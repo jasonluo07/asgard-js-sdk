@@ -2,12 +2,26 @@
 // import styles from './app.module.scss';
 
 import { Route, Routes, Link } from 'react-router-dom';
-import { React } from '@asgard-js/react';
+import { MessageBox } from '@asgard-js/react';
+
+const {
+  VITE_BASE_URL,
+  VITE_NAMESPACE,
+  VITE_BOT_PROVIDER_NAME,
+  VITE_WEBHOOK_TOKEN,
+} = import.meta.env;
 
 export function App() {
   return (
     <div>
-      <React />
+      <MessageBox
+        config={{
+          baseUrl: VITE_BASE_URL,
+          namespace: VITE_NAMESPACE,
+          botProviderName: VITE_BOT_PROVIDER_NAME,
+          webhookToken: VITE_WEBHOOK_TOKEN,
+        }}
+      />
       <div role="navigation">
         <ul>
           <li>
