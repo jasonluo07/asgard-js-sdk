@@ -7,9 +7,11 @@
     "lint:core": "nx run @asgard-js/core:lint",
     "test:core": "nx run @asgard-js/core:test",
     "build:core": "nx run @asgard-js/core:build",
+    "watch:core": "nx build @asgard-js/core --watch",
     "lint:react": "nx run @asgard-js/react:lint",
     "test:react": "nx run @asgard-js/react:test",
-    "build:react": "nx run @asgard-js/react:build"
+    "build:react": "nx run @asgard-js/react:build",
+    "watch:react": "nx build @asgard-js/react --watch"
   },
   "private": true,
   "dependencies": {
