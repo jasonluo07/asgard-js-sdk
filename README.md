@@ -3,6 +3,36 @@
 ## Documentation
 https://www.asgard-ai.com/docs/intigration-with-asgard/intigration-with-api
 
+## build package
+
+```sh
+yarn build:core
+yarn build:react
+```
+
+## test
+```sh
+yarn test:core
+yarn test:react
+```
+
+## serve
+```sh
+yarn serve:react-demo
+```
+起 react-demo 來開發 core, react 時
+```sh
+yarn watch:core
+yarn watch:react
+```
+同時監聽兩個專案，以利 react-demo 的 dev server 觸發 hot reload
+
+
+
+
+
+
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
