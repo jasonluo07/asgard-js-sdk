@@ -1,6 +1,6 @@
 import { describe } from 'vitest';
 import SSEClient from '../client';
-import { EventType } from '../types';
+import { EventType } from '../enum';
 
 const {
   VITE_BASE_URL,

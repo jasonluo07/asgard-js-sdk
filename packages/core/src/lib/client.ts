@@ -1,10 +1,6 @@
 import EventEmitter from 'events';
-import {
-  ClientConfig,
-  EventType,
-  FetchSSEPayload,
-  MessageSSEResponse,
-} from './types';
+import { EventType } from './enum';
+import { ClientConfig, FetchSSEPayload, MessageSSEResponse } from './types';
 import {
   EventSourceMessage,
   fetchEventSource,
@@ -49,7 +45,7 @@ export default class SSEClient {
     event: Event,
     listener: (data: MessageSSEResponse<Event>) => void
   ) {
-    this.eventEmitter.on(event as string, listener);
+    this.eventEmitter.on(event as EventType, listener);
   }
 
   async fetchSSE(payload: FetchSSEPayload) {
@@ -57,7 +53,6 @@ export default class SSEClient {
     await fetchEventSource(this.endpoint, {
       method: 'POST',
       headers: {
-        Accept: 'text/event-stream',
         'X-Asgard-Webhook-Token': this.webhookToken,
         'Content-Type': 'application/json',
       },
