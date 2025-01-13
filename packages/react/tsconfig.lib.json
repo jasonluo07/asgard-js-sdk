@@ -8,7 +8,6 @@
       "@nx/react/typings/image.d.ts",
       "vite/client"
     ],
-    "rootDir": "src",
     "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -39,7 +38,19 @@
     "src/**/*.spec.jsx",
     "eslint.config.js",
     "eslint.config.cjs",
-    "eslint.config.mjs"
+    "eslint.config.mjs",
+    "../../packages/core/dist"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../../packages/core/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../core/tsconfig.lib.json"
+    }
+  ]
 }
