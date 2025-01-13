@@ -20,6 +20,7 @@ export default defineConfig({
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
     outDir: './dist',
+    minify: 'esbuild',
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
@@ -32,11 +33,32 @@ export default defineConfig({
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
-      formats: ['es'],
+      // formats: ['es', 'cjs', 'umd'],
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: [],
+      output: [
+        {
+          format: 'es',
+          sourcemap: true,
+          dir: 'dist',
+          entryFileNames: 'index.mjs',
+        },
+        {
+          format: 'cjs',
+          sourcemap: true,
+          dir: 'dist',
+          entryFileNames: 'index.cjs',
+        },
+        {
+          format: 'umd',
+          name: '@asgard-js/core',
+          sourcemap: true,
+          dir: 'dist',
+          entryFileNames: 'index.js',
+        },
+      ],
     },
   },
   test: {
