@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
     "allowJs": false,
     "allowSyntheticDefaultImports": true,
     "composite": true,
@@ -29,6 +31,10 @@
     "sourceMap": false,
     "strict": true,
     "target": "es2022",
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "paths": {
+      "@asgard-js/core": ["packages/core/src/index.ts"],
+      "@asgard-js/react": ["packages/react/src/index.ts"]
+    }
   }
 }

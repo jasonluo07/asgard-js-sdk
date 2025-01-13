@@ -1,0 +1,23 @@
+{
+  "name": "@asgard-js/react",
+  "version": "0.0.1",
+  "nx": {
+    "projectType": "library",
+    "sourceRoot": "packages/react/src"
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js"
+}
