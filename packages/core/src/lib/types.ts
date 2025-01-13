@@ -1,3 +1,5 @@
+import { EventType, TemplateType } from './enum';
+
 export interface ClientConfig {
   baseUrl: string;
   namespace: string;
@@ -5,27 +7,11 @@ export interface ClientConfig {
   webhookToken: string;
 }
 
-export enum EventType {
-  INIT = 'asgard.run.init',
-  MESSAGE_START = 'asgard.message.start',
-  MESSAGE_DELTA = 'asgard.message.delta',
-  MESSAGE_COMPLETE = 'asgard.message.complete',
-  DONE = 'asgard.run.done',
-}
-
 export interface FetchSSEPayload {
   customChannelId: string;
   customMessageId: string;
   text: string;
   action: 'RESET_CHANNEL' | 'NONE';
-}
-
-export enum TemplateType {
-  TEXT = 'TEXT',
-  IMAGE = 'IMAGE',
-  VIDEO = 'VIDEO',
-  AUDIO = 'AUDIO',
-  LOCATION = 'LOCATION',
 }
 
 export interface BasicTemplate {
