@@ -18,6 +18,8 @@
 "@asgard-js/core@file:/Users/minghsu/workspace/asgard-js/packages/core":
   version "0.0.1"
   resolved "file:packages/core"
+  dependencies:
+    "@microsoft/fetch-event-source" "^2.0.1"
 
 "@asgard-js/react-demo@file:/Users/minghsu/workspace/asgard-js/apps/react-demo":
   version "0.0.1"
@@ -1217,6 +1219,11 @@
     semver "~7.5.4"
     source-map "~0.6.1"
     typescript "5.4.2"
+
+"@microsoft/fetch-event-source@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/@microsoft/fetch-event-source/-/fetch-event-source-2.0.1.tgz"
+  integrity sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==
 
 "@microsoft/tsdoc-config@~0.16.1":
   version "0.16.2"
