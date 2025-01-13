@@ -12,6 +12,7 @@
     "!**/*.tsbuildinfo"
   ],
   "nx": {
+    "name": "@asgard-js/core",
     "sourceRoot": "packages/core/src",
     "projectType": "library"
   },

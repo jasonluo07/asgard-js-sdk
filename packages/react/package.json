@@ -2,6 +2,7 @@
   "name": "@asgard-js/react",
   "version": "0.0.1",
   "nx": {
+    "name": "@asgard-js/react",
     "projectType": "library",
     "sourceRoot": "packages/react/src"
   },
