@@ -1,19 +1,26 @@
 import EventEmitter from 'events';
-import { EventType } from './enum';
-import { ClientConfig, FetchSSEPayload, MessageSSEResponse } from './types';
+import { EventType, FetchSSEAction } from './enum';
+import {
+  ClientConfig,
+  FetchSSEPayload,
+  SendMessagePayload,
+  SetChannelPayload,
+  SSEResponse,
+} from './types';
 import {
   EventSourceMessage,
   fetchEventSource,
 } from '@microsoft/fetch-event-source';
 
-export default class SSEClient {
+export default class AsgardServiceClient {
   baseUrl: string;
   namespace: string;
   botProviderName: string;
   endpoint: string;
   private webhookToken: string;
   private eventEmitter: EventEmitter;
-  private controller: AbortController | null;
+  private controller: AbortController | null = null;
+  channelId: string | null = null;
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -38,53 +45,61 @@ export default class SSEClient {
     this.webhookToken = config.webhookToken;
     this.endpoint = `${this.baseUrl}/generic/ns/${this.namespace}/bot-provider/${this.botProviderName}/message/sse`;
     this.eventEmitter = new EventEmitter();
-    this.controller = null;
   }
 
   on<Event extends EventType>(
     event: Event,
-    listener: (data: MessageSSEResponse<Event>) => void
+    listener: (data: SSEResponse<Event>) => void
   ) {
     this.eventEmitter.on(event as EventType, listener);
   }
 
   async fetchSSE(payload: FetchSSEPayload) {
-    this.controller = new AbortController();
-    await fetchEventSource(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'X-Asgard-Webhook-Token': this.webhookToken,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      signal: this.controller.signal,
-      onmessage: (ev: EventSourceMessage) => {
-        this.eventEmitter.emit(ev.event, JSON.parse(ev.data));
-      },
-      onerror: (err) => {
-        console.error(err);
-      },
-    });
+    try {
+      this.controller = this.controller || new AbortController();
+
+      await fetchEventSource(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'X-Asgard-Webhook-Token': this.webhookToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: this.controller.signal,
+        onmessage: (ev: EventSourceMessage) => {
+          this.eventEmitter.emit(ev.event, JSON.parse(ev.data));
+        },
+        onerror: (err) => {
+          console.error(err);
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  async resetChannel() {
-    await this.fetchSSE({
-      customChannelId: 'ch-2468',
-      customMessageId: '',
-      text: '',
-      action: 'RESET_CHANNEL',
-    });
+  async setChannel(payload: SetChannelPayload) {
+    if (this.channelId) {
+      this.close();
+    }
+
+    this.channelId = payload.customChannelId;
+    await this.fetchSSE(
+      Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload)
+    );
   }
 
-  async sendMessage(payload: FetchSSEPayload) {
-    console.log('send message: ', payload.text);
-    await this.fetchSSE(payload);
+  async sendMessage(payload: SendMessagePayload) {
+    await this.fetchSSE(
+      Object.assign({ action: FetchSSEAction.NONE }, payload)
+    );
   }
 
   close() {
     if (this.controller) {
       this.controller.abort();
       this.controller = null;
+      this.channelId = null;
     }
   }
 }

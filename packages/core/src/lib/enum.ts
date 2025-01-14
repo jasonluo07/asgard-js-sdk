@@ -1,3 +1,8 @@
+export enum FetchSSEAction {
+  RESET_CHANNEL = 'RESET_CHANNEL',
+  NONE = 'NONE',
+}
+
 export enum EventType {
   INIT = 'asgard.run.init',
   MESSAGE_START = 'asgard.message.start',
@@ -6,7 +11,7 @@ export enum EventType {
   DONE = 'asgard.run.done',
 }
 
-export enum TemplateType {
+export enum MessageTemplateType {
   TEXT = 'TEXT',
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
