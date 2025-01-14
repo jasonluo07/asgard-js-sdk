@@ -13,6 +13,8 @@ export type {
   LocationMessageTemplate,
 } from './lib/types';
 
+export type { SSESubscription } from './lib/create-sse-observable';
+
 export * from './lib/enum';
 
 export { AsgardServiceClient };

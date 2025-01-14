@@ -2,15 +2,12 @@ import EventEmitter from 'events';
 import { EventType, FetchSSEAction } from './enum';
 import {
   ClientConfig,
-  FetchSSEPayload,
   SendMessagePayload,
   SetChannelPayload,
   SSEResponse,
 } from './types';
-import {
-  EventSourceMessage,
-  fetchEventSource,
-} from '@microsoft/fetch-event-source';
+import { createSSEObservable } from './create-sse-observable';
+import { concatMap, delay, of } from 'rxjs';
 
 export default class AsgardServiceClient {
   baseUrl: string;
@@ -19,8 +16,6 @@ export default class AsgardServiceClient {
   endpoint: string;
   private webhookToken: string;
   private eventEmitter: EventEmitter;
-  private controller: AbortController | null = null;
-  channelId: string | null = null;
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -54,52 +49,31 @@ export default class AsgardServiceClient {
     this.eventEmitter.on(event as EventType, listener);
   }
 
-  async fetchSSE(payload: FetchSSEPayload) {
-    try {
-      this.controller = this.controller || new AbortController();
+  setChannel(payload: SetChannelPayload) {
+    return createSSEObservable({
+      endpoint: this.endpoint,
+      webhookToken: this.webhookToken,
+      payload: Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload),
+    });
+  }
 
-      await fetchEventSource(this.endpoint, {
-        method: 'POST',
-        headers: {
-          'X-Asgard-Webhook-Token': this.webhookToken,
-          'Content-Type': 'application/json',
+  sendMessage(payload: SendMessagePayload, delayTime?: number) {
+    return createSSEObservable({
+      endpoint: this.endpoint,
+      webhookToken: this.webhookToken,
+      payload: Object.assign({ action: FetchSSEAction.NONE }, payload),
+    })
+      .pipe(concatMap((event) => of(event).pipe(delay(delayTime ?? 50))))
+      .subscribe({
+        next: (esm) => {
+          this.eventEmitter.emit(esm.event, esm.data);
         },
-        body: JSON.stringify(payload),
-        signal: this.controller.signal,
-        onmessage: (ev: EventSourceMessage) => {
-          this.eventEmitter.emit(ev.event, JSON.parse(ev.data));
-        },
-        onerror: (err) => {
+        error: (err) => {
           console.error(err);
         },
+        complete: () => {
+          console.log('SSE channel closed.');
+        },
       });
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async setChannel(payload: SetChannelPayload) {
-    if (this.channelId) {
-      this.close();
-    }
-
-    this.channelId = payload.customChannelId;
-    await this.fetchSSE(
-      Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload)
-    );
-  }
-
-  async sendMessage(payload: SendMessagePayload) {
-    await this.fetchSSE(
-      Object.assign({ action: FetchSSEAction.NONE }, payload)
-    );
-  }
-
-  close() {
-    if (this.controller) {
-      this.controller.abort();
-      this.controller = null;
-      this.channelId = null;
-    }
   }
 }
