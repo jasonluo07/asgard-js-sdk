@@ -1,20 +1,7 @@
-import AsgardServiceClient from './lib/client';
+export type { Subscription } from 'rxjs';
 
-export type {
-  ClientConfig,
-  SSEResponse,
-  SetChannelPayload,
-  SendMessagePayload,
-  MessageTemplate,
-  TextMessageTemplate,
-  ImageMessageTemplate,
-  VideoMessageTemplate,
-  AudioMessageTemplate,
-  LocationMessageTemplate,
-} from './lib/types';
+export type * from 'src/types';
 
-export type { SSESubscription } from './lib/create-sse-observable';
+export * from 'src/constants/enum';
 
-export * from './lib/enum';
-
-export { AsgardServiceClient };
+export { default as AsgardServiceClient } from 'src/lib/client';

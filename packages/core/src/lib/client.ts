@@ -1,13 +1,13 @@
 import EventEmitter from 'events';
-import { EventType, FetchSSEAction } from './enum';
+import { EventType, FetchSSEAction } from 'src/constants/enum';
 import {
   ClientConfig,
   SendMessagePayload,
   SetChannelPayload,
   SSEResponse,
-} from './types';
+} from 'src/types';
 import { createSSEObservable } from './create-sse-observable';
-import { concatMap, delay, of } from 'rxjs';
+import { concatMap, delay, of, Subscription } from 'rxjs';
 
 export default class AsgardServiceClient {
   baseUrl: string;
@@ -42,22 +42,42 @@ export default class AsgardServiceClient {
     this.eventEmitter = new EventEmitter();
   }
 
-  on<Event extends EventType>(
+  on<Action extends FetchSSEAction, Event extends EventType>(
+    action: Action,
     event: Event,
     listener: (data: SSEResponse<Event>) => void
-  ) {
-    this.eventEmitter.on(event as EventType, listener);
+  ): void {
+    const eventKey = `${action}:${event}`;
+
+    if (this.eventEmitter.listeners(eventKey).length > 0) {
+      this.eventEmitter.removeAllListeners(eventKey);
+    }
+
+    this.eventEmitter.on(eventKey, listener);
   }
 
-  setChannel(payload: SetChannelPayload) {
+  setChannel(payload: SetChannelPayload): Subscription {
     return createSSEObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
       payload: Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload),
+    }).subscribe({
+      next: (esm) => {
+        this.eventEmitter.emit(
+          `${FetchSSEAction.RESET_CHANNEL}:${esm.event}`,
+          esm.data
+        );
+      },
+      error: (err) => {
+        console.error(err);
+      },
+      complete: () => {
+        console.log('SSE connection closed.');
+      },
     });
   }
 
-  sendMessage(payload: SendMessagePayload, delayTime?: number) {
+  sendMessage(payload: SendMessagePayload, delayTime?: number): Subscription {
     return createSSEObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
@@ -66,13 +86,16 @@ export default class AsgardServiceClient {
       .pipe(concatMap((event) => of(event).pipe(delay(delayTime ?? 50))))
       .subscribe({
         next: (esm) => {
-          this.eventEmitter.emit(esm.event, esm.data);
+          this.eventEmitter.emit(
+            `${FetchSSEAction.NONE}:${esm.event}`,
+            esm.data
+          );
         },
         error: (err) => {
           console.error(err);
         },
         complete: () => {
-          console.log('SSE channel closed.');
+          console.log('SSE connection closed.');
         },
       });
   }

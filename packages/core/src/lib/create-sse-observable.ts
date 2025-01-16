@@ -3,7 +3,7 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from '@microsoft/fetch-event-source';
-import { FetchSSEPayload } from './types';
+import { FetchSSEPayload } from 'src/types';
 
 interface CreateSSEObservableOptions {
   endpoint: string;
@@ -11,9 +11,9 @@ interface CreateSSEObservableOptions {
   payload: FetchSSEPayload;
 }
 
-export type SSESubscription = ReturnType<typeof createSSEObservable>;
-
-export function createSSEObservable(options: CreateSSEObservableOptions) {
+export function createSSEObservable(
+  options: CreateSSEObservableOptions
+): Observable<EventSourceMessage> {
   const { endpoint, webhookToken, payload } = options;
 
   return new Observable<EventSourceMessage>((subscriber) => {
@@ -31,8 +31,6 @@ export function createSSEObservable(options: CreateSSEObservableOptions) {
         if (!response.ok) {
           subscriber.error(response);
           controller.abort();
-        } else {
-          console.log('SSE channel opened.');
         }
       },
       onmessage: (esm: EventSourceMessage) => {
@@ -47,7 +45,7 @@ export function createSSEObservable(options: CreateSSEObservableOptions) {
       },
     });
 
-    return () => {
+    return (): void => {
       controller.abort();
     };
   });
