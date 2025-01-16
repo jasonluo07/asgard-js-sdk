@@ -7,7 +7,7 @@ import {
   SSEResponse,
 } from 'src/types';
 import { createSSEObservable } from './create-sse-observable';
-import { concatMap, delay, of, Subscription } from 'rxjs';
+import { concatMap, delay, of, Subject, Subscription, takeUntil } from 'rxjs';
 
 export default class AsgardServiceClient {
   baseUrl: string;
@@ -16,6 +16,7 @@ export default class AsgardServiceClient {
   endpoint: string;
   private webhookToken: string;
   private eventEmitter: EventEmitter;
+  private destroy$ = new Subject<void>();
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -61,20 +62,22 @@ export default class AsgardServiceClient {
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
       payload: Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload),
-    }).subscribe({
-      next: (esm) => {
-        this.eventEmitter.emit(
-          `${FetchSSEAction.RESET_CHANNEL}:${esm.event}`,
-          esm.data
-        );
-      },
-      error: (err) => {
-        console.error(err);
-      },
-      complete: () => {
-        console.log('SSE connection closed.');
-      },
-    });
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (esm) => {
+          this.eventEmitter.emit(
+            `${FetchSSEAction.RESET_CHANNEL}:${esm.event}`,
+            esm.data
+          );
+        },
+        error: (err) => {
+          console.error(err);
+        },
+        complete: () => {
+          console.log('SSE connection closed.');
+        },
+      });
   }
 
   sendMessage(payload: SendMessagePayload, delayTime?: number): Subscription {
@@ -84,6 +87,7 @@ export default class AsgardServiceClient {
       payload: Object.assign({ action: FetchSSEAction.NONE }, payload),
     })
       .pipe(concatMap((event) => of(event).pipe(delay(delayTime ?? 50))))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (esm) => {
           this.eventEmitter.emit(
@@ -98,5 +102,10 @@ export default class AsgardServiceClient {
           console.log('SSE connection closed.');
         },
       });
+  }
+
+  close(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
