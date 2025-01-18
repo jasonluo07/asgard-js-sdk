@@ -68,7 +68,7 @@ export default class AsgardServiceClient {
         next: (esm) => {
           this.eventEmitter.emit(
             `${FetchSSEAction.RESET_CHANNEL}:${esm.event}`,
-            esm.data
+            JSON.parse(esm.data)
           );
         },
         error: (err) => {
@@ -92,7 +92,7 @@ export default class AsgardServiceClient {
         next: (esm) => {
           this.eventEmitter.emit(
             `${FetchSSEAction.NONE}:${esm.event}`,
-            esm.data
+            JSON.parse(esm.data)
           );
         },
         error: (err) => {
