@@ -9,7 +9,7 @@ export interface ClientConfig {
 
 export interface FetchSSEPayload {
   customChannelId: string;
-  customMessageId: string;
+  customMessageId?: string;
   text: string;
   action: FetchSSEAction;
 }

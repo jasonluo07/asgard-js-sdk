@@ -1,1 +1,1 @@
-export * from './message-box';
+export * from './chatbot';

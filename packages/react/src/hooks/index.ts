@@ -1,1 +1,1 @@
-export * from './use-sse-client';
+export * from './use-asgard-service-client';
