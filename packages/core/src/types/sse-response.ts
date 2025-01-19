@@ -41,27 +41,26 @@ export interface LocationMessageTemplate extends MessageTemplate {
   longitude: number;
 }
 
+export type ButtonAction =
+  | {
+      type: 'message';
+      text: string;
+    }
+  | {
+      type: 'uri';
+      uri: string;
+    };
+
 export interface ButtonMessageTemplate extends MessageTemplate {
   type: MessageTemplateType.BUTTON;
   title: string;
   text: string;
   thumbnailImageUrl: string;
-  imageAspectRatio: string;
-  imageSize: string;
+  imageAspectRatio: 'rectangle' | 'square';
+  imageSize: 'cover' | 'contain';
   imageBackgroundColor: string;
-  defaultAction: {
-    type: string;
-    text: string;
-    uri: string;
-  };
-  buttons: {
-    label: string;
-    action: {
-      type: string;
-      text: string;
-      uri: string;
-    };
-  }[];
+  defaultAction: ButtonAction;
+  buttons: { label: string; action: ButtonAction }[];
 }
 
 export interface CarouselMessageTemplate extends MessageTemplate {
