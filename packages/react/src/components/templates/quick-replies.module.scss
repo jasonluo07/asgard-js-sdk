@@ -1,0 +1,16 @@
+.quick_replies_box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 32px;
+}
+
+.quick_reply {
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #434343;
+  background: rgba(88, 88, 88, 0.2);
+  color: white;
+  cursor: pointer;
+}

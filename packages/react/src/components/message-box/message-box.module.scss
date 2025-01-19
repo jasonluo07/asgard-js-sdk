@@ -1,0 +1,54 @@
+.message_box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message_box_row {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.message_box--user {
+  > .message_box_row {
+    flex-direction: row-reverse;
+  }
+}
+
+.message_box--bot {
+  > .message_box_row {
+    flex-direction: row;
+  }
+}
+
+.bot_avatar {
+  width: 24px;
+  height: 24px;
+}
+
+.text_area {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+}
+
+.text_area--user {
+  max-width: 255px;
+  background: #4767EB;
+  border-top-right-radius: 0;
+}
+
+.text_area--bot {
+  max-width: 223px;
+  background: #585858;
+  border-top-left-radius: 0;
+}
+
+.time {
+  display: flex;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #8C8C8C;
+}

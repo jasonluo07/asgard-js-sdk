@@ -1,0 +1,10 @@
+.chatbot_body {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  border-top: 1px solid #434343;
+  border-bottom: 1px solid #434343;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}

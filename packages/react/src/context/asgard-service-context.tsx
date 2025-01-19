@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AsgardServiceClient, ClientConfig } from '@asgard-js/core';
 import {
   createContext,
@@ -5,18 +6,29 @@ import {
   HTMLAttributes,
   ReactNode,
   useContext,
-  useEffect,
+  useMemo,
 } from 'react';
-import { useAsgardServiceClient } from 'src/hooks';
+import {
+  ConversationMessage,
+  useAsgardServiceClient,
+  useChannel,
+  UseChannelReturn,
+  useChatbotTyping,
+  UseChatbotTypingReturn,
+} from 'src/hooks';
 
-type AsgardServiceContextType = {
+interface AsgardServiceContextType
+  extends Pick<UseChatbotTypingReturn, 'isTyping' | 'displayText'>,
+    Pick<UseChannelReturn, 'conversation' | 'sendMessage'> {
   client: AsgardServiceClient | null;
-  customChannelId: string | null;
-};
+}
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   client: null,
-  customChannelId: null,
+  isTyping: false,
+  displayText: null,
+  conversation: [],
+  sendMessage: () => {},
 });
 
 interface AsgardServiceContextProviderProps
@@ -25,38 +37,44 @@ interface AsgardServiceContextProviderProps
   config: ClientConfig;
   customChannelId: string;
   customMessageId?: string;
+  delayTime?: number;
+  initConversation?: ConversationMessage[];
 }
 
 export function AsgardServiceContextProvider(
   props: AsgardServiceContextProviderProps
 ): ReactNode {
-  const { children, config, customChannelId, customMessageId, ...divProps } =
-    props;
+  const {
+    children,
+    config,
+    customChannelId,
+    customMessageId,
+    delayTime,
+    initConversation,
+    ...divProps
+  } = props;
 
   const client = useAsgardServiceClient({ config });
 
-  useEffect(() => {
-    if (!client) {
-      console.warn('Client is not available');
+  const { isTyping, displayText, startTyping, onTyping, stopTyping } =
+    useChatbotTyping();
 
-      return;
-    }
+  const { sendMessage, conversation } = useChannel({
+    client,
+    customChannelId,
+    startTyping,
+    onTyping,
+    stopTyping,
+    initConversation,
+  });
 
-    if (!customChannelId) {
-      console.warn('customChannelId is required');
-
-      return;
-    }
-
-    client.setChannel({
-      customChannelId,
-      customMessageId,
-      text: '',
-    });
-  }, [client, customChannelId, customMessageId]);
+  const contextValue = useMemo(
+    () => ({ client, isTyping, displayText, conversation, sendMessage }),
+    [client, conversation, displayText, isTyping, sendMessage]
+  );
 
   return (
-    <AsgardServiceContext.Provider value={{ client, customChannelId }}>
+    <AsgardServiceContext.Provider value={contextValue}>
       <div {...divProps}>{children}</div>
     </AsgardServiceContext.Provider>
   );

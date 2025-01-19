@@ -1,8 +1,9 @@
 import { ChangeEventHandler, ReactNode, useCallback, useState } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
+import styles from './chatbot-footer.module.scss';
 
 export function ChatbotFooter(): ReactNode {
-  const { client, customChannelId } = useAsgardContext();
+  const { sendMessage } = useAsgardContext();
 
   const [value, setValue] = useState('');
 
@@ -14,23 +15,11 @@ export function ChatbotFooter(): ReactNode {
   );
 
   const onSubmit = useCallback(() => {
-    if (!client) {
-      throw new Error('Client is not available');
-    }
-
-    if (!customChannelId) {
-      throw new Error('customChannelId is required');
-    }
-
-    client.sendMessage({
-      customChannelId,
-      customMessageId: '',
-      text: value,
-    });
-  }, [client, customChannelId, value]);
+    sendMessage(value);
+  }, [sendMessage, value]);
 
   return (
-    <div>
+    <div className={styles.chatbot_footer}>
       <input value={value} onChange={onChange} />
       <button type="button" onClick={onSubmit}>
         Send

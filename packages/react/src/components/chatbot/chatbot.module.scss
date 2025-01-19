@@ -1,0 +1,9 @@
+.chatbot_root {
+  width: 375px;
+  height: 640px;
+  background-color: #141414;
+  border-radius: 8px;
+  font-size: 15px;
+  display: grid;
+  grid-template-rows: max-content auto max-content;
+}
