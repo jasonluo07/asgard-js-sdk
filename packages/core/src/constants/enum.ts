@@ -13,8 +13,11 @@ export enum EventType {
 
 export enum MessageTemplateType {
   TEXT = 'TEXT',
+  HINT = 'HINT',
+  BUTTON = 'BUTTON',
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
   AUDIO = 'AUDIO',
   LOCATION = 'LOCATION',
+  CAROUSEL = 'CAROUSEL',
 }

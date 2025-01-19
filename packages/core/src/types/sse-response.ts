@@ -9,6 +9,11 @@ export interface TextMessageTemplate extends MessageTemplate {
   text: string;
 }
 
+export interface HintMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.HINT;
+  text: string;
+}
+
 export interface ImageMessageTemplate extends MessageTemplate {
   type: MessageTemplateType.IMAGE;
   originalContentUrl: string;
@@ -36,6 +41,34 @@ export interface LocationMessageTemplate extends MessageTemplate {
   longitude: number;
 }
 
+export interface ButtonMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.BUTTON;
+  title: string;
+  text: string;
+  thumbnailImageUrl: string;
+  imageAspectRatio: string;
+  imageSize: string;
+  imageBackgroundColor: string;
+  defaultAction: {
+    type: string;
+    text: string;
+    uri: string;
+  };
+  buttons: {
+    label: string;
+    action: {
+      type: string;
+      text: string;
+      uri: string;
+    };
+  }[];
+}
+
+export interface CarouselMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.CAROUSEL;
+  columns: Omit<ButtonMessageTemplate, 'type'>[];
+}
+
 export interface Message<Payload = unknown> {
   messageId: string;
   replyToCustomMessageId: string;
@@ -45,10 +78,13 @@ export interface Message<Payload = unknown> {
   idx: number;
   template:
     | TextMessageTemplate
+    | HintMessageTemplate
+    | ButtonMessageTemplate
     | ImageMessageTemplate
     | VideoMessageTemplate
     | AudioMessageTemplate
-    | LocationMessageTemplate;
+    | LocationMessageTemplate
+    | CarouselMessageTemplate;
 }
 
 export type EventData<
