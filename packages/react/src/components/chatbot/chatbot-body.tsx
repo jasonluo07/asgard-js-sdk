@@ -1,26 +1,26 @@
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
-import { MessageBox } from '../message-box/message-box';
-import { BotTypingBox } from '../bot-typing-box';
 import styles from './chatbot-body.module.scss';
+import { BotTypingMessageBox } from '../message-box/bot-typing-box';
+import { ConversationMessageRenderer } from '../conversation-message-renderer';
 
 export function ChatbotBody(): ReactNode {
-  const { conversation, isTyping, displayText } = useAsgardContext();
-
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const { conversation, messageBoxBottomRef } = useAsgardContext();
 
   useEffect(() => {
-    console.log('conversation', conversation);
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation]);
+    messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversation, messageBoxBottomRef]);
 
   return (
     <div className={styles.chatbot_body}>
       {conversation.map((message) => (
-        <MessageBox key={crypto.randomUUID()} conversationMessage={message} />
+        <ConversationMessageRenderer
+          key={crypto.randomUUID()}
+          conversationMessage={message}
+        />
       ))}
-      {isTyping && <BotTypingBox />}
-      <div ref={bottomRef} />
+      <BotTypingMessageBox />
+      <div ref={messageBoxBottomRef} />
     </div>
   );
 }

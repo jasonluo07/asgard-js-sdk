@@ -10,13 +10,14 @@ export function useAsgardServiceClient(
 ): AsgardServiceClient | null {
   const { config } = props;
 
-  const clientRef = useRef<AsgardServiceClient | null>(
-    new AsgardServiceClient(config)
-  );
+  const clientRef = useRef<AsgardServiceClient | null>(null);
+
+  if (!clientRef.current) {
+    clientRef.current = new AsgardServiceClient(config);
+  }
 
   useEffect(() => {
     return (): void => {
-      console.log('cleaning up client');
       if (clientRef.current) {
         clientRef.current.close();
         clientRef.current = null;

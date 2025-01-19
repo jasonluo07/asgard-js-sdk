@@ -1,0 +1,18 @@
+.template_box_content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time {
+  display: flex;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #8C8C8C;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}

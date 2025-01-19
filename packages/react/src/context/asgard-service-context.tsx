@@ -5,8 +5,10 @@ import {
   DetailedHTMLProps,
   HTMLAttributes,
   ReactNode,
+  RefObject,
   useContext,
   useMemo,
+  useRef,
 } from 'react';
 import {
   ConversationMessage,
@@ -21,12 +23,14 @@ interface AsgardServiceContextType
   extends Pick<UseChatbotTypingReturn, 'isTyping' | 'displayText'>,
     Pick<UseChannelReturn, 'conversation' | 'sendMessage'> {
   client: AsgardServiceClient | null;
+  messageBoxBottomRef: RefObject<HTMLDivElement>;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   client: null,
   isTyping: false,
   displayText: null,
+  messageBoxBottomRef: { current: null },
   conversation: [],
   sendMessage: () => {},
 });
@@ -54,6 +58,8 @@ export function AsgardServiceContextProvider(
     ...divProps
   } = props;
 
+  const messageBoxBottomRef = useRef<HTMLDivElement>(null);
+
   const client = useAsgardServiceClient({ config });
 
   const { isTyping, displayText, startTyping, onTyping, stopTyping } =
@@ -69,8 +75,22 @@ export function AsgardServiceContextProvider(
   });
 
   const contextValue = useMemo(
-    () => ({ client, isTyping, displayText, conversation, sendMessage }),
-    [client, conversation, displayText, isTyping, sendMessage]
+    () => ({
+      client,
+      isTyping,
+      displayText,
+      messageBoxBottomRef,
+      conversation,
+      sendMessage,
+    }),
+    [
+      client,
+      conversation,
+      displayText,
+      messageBoxBottomRef,
+      isTyping,
+      sendMessage,
+    ]
   );
 
   return (

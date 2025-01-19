@@ -1,0 +1,23 @@
+.text {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+}
+
+.text--user {
+  max-width: 255px;
+  background: #4767EB;
+  border-top-right-radius: 0;
+}
+
+.text--bot {
+  max-width: 223px;
+  background: #585858;
+  border-top-left-radius: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

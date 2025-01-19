@@ -1,4 +1,10 @@
-import { ChangeEventHandler, ReactNode, useCallback, useState } from 'react';
+import {
+  ChangeEventHandler,
+  KeyboardEventHandler,
+  ReactNode,
+  useCallback,
+  useState,
+} from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
 
@@ -14,16 +20,25 @@ export function ChatbotFooter(): ReactNode {
     []
   );
 
-  const onSubmit = useCallback(() => {
-    sendMessage(value);
-  }, [sendMessage, value]);
+  const onKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
+    (event) => {
+      if (event.key === 'Enter') {
+        sendMessage(value);
+        setValue('');
+      }
+    },
+    [sendMessage, value]
+  );
 
   return (
     <div className={styles.chatbot_footer}>
-      <input value={value} onChange={onChange} />
-      <button type="button" onClick={onSubmit}>
-        Send
-      </button>
+      <input
+        className={styles.chatbot_input}
+        value={value}
+        placeholder="Enter message"
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+      />
     </div>
   );
 }

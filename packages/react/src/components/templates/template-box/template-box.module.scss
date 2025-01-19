@@ -1,0 +1,19 @@
+.template_box {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+
+.template_box--bot {
+  &.template_box--horizontal {
+    flex-direction: row;
+  }
+
+  &.template_box--vertical {
+    flex-direction: column;
+  }
+}
+
+.template_box--user {
+  flex-direction: row-reverse;
+}

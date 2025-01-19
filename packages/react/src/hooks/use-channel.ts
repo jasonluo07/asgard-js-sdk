@@ -32,7 +32,7 @@ interface UseChannelProps
     'startTyping' | 'onTyping' | 'stopTyping'
   > {
   client: AsgardServiceClient | null;
-  customChannelId: string | null;
+  customChannelId: string;
   initConversation?: ConversationMessage[];
   onResetChannelInit?: (event: SSEResponse<EventType.INIT>) => void;
 }
@@ -53,23 +53,23 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     stopTyping,
   } = props;
 
+  if (!client) {
+    throw new Error('Client instance is required');
+  }
+
+  if (!customChannelId) {
+    throw new Error('Custom channel id is required');
+  }
+
   const [conversation, setConversation] = useState<ConversationMessage[]>(
     initConversation ?? []
   );
 
   useEffect(() => {
-    if (!client) {
-      console.warn('Client is not available');
+    console.log('conversation', conversation);
+  }, [conversation]);
 
-      return;
-    }
-
-    if (!customChannelId) {
-      console.warn('customChannelId is required');
-
-      return;
-    }
-
+  useEffect(() => {
     client.setChannel({
       customChannelId,
       customMessageId: '',
@@ -79,18 +79,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   const sendMessage = useCallback(
     (text: string, customMessageId?: string) => {
-      if (!client) {
-        console.warn('Client is not available');
-
-        return;
-      }
-
-      if (!customChannelId) {
-        console.warn('customChannelId is required');
-
-        return;
-      }
-
       setConversation((prev) =>
         prev.concat({
           type: 'user',
@@ -112,27 +100,23 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   useEffect(() => {
     if (!onResetChannelInit) return;
 
-    client?.on(
-      FetchSSEAction.RESET_CHANNEL,
-      EventType.INIT,
-      onResetChannelInit
-    );
+    client.on(FetchSSEAction.RESET_CHANNEL, EventType.INIT, onResetChannelInit);
   }, [client, onResetChannelInit]);
 
   useEffect(() => {
-    client?.on(FetchSSEAction.NONE, EventType.MESSAGE_START, () => {
+    client.on(FetchSSEAction.NONE, EventType.MESSAGE_START, (data) => {
       startTyping();
     });
   }, [client, startTyping]);
 
   useEffect(() => {
-    client?.on(FetchSSEAction.NONE, EventType.MESSAGE_DELTA, (event) => {
+    client.on(FetchSSEAction.NONE, EventType.MESSAGE_DELTA, (event) => {
       onTyping(event.fact.messageDelta.message);
     });
   }, [client, onTyping]);
 
   useEffect(() => {
-    client?.on(FetchSSEAction.NONE, EventType.MESSAGE_COMPLETE, (event) => {
+    client.on(FetchSSEAction.NONE, EventType.MESSAGE_COMPLETE, (event) => {
       const { eventType, fact } = event;
       const message = fact.messageComplete.message;
       if (!message.isDebug) {
