@@ -5,6 +5,7 @@ import { Avatar } from '../avatar';
 import styles from './carousel-template.module.scss';
 import { Card } from '../button-template/card';
 import { CarouselMessageTemplate } from '@asgard-js/core';
+import { Time } from '../time';
 
 interface CarouselTemplateProps {
   conversationMessage: ConversationBotMessage;
@@ -24,6 +25,7 @@ export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
           <Card key={index} template={column} />
         ))}
       </div>
+      <Time className={styles.carousel_time} time={conversationMessage.time} />
     </TemplateBox>
   );
 }

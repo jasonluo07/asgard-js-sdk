@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
 import clsx from 'clsx';
 import { ConversationMessage } from 'src/hooks';
-import { formatTime } from 'src/utils';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import styles from './text-template.module.scss';
 import { Avatar } from '../avatar';
+import { Time } from '../time';
 
 interface TextTemplateProps {
   conversationMessage: ConversationMessage;
@@ -19,9 +19,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         <div className={clsx(styles.text, styles['text--user'])}>
           {conversationMessage.text}
         </div>
-        <div className={styles.time}>
-          {formatTime(conversationMessage.time)}
-        </div>
+        <Time time={conversationMessage.time} />
       </TemplateBox>
     );
   }

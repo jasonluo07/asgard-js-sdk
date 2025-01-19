@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import styles from './template-box-content.module.scss';
 import { QuickReplies } from '../quick-replies';
-import { formatTime } from 'src/utils';
+import { Time } from '../time';
 
 interface TemplateBoxContentProps {
   children: ReactNode;
@@ -16,7 +16,7 @@ export function TemplateBoxContent(props: TemplateBoxContentProps): ReactNode {
     <div className={styles.template_box_content}>
       <div className={styles.content}>
         {children}
-        {time && <div className={styles.time}>{formatTime(time)}</div>}
+        <Time time={time} />
       </div>
       {!!quickReplies?.length && <QuickReplies quickReplies={quickReplies} />}
     </div>
