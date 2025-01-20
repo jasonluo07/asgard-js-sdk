@@ -39,6 +39,7 @@ interface UseChannelProps
 
 export interface UseChannelReturn {
   conversation: ConversationMessage[];
+  isConnectionProcessing: boolean;
   sendMessage: (text: string, customMessageId?: string) => void;
 }
 
@@ -61,6 +62,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     throw new Error('Custom channel id is required');
   }
 
+  const [isConnectionProcessing, setIsConnectionProcessing] = useState(false);
+
   const [conversation, setConversation] = useState<ConversationMessage[]>(
     initConversation ?? []
   );
@@ -70,11 +73,17 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, [conversation]);
 
   useEffect(() => {
-    client.setChannel({
-      customChannelId,
-      customMessageId: '',
-      text: '',
-    });
+    client.setChannel(
+      {
+        customChannelId,
+        customMessageId: '',
+        text: '',
+      },
+      {
+        onStart: () => setIsConnectionProcessing(true),
+        onCompleted: () => setIsConnectionProcessing(false),
+      }
+    );
   }, [client, customChannelId]);
 
   const sendMessage = useCallback(
@@ -88,11 +97,17 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         })
       );
 
-      client.sendMessage({
-        customChannelId,
-        customMessageId,
-        text,
-      });
+      client.sendMessage(
+        {
+          customChannelId,
+          customMessageId,
+          text,
+        },
+        {
+          onStart: () => setIsConnectionProcessing(true),
+          onCompleted: () => setIsConnectionProcessing(false),
+        }
+      );
     },
     [client, customChannelId]
   );
@@ -104,8 +119,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, [client, onResetChannelInit]);
 
   useEffect(() => {
-    client.on(FetchSSEAction.NONE, EventType.MESSAGE_START, (data) => {
-      startTyping();
+    client.on(FetchSSEAction.NONE, EventType.MESSAGE_START, (event) => {
+      startTyping(event.fact.messageStart.message);
     });
   }, [client, startTyping]);
 
@@ -137,5 +152,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   return {
     conversation,
     sendMessage,
+    isConnectionProcessing,
   };
 }

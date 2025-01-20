@@ -24,6 +24,7 @@ interface AsgardServiceContextType
     Pick<UseChannelReturn, 'conversation' | 'sendMessage'> {
   client: AsgardServiceClient | null;
   messageBoxBottomRef: RefObject<HTMLDivElement>;
+  isConnectionProcessing: boolean;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
@@ -31,6 +32,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   isTyping: false,
   displayText: null,
   messageBoxBottomRef: { current: null },
+  isConnectionProcessing: false,
   conversation: [],
   sendMessage: () => {},
 });
@@ -65,7 +67,7 @@ export function AsgardServiceContextProvider(
   const { isTyping, displayText, startTyping, onTyping, stopTyping } =
     useChatbotTyping();
 
-  const { sendMessage, conversation } = useChannel({
+  const { sendMessage, conversation, isConnectionProcessing } = useChannel({
     client,
     customChannelId,
     startTyping,
@@ -80,6 +82,7 @@ export function AsgardServiceContextProvider(
       isTyping,
       displayText,
       messageBoxBottomRef,
+      isConnectionProcessing,
       conversation,
       sendMessage,
     }),
@@ -88,6 +91,7 @@ export function AsgardServiceContextProvider(
       conversation,
       displayText,
       messageBoxBottomRef,
+      isConnectionProcessing,
       isTyping,
       sendMessage,
     ]
