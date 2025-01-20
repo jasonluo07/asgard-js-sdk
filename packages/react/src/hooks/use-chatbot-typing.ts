@@ -25,7 +25,7 @@ export function useChatbotTyping(): UseChatbotTypingReturn {
     setDisplayText(null);
   }, [setIsTyping]);
 
-  const debouncedIsTyping = useDebounce(isTyping, 300);
+  const debouncedIsTyping = useDebounce(isTyping, 500);
 
   return {
     isTyping: debouncedIsTyping,

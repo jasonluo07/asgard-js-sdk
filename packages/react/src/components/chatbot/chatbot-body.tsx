@@ -1,8 +1,8 @@
 import { ReactNode, useEffect } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
-import { BotTypingMessageBox } from '../message-box/bot-typing-box';
 import { ConversationMessageRenderer } from '../conversation-message-renderer';
+import { BotTypingBox } from '../templates';
 
 export function ChatbotBody(): ReactNode {
   const { conversation, messageBoxBottomRef } = useAsgardContext();
@@ -19,7 +19,7 @@ export function ChatbotBody(): ReactNode {
           conversationMessage={message}
         />
       ))}
-      <BotTypingMessageBox />
+      <BotTypingBox />
       <div ref={messageBoxBottomRef} />
     </div>
   );
