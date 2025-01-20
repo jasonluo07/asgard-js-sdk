@@ -2,12 +2,22 @@ import EventEmitter from 'events';
 import { EventType, FetchSSEAction } from 'src/constants/enum';
 import {
   ClientConfig,
+  SendMessageOptions,
   SendMessagePayload,
+  SetChannelOptions,
   SetChannelPayload,
   SSEResponse,
 } from 'src/types';
 import { createSSEObservable } from './create-sse-observable';
-import { concatMap, delay, of, Subject, Subscription, takeUntil } from 'rxjs';
+import {
+  concatMap,
+  delay,
+  finalize,
+  of,
+  Subject,
+  Subscription,
+  takeUntil,
+} from 'rxjs';
 
 export default class AsgardServiceClient {
   baseUrl: string;
@@ -57,13 +67,21 @@ export default class AsgardServiceClient {
     this.eventEmitter.on(eventKey, listener);
   }
 
-  setChannel(payload: SetChannelPayload): Subscription {
+  setChannel(
+    payload: SetChannelPayload,
+    options?: SetChannelOptions
+  ): Subscription {
+    options?.onStart?.();
+
     return createSSEObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
       payload: Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload),
     })
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => options?.onCompleted?.())
+      )
       .subscribe({
         next: (esm) => {
           this.eventEmitter.emit(
@@ -71,35 +89,31 @@ export default class AsgardServiceClient {
             JSON.parse(esm.data)
           );
         },
-        error: (err) => {
-          console.error(err);
-        },
-        complete: () => {
-          console.log('SSE connection closed.');
-        },
       });
   }
 
-  sendMessage(payload: SendMessagePayload, delayTime?: number): Subscription {
+  sendMessage(
+    payload: SendMessagePayload,
+    options?: SendMessageOptions
+  ): Subscription {
+    options?.onStart?.();
+
     return createSSEObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
       payload: Object.assign({ action: FetchSSEAction.NONE }, payload),
     })
-      .pipe(concatMap((event) => of(event).pipe(delay(delayTime ?? 50))))
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),
+        takeUntil(this.destroy$),
+        finalize(() => options?.onCompleted?.())
+      )
       .subscribe({
         next: (esm) => {
           this.eventEmitter.emit(
             `${FetchSSEAction.NONE}:${esm.event}`,
             JSON.parse(esm.data)
           );
-        },
-        error: (err) => {
-          console.error(err);
-        },
-        complete: () => {
-          console.log('SSE connection closed.');
         },
       });
   }
