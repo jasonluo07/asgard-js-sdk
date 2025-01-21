@@ -11,7 +11,8 @@
     "lint:react": "nx run @asgard-js/react:lint",
     "test:react": "nx run @asgard-js/react:test",
     "build:react": "nx run @asgard-js/react:build",
-    "watch:react": "nx build @asgard-js/react --watch"
+    "watch:react": "nx build @asgard-js/react --watch",
+    "lint:packages": "nx run-many --target=lint --projects=@asgard-js/core,@asgard-js/react"
   },
   "private": true,
   "dependencies": {

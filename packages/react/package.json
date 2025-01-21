@@ -1,6 +1,9 @@
 {
   "name": "@asgard-js/react",
   "version": "0.0.1",
+  "publishConfig": {
+    "access": "public"
+  },
   "nx": {
     "name": "@asgard-js/react",
     "projectType": "library",

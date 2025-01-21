@@ -12,6 +12,9 @@
     "dist",
     "!**/*.tsbuildinfo"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "nx": {
     "name": "@asgard-js/core",
     "sourceRoot": "packages/core/src",
