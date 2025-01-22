@@ -3,16 +3,16 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from '@microsoft/fetch-event-source';
-import { FetchSSEPayload } from 'src/types';
+import { FetchSsePayload } from 'src/types';
 
-interface CreateSSEObservableOptions {
+interface CreateSseObservableOptions {
   endpoint: string;
   webhookToken: string;
-  payload: FetchSSEPayload;
+  payload: FetchSsePayload;
 }
 
-export function createSSEObservable(
-  options: CreateSSEObservableOptions
+export function createSseObservable(
+  options: CreateSseObservableOptions
 ): Observable<EventSourceMessage> {
   const { endpoint, webhookToken, payload } = options;
 

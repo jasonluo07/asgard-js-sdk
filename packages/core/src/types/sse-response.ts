@@ -100,7 +100,7 @@ export interface Fact<Type extends EventType> {
   messageComplete: EventData<Type, EventType.MESSAGE_COMPLETE>;
 }
 
-export interface SSEResponse<Type extends EventType> {
+export interface SseResponse<Type extends EventType> {
   eventType: Type;
   requestId: string;
   namespace: string;

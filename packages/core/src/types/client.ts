@@ -1,4 +1,4 @@
-import { FetchSSEAction } from 'src/constants/enum';
+import { FetchSseAction } from 'src/constants/enum';
 
 export interface ClientConfig {
   baseUrl: string;
@@ -7,11 +7,11 @@ export interface ClientConfig {
   webhookToken: string;
 }
 
-export interface FetchSSEPayload {
+export interface FetchSsePayload {
   customChannelId: string;
   customMessageId?: string;
   text: string;
-  action: FetchSSEAction;
+  action: FetchSseAction;
 }
 
 export interface ConnectionOptions {
@@ -19,10 +19,10 @@ export interface ConnectionOptions {
   onCompleted?: () => void;
 }
 
-export type SetChannelPayload = Omit<FetchSSEPayload, 'action'>;
+export type SetChannelPayload = Omit<FetchSsePayload, 'action'>;
 export type SetChannelOptions = ConnectionOptions;
 
-export type SendMessagePayload = Omit<FetchSSEPayload, 'action'>;
+export type SendMessagePayload = Omit<FetchSsePayload, 'action'>;
 export type SendMessageOptions = ConnectionOptions & {
   delayTime?: number;
 };

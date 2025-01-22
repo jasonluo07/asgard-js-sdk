@@ -1,14 +1,14 @@
 import EventEmitter from 'events';
-import { EventType, FetchSSEAction } from 'src/constants/enum';
+import { EventType, FetchSseAction } from 'src/constants/enum';
 import {
   ClientConfig,
   SendMessageOptions,
   SendMessagePayload,
   SetChannelOptions,
   SetChannelPayload,
-  SSEResponse,
+  SseResponse,
 } from 'src/types';
-import { createSSEObservable } from './create-sse-observable';
+import { createSseObservable } from './create-sse-observable';
 import {
   concatMap,
   delay,
@@ -53,10 +53,10 @@ export default class AsgardServiceClient {
     this.eventEmitter = new EventEmitter();
   }
 
-  on<Action extends FetchSSEAction, Event extends EventType>(
+  on<Action extends FetchSseAction, Event extends EventType>(
     action: Action,
     event: Event,
-    listener: (data: SSEResponse<Event>) => void
+    listener: (data: SseResponse<Event>) => void
   ): void {
     const eventKey = `${action}:${event}`;
 
@@ -73,10 +73,10 @@ export default class AsgardServiceClient {
   ): Subscription {
     options?.onStart?.();
 
-    return createSSEObservable({
+    return createSseObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
-      payload: Object.assign({ action: FetchSSEAction.RESET_CHANNEL }, payload),
+      payload: Object.assign({ action: FetchSseAction.RESET_CHANNEL }, payload),
     })
       .pipe(
         takeUntil(this.destroy$),
@@ -85,7 +85,7 @@ export default class AsgardServiceClient {
       .subscribe({
         next: (esm) => {
           this.eventEmitter.emit(
-            `${FetchSSEAction.RESET_CHANNEL}:${esm.event}`,
+            `${FetchSseAction.RESET_CHANNEL}:${esm.event}`,
             JSON.parse(esm.data)
           );
         },
@@ -98,10 +98,10 @@ export default class AsgardServiceClient {
   ): Subscription {
     options?.onStart?.();
 
-    return createSSEObservable({
+    return createSseObservable({
       endpoint: this.endpoint,
       webhookToken: this.webhookToken,
-      payload: Object.assign({ action: FetchSSEAction.NONE }, payload),
+      payload: Object.assign({ action: FetchSseAction.NONE }, payload),
     })
       .pipe(
         concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),
@@ -111,7 +111,7 @@ export default class AsgardServiceClient {
       .subscribe({
         next: (esm) => {
           this.eventEmitter.emit(
-            `${FetchSSEAction.NONE}:${esm.event}`,
+            `${FetchSseAction.NONE}:${esm.event}`,
             JSON.parse(esm.data)
           );
         },

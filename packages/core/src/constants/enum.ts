@@ -1,4 +1,4 @@
-export enum FetchSSEAction {
+export enum FetchSseAction {
   RESET_CHANNEL = 'RESET_CHANNEL',
   NONE = 'NONE',
 }
