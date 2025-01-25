@@ -1,4 +1,4 @@
-import { ConversationMessage } from '@asgard-js/react';
+import { ConversationMessage } from '@asgard-js/core';
 
 export function createTextTemplateExample(): ConversationMessage {
   return {

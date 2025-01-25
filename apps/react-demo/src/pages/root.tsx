@@ -1,5 +1,6 @@
-import { Chatbot, ConversationMessage } from '@asgard-js/react';
+import { Chatbot } from '@asgard-js/react';
 import { ReactNode, useState } from 'react';
+import { ConversationMessage } from '@asgard-js/core';
 import {
   createButtonTemplateExample,
   createCarouselTemplateExample,
@@ -7,34 +8,30 @@ import {
   createTextTemplateExample,
 } from './const';
 
-const {
-  VITE_BASE_URL,
-  VITE_NAMESPACE,
-  VITE_BOT_PROVIDER_NAME,
-  VITE_WEBHOOK_TOKEN,
-} = import.meta.env;
+const { VITE_DEV_ENDPOINT, VITE_API_KEY } = import.meta.env;
 
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
 
-  const [initConversation] = useState<ConversationMessage[]>([
-    createTextTemplateExample(),
-    createHintTemplateExample(),
-    createButtonTemplateExample(),
-    createCarouselTemplateExample(),
+  const [initMessages] = useState<ConversationMessage[]>([
+    // createTextTemplateExample(),
+    // createHintTemplateExample(),
+    // createButtonTemplateExample(),
+    // createCarouselTemplateExample(),
   ]);
 
   return (
     <div>
       <Chatbot
         config={{
-          baseUrl: VITE_BASE_URL,
-          namespace: VITE_NAMESPACE,
-          botProviderName: VITE_BOT_PROVIDER_NAME,
-          webhookToken: VITE_WEBHOOK_TOKEN,
+          endpoint: VITE_DEV_ENDPOINT,
+          apiKey: VITE_API_KEY,
         }}
         customChannelId={customChannelId}
-        initConversation={initConversation}
+        initMessages={initMessages}
+        options={{
+          showDebugMessage: true,
+        }}
       />
     </div>
   );

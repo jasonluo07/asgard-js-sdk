@@ -38,6 +38,7 @@
     "src/**/*.jsx",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "../../packages/core/src/**/*.ts",
     "../../packages/react/src/**/*.ts",
     "../../packages/react/src/**/*.tsx"
   ],
