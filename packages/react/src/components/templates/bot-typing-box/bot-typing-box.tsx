@@ -5,13 +5,22 @@ import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './bot-typing-box.module.scss';
 import { ResizeObserverBox } from './resize-observer-box';
+import { ConversationBotMessage } from '@asgard-js/core';
+import { useDebounce } from 'src/hooks';
 
-export function BotTypingBox(): ReactNode {
-  const { isTyping, displayText, messageBoxBottomRef } = useAsgardContext();
+interface BotTypingBoxProps {
+  typingMessage: ConversationBotMessage;
+}
+
+export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
+  const { typingMessage } = props;
+  const { messageBoxBottomRef } = useAsgardContext();
 
   const onResize = useCallback(() => {
     messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messageBoxBottomRef]);
+
+  const isTyping = useDebounce(typingMessage?.isTyping, 500);
 
   if (!isTyping) return null;
 
@@ -21,7 +30,7 @@ export function BotTypingBox(): ReactNode {
       <TemplateBoxContent time={new Date()}>
         <div className={clsx(styles.text, styles['text--bot'])}>
           <ResizeObserverBox onResize={onResize}>
-            <span>{displayText ?? ''}</span>
+            <span>{typingMessage?.typingText ?? ''}</span>
             {isTyping && (
               <span className={styles['typing-indicator']}>
                 <div className={styles.dot} />

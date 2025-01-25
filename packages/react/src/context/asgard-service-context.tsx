@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { AsgardServiceClient, ClientConfig } from '@asgard-js/core';
+import {
+  AsgardServiceClient,
+  ClientConfig,
+  ConversationBotMessage,
+  ConversationMessage,
+} from '@asgard-js/core';
 import {
   createContext,
   DetailedHTMLProps,
@@ -11,29 +16,26 @@ import {
   useRef,
 } from 'react';
 import {
-  ConversationMessage,
   useAsgardServiceClient,
   useChannel,
   UseChannelReturn,
-  useChatbotTyping,
-  UseChatbotTypingReturn,
 } from 'src/hooks';
 
-interface AsgardServiceContextType
-  extends Pick<UseChatbotTypingReturn, 'isTyping' | 'displayText'>,
-    Pick<UseChannelReturn, 'conversation' | 'sendMessage'> {
+interface AsgardServiceContextType {
   client: AsgardServiceClient | null;
+  isConnecting: boolean;
+  messages: Map<string, ConversationMessage> | null;
+  typingMessages: Map<string, ConversationBotMessage> | null;
   messageBoxBottomRef: RefObject<HTMLDivElement>;
-  isConnectionProcessing: boolean;
+  sendMessage: UseChannelReturn['sendMessage'];
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   client: null,
-  isTyping: false,
-  displayText: null,
+  isConnecting: false,
+  messages: null,
+  typingMessages: null,
   messageBoxBottomRef: { current: null },
-  isConnectionProcessing: false,
-  conversation: [],
   sendMessage: () => {},
 });
 
@@ -44,7 +46,8 @@ interface AsgardServiceContextProviderProps
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
-  initConversation?: ConversationMessage[];
+  options?: { showDebugMessage?: boolean };
+  initMessages?: ConversationMessage[];
 }
 
 export function AsgardServiceContextProvider(
@@ -56,7 +59,8 @@ export function AsgardServiceContextProvider(
     customChannelId,
     customMessageId,
     delayTime,
-    initConversation,
+    initMessages,
+    options,
     ...divProps
   } = props;
 
@@ -64,37 +68,23 @@ export function AsgardServiceContextProvider(
 
   const client = useAsgardServiceClient({ config });
 
-  const { isTyping, displayText, startTyping, onTyping, stopTyping } =
-    useChatbotTyping();
-
-  const { sendMessage, conversation, isConnectionProcessing } = useChannel({
+  const { messages, typingMessages, sendMessage } = useChannel({
     client,
     customChannelId,
-    startTyping,
-    onTyping,
-    stopTyping,
-    initConversation,
+    initMessages,
+    options,
   });
 
   const contextValue = useMemo(
     () => ({
       client,
-      isTyping,
-      displayText,
-      messageBoxBottomRef,
-      isConnectionProcessing,
-      conversation,
+      isConnecting: client?.isConnecting ?? false,
+      messages,
+      typingMessages,
       sendMessage,
+      messageBoxBottomRef,
     }),
-    [
-      client,
-      conversation,
-      displayText,
-      messageBoxBottomRef,
-      isConnectionProcessing,
-      isTyping,
-      sendMessage,
-    ]
+    [client, messages, sendMessage, typingMessages]
   );
 
   return (

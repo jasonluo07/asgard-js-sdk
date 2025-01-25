@@ -9,7 +9,7 @@ import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnectionProcessing } = useAsgardContext();
+  const { sendMessage, isConnecting } = useAsgardContext();
 
   const [value, setValue] = useState('');
 
@@ -34,7 +34,7 @@ export function ChatbotFooter(): ReactNode {
     <div className={styles.chatbot_footer}>
       <input
         className={styles.chatbot_input}
-        disabled={isConnectionProcessing}
+        disabled={isConnecting}
         value={value}
         placeholder="Enter message"
         onChange={onChange}

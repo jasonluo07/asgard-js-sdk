@@ -1,12 +1,11 @@
 import { ReactNode } from 'react';
-import { ConversationMessage } from 'src/hooks';
+import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 import {
   ButtonTemplate,
   CarouselTemplate,
   HintTemplate,
   TextTemplate,
 } from '../templates';
-import { MessageTemplateType } from '@asgard-js/core';
 
 interface ConversationMessageRendererProps {
   conversationMessage: ConversationMessage;

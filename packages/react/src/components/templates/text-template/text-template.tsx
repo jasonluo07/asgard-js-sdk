@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import clsx from 'clsx';
-import { ConversationMessage } from 'src/hooks';
+import { ConversationMessage } from '@asgard-js/core';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import styles from './text-template.module.scss';
 import { Avatar } from '../avatar';

@@ -1,10 +1,12 @@
 import { ReactNode } from 'react';
-import { ConversationBotMessage } from 'src/hooks';
 import { TemplateBox } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './carousel-template.module.scss';
 import { Card } from '../button-template/card';
-import { CarouselMessageTemplate } from '@asgard-js/core';
+import {
+  CarouselMessageTemplate,
+  ConversationBotMessage,
+} from '@asgard-js/core';
 import { Time } from '../time';
 
 interface CarouselTemplateProps {

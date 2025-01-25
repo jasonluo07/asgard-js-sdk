@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
 import styles from './hint-template.module.scss';
-import { ConversationMessage } from 'src/hooks';
 import { formatTime } from 'src/utils';
-import { MessageTemplateType } from '@asgard-js/core';
+import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 
 interface HintTemplateProps {
   conversationMessage: ConversationMessage;

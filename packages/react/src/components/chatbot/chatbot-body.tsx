@@ -5,21 +5,23 @@ import { ConversationMessageRenderer } from '../conversation-message-renderer';
 import { BotTypingBox } from '../templates';
 
 export function ChatbotBody(): ReactNode {
-  const { conversation, messageBoxBottomRef } = useAsgardContext();
+  const { messages, typingMessages, messageBoxBottomRef } = useAsgardContext();
 
   useEffect(() => {
     messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation, messageBoxBottomRef]);
+  }, [messages, messageBoxBottomRef]);
 
   return (
     <div className={styles.chatbot_body}>
-      {conversation.map((message) => (
+      {Array.from(messages?.values() ?? []).map((message) => (
         <ConversationMessageRenderer
           key={crypto.randomUUID()}
           conversationMessage={message}
         />
       ))}
-      <BotTypingBox />
+      {Array.from(typingMessages?.values() ?? []).map((typingMessage) => (
+        <BotTypingBox key={crypto.randomUUID()} typingMessage={typingMessage} />
+      ))}
       <div ref={messageBoxBottomRef} />
     </div>
   );
