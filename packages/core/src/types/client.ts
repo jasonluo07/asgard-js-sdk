@@ -1,10 +1,10 @@
-import { FetchSseAction } from 'src/constants/enum';
+import { EventType, FetchSseAction } from 'src/constants/enum';
+import { Message, SseResponse } from './sse-response';
 
 export interface ClientConfig {
-  baseUrl: string;
-  namespace: string;
-  botProviderName: string;
-  webhookToken: string;
+  endpoint: string;
+  apiKey: string;
+  webhookToken?: string;
 }
 
 export interface FetchSsePayload {
@@ -15,14 +15,43 @@ export interface FetchSsePayload {
 }
 
 export interface ConnectionOptions {
-  onStart?: () => void;
-  onCompleted?: () => void;
+  onSseStart?: () => void;
+  onSseMessage?: (response: SseResponse<EventType>) => void;
+  onSseError?: (error: unknown) => void;
+  onSseCompleted?: () => void;
 }
 
-export type SetChannelPayload = Omit<FetchSsePayload, 'action'>;
+export type SetChannelPayload = Pick<
+  FetchSsePayload,
+  'customChannelId' | 'customMessageId'
+>;
 export type SetChannelOptions = ConnectionOptions;
 
-export type SendMessagePayload = Omit<FetchSsePayload, 'action'>;
+export type SendMessagePayload = Pick<
+  FetchSsePayload,
+  'customChannelId' | 'customMessageId' | 'text'
+>;
 export type SendMessageOptions = ConnectionOptions & {
   delayTime?: number;
 };
+
+export type ConversationUserMessage = {
+  type: 'user';
+  messageId: string;
+  text: string;
+  time: Date;
+};
+
+export type ConversationBotMessage = {
+  type: 'bot';
+  messageId: string;
+  eventType: EventType;
+  isTyping: boolean;
+  typingText: string | null;
+  message: Message;
+  time: Date;
+};
+
+export type ConversationMessage =
+  | ConversationUserMessage
+  | ConversationBotMessage;

@@ -1,124 +1,100 @@
-import EventEmitter from 'events';
-import { EventType, FetchSseAction } from 'src/constants/enum';
+import { FetchSseAction } from 'src/constants/enum';
 import {
   ClientConfig,
   SendMessageOptions,
   SendMessagePayload,
   SetChannelOptions,
   SetChannelPayload,
-  SseResponse,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
-import {
-  concatMap,
-  delay,
-  finalize,
-  of,
-  Subject,
-  Subscription,
-  takeUntil,
-} from 'rxjs';
+import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
 
 export default class AsgardServiceClient {
-  baseUrl: string;
-  namespace: string;
-  botProviderName: string;
-  endpoint: string;
-  private webhookToken: string;
-  private eventEmitter: EventEmitter;
+  public isConnecting = false;
+
+  private apiKey: string;
+  private endpoint: string;
   private destroy$ = new Subject<void>();
 
   constructor(config: ClientConfig) {
-    if (!config.baseUrl) {
-      throw new Error('baseUrl must be required');
+    if (!config.apiKey) {
+      throw new Error('apiKey must be required');
     }
 
-    if (!config.namespace) {
-      throw new Error('namespace must be required');
-    }
-
-    if (!config.botProviderName) {
+    if (!config.endpoint) {
       throw new Error('botProviderName must be required');
     }
 
-    if (!config.webhookToken) {
-      throw new Error('webhookToken must be required');
-    }
-
-    this.baseUrl = config.baseUrl;
-    this.namespace = config.namespace;
-    this.botProviderName = config.botProviderName;
-    this.webhookToken = config.webhookToken;
-    this.endpoint = `${this.baseUrl}/generic/ns/${this.namespace}/bot-provider/${this.botProviderName}/message/sse`;
-    this.eventEmitter = new EventEmitter();
+    this.apiKey = config.apiKey;
+    this.endpoint = config.endpoint;
   }
 
-  on<Action extends FetchSseAction, Event extends EventType>(
-    action: Action,
-    event: Event,
-    listener: (data: SseResponse<Event>) => void
-  ): void {
-    const eventKey = `${action}:${event}`;
+  setChannel(payload: SetChannelPayload, options?: SetChannelOptions): void {
+    options?.onSseStart?.();
+    this.isConnecting = true;
 
-    if (this.eventEmitter.listeners(eventKey).length > 0) {
-      this.eventEmitter.removeAllListeners(eventKey);
-    }
-
-    this.eventEmitter.on(eventKey, listener);
-  }
-
-  setChannel(
-    payload: SetChannelPayload,
-    options?: SetChannelOptions
-  ): Subscription {
-    options?.onStart?.();
-
-    return createSseObservable({
+    createSseObservable({
+      apiKey: this.apiKey,
       endpoint: this.endpoint,
-      webhookToken: this.webhookToken,
-      payload: Object.assign({ action: FetchSseAction.RESET_CHANNEL }, payload),
+      payload: {
+        action: FetchSseAction.RESET_CHANNEL,
+        customChannelId: payload.customChannelId,
+        customMessageId: payload?.customMessageId,
+        text: '',
+      },
     })
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => options?.onCompleted?.())
-      )
+      .pipe(takeUntil(this.destroy$), retry(3))
       .subscribe({
-        next: (esm) => {
-          this.eventEmitter.emit(
-            `${FetchSseAction.RESET_CHANNEL}:${esm.event}`,
-            JSON.parse(esm.data)
-          );
+        next: (response) => {
+          options?.onSseMessage?.(response);
+        },
+        error: (error) => {
+          options?.onSseError?.(error);
+          this.isConnecting = false;
+        },
+        complete: () => {
+          options?.onSseCompleted?.();
+          this.isConnecting = false;
         },
       });
   }
 
-  sendMessage(
-    payload: SendMessagePayload,
-    options?: SendMessageOptions
-  ): Subscription {
-    options?.onStart?.();
+  sendMessage(payload: SendMessagePayload, options?: SendMessageOptions): void {
+    this.isConnecting = true;
+    options?.onSseStart?.();
 
-    return createSseObservable({
+    createSseObservable({
+      apiKey: this.apiKey,
       endpoint: this.endpoint,
-      webhookToken: this.webhookToken,
-      payload: Object.assign({ action: FetchSseAction.NONE }, payload),
+      payload: {
+        action: FetchSseAction.NONE,
+        customChannelId: payload.customChannelId,
+        customMessageId: payload?.customMessageId,
+        text: payload.text,
+      },
     })
       .pipe(
         concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),
         takeUntil(this.destroy$),
-        finalize(() => options?.onCompleted?.())
+        retry(3)
       )
       .subscribe({
-        next: (esm) => {
-          this.eventEmitter.emit(
-            `${FetchSseAction.NONE}:${esm.event}`,
-            JSON.parse(esm.data)
-          );
+        next: (response) => {
+          options?.onSseMessage?.(response);
+        },
+        error: (error) => {
+          options?.onSseError?.(error);
+          this.isConnecting = false;
+        },
+        complete: () => {
+          options?.onSseCompleted?.();
+          this.isConnecting = false;
         },
       });
   }
 
   close(): void {
+    this.isConnecting = false;
     this.destroy$.next();
     this.destroy$.complete();
   }

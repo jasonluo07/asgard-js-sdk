@@ -3,26 +3,27 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from '@microsoft/fetch-event-source';
-import { FetchSsePayload } from 'src/types';
+import { FetchSsePayload, SseResponse } from 'src/types';
+import { EventType } from 'src/constants/enum';
 
 interface CreateSseObservableOptions {
   endpoint: string;
-  webhookToken: string;
+  apiKey: string;
   payload: FetchSsePayload;
 }
 
 export function createSseObservable(
   options: CreateSseObservableOptions
-): Observable<EventSourceMessage> {
-  const { endpoint, webhookToken, payload } = options;
+): Observable<SseResponse<EventType>> {
+  const { endpoint, apiKey, payload } = options;
 
-  return new Observable<EventSourceMessage>((subscriber) => {
+  return new Observable<SseResponse<EventType>>((subscriber) => {
     const controller = new AbortController();
 
     fetchEventSource(endpoint, {
       method: 'POST',
       headers: {
-        'X-Asgard-Webhook-Token': webhookToken,
+        'X-API-KEY': apiKey,
         'Content-Type': 'application/json',
       },
       body: payload ? JSON.stringify(payload) : undefined,
@@ -34,7 +35,7 @@ export function createSseObservable(
         }
       },
       onmessage: (esm: EventSourceMessage) => {
-        subscriber.next(esm);
+        subscriber.next(JSON.parse(esm.data));
       },
       onclose: () => {
         subscriber.complete();
@@ -42,6 +43,7 @@ export function createSseObservable(
       onerror: (err) => {
         subscriber.error(err);
         controller.abort();
+        throw err;
       },
     });
 
