@@ -1,3 +1,28 @@
 .chatbot_header {
-  padding: 16px;
+  .chatbot_header__content {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+.chatbot_header__title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+
+  > h4 {
+    margin: 0;
+    color: white;
+  }
+}
+
+.chatbot_header__extra {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }

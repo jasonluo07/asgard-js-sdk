@@ -13,16 +13,21 @@ export function ChatbotBody(): ReactNode {
 
   return (
     <div className={styles.chatbot_body}>
-      {Array.from(messages?.values() ?? []).map((message) => (
-        <ConversationMessageRenderer
-          key={crypto.randomUUID()}
-          conversationMessage={message}
-        />
-      ))}
-      {Array.from(typingMessages?.values() ?? []).map((typingMessage) => (
-        <BotTypingBox key={crypto.randomUUID()} typingMessage={typingMessage} />
-      ))}
-      <div ref={messageBoxBottomRef} />
+      <div className={styles.chatbot_body__content}>
+        {Array.from(messages?.values() ?? []).map((message) => (
+          <ConversationMessageRenderer
+            key={crypto.randomUUID()}
+            conversationMessage={message}
+          />
+        ))}
+        {Array.from(typingMessages?.values() ?? []).map((typingMessage) => (
+          <BotTypingBox
+            key={crypto.randomUUID()}
+            typingMessage={typingMessage}
+          />
+        ))}
+        <div ref={messageBoxBottomRef} />
+      </div>
     </div>
   );
 }
