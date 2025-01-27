@@ -45,9 +45,11 @@ export type ButtonAction =
   | {
       type: 'message';
       text: string;
+      uri?: null;
     }
   | {
       type: 'uri';
+      text?: null;
       uri: string;
     };
 
@@ -65,7 +67,7 @@ export interface ButtonMessageTemplate extends MessageTemplate {
 
 export interface CarouselMessageTemplate extends MessageTemplate {
   type: MessageTemplateType.CAROUSEL;
-  columns: Omit<ButtonMessageTemplate, 'type'>[];
+  columns: Omit<ButtonMessageTemplate, 'type' | 'quickReplies'>[];
 }
 
 export interface Message<Payload = unknown> {
