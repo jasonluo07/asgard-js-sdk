@@ -14,15 +14,17 @@ export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
 
   const [initMessages] = useState<ConversationMessage[]>([
-    // createTextTemplateExample(),
-    // createHintTemplateExample(),
-    // createButtonTemplateExample(),
-    // createCarouselTemplateExample(),
+    createTextTemplateExample(),
+    createHintTemplateExample(),
+    createButtonTemplateExample(),
+    createCarouselTemplateExample(),
   ]);
 
   return (
-    <div>
+    <div style={{ width: '100vw', height: '100vh' }}>
       <Chatbot
+        fullScreen
+        title="Chatbot"
         config={{
           endpoint: VITE_DEV_ENDPOINT,
           apiKey: VITE_API_KEY,
