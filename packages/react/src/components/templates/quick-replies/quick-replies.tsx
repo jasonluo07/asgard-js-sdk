@@ -9,7 +9,7 @@ interface QuickRepliesProps {
 export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { quickReplies } = props;
 
-  const { sendMessage } = useAsgardContext();
+  const { sendMessage, isConnecting } = useAsgardContext();
 
   const onClick = useCallback(
     (text: string) => {
@@ -25,13 +25,14 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
   return (
     <div className={styles.quick_replies_box}>
       {quickReplies.map((quickReply) => (
-        <div
+        <button
           key={quickReply.text}
           className={styles.quick_reply}
+          disabled={isConnecting}
           onClick={() => onClick(quickReply.text)}
         >
           {quickReply.text}
-        </div>
+        </button>
       ))}
     </div>
   );

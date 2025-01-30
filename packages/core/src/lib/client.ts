@@ -10,8 +10,6 @@ import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
 
 export default class AsgardServiceClient {
-  public isConnecting = false;
-
   private apiKey: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
@@ -31,7 +29,6 @@ export default class AsgardServiceClient {
 
   setChannel(payload: SetChannelPayload, options?: SetChannelOptions): void {
     options?.onSseStart?.();
-    this.isConnecting = true;
 
     createSseObservable({
       apiKey: this.apiKey,
@@ -50,17 +47,14 @@ export default class AsgardServiceClient {
         },
         error: (error) => {
           options?.onSseError?.(error);
-          this.isConnecting = false;
         },
         complete: () => {
           options?.onSseCompleted?.();
-          this.isConnecting = false;
         },
       });
   }
 
   sendMessage(payload: SendMessagePayload, options?: SendMessageOptions): void {
-    this.isConnecting = true;
     options?.onSseStart?.();
 
     createSseObservable({
@@ -84,17 +78,14 @@ export default class AsgardServiceClient {
         },
         error: (error) => {
           options?.onSseError?.(error);
-          this.isConnecting = false;
         },
         complete: () => {
           options?.onSseCompleted?.();
-          this.isConnecting = false;
         },
       });
   }
 
   close(): void {
-    this.isConnecting = false;
     this.destroy$.next();
     this.destroy$.complete();
   }

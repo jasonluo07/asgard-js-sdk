@@ -68,7 +68,7 @@ export function AsgardServiceContextProvider(
 
   const client = useAsgardServiceClient({ config });
 
-  const { messages, typingMessages, sendMessage } = useChannel({
+  const { messages, typingMessages, sendMessage, isConnecting } = useChannel({
     client,
     customChannelId,
     initMessages,
@@ -78,13 +78,13 @@ export function AsgardServiceContextProvider(
   const contextValue = useMemo(
     () => ({
       client,
-      isConnecting: client?.isConnecting ?? false,
+      isConnecting,
       messages,
       typingMessages,
       sendMessage,
       messageBoxBottomRef,
     }),
-    [client, messages, sendMessage, typingMessages]
+    [client, isConnecting, messages, sendMessage, typingMessages]
   );
 
   return (

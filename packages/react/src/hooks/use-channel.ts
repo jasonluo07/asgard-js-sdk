@@ -17,6 +17,7 @@ interface UseChannelProps {
 }
 
 export interface UseChannelReturn {
+  isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
   typingMessages: Map<string, ConversationBotMessage> | null;
   sendMessage: (text: string, customMessageId?: string) => void;
@@ -32,6 +33,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   if (!customChannelId) {
     throw new Error('Custom channel id is required');
   }
+
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const [conversation, setConversation] = useState<Conversation>(
     new Conversation({
@@ -51,6 +54,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   const sendMessage = useCallback(
     (text: string, customMessageId?: string) => {
+      setIsConnecting(true);
+
       setConversation((prevConversation) => {
         const nextConversation = prevConversation.pushMessage(
           prevConversation,
@@ -76,6 +81,9 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
                 })
               );
             },
+            onSseCompleted: () => {
+              setIsConnecting(false);
+            },
           }
         );
 
@@ -87,10 +95,11 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   return useMemo(
     () => ({
+      isConnecting,
       messages: conversation.messages,
       typingMessages: conversation.typingMessages,
       sendMessage,
     }),
-    [conversation, sendMessage]
+    [conversation, isConnecting, sendMessage]
   );
 }
