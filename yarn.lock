@@ -16,7 +16,7 @@
     "@jridgewell/trace-mapping" "^0.3.24"
 
 "@asgard-js/core@file:/Users/minghsu/workspace/asgard-js/packages/core":
-  version "0.0.1"
+  version "0.0.3"
   resolved "file:packages/core"
   dependencies:
     "@microsoft/fetch-event-source" "^2.0.1"
@@ -27,7 +27,7 @@
   resolved "file:apps/react-demo"
 
 "@asgard-js/react@file:/Users/minghsu/workspace/asgard-js/packages/react":
-  version "0.0.1"
+  version "0.0.3"
   resolved "file:packages/react"
   dependencies:
     clsx "^2.1.1"

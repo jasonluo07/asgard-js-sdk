@@ -12,7 +12,9 @@
     "test:react": "nx run @asgard-js/react:test",
     "build:react": "nx run @asgard-js/react:build",
     "watch:react": "nx build @asgard-js/react --watch",
-    "lint:packages": "nx run-many --target=lint --projects=@asgard-js/core,@asgard-js/react"
+    "lint:packages": "nx run-many --target=lint --projects=@asgard-js/core,@asgard-js/react",
+    "release:core": "nx run @asgard-js/core:nx-release-publish",
+    "release:react": "nx run @asgard-js/react:nx-release-publish"
   },
   "private": true,
   "dependencies": {
