@@ -13,6 +13,7 @@ interface ChatbotProps {
   customChannelId: string;
   initMessages?: ConversationMessage[];
   fullScreen?: boolean;
+  avatar?: string;
   options?: { showDebugMessage?: boolean };
 }
 
@@ -23,6 +24,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     customChannelId,
     initMessages,
     fullScreen = false,
+    avatar,
     options,
   } = props;
 
@@ -32,6 +34,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
         styles.chatbot_root,
         fullScreen && styles.chatbot_root__fullScreen
       )}
+      avatar={avatar}
       config={config}
       customChannelId={customChannelId}
       initMessages={initMessages}

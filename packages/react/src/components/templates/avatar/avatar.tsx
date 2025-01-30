@@ -1,7 +1,14 @@
 import { ReactNode } from 'react';
 import styles from './avatar.module.scss';
+import { useAsgardContext } from 'src/context/asgard-service-context';
 
 export function Avatar(): ReactNode {
+  const { avatar } = useAsgardContext();
+
+  if (avatar) {
+    return <img src={avatar} alt="Bot Avatar" className={styles.bot_avatar} />;
+  }
+
   return (
     <div className={styles.bot_avatar}>
       <svg

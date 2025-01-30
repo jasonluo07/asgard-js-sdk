@@ -22,6 +22,7 @@ import {
 } from 'src/hooks';
 
 interface AsgardServiceContextType {
+  avatar?: string;
   client: AsgardServiceClient | null;
   isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
@@ -31,6 +32,7 @@ interface AsgardServiceContextType {
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
+  avatar: undefined,
   client: null,
   isConnecting: false,
   messages: null,
@@ -42,6 +44,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextType>({
 interface AsgardServiceContextProviderProps
   extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
   children: ReactNode;
+  avatar?: string;
   config: ClientConfig;
   customChannelId: string;
   customMessageId?: string;
@@ -54,6 +57,7 @@ export function AsgardServiceContextProvider(
   props: AsgardServiceContextProviderProps
 ): ReactNode {
   const {
+    avatar,
     children,
     config,
     customChannelId,
@@ -77,6 +81,7 @@ export function AsgardServiceContextProvider(
 
   const contextValue = useMemo(
     () => ({
+      avatar,
       client,
       isConnecting,
       messages,
@@ -84,7 +89,7 @@ export function AsgardServiceContextProvider(
       sendMessage,
       messageBoxBottomRef,
     }),
-    [client, isConnecting, messages, sendMessage, typingMessages]
+    [avatar, client, isConnecting, messages, sendMessage, typingMessages]
   );
 
   return (
