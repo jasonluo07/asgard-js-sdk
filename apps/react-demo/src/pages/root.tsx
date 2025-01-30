@@ -2,22 +2,22 @@ import { Chatbot } from '@asgard-js/react';
 import { ReactNode, useState } from 'react';
 import { ConversationMessage } from '@asgard-js/core';
 import {
-  createButtonTemplateExample,
-  createCarouselTemplateExample,
-  createHintTemplateExample,
+  // createButtonTemplateExample,
+  // createCarouselTemplateExample,
+  // createHintTemplateExample,
   createTextTemplateExample,
 } from './const';
 
-const { VITE_DEV_ENDPOINT, VITE_API_KEY } = import.meta.env;
+const { VITE_ENDPOINT, VITE_API_KEY } = import.meta.env;
 
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
 
   const [initMessages] = useState<ConversationMessage[]>([
     createTextTemplateExample(),
-    createHintTemplateExample(),
-    createButtonTemplateExample(),
-    createCarouselTemplateExample(),
+    // createHintTemplateExample(),
+    // createButtonTemplateExample(),
+    // createCarouselTemplateExample(),
   ]);
 
   return (
@@ -26,14 +26,12 @@ export function Root(): ReactNode {
         fullScreen
         title="Chatbot"
         config={{
-          endpoint: VITE_DEV_ENDPOINT,
+          endpoint: VITE_ENDPOINT,
           apiKey: VITE_API_KEY,
         }}
+        avatar="./showtime.webp"
         customChannelId={customChannelId}
         initMessages={initMessages}
-        options={{
-          showDebugMessage: true,
-        }}
       />
     </div>
   );
