@@ -1,5 +1,9 @@
 .chatbot_footer {
   .chatbot_footer__content {
+    display: grid;
+    gap: 8px;
+    align-items: flex-end;
+    grid-template-columns: auto max-content;
     margin: 0 auto;
     max-width: 1200px;
     padding: 16px;
@@ -7,10 +11,9 @@
   }
 }
 
-
 .chatbot_textarea {
   font: inherit;
-  width: calc(100% - 20px);
+  font-size: 16px;
   height: 20px;
   max-height: 240px;
   padding: 8px;
@@ -21,4 +24,20 @@
   color: rgba(140, 140, 140, 1);
   resize: none;
   overflow: hidden;
+}
+
+.chatbot_submit_button {
+  font: inherit;
+  max-height: 38px;
+  font-size: 16px;
+  border: none;
+  padding: 8px 12px;
+  background: rgba(71, 103, 235, 1);
+  border-radius: 2px;
+  color: white;
+
+  &.chatbot_submit_button__disabled {
+    background: rgba(67, 67, 67, 1);
+    color: rgba(140, 140, 140, 1);
+  }
 }
