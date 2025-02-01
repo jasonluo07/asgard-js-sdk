@@ -1,7 +1,6 @@
 import {
   AsgardServiceClient,
   Conversation,
-  ConversationBotMessage,
   ConversationMessage,
   EventType,
   SseResponse,
@@ -19,7 +18,6 @@ interface UseChannelProps {
 export interface UseChannelReturn {
   isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
-  typingMessages: Map<string, ConversationBotMessage> | null;
   sendMessage: (text: string, customMessageId?: string) => void;
 }
 
@@ -41,7 +39,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       messages: new Map(
         initMessages?.map((message) => [message.messageId, message])
       ),
-      typingMessages: null,
     })
   );
 
@@ -97,7 +94,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     () => ({
       isConnecting,
       messages: conversation.messages,
-      typingMessages: conversation.typingMessages,
       sendMessage,
     }),
     [conversation, isConnecting, sendMessage]

@@ -2,10 +2,9 @@ import { ReactNode, useEffect } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from '../conversation-message-renderer';
-import { BotTypingBox } from '../templates';
 
 export function ChatbotBody(): ReactNode {
-  const { messages, typingMessages, messageBoxBottomRef } = useAsgardContext();
+  const { messages, messageBoxBottomRef } = useAsgardContext();
 
   useEffect(() => {
     messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -16,14 +15,8 @@ export function ChatbotBody(): ReactNode {
       <div className={styles.chatbot_body__content}>
         {Array.from(messages?.values() ?? []).map((message) => (
           <ConversationMessageRenderer
-            key={crypto.randomUUID()}
-            conversationMessage={message}
-          />
-        ))}
-        {Array.from(typingMessages?.values() ?? []).map((typingMessage) => (
-          <BotTypingBox
-            key={crypto.randomUUID()}
-            typingMessage={typingMessage}
+            key={message.messageId}
+            message={message}
           />
         ))}
         <div ref={messageBoxBottomRef} />

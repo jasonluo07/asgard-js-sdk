@@ -3,22 +3,24 @@ import { ReactNode } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import { Card } from './card';
+import { useAsgardContext } from 'src/context/asgard-service-context';
 
 interface ButtonTemplateProps {
-  conversationMessage: ConversationBotMessage;
+  message: ConversationBotMessage;
 }
 
 export function ButtonTemplate(props: ButtonTemplateProps): ReactNode {
-  const { conversationMessage } = props;
+  const { message } = props;
 
-  const template = conversationMessage.message
-    .template as ButtonMessageTemplate;
+  const { avatar } = useAsgardContext();
+
+  const template = message.message.template as ButtonMessageTemplate;
 
   return (
     <TemplateBox type="bot" direction="horizontal">
-      <Avatar />
+      <Avatar avatar={avatar} />
       <TemplateBoxContent
-        time={conversationMessage.time}
+        time={message.time}
         quickReplies={template?.quickReplies}
       >
         <Card template={template} />

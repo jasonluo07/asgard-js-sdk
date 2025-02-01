@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 import {
+  BotTypingBox,
   ButtonTemplate,
   CarouselTemplate,
   HintTemplate,
@@ -8,30 +9,37 @@ import {
 } from '../templates';
 
 interface ConversationMessageRendererProps {
-  conversationMessage: ConversationMessage;
+  message: ConversationMessage;
 }
 
 export function ConversationMessageRenderer(
   props: ConversationMessageRendererProps
 ): ReactNode {
-  const { conversationMessage } = props;
+  const { message } = props;
 
-  if (conversationMessage.type === 'user') {
-    return <TextTemplate conversationMessage={conversationMessage} />;
+  if (message.type === 'user') {
+    return <TextTemplate message={message} />;
   }
 
-  const template = conversationMessage.message.template;
+  if (message.isTyping) {
+    return (
+      <BotTypingBox
+        isTyping={message.isTyping}
+        typingText={message.typingText}
+      />
+    );
+  }
 
-  switch (template?.type) {
+  switch (message.message.template?.type) {
     case MessageTemplateType.TEXT:
-      return <TextTemplate conversationMessage={conversationMessage} />;
+      return <TextTemplate message={message} />;
     case MessageTemplateType.HINT:
-      return <HintTemplate conversationMessage={conversationMessage} />;
+      return <HintTemplate message={message} />;
     case MessageTemplateType.BUTTON:
-      return <ButtonTemplate conversationMessage={conversationMessage} />;
+      return <ButtonTemplate message={message} />;
     case MessageTemplateType.CAROUSEL:
-      return <CarouselTemplate conversationMessage={conversationMessage} />;
+      return <CarouselTemplate message={message} />;
     default:
-      return <div>Unknown template</div>;
+      return <div />;
   }
 }

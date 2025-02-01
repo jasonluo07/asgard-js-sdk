@@ -4,21 +4,21 @@ import { formatTime } from 'src/utils';
 import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 
 interface HintTemplateProps {
-  conversationMessage: ConversationMessage;
+  message: ConversationMessage;
 }
 
 export function HintTemplate(props: HintTemplateProps): ReactNode {
-  const { conversationMessage } = props;
+  const { message } = props;
 
-  if (conversationMessage.type === 'user') return null;
+  if (message.type === 'user') return null;
 
-  const template = conversationMessage.message.template;
+  const template = message.message.template;
 
   if (template.type !== MessageTemplateType.HINT) return null;
 
   return (
     <div className={styles.hint_root}>
-      <div className={styles.time}>{formatTime(conversationMessage.time)}</div>
+      <div className={styles.time}>{formatTime(message.time)}</div>
       {template.text}
     </div>
   );

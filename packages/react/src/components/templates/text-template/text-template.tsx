@@ -5,34 +5,37 @@ import { TemplateBox, TemplateBoxContent } from '../template-box';
 import styles from './text-template.module.scss';
 import { Avatar } from '../avatar';
 import { Time } from '../time';
+import { useAsgardContext } from 'src/context/asgard-service-context';
 
 interface TextTemplateProps {
-  conversationMessage: ConversationMessage;
+  message: ConversationMessage;
 }
 
 export function TextTemplate(props: TextTemplateProps): ReactNode {
-  const { conversationMessage } = props;
+  const { message } = props;
 
-  if (conversationMessage.type === 'user') {
+  const { avatar } = useAsgardContext();
+
+  if (message.type === 'user') {
     return (
       <TemplateBox type="user" direction="horizontal">
         <div className={clsx(styles.text, styles['text--user'])}>
-          {conversationMessage.text}
+          {message.text}
         </div>
-        <Time time={conversationMessage.time} />
+        <Time time={message.time} />
       </TemplateBox>
     );
   }
 
   return (
     <TemplateBox type="bot" direction="horizontal">
-      <Avatar />
+      <Avatar avatar={avatar} />
       <TemplateBoxContent
-        time={conversationMessage.time}
-        quickReplies={conversationMessage.message.template?.quickReplies}
+        time={message.time}
+        quickReplies={message.message.template?.quickReplies}
       >
         <div className={clsx(styles.text, styles['text--bot'])}>
-          {conversationMessage.message.text}
+          {message.message.text}
         </div>
       </TemplateBoxContent>
     </TemplateBox>

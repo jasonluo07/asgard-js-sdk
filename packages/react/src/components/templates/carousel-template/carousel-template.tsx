@@ -8,26 +8,28 @@ import {
   ConversationBotMessage,
 } from '@asgard-js/core';
 import { Time } from '../time';
+import { useAsgardContext } from 'src/context/asgard-service-context';
 
 interface CarouselTemplateProps {
-  conversationMessage: ConversationBotMessage;
+  message: ConversationBotMessage;
 }
 
 export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
-  const { conversationMessage } = props;
+  const { message } = props;
 
-  const template = conversationMessage.message
-    .template as CarouselMessageTemplate;
+  const { avatar } = useAsgardContext();
+
+  const template = message.message.template as CarouselMessageTemplate;
 
   return (
     <TemplateBox type="bot" direction="vertical">
-      <Avatar />
+      <Avatar avatar={avatar} />
       <div className={styles.carousel_root}>
         {template.columns?.map((column, index) => (
           <Card key={index} template={column} />
         ))}
       </div>
-      <Time className={styles.carousel_time} time={conversationMessage.time} />
+      <Time className={styles.carousel_time} time={message.time} />
     </TemplateBox>
   );
 }

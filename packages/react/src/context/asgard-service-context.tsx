@@ -26,7 +26,6 @@ interface AsgardServiceContextType {
   client: AsgardServiceClient | null;
   isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
-  typingMessages: Map<string, ConversationBotMessage> | null;
   messageBoxBottomRef: RefObject<HTMLDivElement>;
   sendMessage: UseChannelReturn['sendMessage'];
 }
@@ -36,7 +35,6 @@ export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   client: null,
   isConnecting: false,
   messages: null,
-  typingMessages: null,
   messageBoxBottomRef: { current: null },
   sendMessage: () => {},
 });
@@ -72,7 +70,7 @@ export function AsgardServiceContextProvider(
 
   const client = useAsgardServiceClient({ config });
 
-  const { messages, typingMessages, sendMessage, isConnecting } = useChannel({
+  const { messages, sendMessage, isConnecting } = useChannel({
     client,
     customChannelId,
     initMessages,
@@ -85,11 +83,10 @@ export function AsgardServiceContextProvider(
       client,
       isConnecting,
       messages,
-      typingMessages,
       sendMessage,
       messageBoxBottomRef,
     }),
-    [avatar, client, isConnecting, messages, sendMessage, typingMessages]
+    [avatar, client, isConnecting, messages, sendMessage]
   );
 
   return (

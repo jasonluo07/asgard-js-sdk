@@ -1,39 +1,26 @@
 import { EventType } from 'src/constants/enum';
-import {
-  ConversationBotMessage,
-  ConversationMessage,
-  SseResponse,
-} from 'src/types';
+import { ConversationMessage, SseResponse } from 'src/types';
 
 interface IConversation {
   messages: Map<string, ConversationMessage> | null;
-  typingMessages: Map<string, ConversationBotMessage> | null;
 }
 
 export default class Conversation implements IConversation {
-  public messages: Map<string, ConversationMessage> | null;
-  public typingMessages: Map<string, ConversationBotMessage> | null = null;
+  public messages: Map<string, ConversationMessage> | null = null;
 
-  constructor({ messages, typingMessages }: IConversation) {
+  constructor({ messages }: IConversation) {
     this.messages = messages;
-    this.typingMessages = typingMessages;
   }
 
   resetConversation(): Conversation {
-    return new Conversation({
-      messages: null,
-      typingMessages: null,
-    });
+    return new Conversation({ messages: null });
   }
 
   pushMessage(prev: Conversation, message: ConversationMessage): Conversation {
     const messages = new Map(prev.messages);
     messages.set(message.messageId, message);
 
-    return new Conversation({
-      messages,
-      typingMessages: prev.typingMessages,
-    });
+    return new Conversation({ messages });
   }
 
   onMessage(
@@ -62,8 +49,6 @@ export default class Conversation implements IConversation {
           response as SseResponse<EventType.MESSAGE_COMPLETE>,
           { showDebugMessage }
         );
-      case EventType.DONE:
-        return prev.onMessageDone(prev);
       default:
         return prev;
     }
@@ -75,19 +60,16 @@ export default class Conversation implements IConversation {
     options: { showDebugMessage: boolean }
   ): Conversation {
     const message = response.fact.messageStart.message;
-    const typingMessages = new Map(prev.typingMessages);
+    const messages = new Map(prev.messages);
 
     if (
       (message.isDebug && !options.showDebugMessage) ||
-      typingMessages?.has(message.messageId)
+      messages?.has(message.messageId)
     ) {
-      return new Conversation({
-        messages: prev.messages,
-        typingMessages,
-      });
+      return new Conversation({ messages });
     }
 
-    typingMessages.set(message.messageId, {
+    messages.set(message.messageId, {
       type: 'bot',
       eventType: EventType.MESSAGE_START,
       isTyping: true,
@@ -97,10 +79,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return new Conversation({
-      messages: prev.messages,
-      typingMessages,
-    });
+    return new Conversation({ messages });
   }
 
   onMessageDelta(
@@ -111,26 +90,21 @@ export default class Conversation implements IConversation {
     const message = response.fact.messageDelta.message;
 
     const messages = new Map(prev.messages);
-    const typingMessages = new Map(prev.typingMessages);
 
-    const currentTypingMessage = typingMessages.get(message.messageId);
+    const currentMessage = messages.get(message.messageId);
+
+    if (currentMessage?.type === 'user') return prev;
 
     if (
       (message.isDebug && !options.showDebugMessage) ||
-      messages.has(message.messageId) ||
-      currentTypingMessage?.eventType === EventType.MESSAGE_COMPLETE
+      currentMessage?.eventType === EventType.MESSAGE_COMPLETE
     ) {
-      return new Conversation({
-        messages: prev.messages,
-        typingMessages,
-      });
+      return new Conversation({ messages });
     }
 
-    const typingText = `${currentTypingMessage?.typingText ?? ''}${
-      message.text
-    }`;
+    const typingText = `${currentMessage?.typingText ?? ''}${message.text}`;
 
-    typingMessages.set(message.messageId, {
+    messages.set(message.messageId, {
       type: 'bot',
       eventType: EventType.MESSAGE_DELTA,
       isTyping: true,
@@ -140,10 +114,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return new Conversation({
-      messages: prev.messages,
-      typingMessages,
-    });
+    return new Conversation({ messages });
   }
 
   onMessageComplete(
@@ -154,13 +125,9 @@ export default class Conversation implements IConversation {
     const message = response.fact.messageComplete.message;
 
     const messages = new Map(prev.messages);
-    const typingMessages = new Map(prev.typingMessages);
 
     if (message.isDebug && !options.showDebugMessage) {
-      return new Conversation({
-        messages,
-        typingMessages,
-      });
+      return new Conversation({ messages });
     }
 
     messages.set(message.messageId, {
@@ -173,28 +140,6 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    typingMessages.delete(message.messageId);
-
-    return new Conversation({
-      messages,
-      typingMessages,
-    });
-  }
-
-  onMessageDone(prev: Conversation): Conversation {
-    const messages = new Map(prev.messages);
-    const typingMessages = new Map(prev.typingMessages);
-
-    typingMessages.forEach((message, key) => {
-      if (message.eventType === EventType.MESSAGE_COMPLETE) {
-        messages.set(message.messageId, message);
-        typingMessages.delete(key);
-      }
-    });
-
-    return new Conversation({
-      messages: prev.messages,
-      typingMessages,
-    });
+    return new Conversation({ messages });
   }
 }
