@@ -27,5 +27,9 @@
   "main": "./dist/index.js",
   "dependencies": {
     "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "@types/dom-speech-recognition": "^0.0.4",
+    "vite-plugin-svgr": "^4.3.0"
   }
 }

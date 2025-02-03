@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
+import svgr from 'vite-plugin-svgr';
 import * as path from 'path';
 
 export default defineConfig({
@@ -14,6 +15,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    svgr(),
     dts({
       entryRoot: 'src',
       tsconfigPath: path.join(__dirname, 'tsconfig.lib.json'),

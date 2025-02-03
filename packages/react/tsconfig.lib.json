@@ -10,6 +10,8 @@
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts",
+      "@types/dom-speech-recognition",
+      "vite-plugin-svgr/client",
       "vite/client"
     ],
     "jsx": "react-jsx",
