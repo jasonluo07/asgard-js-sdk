@@ -6,6 +6,7 @@ import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import styles from './chatbot.module.scss';
+import { ChatbotLoading } from './chatbot-loading/chatbot-loading';
 
 interface ChatbotProps {
   title: string;
@@ -40,6 +41,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
       initMessages={initMessages}
       options={options}
     >
+      <ChatbotLoading />
       <ChatbotHeader title={title} />
       <ChatbotBody />
       <ChatbotFooter />
