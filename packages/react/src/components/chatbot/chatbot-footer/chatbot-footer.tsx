@@ -9,6 +9,8 @@ import {
 } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
+import SendSvg from 'src/icons/send.svg?react';
+import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 
 export function ChatbotFooter(): ReactNode {
@@ -36,6 +38,17 @@ export function ChatbotFooter(): ReactNode {
     []
   );
 
+  const onSubmit = useCallback(() => {
+    if (!isComposing && !isConnecting) {
+      sendMessage(value);
+      setValue('');
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '20px';
+      }
+    }
+  }, [isComposing, isConnecting, sendMessage, value]);
+
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
       if (event.key === 'Enter' && !isComposing && !isConnecting) {
@@ -49,17 +62,6 @@ export function ChatbotFooter(): ReactNode {
     },
     [isComposing, isConnecting, sendMessage, value]
   );
-
-  const onSubmit = useCallback(() => {
-    if (!isComposing && !isConnecting) {
-      sendMessage(value);
-      setValue('');
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '20px';
-      }
-    }
-  }, [isComposing, isConnecting, sendMessage, value]);
 
   return (
     <div className={styles.chatbot_footer}>
@@ -76,16 +78,26 @@ export function ChatbotFooter(): ReactNode {
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
         />
-        <button
-          className={clsx(
-            styles.chatbot_submit_button,
-            disabled && styles.chatbot_submit_button__disabled
-          )}
-          disabled={disabled}
-          onClick={onSubmit}
-        >
-          送出
-        </button>
+        {value ? (
+          <button
+            className={clsx(
+              styles.chatbot_submit_button,
+              disabled && styles.chatbot_submit_button__disabled
+            )}
+            disabled={disabled}
+            onClick={onSubmit}
+          >
+            <SendSvg />
+          </button>
+        ) : (
+          <SpeechInputButton
+            setValue={setValue}
+            className={clsx(
+              styles.chatbot_submit_button,
+              isConnecting && styles.chatbot_submit_button__disabled
+            )}
+          />
+        )}
       </div>
     </div>
   );

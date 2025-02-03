@@ -3,7 +3,7 @@
     display: grid;
     gap: 8px;
     align-items: flex-end;
-    grid-template-columns: auto max-content;
+    grid-template-columns: auto 24px;
     margin: 0 auto;
     max-width: 1200px;
     padding: 16px;
@@ -28,16 +28,35 @@
 
 .chatbot_submit_button {
   font: inherit;
+  width: 24px;
+  height: 100%;
   max-height: 38px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 16px;
   border: none;
-  padding: 8px 12px;
-  background: rgba(71, 103, 235, 1);
-  border-radius: 2px;
+  background: transparent;
+  border-radius: 50%;
   color: white;
+  cursor: pointer;
+
+  > svg {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    width: auto;
+    min-width: 16px;
+    height: 60%;
+    max-height: 38px;
+    min-height: 16px;
+  }
 
   &.chatbot_submit_button__disabled {
-    background: rgba(67, 67, 67, 1);
-    color: rgba(140, 140, 140, 1);
+    > svg {
+      > path {
+        fill: rgba(140, 140, 140, 1);
+      }
+    }
   }
 }
