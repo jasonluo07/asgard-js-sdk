@@ -1,28 +1,41 @@
 import {
   AsgardServiceClient,
+  Channel,
   Conversation,
   ConversationMessage,
   EventType,
   SseResponse,
+  Subscription,
 } from '@asgard-js/core';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface UseChannelProps {
   client: AsgardServiceClient | null;
   customChannelId: string;
+  customMessageId?: string;
   initMessages?: ConversationMessage[];
-  options?: { showDebugMessage?: boolean };
+  showDebugMessage?: boolean;
   onResetChannelInit?: (event: SseResponse<EventType.INIT>) => void;
 }
 
 export interface UseChannelReturn {
+  isOpen: boolean;
+  isResetting: boolean;
   isConnecting: boolean;
-  messages: Map<string, ConversationMessage> | null;
-  sendMessage: (text: string, customMessageId?: string) => void;
+  conversation: Conversation | null;
+  sendMessage?: (text: string) => void;
+  resetChannel?: () => void;
+  closeChannel?: () => void;
 }
 
 export function useChannel(props: UseChannelProps): UseChannelReturn {
-  const { client, customChannelId, initMessages, options } = props;
+  const {
+    client,
+    customChannelId,
+    customMessageId,
+    initMessages,
+    showDebugMessage,
+  } = props;
 
   if (!client) {
     throw new Error('Client instance is required');
@@ -32,70 +45,115 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     throw new Error('Custom channel id is required');
   }
 
+  const [channel, setChannel] = useState<Channel | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
+  const [isResetting, setIsResetting] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
 
-  const [conversation, setConversation] = useState<Conversation>(
-    new Conversation({
-      messages: new Map(
-        initMessages?.map((message) => [message.messageId, message])
-      ),
-    })
+  const subscriptionsRef = useRef<Subscription[] | null>(null);
+
+  const resetChannel = useCallback(() => {
+    setIsResetting(true);
+
+    client?.resetChannel(
+      { customChannelId, customMessageId },
+      {
+        onSseCompleted: () => {
+          setIsResetting(false);
+
+          setChannel(() => {
+            const newChannel = new Channel({
+              client,
+              customChannelId,
+              conversation: new Conversation({
+                showDebugMessage,
+                messages: new Map(
+                  initMessages?.map((message) => [message.messageId, message])
+                ),
+              }),
+            });
+
+            setIsOpen(true);
+            setIsConnecting(newChannel.isConnecting$.value);
+            setConversation(newChannel.conversation$.value);
+
+            return newChannel;
+          });
+        },
+      }
+    );
+  }, [
+    client,
+    customChannelId,
+    customMessageId,
+    initMessages,
+    showDebugMessage,
+  ]);
+
+  const closeChannel = useCallback(() => {
+    setChannel((prevChannel) => {
+      prevChannel?.close();
+
+      return null;
+    });
+    setIsOpen(false);
+    setIsResetting(false);
+    setIsConnecting(false);
+    setConversation(null);
+    subscriptionsRef.current?.forEach((subscription) =>
+      subscription.unsubscribe()
+    );
+  }, []);
+
+  const sendMessage = useCallback(
+    (text: string) => {
+      channel?.sendMessage({ text });
+    },
+    [channel]
   );
 
   useEffect(() => {
-    client.setChannel({
-      customChannelId,
-      customMessageId: '',
-    });
-  }, [client, customChannelId]);
+    if (!channel) return;
 
-  const sendMessage = useCallback(
-    (text: string, customMessageId?: string) => {
-      setIsConnecting(true);
+    subscriptionsRef.current = [
+      channel?.isConnecting$.subscribe(setIsConnecting),
+      channel?.conversation$.subscribe(setConversation),
+    ];
 
-      setConversation((prevConversation) => {
-        const nextConversation = prevConversation.pushMessage(
-          prevConversation,
-          {
-            type: 'user',
-            messageId: customMessageId ?? crypto.randomUUID(),
-            text,
-            time: new Date(),
-          }
-        );
+    return (): void => {
+      subscriptionsRef.current?.forEach((subscription) =>
+        subscription.unsubscribe()
+      );
+    };
+  }, [channel]);
 
-        client.sendMessage(
-          {
-            customChannelId,
-            customMessageId,
-            text,
-          },
-          {
-            onSseMessage: (response) => {
-              setConversation((prev) =>
-                nextConversation.onMessage(prev, response, {
-                  showDebugMessage: options?.showDebugMessage,
-                })
-              );
-            },
-            onSseCompleted: () => {
-              setIsConnecting(false);
-            },
-          }
-        );
+  useEffect(() => {
+    if (!channel && isOpen) resetChannel();
+  }, [channel, isOpen, resetChannel]);
 
-        return nextConversation;
-      });
-    },
-    [client, customChannelId, options]
-  );
+  useEffect(() => {
+    return (): void => closeChannel();
+  }, [closeChannel]);
 
   return useMemo(
     () => ({
+      isOpen,
+      isResetting,
       isConnecting,
-      messages: conversation.messages,
+      conversation,
       sendMessage,
+      resetChannel,
+      closeChannel,
     }),
-    [conversation, isConnecting, sendMessage]
+    [
+      isOpen,
+      isResetting,
+      isConnecting,
+      conversation,
+      sendMessage,
+      resetChannel,
+      closeChannel,
+    ]
   );
 }

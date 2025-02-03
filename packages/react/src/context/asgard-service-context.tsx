@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import {
   AsgardServiceClient,
   ClientConfig,
-  ConversationBotMessage,
   ConversationMessage,
 } from '@asgard-js/core';
 import {
@@ -24,19 +22,24 @@ import {
 interface AsgardServiceContextType {
   avatar?: string;
   client: AsgardServiceClient | null;
+  isOpen: boolean;
+  isResetting: boolean;
   isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
   messageBoxBottomRef: RefObject<HTMLDivElement>;
-  sendMessage: UseChannelReturn['sendMessage'];
+  sendMessage?: UseChannelReturn['sendMessage'];
+  resetChannel?: UseChannelReturn['resetChannel'];
+  closeChannel?: UseChannelReturn['closeChannel'];
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   avatar: undefined,
   client: null,
+  isOpen: false,
+  isResetting: false,
   isConnecting: false,
   messages: null,
   messageBoxBottomRef: { current: null },
-  sendMessage: () => {},
 });
 
 interface AsgardServiceContextProviderProps
@@ -70,23 +73,45 @@ export function AsgardServiceContextProvider(
 
   const client = useAsgardServiceClient({ config });
 
-  const { messages, sendMessage, isConnecting } = useChannel({
+  const {
+    isOpen,
+    isResetting,
+    isConnecting,
+    conversation,
+    sendMessage,
+    resetChannel,
+    closeChannel,
+  } = useChannel({
     client,
     customChannelId,
     initMessages,
-    options,
+    showDebugMessage: options?.showDebugMessage,
   });
 
   const contextValue = useMemo(
     () => ({
       avatar,
       client,
+      isOpen,
+      isResetting,
       isConnecting,
-      messages,
+      messages: conversation?.messages ?? null,
       sendMessage,
+      resetChannel,
+      closeChannel,
       messageBoxBottomRef,
     }),
-    [avatar, client, isConnecting, messages, sendMessage]
+    [
+      avatar,
+      client,
+      isOpen,
+      isResetting,
+      isConnecting,
+      conversation?.messages,
+      sendMessage,
+      resetChannel,
+      closeChannel,
+    ]
   );
 
   return (

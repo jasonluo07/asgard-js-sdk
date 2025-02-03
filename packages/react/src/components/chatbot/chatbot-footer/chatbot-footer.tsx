@@ -40,7 +40,7 @@ export function ChatbotFooter(): ReactNode {
 
   const onSubmit = useCallback(() => {
     if (!isComposing && !isConnecting) {
-      sendMessage(value);
+      sendMessage?.(value);
       setValue('');
 
       if (textareaRef.current) {
@@ -52,7 +52,7 @@ export function ChatbotFooter(): ReactNode {
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
       if (event.key === 'Enter' && !isComposing && !isConnecting) {
-        sendMessage(value);
+        sendMessage?.(value);
         setValue('');
 
         const element = event.target as HTMLTextAreaElement;
