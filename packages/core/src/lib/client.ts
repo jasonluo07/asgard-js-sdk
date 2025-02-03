@@ -20,7 +20,7 @@ export default class AsgardServiceClient {
     }
 
     if (!config.endpoint) {
-      throw new Error('botProviderName must be required');
+      throw new Error('endpoint must be required');
     }
 
     this.apiKey = config.apiKey;
