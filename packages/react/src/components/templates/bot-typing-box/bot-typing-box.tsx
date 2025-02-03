@@ -5,13 +5,11 @@ import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './bot-typing-box.module.scss';
 import { ResizeObserverBox } from './resize-observer-box';
-import { MessageTemplateType } from '@asgard-js/core';
 import { useDebounce } from 'src/hooks';
 
 interface BotTypingBoxProps {
   isTyping: boolean;
   typingText: string | null;
-  templateType?: MessageTemplateType | null;
 }
 
 export function BotTypingBox(props: BotTypingBoxProps): ReactNode {

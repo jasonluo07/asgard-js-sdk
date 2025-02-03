@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from '../conversation-message-renderer';
+import { BotTypingPlaceholder } from '../templates';
 
 export function ChatbotBody(): ReactNode {
   const { messages, messageBoxBottomRef } = useAsgardContext();
@@ -19,6 +20,7 @@ export function ChatbotBody(): ReactNode {
             message={message}
           />
         ))}
+        <BotTypingPlaceholder placeholder="正在輸入訊息" />
         <div ref={messageBoxBottomRef} />
       </div>
     </div>
