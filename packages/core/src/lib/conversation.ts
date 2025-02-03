@@ -3,67 +3,50 @@ import { ConversationMessage, SseResponse } from 'src/types';
 
 interface IConversation {
   messages: Map<string, ConversationMessage> | null;
+  showDebugMessage?: boolean;
 }
 
 export default class Conversation implements IConversation {
+  public showDebugMessage = false;
   public messages: Map<string, ConversationMessage> | null = null;
 
-  constructor({ messages }: IConversation) {
+  constructor({ messages, showDebugMessage }: IConversation) {
     this.messages = messages;
+    this.showDebugMessage = showDebugMessage ?? false;
   }
 
-  resetConversation(): Conversation {
-    return new Conversation({ messages: null });
-  }
-
-  pushMessage(prev: Conversation, message: ConversationMessage): Conversation {
-    const messages = new Map(prev.messages);
+  pushMessage(message: ConversationMessage): Conversation {
+    const messages = new Map(this.messages);
     messages.set(message.messageId, message);
 
     return new Conversation({ messages });
   }
 
-  onMessage(
-    prev: Conversation,
-    response: SseResponse<EventType>,
-    options?: { showDebugMessage?: boolean }
-  ): Conversation {
-    const showDebugMessage = options?.showDebugMessage ?? false;
-
+  onMessage(response: SseResponse<EventType>): Conversation {
     switch (response.eventType) {
       case EventType.MESSAGE_START:
-        return prev.onMessageStart(
-          prev,
-          response as SseResponse<EventType.MESSAGE_START>,
-          { showDebugMessage }
+        return this.onMessageStart(
+          response as SseResponse<EventType.MESSAGE_START>
         );
       case EventType.MESSAGE_DELTA:
-        return prev.onMessageDelta(
-          prev,
-          response as SseResponse<EventType.MESSAGE_DELTA>,
-          { showDebugMessage }
+        return this.onMessageDelta(
+          response as SseResponse<EventType.MESSAGE_DELTA>
         );
       case EventType.MESSAGE_COMPLETE:
-        return prev.onMessageComplete(
-          prev,
-          response as SseResponse<EventType.MESSAGE_COMPLETE>,
-          { showDebugMessage }
+        return this.onMessageComplete(
+          response as SseResponse<EventType.MESSAGE_COMPLETE>
         );
       default:
-        return prev;
+        return this;
     }
   }
 
-  onMessageStart(
-    prev: Conversation,
-    response: SseResponse<EventType.MESSAGE_START>,
-    options: { showDebugMessage: boolean }
-  ): Conversation {
+  onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
     const message = response.fact.messageStart.message;
-    const messages = new Map(prev.messages);
+    const messages = new Map(this.messages);
 
     if (
-      (message.isDebug && !options.showDebugMessage) ||
+      (message.isDebug && !this.showDebugMessage) ||
       messages?.has(message.messageId)
     ) {
       return new Conversation({ messages });
@@ -82,21 +65,17 @@ export default class Conversation implements IConversation {
     return new Conversation({ messages });
   }
 
-  onMessageDelta(
-    prev: Conversation,
-    response: SseResponse<EventType.MESSAGE_DELTA>,
-    options: { showDebugMessage: boolean }
-  ): Conversation {
+  onMessageDelta(response: SseResponse<EventType.MESSAGE_DELTA>): Conversation {
     const message = response.fact.messageDelta.message;
 
-    const messages = new Map(prev.messages);
+    const messages = new Map(this.messages);
 
     const currentMessage = messages.get(message.messageId);
 
-    if (currentMessage?.type === 'user') return prev;
+    if (currentMessage?.type === 'user') return this;
 
     if (
-      (message.isDebug && !options.showDebugMessage) ||
+      (message.isDebug && !this.showDebugMessage) ||
       currentMessage?.eventType === EventType.MESSAGE_COMPLETE
     ) {
       return new Conversation({ messages });
@@ -118,15 +97,13 @@ export default class Conversation implements IConversation {
   }
 
   onMessageComplete(
-    prev: Conversation,
-    response: SseResponse<EventType.MESSAGE_COMPLETE>,
-    options: { showDebugMessage: boolean }
+    response: SseResponse<EventType.MESSAGE_COMPLETE>
   ): Conversation {
     const message = response.fact.messageComplete.message;
 
-    const messages = new Map(prev.messages);
+    const messages = new Map(this.messages);
 
-    if (message.isDebug && !options.showDebugMessage) {
+    if (message.isDebug && !this.showDebugMessage) {
       return new Conversation({ messages });
     }
 

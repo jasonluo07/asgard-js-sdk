@@ -1,5 +1,13 @@
 import { EventType, FetchSseAction } from 'src/constants/enum';
-import { Message, SseResponse } from './sse-response';
+import { SseResponse } from './sse-response';
+
+export interface IAsgardServiceClient {
+  resetChannel(
+    payload: ResetChannelPayload,
+    options?: ResetChannelOptions
+  ): void;
+  sendMessage(payload: SendMessagePayload, options?: SendMessageOptions): void;
+}
 
 export interface ClientConfig {
   endpoint: string;
@@ -21,11 +29,11 @@ export interface ConnectionOptions {
   onSseCompleted?: () => void;
 }
 
-export type SetChannelPayload = Pick<
+export type ResetChannelPayload = Pick<
   FetchSsePayload,
   'customChannelId' | 'customMessageId'
 >;
-export type SetChannelOptions = ConnectionOptions;
+export type ResetChannelOptions = ConnectionOptions;
 
 export type SendMessagePayload = Pick<
   FetchSsePayload,
@@ -34,24 +42,3 @@ export type SendMessagePayload = Pick<
 export type SendMessageOptions = ConnectionOptions & {
   delayTime?: number;
 };
-
-export type ConversationUserMessage = {
-  type: 'user';
-  messageId: string;
-  text: string;
-  time: Date;
-};
-
-export type ConversationBotMessage = {
-  type: 'bot';
-  messageId: string;
-  eventType: EventType;
-  isTyping: boolean;
-  typingText: string | null;
-  message: Message;
-  time: Date;
-};
-
-export type ConversationMessage =
-  | ConversationUserMessage
-  | ConversationBotMessage;

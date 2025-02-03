@@ -1,15 +1,16 @@
 import { FetchSseAction } from 'src/constants/enum';
 import {
   ClientConfig,
+  IAsgardServiceClient,
   SendMessageOptions,
   SendMessagePayload,
-  SetChannelOptions,
-  SetChannelPayload,
+  ResetChannelOptions,
+  ResetChannelPayload,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
 
-export default class AsgardServiceClient {
+export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
@@ -27,7 +28,10 @@ export default class AsgardServiceClient {
     this.endpoint = config.endpoint;
   }
 
-  setChannel(payload: SetChannelPayload, options?: SetChannelOptions): void {
+  resetChannel(
+    payload: ResetChannelPayload,
+    options?: ResetChannelOptions
+  ): void {
     options?.onSseStart?.();
 
     createSseObservable({
