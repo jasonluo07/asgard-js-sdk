@@ -6,6 +6,7 @@ import {
   SendMessagePayload,
   ResetChannelOptions,
   ResetChannelPayload,
+  FetchSsePayload,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
@@ -14,6 +15,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
+  private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 
   constructor(config: ClientConfig) {
     if (!config.apiKey) {
@@ -26,6 +28,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
     this.apiKey = config.apiKey;
     this.endpoint = config.endpoint;
+    this.transformSsePayload = config.transformSsePayload;
   }
 
   resetChannel(
@@ -34,15 +37,17 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   ): void {
     options?.onSseStart?.();
 
+    const ssePayload = {
+      action: FetchSseAction.RESET_CHANNEL,
+      customChannelId: payload.customChannelId,
+      customMessageId: payload?.customMessageId,
+      text: '',
+    };
+
     createSseObservable({
       apiKey: this.apiKey,
       endpoint: this.endpoint,
-      payload: {
-        action: FetchSseAction.RESET_CHANNEL,
-        customChannelId: payload.customChannelId,
-        customMessageId: payload?.customMessageId,
-        text: '',
-      },
+      payload: this.transformSsePayload?.(ssePayload) ?? ssePayload,
     })
       .pipe(takeUntil(this.destroy$), retry(3))
       .subscribe({
@@ -61,15 +66,17 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   sendMessage(payload: SendMessagePayload, options?: SendMessageOptions): void {
     options?.onSseStart?.();
 
+    const ssePayload = {
+      action: FetchSseAction.NONE,
+      customChannelId: payload.customChannelId,
+      customMessageId: payload?.customMessageId,
+      text: payload.text,
+    };
+
     createSseObservable({
       apiKey: this.apiKey,
       endpoint: this.endpoint,
-      payload: {
-        action: FetchSseAction.NONE,
-        customChannelId: payload.customChannelId,
-        customMessageId: payload?.customMessageId,
-        text: payload.text,
-      },
+      payload: this.transformSsePayload?.(ssePayload) ?? ssePayload,
     })
       .pipe(
         concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),

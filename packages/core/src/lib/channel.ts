@@ -8,7 +8,6 @@ import { BehaviorSubject } from 'rxjs';
 
 interface ChannelConfig {
   client: IAsgardServiceClient;
-  isOpen?: boolean;
   customChannelId: string;
   conversation: Conversation;
 }

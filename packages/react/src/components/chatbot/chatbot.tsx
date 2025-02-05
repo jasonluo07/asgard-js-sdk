@@ -15,6 +15,7 @@ interface ChatbotProps {
   initMessages?: ConversationMessage[];
   fullScreen?: boolean;
   avatar?: string;
+  botTypingPlaceholder?: string;
   options?: { showDebugMessage?: boolean };
 }
 
@@ -27,6 +28,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     fullScreen = false,
     avatar,
     options,
+    botTypingPlaceholder,
   } = props;
 
   return (
@@ -39,6 +41,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
       config={config}
       customChannelId={customChannelId}
       initMessages={initMessages}
+      botTypingPlaceholder={botTypingPlaceholder}
       options={options}
     >
       <ChatbotLoading />

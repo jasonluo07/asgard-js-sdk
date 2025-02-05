@@ -5,7 +5,8 @@ import { ConversationMessageRenderer } from '../conversation-message-renderer';
 import { BotTypingPlaceholder } from '../templates';
 
 export function ChatbotBody(): ReactNode {
-  const { messages, messageBoxBottomRef } = useAsgardContext();
+  const { messages, messageBoxBottomRef, botTypingPlaceholder } =
+    useAsgardContext();
 
   useEffect(() => {
     messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,7 +21,9 @@ export function ChatbotBody(): ReactNode {
             message={message}
           />
         ))}
-        <BotTypingPlaceholder placeholder="正在輸入訊息" />
+        <BotTypingPlaceholder
+          placeholder={botTypingPlaceholder ?? '正在輸入訊息'}
+        />
         <div ref={messageBoxBottomRef} />
       </div>
     </div>

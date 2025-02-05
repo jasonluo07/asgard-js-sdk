@@ -30,6 +30,7 @@ interface AsgardServiceContextType {
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
   closeChannel?: UseChannelReturn['closeChannel'];
+  botTypingPlaceholder?: string;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextType>({
@@ -40,6 +41,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextType>({
   isConnecting: false,
   messages: null,
   messageBoxBottomRef: { current: null },
+  botTypingPlaceholder: undefined,
 });
 
 interface AsgardServiceContextProviderProps
@@ -47,6 +49,7 @@ interface AsgardServiceContextProviderProps
   children: ReactNode;
   avatar?: string;
   config: ClientConfig;
+  botTypingPlaceholder?: string;
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
@@ -61,6 +64,7 @@ export function AsgardServiceContextProvider(
     avatar,
     children,
     config,
+    botTypingPlaceholder,
     customChannelId,
     customMessageId,
     delayTime,
@@ -99,6 +103,7 @@ export function AsgardServiceContextProvider(
       sendMessage,
       resetChannel,
       closeChannel,
+      botTypingPlaceholder,
       messageBoxBottomRef,
     }),
     [
@@ -111,6 +116,7 @@ export function AsgardServiceContextProvider(
       sendMessage,
       resetChannel,
       closeChannel,
+      botTypingPlaceholder,
     ]
   );
 

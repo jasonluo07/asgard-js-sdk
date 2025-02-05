@@ -21,15 +21,21 @@ export function Root(): ReactNode {
   ]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ width: '800px' }}>
       <Chatbot
         fullScreen
         title="Chatbot"
         config={{
           endpoint: VITE_ENDPOINT,
           apiKey: VITE_API_KEY,
+          transformSsePayload: (payload) => {
+            console.log('transformSsePayload', payload);
+
+            return payload;
+          },
         }}
         avatar="./showtime.webp"
+        botTypingPlaceholder="typing"
         customChannelId={customChannelId}
         initMessages={initMessages}
       />
