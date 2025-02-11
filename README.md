@@ -1,31 +1,78 @@
-# AsgardJs
+# AsgardJs SDK
+
+Welcome to the AsgardJs SDK! This SDK provides tools and libraries to integrate with the Asgard AI platform.
 
 ## Documentation
-https://www.asgard-ai.com/docs/intigration-with-asgard/intigration-with-api
 
-## build package
+For detailed documentation, visit: [Asgard AI Documentation](https://www.asgard-ai.com/docs/intigration-with-asgard/intigration-with-api)
+
+## Installation
+
+To install the SDK, use the following command:
+
+```sh
+yarn add asgardjs-sdk
+```
+
+## Building the Package
+
+To build the core and react packages, run:
 
 ```sh
 yarn build:core
 yarn build:react
 ```
 
-## test
+## Testing
+
+To run tests for the core and react packages, use:
+
 ```sh
 yarn test:core
 yarn test:react
 ```
 
-## serve
+## Serving the React Demo
+
+To serve the react-demo for development, execute:
+
 ```sh
 yarn serve:react-demo
 ```
-起 react-demo 來開發 core, react 時
+
+## Development
+
+To start developing with the core and react packages, use:
+
 ```sh
 yarn watch:core
 yarn watch:react
 ```
-同時監聽兩個專案，以利 react-demo 的 dev server 觸發 hot reload
+
+This will watch both projects and trigger hot reloads for the react-demo dev server.
+
+## Usage
+
+Here's a basic example of how to use the SDK:
+
+```javascript
+import { AsgardServiceClient } from 'asgardjs-sdk';
+
+const client = new AsgardServiceClient({
+  apiKey: 'your-api-key',
+  endpoint: 'https://api.asgard-ai.com',
+});
+
+// Use the client to interact with the Asgard AI platform
+```
+
+## Contributing
+
+We welcome contributions! Please read our [contributing guide](CONTRIBUTING.md) to get started.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
 
