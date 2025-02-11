@@ -1,10 +1,3 @@
-# @asgard-js/react
-
-This library was generated with [Nx](https://nx.dev).
-
-## Running unit tests
-
-Run `nx test @asgard-js/react` to execute the unit tests via [Vitest](https://vitest.dev/).
 # AsgardJs React
 
 This package provides React components and hooks for integrating with the Asgard AI platform, allowing you to build interactive chat interfaces.
@@ -34,12 +27,28 @@ const App = () => {
         endpoint: 'https://api.asgard-ai.com',
       }}
       customChannelId="your-channel-id"
+      initMessages={[]}
+      fullScreen={false}
+      avatar="https://example.com/avatar.png"
+      botTypingPlaceholder="Bot is typing..."
+      options={{ showDebugMessage: true }}
     />
   );
 };
 
 export default App;
 ```
+
+### Chatbot Component Props
+
+- **title**: `string` - The title of the chatbot.
+- **config**: `ClientConfig` - Configuration object for the Asgard service client.
+- **customChannelId**: `string` - Custom channel identifier.
+- **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat.
+- **fullScreen**: `boolean` - Whether the chatbot should be displayed in full screen.
+- **avatar**: `string` - URL of the avatar image for the chatbot.
+- **botTypingPlaceholder**: `string` - Placeholder text to show when the bot is typing.
+- **options**: `object` - Additional options, such as `showDebugMessage`.
 
 ## Development
 
