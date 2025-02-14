@@ -1,13 +1,13 @@
 import {
   AsgardServiceClient,
   Channel,
+  ChannelStates,
   Conversation,
   ConversationMessage,
   EventType,
   SseResponse,
-  Subscription,
 } from '@asgard-js/core';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface UseChannelProps {
   client: AsgardServiceClient | null;
@@ -51,8 +51,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
-  const subscriptionsRef = useRef<Subscription[] | null>(null);
-
   const resetChannel = useCallback(() => {
     setIsResetting(true);
 
@@ -63,20 +61,26 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           setIsResetting(false);
 
           setChannel(() => {
+            const conversation = new Conversation({
+              showDebugMessage,
+              messages: new Map(
+                initMessages?.map((message) => [message.messageId, message])
+              ),
+            });
+
             const newChannel = new Channel({
               client,
               customChannelId,
-              conversation: new Conversation({
-                showDebugMessage,
-                messages: new Map(
-                  initMessages?.map((message) => [message.messageId, message])
-                ),
-              }),
+              conversation,
+              statesObserver: (states: ChannelStates): void => {
+                setIsConnecting(states.isConnecting);
+                setConversation(states.conversation);
+              },
             });
 
             setIsOpen(true);
-            setIsConnecting(newChannel.isConnecting$.value);
-            setConversation(newChannel.conversation$.value);
+            setIsConnecting(false);
+            setConversation(conversation);
 
             return newChannel;
           });
@@ -101,9 +105,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     setIsResetting(false);
     setIsConnecting(false);
     setConversation(null);
-    subscriptionsRef.current?.forEach((subscription) =>
-      subscription.unsubscribe()
-    );
   }, []);
 
   const sendMessage = useCallback(
@@ -112,21 +113,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     },
     [channel]
   );
-
-  useEffect(() => {
-    if (!channel) return;
-
-    subscriptionsRef.current = [
-      channel?.isConnecting$.subscribe(setIsConnecting),
-      channel?.conversation$.subscribe(setConversation),
-    ];
-
-    return (): void => {
-      subscriptionsRef.current?.forEach((subscription) =>
-        subscription.unsubscribe()
-      );
-    };
-  }, [channel]);
 
   useEffect(() => {
     if (!channel && isOpen) resetChannel();

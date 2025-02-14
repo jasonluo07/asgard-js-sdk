@@ -1,23 +1,22 @@
 import {
+  ChannelConfig,
+  ChannelStates,
   IAsgardServiceClient,
+  ObserverOrNext,
   SendMessageOptions,
   SendMessagePayload,
 } from 'src/types';
 import Conversation from './conversation';
-import { BehaviorSubject } from 'rxjs';
-
-interface ChannelConfig {
-  client: IAsgardServiceClient;
-  customChannelId: string;
-  conversation: Conversation;
-}
+import { BehaviorSubject, combineLatest, map, Subscription } from 'rxjs';
 
 export default class Channel {
   private client: IAsgardServiceClient;
+  private isConnecting$: BehaviorSubject<boolean>;
+  private conversation$: BehaviorSubject<Conversation>;
+  private statesSubscription?: Subscription;
 
-  public isConnecting$: BehaviorSubject<boolean>;
-  public conversation$: BehaviorSubject<Conversation>;
   public customChannelId: string;
+  public customMessageId?: string;
 
   constructor(config: ChannelConfig) {
     if (!config.client) {
@@ -30,9 +29,25 @@ export default class Channel {
 
     this.client = config.client;
     this.customChannelId = config.customChannelId;
+    this.customMessageId = config.customMessageId;
 
     this.isConnecting$ = new BehaviorSubject(false);
     this.conversation$ = new BehaviorSubject(config.conversation);
+
+    if (config.statesObserver) {
+      this.statesSubscription = this.subscribe(config.statesObserver);
+    }
+  }
+
+  private subscribe(observer: ObserverOrNext<ChannelStates>): Subscription {
+    return combineLatest([this.isConnecting$, this.conversation$])
+      .pipe(
+        map(([isConnecting, conversation]) => ({
+          isConnecting,
+          conversation,
+        }))
+      )
+      .subscribe(observer);
   }
 
   sendMessage(
@@ -41,13 +56,14 @@ export default class Channel {
   ): void {
     this.isConnecting$.next(true);
 
+    const text = payload.text.trim();
     const messageId = payload.customMessageId ?? crypto.randomUUID();
 
     this.conversation$.next(
       this.conversation$.value.pushMessage({
         type: 'user',
         messageId,
-        text: payload.text,
+        text,
         time: new Date(),
       })
     );
@@ -56,7 +72,7 @@ export default class Channel {
       {
         customChannelId: this.customChannelId,
         customMessageId: messageId,
-        text: payload.text,
+        text,
       },
       {
         onSseStart: options?.onSseStart,
@@ -79,5 +95,6 @@ export default class Channel {
   close(): void {
     this.isConnecting$.complete();
     this.conversation$.complete();
+    this.statesSubscription?.unsubscribe();
   }
 }

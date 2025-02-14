@@ -12,7 +12,6 @@ export interface IAsgardServiceClient {
 export interface ClientConfig {
   endpoint: string;
   apiKey: string;
-  webhookToken?: string;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 }
 
