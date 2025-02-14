@@ -4,8 +4,6 @@ import {
   ChannelStates,
   Conversation,
   ConversationMessage,
-  EventType,
-  SseResponse,
 } from '@asgard-js/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -15,7 +13,6 @@ interface UseChannelProps {
   customMessageId?: string;
   initMessages?: ConversationMessage[];
   showDebugMessage?: boolean;
-  onResetChannelInit?: (event: SseResponse<EventType.INIT>) => void;
 }
 
 export interface UseChannelReturn {
@@ -51,42 +48,37 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
-  const resetChannel = useCallback(() => {
+  const resetChannel = useCallback(async () => {
+    const conversation = new Conversation({
+      showDebugMessage,
+      messages: new Map(
+        initMessages?.map((message) => [message.messageId, message])
+      ),
+    });
+
     setIsResetting(true);
+    setIsConnecting(true);
+    setConversation(conversation);
 
-    client?.resetChannel(
-      { customChannelId, customMessageId },
+    const channel = await Channel.reset(
       {
-        onSseCompleted: () => {
+        client,
+        customChannelId,
+        customMessageId,
+        conversation,
+        statesObserver: (states: ChannelStates): void => {
+          setIsConnecting(states.isConnecting);
+          setConversation(states.conversation);
+        },
+      },
+      {
+        onSseCompleted() {
           setIsResetting(false);
-
-          setChannel(() => {
-            const conversation = new Conversation({
-              showDebugMessage,
-              messages: new Map(
-                initMessages?.map((message) => [message.messageId, message])
-              ),
-            });
-
-            const newChannel = new Channel({
-              client,
-              customChannelId,
-              conversation,
-              statesObserver: (states: ChannelStates): void => {
-                setIsConnecting(states.isConnecting);
-                setConversation(states.conversation);
-              },
-            });
-
-            setIsOpen(true);
-            setIsConnecting(false);
-            setConversation(conversation);
-
-            return newChannel;
-          });
         },
       }
     );
+
+    setChannel(channel);
   }, [
     client,
     customChannelId,

@@ -1,12 +1,8 @@
-import { FetchSseAction } from 'src/constants/enum';
 import {
   ClientConfig,
   IAsgardServiceClient,
-  SendMessageOptions,
-  SendMessagePayload,
-  ResetChannelOptions,
-  ResetChannelPayload,
   FetchSsePayload,
+  FetchSseOptions,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
@@ -31,52 +27,13 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     this.transformSsePayload = config.transformSsePayload;
   }
 
-  resetChannel(
-    payload: ResetChannelPayload,
-    options?: ResetChannelOptions
-  ): void {
+  fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
     options?.onSseStart?.();
-
-    const ssePayload = {
-      action: FetchSseAction.RESET_CHANNEL,
-      customChannelId: payload.customChannelId,
-      customMessageId: payload?.customMessageId,
-      text: '',
-    };
 
     createSseObservable({
       apiKey: this.apiKey,
       endpoint: this.endpoint,
-      payload: this.transformSsePayload?.(ssePayload) ?? ssePayload,
-    })
-      .pipe(takeUntil(this.destroy$), retry(3))
-      .subscribe({
-        next: (response) => {
-          options?.onSseMessage?.(response);
-        },
-        error: (error) => {
-          options?.onSseError?.(error);
-        },
-        complete: () => {
-          options?.onSseCompleted?.();
-        },
-      });
-  }
-
-  sendMessage(payload: SendMessagePayload, options?: SendMessageOptions): void {
-    options?.onSseStart?.();
-
-    const ssePayload = {
-      action: FetchSseAction.NONE,
-      customChannelId: payload.customChannelId,
-      customMessageId: payload?.customMessageId,
-      text: payload.text,
-    };
-
-    createSseObservable({
-      apiKey: this.apiKey,
-      endpoint: this.endpoint,
-      payload: this.transformSsePayload?.(ssePayload) ?? ssePayload,
+      payload: this.transformSsePayload?.(payload) ?? payload,
     })
       .pipe(
         concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),

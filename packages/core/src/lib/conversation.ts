@@ -15,7 +15,7 @@ export default class Conversation implements IConversation {
     this.showDebugMessage = showDebugMessage ?? false;
   }
 
-  private copy(messages: IConversation['messages']): Conversation {
+  private create(messages: IConversation['messages']): Conversation {
     return new Conversation({
       messages,
       showDebugMessage: this.showDebugMessage,
@@ -26,7 +26,7 @@ export default class Conversation implements IConversation {
     const messages = new Map(this.messages);
     messages.set(message.messageId, message);
 
-    return this.copy(messages);
+    return this.create(messages);
   }
 
   onMessage(response: SseResponse<EventType>): Conversation {
@@ -56,7 +56,7 @@ export default class Conversation implements IConversation {
       (message.isDebug && !this.showDebugMessage) ||
       messages?.has(message.messageId)
     ) {
-      return this.copy(messages);
+      return this.create(messages);
     }
 
     messages.set(message.messageId, {
@@ -69,7 +69,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.copy(messages);
+    return this.create(messages);
   }
 
   onMessageDelta(response: SseResponse<EventType.MESSAGE_DELTA>): Conversation {
@@ -85,7 +85,7 @@ export default class Conversation implements IConversation {
       (message.isDebug && !this.showDebugMessage) ||
       currentMessage?.eventType === EventType.MESSAGE_COMPLETE
     ) {
-      return this.copy(messages);
+      return this.create(messages);
     }
 
     const typingText = `${currentMessage?.typingText ?? ''}${message.text}`;
@@ -100,7 +100,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.copy(messages);
+    return this.create(messages);
   }
 
   onMessageComplete(
@@ -111,7 +111,7 @@ export default class Conversation implements IConversation {
     const messages = new Map(this.messages);
 
     if (message.isDebug && !this.showDebugMessage) {
-      return this.copy(messages);
+      return this.create(messages);
     }
 
     messages.set(message.messageId, {
@@ -124,6 +124,6 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.copy(messages);
+    return this.create(messages);
   }
 }
