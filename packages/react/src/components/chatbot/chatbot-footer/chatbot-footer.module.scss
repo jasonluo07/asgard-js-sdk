@@ -1,20 +1,19 @@
 .chatbot_footer {
   .chatbot_footer__content {
     display: grid;
-    gap: 8px;
     align-items: flex-end;
     grid-template-columns: auto 24px;
     margin: 0 auto;
     max-width: 1200px;
-    padding: 16px;
-    gap: 16px;
+    padding: var(--asg-spacing-3) var(--asg-spacing-4);
+    gap: var(--asg-spacing-2);
   }
 }
 
 .chatbot_textarea {
   font: inherit;
   font-size: 16px;
-  height: 20px;
+  height: 36px;
   max-height: 240px;
   padding: 8px;
   padding-left: 12px;

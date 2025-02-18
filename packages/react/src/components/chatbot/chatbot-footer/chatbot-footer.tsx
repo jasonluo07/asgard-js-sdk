@@ -27,10 +27,10 @@ export function ChatbotFooter(): ReactNode {
       const element = event.target as HTMLTextAreaElement;
       const value = element.value;
 
-      element.style.height = '20px';
+      element.style.height = '36px';
 
       if (value) {
-        element.style.height = `${element.scrollHeight - 16}px`;
+        element.style.height = `${element.scrollHeight}px`;
       }
 
       setValue(event.target.value);
@@ -44,7 +44,7 @@ export function ChatbotFooter(): ReactNode {
       setValue('');
 
       if (textareaRef.current) {
-        textareaRef.current.style.height = '20px';
+        textareaRef.current.style.height = '36px';
       }
     }
   }, [isComposing, isConnecting, sendMessage, value]);
@@ -57,7 +57,7 @@ export function ChatbotFooter(): ReactNode {
 
         const element = event.target as HTMLTextAreaElement;
 
-        element.style.height = '20px';
+        element.style.height = '36px';
       }
     },
     [isComposing, isConnecting, sendMessage, value]

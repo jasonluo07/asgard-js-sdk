@@ -40,7 +40,7 @@ export function Card(props: CardProps): ReactNode {
       return function clickHandler() {
         switch (action.type) {
           case 'message':
-            sendMessage(action.text);
+            sendMessage?.(action.text);
 
             return;
           case 'uri':
@@ -62,6 +62,7 @@ export function Card(props: CardProps): ReactNode {
           style={{
             display: 'block',
             width: '100%',
+            maxHeight: '170px',
             objectFit: template?.imageSize,
             aspectRatio,
           }}
