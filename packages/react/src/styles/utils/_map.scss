@@ -1,0 +1,22 @@
+@use 'sass:meta';
+@use 'sass:list';
+@use 'sass:map';
+
+@mixin generate-vars($prefix, $data) {
+  $map: null;
+
+  @if meta.type-of($data) == "list" {
+    $map: ();
+    @for $i from 1 through list.length($data) {
+      $map: map.merge($map, ($i: list.nth($data, $i)));
+    }
+  } @else if meta.type-of($data) == "map" {
+    $map: $data;
+  } @else {
+    @warn "generate-vars: The provided data is neither a list nor a map. (type: #{meta.type-of($data)})";
+  }
+
+  @each $index, $item in $map {
+    --#{$prefix}-#{$index}: #{$item};
+  }
+}

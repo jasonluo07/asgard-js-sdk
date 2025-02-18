@@ -1,0 +1,10 @@
+@use './variables';
+@use '../utils';
+
+$prefix: asgard-colors;
+
+@mixin generate($map: variables.$colors-map) {
+  @each $color, $list in $map {
+    @include utils.generate-vars($prefix + '-' + $color, $list);
+  }
+}

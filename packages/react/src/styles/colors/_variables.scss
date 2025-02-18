@@ -1,0 +1,72 @@
+$blue-colors: (
+  #edf0fd,
+  #d3dbfa,
+  #b0bef6,
+  #6882ef,
+  #8b9ff2,
+  #4767eb,
+  #3c58c8,
+  #3249a7,
+  #283b86,
+  #202e6a
+);
+
+$orange-colors: (
+  #ffeded,
+  #ffd4d5,
+  #ffb2b3,
+  #ff8f90,
+  #ff6d6f,
+  #ff4d4f,
+  #d94143,
+  #b53738,
+  #912c2d,
+  #732324
+);
+
+$green-colors: (
+  #eef9e8,
+  #d5f1c8,
+  #b5e69d,
+  #92da6f,
+  #71cf43,
+  #52c41a,
+  #46a716,
+  #3a8b12,
+  #2f700f,
+  #25580c,
+);
+
+$yellow-colors: (
+  #fef7eb,
+  #fdebcf,
+  #fcdba9,
+  #facb82,
+  #f8bb5c,
+  #f7ac38,
+  #d29230,
+  #af7a28,
+  #8d6220,
+  #6f4d19,
+);
+
+$grey-colors: (
+  #f3f3f3,
+  #e2e2e2,
+  #cbcbcb,
+  #b2b2b2,
+  #9b9b9b,
+  #858585,
+  #717171,
+  #5e5e5e,
+  #4c4c4c,
+  #3c3c3c
+);
+
+$colors-map: (
+  blue: $blue-colors,
+  orange: $orange-colors,
+  green: $green-colors,
+  yellow: $yellow-colors,
+  grey: $grey-colors
+);

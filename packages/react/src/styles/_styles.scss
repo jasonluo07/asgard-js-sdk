@@ -1,0 +1,9 @@
+@use './colors';
+@use './radius';
+@use './spacing';
+
+@mixin generate() {
+  @include colors.generate();
+  @include radius.generate();
+  @include spacing.generate();
+}
