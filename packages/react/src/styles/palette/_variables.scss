@@ -1,0 +1,40 @@
+@use 'sass:list';
+@use '../colors/variables';
+
+$primary-colors: (
+  main: list.nth(variables.$blue-colors, 6),
+  light: list.nth(variables.$blue-colors, 5),
+  dark: list.nth(variables.$blue-colors, 8),
+);
+
+$secondary-colors: (
+  main: list.nth(variables.$grey-colors, 6),
+  light: list.nth(variables.$grey-colors, 4),
+  dark: list.nth(variables.$grey-colors, 9),
+);
+
+$error-colors: (
+  main: list.nth(variables.$orange-colors, 6),
+  light: list.nth(variables.$orange-colors, 5),
+  dark: list.nth(variables.$orange-colors, 7),
+);
+
+$warning-colors: (
+  main: list.nth(variables.$yellow-colors, 6),
+  light: list.nth(variables.$yellow-colors, 5),
+  dark: list.nth(variables.$yellow-colors, 8),
+);
+
+$success-colors: (
+  main: list.nth(variables.$green-colors, 6),
+  light: list.nth(variables.$green-colors, 5),
+  dark: list.nth(variables.$green-colors, 8),
+);
+
+$state-colors-map: (
+  primary: $primary-colors,
+  secondary: $secondary-colors,
+  error: $error-colors,
+  warning: $warning-colors,
+  success: $success-colors,
+);

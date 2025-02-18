@@ -1,7 +1,7 @@
 @use './variables';
 @use '../utils';
 
-$prefix: asgard-spacing;
+$prefix: asg-spacing;
 
 @mixin generate($list: variables.$spacing-list) {
   @include utils.generate-vars($prefix, $list);

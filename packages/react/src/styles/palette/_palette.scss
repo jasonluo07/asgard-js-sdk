@@ -1,0 +1,41 @@
+@use 'sass:map';
+@use './variables';
+
+$prefix: asg-color;
+
+@mixin generate-state-colors($map: variables.$state-colors-map) {
+  @each $state, $colors-map in $map {
+    
+    $main-color: map.get($colors-map, main);
+    $light-color: map.get($colors-map, light);
+    $dark-color: map.get($colors-map, dark);
+    
+    --#{$prefix}-#{$state}: #{$main-color};
+    --#{$prefix}-#{$state}-light: #{$light-color};
+    --#{$prefix}-#{$state}-dark: #{$dark-color};
+    --#{$prefix}-#{$state}-on-#{$state}: #ffffff;
+    --#{$prefix}-#{$state}-hover-bg: #{rgba($light-color, 0.15)};
+    --#{$prefix}-#{$state}-selected-bg: #{rgba($main-color, 0.20)};
+  }
+}
+
+@mixin generate() {
+  @include generate-state-colors();
+
+  --#{$prefix}-action-active: #ffffff;
+  --#{$prefix}-action-inactive: #8c8c8c;
+  --#{$prefix}-action-disabled: #595959;
+  --#{$prefix}-action-disabled-bg: #393939;
+
+  --#{$prefix}-text-primary: #ffffff;
+  --#{$prefix}-text-secondary: #8c8c8c;
+  --#{$prefix}-text-disabled: #595959;
+
+  --#{$prefix}-bg: #141414;
+  --#{$prefix}-surface: #1f1f1f;
+  --#{$prefix}-divider: #333333;
+  --#{$prefix}-border: #434343;
+
+  --#{$prefix}-overlay-dark: #{rgba(#000000, 0.5)};
+  --#{$prefix}-overlay-light: #{rgba(#1f1f1f, 0.9)};
+}

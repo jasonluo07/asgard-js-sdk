@@ -1,7 +1,7 @@
 @use './variables';
 @use '../utils';
 
-$prefix: asgard-radius;
+$prefix: asg-radius;
 
 @mixin generate($map: variables.$radius-map) {
   @include utils.generate-vars($prefix, $map);
