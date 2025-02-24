@@ -17,10 +17,10 @@ interface ChatbotProps {
   config: ClientConfig;
   customChannelId: string;
   initMessages?: ConversationMessage[];
+  debugMode?: boolean;
   fullScreen?: boolean;
   avatar?: string;
   botTypingPlaceholder?: string;
-  options?: { showDebugMessage?: boolean };
   onReset?: () => void;
   onClose?: () => void;
 }
@@ -32,9 +32,9 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     config,
     customChannelId,
     initMessages,
+    debugMode = false,
     fullScreen = false,
     avatar,
-    options,
     botTypingPlaceholder,
     onReset,
     onClose,
@@ -52,7 +52,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
         customChannelId={customChannelId}
         initMessages={initMessages}
         botTypingPlaceholder={botTypingPlaceholder}
-        options={options}
+        options={{ showDebugMessage: debugMode }}
       >
         <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
         <ChatbotBody />
