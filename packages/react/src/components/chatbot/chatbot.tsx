@@ -21,6 +21,8 @@ interface ChatbotProps {
   avatar?: string;
   botTypingPlaceholder?: string;
   options?: { showDebugMessage?: boolean };
+  onReset?: () => void;
+  onClose?: () => void;
 }
 
 export function Chatbot(props: ChatbotProps): ReactNode {
@@ -34,6 +36,8 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     avatar,
     options,
     botTypingPlaceholder,
+    onReset,
+    onClose,
   } = props;
 
   return (
@@ -50,7 +54,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
         botTypingPlaceholder={botTypingPlaceholder}
         options={options}
       >
-        <ChatbotHeader title={title} />
+        <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
         <ChatbotBody />
         <ChatbotFooter />
       </AsgardServiceContextProvider>

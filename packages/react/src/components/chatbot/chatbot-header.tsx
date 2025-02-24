@@ -8,14 +8,16 @@ import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 interface ChatbotHeaderProps {
   title: string;
+  onClose?: () => void;
+  onReset?: () => void;
 }
 
 export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
-  const { title } = props;
+  const { title, onReset, onClose } = props;
 
   const { chatbot } = useAsgardThemeContext();
 
-  const { avatar, isOpen, isResetting, resetChannel, closeChannel } =
+  const { avatar, isResetting, resetChannel, closeChannel } =
     useAsgardContext();
 
   const contentStyles = useMemo(
@@ -25,48 +27,40 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
     [chatbot]
   );
 
-  const onOpen = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (e) => {
-      if (!isOpen && !isResetting) {
-        e.stopPropagation();
-        resetChannel?.();
-      }
-    },
-    [isOpen, isResetting, resetChannel]
-  );
-
-  const onReset = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (e) => {
-      if (isOpen && !isResetting) {
-        e.stopPropagation();
-        resetChannel?.();
-      }
-    },
-    [isOpen, isResetting, resetChannel]
-  );
-
-  const onClose = useCallback<MouseEventHandler<HTMLDivElement>>(
+  const _onReset = useCallback<MouseEventHandler<HTMLDivElement>>(
     (e) => {
       if (!isResetting) {
         e.stopPropagation();
+        onReset?.();
+        resetChannel?.();
+      }
+    },
+    [isResetting, onReset, resetChannel]
+  );
+
+  const _onClose = useCallback<MouseEventHandler<HTMLDivElement>>(
+    (e) => {
+      if (!isResetting) {
+        e.stopPropagation();
+        onClose?.();
         closeChannel?.();
       }
     },
-    [isResetting, closeChannel]
+    [isResetting, onClose, closeChannel]
   );
 
   return (
-    <div className={styles.chatbot_header} onClick={onOpen}>
+    <div className={styles.chatbot_header}>
       <div className={styles.chatbot_header__content} style={contentStyles}>
         <div className={styles.chatbot_header__title}>
           <ProfileIcon avatar={avatar} />
           <h4>{title}</h4>
         </div>
         <div className={styles.chatbot_header__extra}>
-          <div onClick={onReset}>
+          <div onClick={_onReset}>
             <RefreshSvg />
           </div>
-          <div onClick={onClose}>
+          <div onClick={_onClose}>
             <CloseSvg />
           </div>
         </div>
