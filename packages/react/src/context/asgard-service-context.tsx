@@ -18,6 +18,7 @@ import {
   useChannel,
   UseChannelReturn,
 } from 'src/hooks';
+import { useAsgardThemeContext } from './asgard-theme-context';
 
 interface AsgardServiceContextType {
   avatar?: string;
@@ -120,9 +121,13 @@ export function AsgardServiceContextProvider(
     ]
   );
 
+  const theme = useAsgardThemeContext();
+
   return (
     <AsgardServiceContext.Provider value={contextValue}>
-      <div {...divProps}>{children}</div>
+      <div style={theme?.chatbot} {...divProps}>
+        {children}
+      </div>
     </AsgardServiceContext.Provider>
   );
 }

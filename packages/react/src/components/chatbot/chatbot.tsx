@@ -1,14 +1,19 @@
 import { ReactNode } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import clsx from 'clsx';
+import {
+  AsgardThemeContextProvider,
+  AsgardThemeContextValue,
+} from 'src/context/asgard-theme-context';
 import { AsgardServiceContextProvider } from 'src/context/asgard-service-context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
-import styles from './chatbot.module.scss';
+import classes from './chatbot.module.scss';
 
 interface ChatbotProps {
   title: string;
+  theme?: Partial<AsgardThemeContextValue>;
   config: ClientConfig;
   customChannelId: string;
   initMessages?: ConversationMessage[];
@@ -21,6 +26,7 @@ interface ChatbotProps {
 export function Chatbot(props: ChatbotProps): ReactNode {
   const {
     title,
+    theme,
     config,
     customChannelId,
     initMessages,
@@ -31,21 +37,23 @@ export function Chatbot(props: ChatbotProps): ReactNode {
   } = props;
 
   return (
-    <AsgardServiceContextProvider
-      className={clsx(
-        styles.chatbot_root,
-        fullScreen && styles.chatbot_root__fullScreen
-      )}
-      avatar={avatar}
-      config={config}
-      customChannelId={customChannelId}
-      initMessages={initMessages}
-      botTypingPlaceholder={botTypingPlaceholder}
-      options={options}
-    >
-      <ChatbotHeader title={title} />
-      <ChatbotBody />
-      <ChatbotFooter />
-    </AsgardServiceContextProvider>
+    <AsgardThemeContextProvider fullScreen={fullScreen} theme={theme}>
+      <AsgardServiceContextProvider
+        className={clsx(
+          classes.chatbot_root,
+          fullScreen && classes.chatbot_root__fullScreen
+        )}
+        avatar={avatar}
+        config={config}
+        customChannelId={customChannelId}
+        initMessages={initMessages}
+        botTypingPlaceholder={botTypingPlaceholder}
+        options={options}
+      >
+        <ChatbotHeader title={title} />
+        <ChatbotBody />
+        <ChatbotFooter />
+      </AsgardServiceContextProvider>
+    </AsgardThemeContextProvider>
   );
 }

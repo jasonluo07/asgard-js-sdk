@@ -12,15 +12,25 @@ import styles from './chatbot-footer.module.scss';
 import SendSvg from 'src/icons/send.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 export function ChatbotFooter(): ReactNode {
   const { sendMessage, isConnecting } = useAsgardContext();
+
+  const { chatbot } = useAsgardThemeContext();
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const disabled = useMemo(() => isConnecting || !value, [isConnecting, value]);
+
+  const contentStyles = useMemo(
+    () => ({
+      maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+    }),
+    [chatbot]
+  );
 
   const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
     (event) => {
@@ -65,7 +75,7 @@ export function ChatbotFooter(): ReactNode {
 
   return (
     <div className={styles.chatbot_footer}>
-      <div className={styles.chatbot_footer__content}>
+      <div className={styles.chatbot_footer__content} style={contentStyles}>
         <textarea
           ref={textareaRef}
           className={styles.chatbot_textarea}
