@@ -1,5 +1,5 @@
 import { EventType, FetchSseAction } from 'src/constants/enum';
-import { SseResponse } from './sse-response';
+import { ErrorEventData, SseResponse } from './sse-response';
 
 export interface IAsgardServiceClient {
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
@@ -8,6 +8,7 @@ export interface IAsgardServiceClient {
 export interface ClientConfig {
   endpoint: string;
   apiKey: string;
+  onExecutionError?: (error: ErrorEventData) => void;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 }
 

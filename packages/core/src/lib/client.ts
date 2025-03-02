@@ -3,14 +3,18 @@ import {
   IAsgardServiceClient,
   FetchSsePayload,
   FetchSseOptions,
+  ErrorEventData,
+  SseResponse,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
+import { EventType } from 'src/constants/enum';
 
 export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
+  private onExecutionError?: (error: ErrorEventData) => void;
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 
   constructor(config: ClientConfig) {
@@ -24,6 +28,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
     this.apiKey = config.apiKey;
     this.endpoint = config.endpoint;
+    this.onExecutionError = config.onExecutionError;
     this.transformSsePayload = config.transformSsePayload;
   }
 
@@ -43,6 +48,17 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       .subscribe({
         next: (response) => {
           options?.onSseMessage?.(response);
+
+          switch (response.eventType) {
+            case EventType.ERROR:
+              this.onExecutionError?.(
+                (response as SseResponse<EventType.ERROR>).fact.runError
+              );
+
+              break;
+            default:
+              break;
+          }
         },
         error: (error) => {
           options?.onSseError?.(error);
