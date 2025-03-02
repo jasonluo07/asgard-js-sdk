@@ -43,6 +43,8 @@ export default class Conversation implements IConversation {
         return this.onMessageComplete(
           response as SseResponse<EventType.MESSAGE_COMPLETE>
         );
+      case EventType.ERROR:
+        return this.onMessageError(response as SseResponse<EventType.ERROR>);
       default:
         return this;
     }
@@ -79,7 +81,7 @@ export default class Conversation implements IConversation {
 
     const currentMessage = messages.get(message.messageId);
 
-    if (currentMessage?.type === 'user') return this;
+    if (currentMessage?.type !== 'bot') return this;
 
     if (
       (message.isDebug && !this.showDebugMessage) ||
@@ -121,6 +123,23 @@ export default class Conversation implements IConversation {
       typingText: null,
       messageId: message.messageId,
       message,
+      time: new Date(),
+    });
+
+    return this.create(messages);
+  }
+
+  onMessageError(response: SseResponse<EventType.ERROR>): Conversation {
+    const messageId = crypto.randomUUID();
+    const error = response.fact.runError.error;
+
+    const messages = new Map(this.messages);
+
+    messages.set(messageId, {
+      type: 'error',
+      eventType: EventType.ERROR,
+      messageId,
+      error,
       time: new Date(),
     });
 

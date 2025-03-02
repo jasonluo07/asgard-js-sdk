@@ -21,6 +21,10 @@ export function ConversationMessageRenderer(
     return <TextTemplate message={message} />;
   }
 
+  if (message.type === 'error') {
+    return <HintTemplate message={message} />;
+  }
+
   if (message.isTyping) {
     return (
       <BotTypingBox

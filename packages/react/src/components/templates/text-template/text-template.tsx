@@ -16,6 +16,8 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
 
   const { avatar } = useAsgardContext();
 
+  if (message.type === 'error') return null;
+
   if (message.type === 'user') {
     return (
       <TemplateBox type="user" direction="horizontal">

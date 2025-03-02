@@ -9,6 +9,10 @@
   background: rgba(88, 88, 88, 0.2);
   font-size: 13px;
   color: white;
+
+  &.hint_root__error {
+    color: var(--asg-color-error);
+  }
 }
 
 .time {

@@ -9,6 +9,7 @@ export enum EventType {
   MESSAGE_DELTA = 'asgard.message.delta',
   MESSAGE_COMPLETE = 'asgard.message.complete',
   DONE = 'asgard.run.done',
+  ERROR = 'asgard.run.error',
 }
 
 export enum MessageTemplateType {

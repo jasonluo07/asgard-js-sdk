@@ -88,18 +88,39 @@ export interface Message<Payload = unknown> {
     | CarouselMessageTemplate;
 }
 
-export type EventData<
-  CurrentEventType extends EventType,
-  TargetEventType extends EventType
-> = CurrentEventType extends TargetEventType ? { message: Message } : null;
+export type IsEqual<A, B, DataType> = A extends B
+  ? B extends A
+    ? DataType
+    : null
+  : null;
+
+export interface MessageEventData {
+  message: Message;
+}
+
+export interface ErrorMessage {
+  message: string;
+  code: string;
+  inner: string;
+  location: {
+    namespace: string;
+    workflowName: string;
+    processorName: string;
+    processorType: string;
+  };
+}
+
+export interface ErrorEventData {
+  error: ErrorMessage;
+}
 
 export interface Fact<Type extends EventType> {
   runInit: null;
   runDone: null;
-  runError: null;
-  messageStart: EventData<Type, EventType.MESSAGE_START>;
-  messageDelta: EventData<Type, EventType.MESSAGE_DELTA>;
-  messageComplete: EventData<Type, EventType.MESSAGE_COMPLETE>;
+  runError: IsEqual<Type, EventType.ERROR, ErrorEventData>;
+  messageStart: IsEqual<Type, EventType.MESSAGE_START, MessageEventData>;
+  messageDelta: IsEqual<Type, EventType.MESSAGE_DELTA, MessageEventData>;
+  messageComplete: IsEqual<Type, EventType.MESSAGE_COMPLETE, MessageEventData>;
 }
 
 export interface SseResponse<Type extends EventType> {

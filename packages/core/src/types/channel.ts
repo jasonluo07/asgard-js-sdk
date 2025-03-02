@@ -2,7 +2,7 @@ import { Observer } from 'rxjs';
 import { EventType } from 'src/constants/enum';
 import Conversation from 'src/lib/conversation';
 import { IAsgardServiceClient } from './client';
-import { Message } from './sse-response';
+import { ErrorMessage, Message } from './sse-response';
 
 export type ObserverOrNext<T> = Partial<Observer<T>> | ((value: T) => void);
 
@@ -36,6 +36,15 @@ export type ConversationBotMessage = {
   time: Date;
 };
 
+export type ConversationErrorMessage = {
+  type: 'error';
+  messageId: string;
+  eventType: EventType;
+  error: ErrorMessage;
+  time: Date;
+};
+
 export type ConversationMessage =
   | ConversationUserMessage
-  | ConversationBotMessage;
+  | ConversationBotMessage
+  | ConversationErrorMessage;
