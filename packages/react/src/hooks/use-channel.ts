@@ -75,6 +75,9 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         onSseCompleted() {
           setIsResetting(false);
         },
+        onSseError() {
+          setIsResetting(false);
+        },
       }
     );
 

@@ -46,9 +46,9 @@ export default class Channel {
     const channel = new Channel(config);
 
     try {
-      await channel.resetChannel(options);
-
       channel.subscribe();
+
+      await channel.resetChannel(options);
 
       return channel;
     } catch (error) {
