@@ -6,7 +6,7 @@ import {
   CarouselTemplate,
   HintTemplate,
   TextTemplate,
-} from '../templates';
+} from '../../templates';
 
 interface ConversationMessageRendererProps {
   message: ConversationMessage;

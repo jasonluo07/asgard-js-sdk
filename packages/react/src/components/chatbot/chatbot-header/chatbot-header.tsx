@@ -1,6 +1,6 @@
 import { MouseEventHandler, ReactNode, useCallback, useMemo } from 'react';
 import styles from './chatbot-header.module.scss';
-import { ProfileIcon } from './profile-icon';
+import { ProfileIcon } from '../profile-icon';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import RefreshSvg from 'src/icons/refresh.svg?react';
 import CloseSvg from 'src/icons/close.svg?react';
