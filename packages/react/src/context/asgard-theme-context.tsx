@@ -52,27 +52,14 @@ export const AsgardThemeContext = createContext<AsgardThemeContextValue>(
 
 export function AsgardThemeContextProvider(
   props: PropsWithChildren<{
-    fullScreen?: boolean;
     theme?: Partial<AsgardThemeContextValue>;
   }>
 ): ReactNode {
-  const { children, fullScreen, theme = {} } = props;
+  const { children, theme = {} } = props;
 
   const value = useMemo(
-    () =>
-      deepMerge(
-        defaultAsgardThemeContextValue,
-        fullScreen
-          ? deepMerge(theme, {
-              chatbot: {
-                width: '100vw',
-                height: '100vh',
-                borderRadius: 'var(--asg-radius-none)',
-              },
-            })
-          : theme
-      ),
-    [fullScreen, theme]
+    () => deepMerge(defaultAsgardThemeContextValue, theme),
+    [theme]
   );
 
   return (

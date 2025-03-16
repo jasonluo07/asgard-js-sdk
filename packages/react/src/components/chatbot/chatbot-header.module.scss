@@ -1,4 +1,6 @@
 .chatbot_header {
+  border-bottom: 1px solid #434343;
+
   .chatbot_header__content {
     margin: 0 auto;
     max-width: 1200px;
@@ -32,12 +34,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-  
+
     > svg {
       width: 15px;
       height: 15px;
       cursor: pointer;
-  
+
       &:hover {
         opacity: 0.5;
       }

@@ -28,6 +28,7 @@ export function ChatbotFooter(): ReactNode {
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+      borderTopColor: chatbot?.borderColor,
     }),
     [chatbot]
   );

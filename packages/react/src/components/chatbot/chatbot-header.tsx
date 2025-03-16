@@ -23,6 +23,7 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+      borderBottomColor: chatbot?.borderColor,
     }),
     [chatbot]
   );

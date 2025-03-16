@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
-import clsx from 'clsx';
 import {
   AsgardThemeContextProvider,
   AsgardThemeContextValue,
@@ -9,7 +8,7 @@ import { AsgardServiceContextProvider } from 'src/context/asgard-service-context
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
-import classes from './chatbot.module.scss';
+import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
 interface ChatbotProps {
   title: string;
@@ -41,12 +40,8 @@ export function Chatbot(props: ChatbotProps): ReactNode {
   } = props;
 
   return (
-    <AsgardThemeContextProvider fullScreen={fullScreen} theme={theme}>
+    <AsgardThemeContextProvider theme={theme}>
       <AsgardServiceContextProvider
-        className={clsx(
-          classes.chatbot_root,
-          fullScreen && classes.chatbot_root__fullScreen
-        )}
         avatar={avatar}
         config={config}
         customChannelId={customChannelId}
@@ -54,9 +49,11 @@ export function Chatbot(props: ChatbotProps): ReactNode {
         botTypingPlaceholder={botTypingPlaceholder}
         options={{ showDebugMessage: debugMode }}
       >
-        <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
-        <ChatbotBody />
-        <ChatbotFooter />
+        <ChatbotContainer fullScreen={fullScreen}>
+          <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
+          <ChatbotBody />
+          <ChatbotFooter />
+        </ChatbotContainer>
       </AsgardServiceContextProvider>
     </AsgardThemeContextProvider>
   );
