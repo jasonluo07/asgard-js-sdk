@@ -23,7 +23,10 @@ export function ChatbotFooter(): ReactNode {
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const disabled = useMemo(() => isConnecting || !value, [isConnecting, value]);
+  const disabled = useMemo(
+    () => isConnecting || !value.trim(),
+    [isConnecting, value]
+  );
 
   const contentStyles = useMemo(
     () => ({
@@ -62,7 +65,12 @@ export function ChatbotFooter(): ReactNode {
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
-      if (event.key === 'Enter' && !isComposing && !isConnecting) {
+      if (
+        event.key === 'Enter' &&
+        !isComposing &&
+        !isConnecting &&
+        value.trim()
+      ) {
         sendMessage?.(value);
         setValue('');
 
