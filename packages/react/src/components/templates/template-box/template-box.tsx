@@ -33,5 +33,22 @@ export function TemplateBox(props: TemplateBoxProps): ReactNode {
     }
   }, [direction, type]);
 
+  // const boxStyles = useMemo<CSSProperties>(() => {
+  //   switch (type) {
+  //     case 'user':
+  //       return {
+  //         color: theme?.userMessage?.color,
+  //         backgroundColor: theme?.userMessage?.backgroundColor,
+  //       };
+  //     case 'bot':
+  //       return {
+  //         color: theme?.botMessage?.color,
+  //         backgroundColor: theme?.botMessage?.backgroundColor,
+  //       };
+  //     default:
+  //       return {};
+  //   }
+  // }, [type, theme]);
+
   return <div className={boxClassName}>{children}</div>;
 }

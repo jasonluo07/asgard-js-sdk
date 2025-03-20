@@ -1,11 +1,10 @@
-import { ReactNode, useCallback } from 'react';
+import { ReactNode, useCallback, useRef } from 'react';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import clsx from 'clsx';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import styles from './bot-typing-box.module.scss';
-import { ResizeObserverBox } from './resize-observer-box';
-import { useDebounce } from 'src/hooks';
+import { useDebounce, useResizeObserver } from 'src/hooks';
+import styles from './text-template.module.scss';
 
 interface BotTypingBoxProps {
   isTyping: boolean;
@@ -16,9 +15,13 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
   const { isTyping, typingText } = props;
   const { messageBoxBottomRef, avatar } = useAsgardContext();
 
+  const ref = useRef<HTMLDivElement>(null);
+
   const onResize = useCallback(() => {
     messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messageBoxBottomRef]);
+
+  useResizeObserver({ ref, onResize });
 
   const _isTyping = useDebounce(isTyping, 500);
 
@@ -28,9 +31,9 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
     <TemplateBox type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
       <TemplateBoxContent time={new Date()}>
-        <div className={clsx(styles.text, styles['text--bot'])}>
-          <ResizeObserverBox onResize={onResize}>
-            <span>{typingText ?? ''}</span>
+        <div ref={ref} className={clsx(styles.text, styles['text--bot'])}>
+          <span>
+            {typingText ?? ''}
             {_isTyping && (
               <span className={styles['typing-indicator']}>
                 <div className={styles.dot} />
@@ -38,7 +41,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
                 <div className={styles.dot} />
               </span>
             )}
-          </ResizeObserverBox>
+          </span>
         </div>
       </TemplateBoxContent>
     </TemplateBox>

@@ -1,5 +1,4 @@
 export * from './template-box';
-export * from './bot-typing-box';
 
 export * from './button-template';
 export * from './text-template';
