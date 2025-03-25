@@ -19,7 +19,7 @@ import {
   UseChannelReturn,
 } from 'src/hooks';
 
-interface AsgardServiceContextType {
+export interface AsgardServiceContextValue {
   avatar?: string;
   client: AsgardServiceClient | null;
   isOpen: boolean;
@@ -33,7 +33,7 @@ interface AsgardServiceContextType {
   botTypingPlaceholder?: string;
 }
 
-export const AsgardServiceContext = createContext<AsgardServiceContextType>({
+export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   avatar: undefined,
   client: null,
   isOpen: false,
@@ -121,6 +121,6 @@ export function AsgardServiceContextProvider(
   );
 }
 
-export function useAsgardContext(): AsgardServiceContextType {
+export function useAsgardContext(): AsgardServiceContextValue {
   return useContext(AsgardServiceContext);
 }

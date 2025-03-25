@@ -4,13 +4,17 @@ import {
   AsgardThemeContextProvider,
   AsgardThemeContextValue,
 } from 'src/context/asgard-theme-context';
-import { AsgardServiceContextProvider } from 'src/context/asgard-service-context';
+import {
+  AsgardServiceContextProvider,
+  AsgardTemplateContextProvider,
+  AsgardTemplateContextValue,
+} from 'src/context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
-interface ChatbotProps {
+interface ChatbotProps extends AsgardTemplateContextValue {
   title: string;
   theme?: Partial<AsgardThemeContextValue>;
   config: ClientConfig;
@@ -35,6 +39,8 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     botTypingPlaceholder,
     onReset,
     onClose,
+    onErrorClick,
+    errorMessageRenderer,
   } = props;
 
   return (
@@ -48,7 +54,12 @@ export function Chatbot(props: ChatbotProps): ReactNode {
       >
         <ChatbotContainer fullScreen={fullScreen}>
           <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
-          <ChatbotBody />
+          <AsgardTemplateContextProvider
+            onErrorClick={onErrorClick}
+            errorMessageRenderer={errorMessageRenderer}
+          >
+            <ChatbotBody />
+          </AsgardTemplateContextProvider>
           <ChatbotFooter />
         </ChatbotContainer>
       </AsgardServiceContextProvider>
