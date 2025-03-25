@@ -36,6 +36,13 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
     [theme]
   );
 
+  const dotStyles = useMemo<CSSProperties>(
+    () => ({
+      backgroundColor: theme?.botMessage?.color,
+    }),
+    [theme]
+  );
+
   if (!_isTyping) return null;
 
   return (
@@ -51,9 +58,9 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
             {typingText ?? ''}
             {_isTyping && (
               <span className={classes['typing-indicator']}>
-                <div className={classes.dot} />
-                <div className={classes.dot} />
-                <div className={classes.dot} />
+                <div className={classes.dot} style={dotStyles} />
+                <div className={classes.dot} style={dotStyles} />
+                <div className={classes.dot} style={dotStyles} />
               </span>
             )}
           </span>
