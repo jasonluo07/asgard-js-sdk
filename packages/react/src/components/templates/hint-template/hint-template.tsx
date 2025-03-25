@@ -1,7 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode, useCallback } from 'react';
 import classes from './hint-template.module.scss';
 import { formatTime } from 'src/utils';
-import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
+import {
+  ConversationErrorMessage,
+  ConversationMessage,
+  MessageTemplateType,
+} from '@asgard-js/core';
 import { useAsgardTemplateContext } from 'src/context';
 
 interface HintTemplateProps {
@@ -12,6 +16,10 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
   const { message } = props;
 
   const { onErrorClick, errorMessageRenderer } = useAsgardTemplateContext();
+
+  const onErrorHintClick = useCallback(() => {
+    onErrorClick?.(message as ConversationErrorMessage);
+  }, [message, onErrorClick]);
 
   if (message.type === 'user') return null;
 
@@ -27,7 +35,7 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
             {onErrorClick && (
               <div
                 className={classes.error_hint_message}
-                onClick={onErrorClick}
+                onClick={onErrorHintClick}
               >
                 Click <span>here</span> to view the report.
               </div>

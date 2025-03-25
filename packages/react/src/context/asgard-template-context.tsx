@@ -8,7 +8,7 @@ import {
 import { ConversationErrorMessage } from '@asgard-js/core';
 
 export interface AsgardTemplateContextValue {
-  onErrorClick?: () => void;
+  onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
 }
 
@@ -18,7 +18,7 @@ export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
 });
 
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
-  onErrorClick?: () => void;
+  onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
 }
 
