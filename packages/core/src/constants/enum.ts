@@ -5,6 +5,10 @@ export enum FetchSseAction {
 
 export enum EventType {
   INIT = 'asgard.run.init',
+  PROCESS = 'asgard.process',
+  PROCESS_START = 'asgard.process.start',
+  PROCESS_COMPLETE = 'asgard.process.complete',
+  MESSAGE = 'asgard.message',
   MESSAGE_START = 'asgard.message.start',
   MESSAGE_DELTA = 'asgard.message.delta',
   MESSAGE_COMPLETE = 'asgard.message.complete',

@@ -3,18 +3,19 @@ import {
   IAsgardServiceClient,
   FetchSsePayload,
   FetchSseOptions,
-  ErrorEventData,
   SseResponse,
+  SseEvents,
 } from 'src/types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
 import { EventType } from 'src/constants/enum';
+import { EventEmitter } from './event-emitter';
 
 export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey?: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
-  private onExecutionError?: (error: ErrorEventData) => void;
+  private sseEmitter = new EventEmitter<SseEvents>();
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 
   constructor(config: ClientConfig) {
@@ -24,8 +25,57 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
     this.apiKey = config.apiKey;
     this.endpoint = config.endpoint;
-    this.onExecutionError = config.onExecutionError;
     this.transformSsePayload = config.transformSsePayload;
+  }
+
+  on<K extends keyof SseEvents>(event: K, listener: SseEvents[K]): void {
+    this.sseEmitter.remove(event);
+    this.sseEmitter.on(event, listener);
+  }
+
+  handleEvent(response: SseResponse<EventType>): void {
+    switch (response.eventType) {
+      case EventType.INIT:
+        this.sseEmitter.emit(
+          EventType.INIT,
+          response as SseResponse<EventType.INIT>
+        );
+
+        break;
+      case EventType.PROCESS_START:
+      case EventType.PROCESS_COMPLETE:
+        this.sseEmitter.emit(
+          EventType.PROCESS,
+          response as Parameters<SseEvents[EventType.PROCESS]>[0]
+        );
+
+        break;
+      case EventType.MESSAGE_START:
+      case EventType.MESSAGE_DELTA:
+      case EventType.MESSAGE_COMPLETE:
+        this.sseEmitter.emit(
+          EventType.MESSAGE,
+          response as Parameters<SseEvents[EventType.MESSAGE]>[0]
+        );
+
+        break;
+      case EventType.DONE:
+        this.sseEmitter.emit(
+          EventType.DONE,
+          response as SseResponse<EventType.DONE>
+        );
+
+        break;
+      case EventType.ERROR:
+        this.sseEmitter.emit(
+          EventType.ERROR,
+          response as SseResponse<EventType.ERROR>
+        );
+
+        break;
+      default:
+        break;
+    }
   }
 
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
@@ -44,17 +94,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       .subscribe({
         next: (response) => {
           options?.onSseMessage?.(response);
-
-          switch (response.eventType) {
-            case EventType.ERROR:
-              this.onExecutionError?.(
-                (response as SseResponse<EventType.ERROR>).fact.runError
-              );
-
-              break;
-            default:
-              break;
-          }
+          this.handleEvent(response);
         },
         error: (error) => {
           options?.onSseError?.(error);

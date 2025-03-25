@@ -1,4 +1,4 @@
-import { ClientConfig, AsgardServiceClient } from '@asgard-js/core';
+import { ClientConfig, AsgardServiceClient, EventType } from '@asgard-js/core';
 import { useEffect, useRef } from 'react';
 
 interface UseAsgardServiceClientProps {
@@ -9,6 +9,8 @@ export function useAsgardServiceClient(
   props: UseAsgardServiceClientProps
 ): AsgardServiceClient | null {
   const { config } = props;
+
+  const { onRunInit, onProcess, onMessage, onRunDone, onRunError } = config;
 
   const clientRef = useRef<AsgardServiceClient | null>(null);
 
@@ -23,7 +25,37 @@ export function useAsgardServiceClient(
         clientRef.current = null;
       }
     };
-  }, [config]);
+  }, []);
+
+  useEffect(() => {
+    if (!clientRef.current || !onRunInit) return;
+
+    clientRef.current.on(EventType.INIT, onRunInit);
+  }, [onRunInit]);
+
+  useEffect(() => {
+    if (!clientRef.current || !onProcess) return;
+
+    clientRef.current.on(EventType.PROCESS, onProcess);
+  }, [onProcess]);
+
+  useEffect(() => {
+    if (!clientRef.current || !onMessage) return;
+
+    clientRef.current.on(EventType.MESSAGE, onMessage);
+  }, [onMessage]);
+
+  useEffect(() => {
+    if (!clientRef.current || !onRunDone) return;
+
+    clientRef.current.on(EventType.DONE, onRunDone);
+  }, [onRunDone]);
+
+  useEffect(() => {
+    if (!clientRef.current || !onRunError) return;
+
+    clientRef.current.on(EventType.ERROR, onRunError);
+  }, [onRunError]);
 
   return clientRef.current;
 }
