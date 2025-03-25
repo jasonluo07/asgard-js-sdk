@@ -1,4 +1,4 @@
-import { PropsWithChildren, ReactNode, useRef } from 'react';
+import { PropsWithChildren, ReactNode, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import {
   useIsOnScreenKeyboardOpen,
@@ -7,6 +7,7 @@ import {
   useViewportSize,
 } from 'src/hooks';
 import classes from './chatbot-container.module.scss';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 export function ChatbotFullScreenContainer(
   props: PropsWithChildren
@@ -14,6 +15,8 @@ export function ChatbotFullScreenContainer(
   const { children } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const theme = useAsgardThemeContext();
 
   usePreventOverScrolling(containerRef);
 
@@ -23,6 +26,17 @@ export function ChatbotFullScreenContainer(
 
   const isOnScreenKeyboardOpen = useIsOnScreenKeyboardOpen();
 
+  const styles = useMemo(() => {
+    return Object.assign(
+      theme?.chatbot?.backgroundColor
+        ? {
+            backgroundColor: theme.chatbot?.backgroundColor,
+          }
+        : {},
+      isOnScreenKeyboardOpen ? { height } : {}
+    );
+  }, [height, isOnScreenKeyboardOpen, theme]);
+
   return (
     <div className={classes.full_screen}>
       <div
@@ -31,7 +45,7 @@ export function ChatbotFullScreenContainer(
           classes.chatbot_container,
           isOnScreenKeyboardOpen && classes.screen_keyboard_open
         )}
-        style={isOnScreenKeyboardOpen ? { height } : undefined}
+        style={styles}
       >
         {children}
       </div>
