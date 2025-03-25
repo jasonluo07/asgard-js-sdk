@@ -31,6 +31,7 @@ export interface SseHandlers {
 export interface ClientConfig extends SseHandlers {
   endpoint: string;
   apiKey?: string;
+  debugMode?: boolean;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 }
 

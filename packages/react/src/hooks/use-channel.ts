@@ -12,7 +12,6 @@ interface UseChannelProps {
   customChannelId: string;
   customMessageId?: string;
   initMessages?: ConversationMessage[];
-  showDebugMessage?: boolean;
 }
 
 export interface UseChannelReturn {
@@ -26,13 +25,7 @@ export interface UseChannelReturn {
 }
 
 export function useChannel(props: UseChannelProps): UseChannelReturn {
-  const {
-    client,
-    customChannelId,
-    customMessageId,
-    initMessages,
-    showDebugMessage,
-  } = props;
+  const { client, customChannelId, customMessageId, initMessages } = props;
 
   if (!client) {
     throw new Error('Client instance is required');
@@ -50,7 +43,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   const resetChannel = useCallback(async () => {
     const conversation = new Conversation({
-      showDebugMessage,
       messages: new Map(
         initMessages?.map((message) => [message.messageId, message])
       ),
@@ -82,13 +74,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     );
 
     setChannel(channel);
-  }, [
-    client,
-    customChannelId,
-    customMessageId,
-    initMessages,
-    showDebugMessage,
-  ]);
+  }, [client, customChannelId, customMessageId, initMessages]);
 
   const closeChannel = useCallback(() => {
     setChannel((prevChannel) => {
@@ -103,9 +89,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (text: string) => {
-      channel?.sendMessage({ text });
-    },
+    (text: string) => channel?.sendMessage({ text }),
     [channel]
   );
 

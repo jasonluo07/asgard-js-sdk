@@ -3,30 +3,20 @@ import { ConversationMessage, SseResponse } from 'src/types';
 
 interface IConversation {
   messages: Map<string, ConversationMessage> | null;
-  showDebugMessage?: boolean;
 }
 
 export default class Conversation implements IConversation {
-  public showDebugMessage = false;
   public messages: Map<string, ConversationMessage> | null = null;
 
-  constructor({ messages, showDebugMessage }: IConversation) {
+  constructor({ messages }: IConversation) {
     this.messages = messages;
-    this.showDebugMessage = showDebugMessage ?? false;
-  }
-
-  private create(messages: IConversation['messages']): Conversation {
-    return new Conversation({
-      messages,
-      showDebugMessage: this.showDebugMessage,
-    });
   }
 
   pushMessage(message: ConversationMessage): Conversation {
     const messages = new Map(this.messages);
     messages.set(message.messageId, message);
 
-    return this.create(messages);
+    return new Conversation({ messages });
   }
 
   onMessage(response: SseResponse<EventType>): Conversation {
@@ -54,13 +44,6 @@ export default class Conversation implements IConversation {
     const message = response.fact.messageStart.message;
     const messages = new Map(this.messages);
 
-    if (
-      (message.isDebug && !this.showDebugMessage) ||
-      messages?.has(message.messageId)
-    ) {
-      return this.create(messages);
-    }
-
     messages.set(message.messageId, {
       type: 'bot',
       eventType: EventType.MESSAGE_START,
@@ -71,7 +54,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.create(messages);
+    return new Conversation({ messages });
   }
 
   onMessageDelta(response: SseResponse<EventType.MESSAGE_DELTA>): Conversation {
@@ -82,13 +65,6 @@ export default class Conversation implements IConversation {
     const currentMessage = messages.get(message.messageId);
 
     if (currentMessage?.type !== 'bot') return this;
-
-    if (
-      (message.isDebug && !this.showDebugMessage) ||
-      currentMessage?.eventType === EventType.MESSAGE_COMPLETE
-    ) {
-      return this.create(messages);
-    }
 
     const typingText = `${currentMessage?.typingText ?? ''}${message.text}`;
 
@@ -102,7 +78,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.create(messages);
+    return new Conversation({ messages });
   }
 
   onMessageComplete(
@@ -111,10 +87,6 @@ export default class Conversation implements IConversation {
     const message = response.fact.messageComplete.message;
 
     const messages = new Map(this.messages);
-
-    if (message.isDebug && !this.showDebugMessage) {
-      return this.create(messages);
-    }
 
     messages.set(message.messageId, {
       type: 'bot',
@@ -126,7 +98,7 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.create(messages);
+    return new Conversation({ messages });
   }
 
   onMessageError(response: SseResponse<EventType.ERROR>): Conversation {
@@ -143,6 +115,6 @@ export default class Conversation implements IConversation {
       time: new Date(),
     });
 
-    return this.create(messages);
+    return new Conversation({ messages });
   }
 }

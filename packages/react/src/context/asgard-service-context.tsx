@@ -53,7 +53,6 @@ interface AsgardServiceContextProviderProps
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
-  options?: { showDebugMessage?: boolean };
   initMessages?: ConversationMessage[];
 }
 
@@ -67,7 +66,6 @@ export function AsgardServiceContextProvider(
     botTypingPlaceholder,
     customChannelId,
     initMessages,
-    options,
   } = props;
 
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
@@ -86,7 +84,6 @@ export function AsgardServiceContextProvider(
     client,
     customChannelId,
     initMessages,
-    showDebugMessage: options?.showDebugMessage,
   });
 
   const contextValue = useMemo(

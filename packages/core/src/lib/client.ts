@@ -14,6 +14,7 @@ import { EventEmitter } from './event-emitter';
 export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey?: string;
   private endpoint: string;
+  private debugMode?: boolean;
   private destroy$ = new Subject<void>();
   private sseEmitter = new EventEmitter<SseEvents>();
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
@@ -25,6 +26,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
     this.apiKey = config.apiKey;
     this.endpoint = config.endpoint;
+    this.debugMode = config.debugMode;
     this.transformSsePayload = config.transformSsePayload;
   }
 
@@ -84,6 +86,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     createSseObservable({
       apiKey: this.apiKey,
       endpoint: this.endpoint,
+      debugMode: this.debugMode,
       payload: this.transformSsePayload?.(payload) ?? payload,
     })
       .pipe(

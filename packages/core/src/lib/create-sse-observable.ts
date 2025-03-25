@@ -9,13 +9,14 @@ import { EventType } from 'src/constants/enum';
 interface CreateSseObservableOptions {
   endpoint: string;
   apiKey?: string;
+  debugMode?: boolean;
   payload: FetchSsePayload;
 }
 
 export function createSseObservable(
   options: CreateSseObservableOptions
 ): Observable<SseResponse<EventType>> {
-  const { endpoint, apiKey, payload } = options;
+  const { endpoint, apiKey, payload, debugMode } = options;
 
   return new Observable<SseResponse<EventType>>((subscriber) => {
     const controller = new AbortController();
@@ -28,7 +29,19 @@ export function createSseObservable(
       headers['X-API-KEY'] = apiKey;
     }
 
-    fetchEventSource(endpoint, {
+    const searchParams = new URLSearchParams();
+
+    if (debugMode) {
+      searchParams.set('is_debug', 'true');
+    }
+
+    const url = new URL(endpoint);
+
+    if (searchParams.toString()) {
+      url.search = searchParams.toString();
+    }
+
+    fetchEventSource(url.toString(), {
       method: 'POST',
       headers,
       body: payload ? JSON.stringify(payload) : undefined,
