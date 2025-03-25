@@ -11,17 +11,13 @@ import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
 import { EventType } from 'src/constants/enum';
 
 export default class AsgardServiceClient implements IAsgardServiceClient {
-  private apiKey: string;
+  private apiKey?: string;
   private endpoint: string;
   private destroy$ = new Subject<void>();
   private onExecutionError?: (error: ErrorEventData) => void;
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 
   constructor(config: ClientConfig) {
-    if (!config.apiKey) {
-      throw new Error('apiKey must be required');
-    }
-
     if (!config.endpoint) {
       throw new Error('endpoint must be required');
     }

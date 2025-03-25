@@ -8,7 +8,7 @@ import { EventType } from 'src/constants/enum';
 
 interface CreateSseObservableOptions {
   endpoint: string;
-  apiKey: string;
+  apiKey?: string;
   payload: FetchSsePayload;
 }
 
@@ -20,12 +20,17 @@ export function createSseObservable(
   return new Observable<SseResponse<EventType>>((subscriber) => {
     const controller = new AbortController();
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (apiKey) {
+      headers['X-API-KEY'] = apiKey;
+    }
+
     fetchEventSource(endpoint, {
       method: 'POST',
-      headers: {
-        'X-API-KEY': apiKey,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: payload ? JSON.stringify(payload) : undefined,
       signal: controller.signal,
       onopen: async (response) => {

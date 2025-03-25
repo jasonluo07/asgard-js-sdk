@@ -7,7 +7,7 @@ export interface IAsgardServiceClient {
 
 export interface ClientConfig {
   endpoint: string;
-  apiKey: string;
+  apiKey?: string;
   onExecutionError?: (error: ErrorEventData) => void;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 }
