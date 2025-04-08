@@ -1,12 +1,13 @@
 import { CSSProperties, ReactNode, useMemo } from 'react';
 import clsx from 'clsx';
-import { ConversationMessage } from '@asgard-js/core';
+import { ConversationBotMessage, ConversationMessage } from '@asgard-js/core';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import classes from './text-template.module.scss';
 import { Avatar } from '../avatar';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useMarkdownRenderer } from './use-markdown-renderer';
 
 interface TextTemplateProps {
   message: ConversationMessage;
@@ -18,6 +19,11 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
   const { avatar } = useAsgardContext();
 
   const theme = useAsgardThemeContext();
+
+  const { htmlBlocks, lastTypingText } = useMarkdownRenderer(
+    (message as ConversationBotMessage)?.message?.text || '',
+    20
+  );
 
   const styles = useMemo<CSSProperties>(() => {
     switch (message.type) {
@@ -63,7 +69,8 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
           className={clsx(classes.text, classes['text--bot'])}
           style={styles}
         >
-          {message.message.text}
+          {htmlBlocks}
+          {lastTypingText ?? ''}
         </div>
       </TemplateBoxContent>
     </TemplateBox>

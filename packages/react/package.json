@@ -26,7 +26,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "dependencies": {
-    "clsx": "^2.1.1"
+    "clsx": "^2.1.1",
+    "dompurify": "^3.2.5",
+    "marked": "^15.0.8"
   },
   "devDependencies": {
     "@types/dom-speech-recognition": "^0.0.4",
