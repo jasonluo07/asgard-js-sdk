@@ -40,7 +40,7 @@ export function Card(props: CardProps): ReactNode {
       return function clickHandler() {
         switch (action.type) {
           case 'message':
-            sendMessage?.(action.text);
+            sendMessage?.({ text: action.text });
 
             return;
           case 'uri':

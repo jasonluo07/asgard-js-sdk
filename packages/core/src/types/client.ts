@@ -39,6 +39,7 @@ export interface FetchSsePayload {
   customChannelId: string;
   customMessageId?: string;
   text: string;
+  payload?: Record<string, unknown>;
   action: FetchSseAction;
 }
 

@@ -12,9 +12,7 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { sendMessage, isConnecting } = useAsgardContext();
 
   const onClick = useCallback(
-    (text: string) => {
-      sendMessage?.(text);
-    },
+    (text: string) => sendMessage?.({ text }),
     [sendMessage]
   );
 

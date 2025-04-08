@@ -4,6 +4,7 @@ import {
   ChannelStates,
   Conversation,
   ConversationMessage,
+  FetchSsePayload,
 } from '@asgard-js/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -19,7 +20,7 @@ export interface UseChannelReturn {
   isResetting: boolean;
   isConnecting: boolean;
   conversation: Conversation | null;
-  sendMessage?: (text: string) => void;
+  sendMessage?: (payload: Pick<FetchSsePayload, 'text' | 'payload'>) => void;
   resetChannel?: () => void;
   closeChannel?: () => void;
 }
@@ -89,7 +90,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (text: string) => channel?.sendMessage({ text }),
+    (payload: Pick<FetchSsePayload, 'text' | 'payload'>) =>
+      channel?.sendMessage(payload),
     [channel]
   );
 

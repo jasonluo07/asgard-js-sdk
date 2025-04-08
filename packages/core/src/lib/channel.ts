@@ -112,7 +112,7 @@ export default class Channel {
   }
 
   public sendMessage(
-    payload: Pick<FetchSsePayload, 'customMessageId' | 'text'>,
+    payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload'>,
     options?: FetchSseOptions
   ): Promise<void> {
     const text = payload.text.trim();
@@ -132,6 +132,7 @@ export default class Channel {
         action: FetchSseAction.NONE,
         customChannelId: this.customChannelId,
         customMessageId: messageId,
+        payload: payload?.payload,
         text,
       },
       options

@@ -54,7 +54,7 @@ export function ChatbotFooter(): ReactNode {
 
   const onSubmit = useCallback(() => {
     if (!isComposing && !isConnecting) {
-      sendMessage?.(value);
+      sendMessage?.({ text: value });
       setValue('');
 
       if (textareaRef.current) {
@@ -71,7 +71,7 @@ export function ChatbotFooter(): ReactNode {
         !isConnecting &&
         value.trim()
       ) {
-        sendMessage?.(value);
+        sendMessage?.({ text: value });
         setValue('');
 
         const element = event.target as HTMLTextAreaElement;
