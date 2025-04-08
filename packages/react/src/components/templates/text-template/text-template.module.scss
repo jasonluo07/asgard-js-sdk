@@ -3,6 +3,11 @@
   padding: 8px 12px;
   border-radius: 8px;
   color: white;
+  word-break: break-all;
+
+  > span {
+    word-break: break-all;
+  }
 }
 
 .text--user {

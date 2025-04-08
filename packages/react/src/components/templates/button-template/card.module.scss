@@ -5,13 +5,16 @@
   border-radius: 8px;
   background: rgba(51, 51, 51, 1);
   overflow: hidden;
+  display: grid;
+  grid-template-rows: max-content auto;
 }
 
 .card_content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-rows: 1.5em auto max-content;
+  gap: var(--asg-spacing-2);
   padding: 12px;
+  line-height: 1.5em;
 }
 
 .card_title {
@@ -21,17 +24,18 @@
 }
 
 .card_description {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
   color: rgba(140, 140, 140, 1);
   font-size: 13px;
   font-weight: 400;
-  line-height: 20px;
+  max-height: 4.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   text-underline-position: from-font;
   text-decoration-skip-ink: none;
-  text-overflow: ellipsis;
 }
 
 .card_actions {
