@@ -3,6 +3,8 @@
 .chatbot_root {
   @include styles.generate();
 
+  font-family: 'SpaceGrotesk', 'NotoSansTC', sans-serif;
+
   * {
     line-height: 1.5;
     box-sizing: border-box;
