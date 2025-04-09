@@ -71,6 +71,22 @@
   "release": {
     "version": {
       "preVersionCommand": "yarn nx run-many -t build"
+    },
+    "changelog": {
+      "projectChangelogs": {
+        "renderOptions": {
+          "authors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      },
+      "workspaceChangelog": {
+        "renderOptions": {
+          "authors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
     }
   },
   "targetDefaults": {
