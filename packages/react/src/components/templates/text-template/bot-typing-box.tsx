@@ -6,8 +6,7 @@ import { Avatar } from '../avatar';
 import { useDebounce, useResizeObserver } from 'src/hooks';
 import classes from './text-template.module.scss';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
-import { useMarkdownRenderer } from './use-markdown-renderer';
-
+import { useMarkdownRenderer } from 'src/hooks/use-markdown-renderer';
 interface BotTypingBoxProps {
   isTyping: boolean;
   typingText: string | null;
