@@ -299,3 +299,66 @@ export function createCarouselTemplateExample(): ConversationMessage {
     },
   });
 }
+
+export function createChartTemplateExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: '這是圖表範例',
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.CHART,
+      title: '每月銷售額統計',
+      description: '以下是過去三個月的總銷售數據分析。',
+      data: {
+        values: [
+          { category: 'A', group: 'x', value: 0.1 },
+          { category: 'A', group: 'y', value: 0.6 },
+          { category: 'A', group: 'z', value: 0.9 },
+          { category: 'B', group: 'x', value: 0.7 },
+          { category: 'B', group: 'y', value: 0.2 },
+          { category: 'B', group: 'z', value: 1.1 },
+          { category: 'C', group: 'x', value: 0.6 },
+          { category: 'C', group: 'y', value: 0.1 },
+          { category: 'C', group: 'z', value: 0.2 },
+        ],
+      },
+      chartOptions: [
+        {
+          type: 'bar',
+          title: '長條圖',
+          spec: {
+            data: { name: 'values' },
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            mark: 'bar',
+            encoding: {
+              x: { field: 'category' },
+              y: { field: 'value', type: 'quantitative' },
+              xOffset: { field: 'group' },
+              color: { field: 'group' },
+            },
+          },
+        },
+        {
+          type: 'line',
+          title: '折線圖',
+          spec: {
+            data: { name: 'values' },
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            mark: 'line',
+            encoding: {
+              x: { field: 'category' },
+              y: { field: 'value', type: 'quantitative' },
+              xOffset: { field: 'group' },
+              color: { field: 'group' },
+            },
+          },
+        },
+      ],
+      defaultChart: 'bar',
+      quickReplies: [],
+    },
+  });
+}

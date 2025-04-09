@@ -5,7 +5,8 @@ import {
   // createButtonTemplateExample,
   // createCarouselTemplateExample,
   // createHintTemplateExample,
-  createTextTemplateExample,
+  // createTextTemplateExample,
+  createChartTemplateExample,
 } from './const';
 
 const { VITE_ENDPOINT, VITE_API_KEY } = import.meta.env;
@@ -18,6 +19,7 @@ export function Root(): ReactNode {
     // createHintTemplateExample(),
     // createButtonTemplateExample(),
     // createCarouselTemplateExample(),
+    createChartTemplateExample(),
   ]);
 
   return (
@@ -28,11 +30,6 @@ export function Root(): ReactNode {
         config={{
           endpoint: VITE_ENDPOINT,
           apiKey: VITE_API_KEY,
-          transformSsePayload: (payload) => {
-            console.log('transformSsePayload', payload);
-
-            return payload;
-          },
         }}
         avatar="./showtime.webp"
         botTypingPlaceholder="typing"

@@ -1,1 +1,1 @@
-export * from './carousel-template';
+export * from './chart-template';
