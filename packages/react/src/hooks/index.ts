@@ -7,4 +7,4 @@ export * from './use-on-screen-keyboard-scroll-fix';
 export * from './use-prevent-over-scrolling';
 export * from './use-update-vh';
 export * from './use-resize-observer';
-export * from './use-markdown-renderer';
+export * from 'src/components/templates/text-template/use-markdown-renderer';

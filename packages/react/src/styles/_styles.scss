@@ -3,23 +3,23 @@
 @use './radius';
 @use './spacing';
 
+@font-face {
+  font-family: 'SpaceGrotesk';
+  src: url('../fonts/SpaceGrotesk-Regular.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'NotoSansTC';
+  src: url('../fonts/NotoSansTC-Regular.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @mixin generate() {
   @include colors.generate();
   @include palette.generate();
   @include radius.generate();
   @include spacing.generate();
-
-  @font-face {
-    font-family: 'SpaceGrotesk';
-    src: url('../fonts/SpaceGrotesk-Regular.ttf');
-    font-weight: normal;
-    font-style: normal;
-  }
-
-  @font-face {
-    font-family: 'NotoSansTC';
-    src: url('../fonts/NotoSansTC-Regular.ttf');
-    font-weight: normal;
-    font-style: normal;
-  }
 }
