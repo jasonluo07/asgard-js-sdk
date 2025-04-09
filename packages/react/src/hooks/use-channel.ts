@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface UseChannelProps {
+  defaultIsOpen?: boolean;
   client: AsgardServiceClient | null;
   customChannelId: string;
   customMessageId?: string;
@@ -26,7 +27,13 @@ export interface UseChannelReturn {
 }
 
 export function useChannel(props: UseChannelProps): UseChannelReturn {
-  const { client, customChannelId, customMessageId, initMessages } = props;
+  const {
+    client,
+    defaultIsOpen,
+    customChannelId,
+    customMessageId,
+    initMessages,
+  } = props;
 
   if (!client) {
     throw new Error('Client instance is required');
@@ -37,7 +44,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }
 
   const [channel, setChannel] = useState<Channel | null>(null);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultIsOpen ?? true);
   const [isResetting, setIsResetting] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
