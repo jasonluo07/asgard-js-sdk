@@ -1,0 +1,52 @@
+.text {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  word-break: break-all;
+
+  > span {
+    word-break: break-all;
+  }
+
+  .md_container {
+    display: inline-block;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.text--user {
+  max-width: 75%;
+  background: #4767eb;
+  border-top-right-radius: 0;
+}
+
+.text--bot {
+  max-width: 70%;
+  background: #585858;
+  border-top-left-radius: 0;
+}
+
+.chart_time {
+  justify-content: flex-end;
+}
+
+.quick_replies_box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick_reply {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #434343;
+  background: rgba(88, 88, 88, 0.2);
+  color: white;
+  cursor: pointer;
+}

@@ -41,6 +41,22 @@ export interface LocationMessageTemplate extends MessageTemplate {
   longitude: number;
 }
 
+export interface ChartMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.CHART;
+  title: string;
+  description: string;
+  data: {
+    values: Record<string, unknown>[];
+  };
+  chartOptions: {
+    type: string;
+    title: string;
+    spec: Record<string, unknown>;
+  }[];
+  defaultChart: string;
+  quickReplies: { text: string }[];
+}
+
 export type ButtonAction =
   | {
       type: 'message';
@@ -85,7 +101,8 @@ export interface Message<Payload = unknown> {
     | VideoMessageTemplate
     | AudioMessageTemplate
     | LocationMessageTemplate
-    | CarouselMessageTemplate;
+    | CarouselMessageTemplate
+    | ChartMessageTemplate;
 }
 
 export type IsEqual<A, B, DataType> = A extends B

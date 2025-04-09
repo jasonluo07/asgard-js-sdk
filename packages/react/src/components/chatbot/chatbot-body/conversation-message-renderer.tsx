@@ -6,6 +6,7 @@ import {
   CarouselTemplate,
   HintTemplate,
   TextTemplate,
+  ChartTemplate,
 } from '../../templates';
 
 interface ConversationMessageRendererProps {
@@ -43,6 +44,8 @@ export function ConversationMessageRenderer(
       return <ButtonTemplate message={message} />;
     case MessageTemplateType.CAROUSEL:
       return <CarouselTemplate message={message} />;
+    case MessageTemplateType.CHART:
+      return <ChartTemplate message={message} />;
     default:
       return <div />;
   }
