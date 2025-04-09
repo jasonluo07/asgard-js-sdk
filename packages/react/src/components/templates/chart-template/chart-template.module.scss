@@ -1,0 +1,15 @@
+.carousel_root {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: scroll;
+  gap: 8px;
+
+  > div {
+    flex: 0 0 auto;
+  }
+}
+
+.carousel_time {
+  justify-content: flex-end;
+}

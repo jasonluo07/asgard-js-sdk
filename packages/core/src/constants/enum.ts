@@ -25,4 +25,5 @@ export enum MessageTemplateType {
   AUDIO = 'AUDIO',
   LOCATION = 'LOCATION',
   CAROUSEL = 'CAROUSEL',
+  CHART = 'CHART',
 }

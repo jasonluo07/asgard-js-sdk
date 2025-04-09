@@ -14,7 +14,7 @@ export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
 
   const [initMessages] = useState<ConversationMessage[]>([
-    createTextTemplateExample(),
+    // createTextTemplateExample(),
     // createHintTemplateExample(),
     // createButtonTemplateExample(),
     // createCarouselTemplateExample(),
