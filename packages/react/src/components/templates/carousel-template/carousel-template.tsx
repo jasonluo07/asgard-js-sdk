@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { TemplateBox } from '../template-box';
+import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './carousel-template.module.scss';
 import { Card } from '../button-template/card';
@@ -24,11 +24,13 @@ export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
   return (
     <TemplateBox type="bot" direction="vertical">
       <Avatar avatar={avatar} />
-      <div className={styles.carousel_root}>
-        {template.columns?.map((column, index) => (
-          <Card key={index} template={column} />
-        ))}
-      </div>
+      <TemplateBoxContent quickReplies={template.quickReplies}>
+        <div className={styles.carousel_root}>
+          {template.columns?.map((column, index) => (
+            <Card key={index} template={column} />
+          ))}
+        </div>
+      </TemplateBoxContent>
       <Time className={styles.carousel_time} time={message.time} />
     </TemplateBox>
   );

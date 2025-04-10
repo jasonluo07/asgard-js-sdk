@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useState } from 'react';
-import { TemplateBox } from '../template-box';
+import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './chart-template.module.scss';
 import { ConversationBotMessage } from '@asgard-js/core';
@@ -51,7 +51,9 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
           </button>
         ))}
       </div>
-      <VegaLite data={template.data} spec={spec} />
+      <TemplateBoxContent quickReplies={template?.quickReplies}>
+        <VegaLite data={template.data} spec={spec} />
+      </TemplateBoxContent>
       <Time className={styles.chart_time} time={message.time} />
     </TemplateBox>
   );

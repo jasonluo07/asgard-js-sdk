@@ -5,6 +5,14 @@ import {
   MessageTemplateType,
 } from '@asgard-js/core';
 
+const quickReplies = [
+  { text: '死侍有上映嗎?' },
+  { text: '哪邊可以找得到哺乳室' },
+  { text: '請問停車場入場幾分鐘內免費' },
+  { text: '可以跨影城進行網路訂票的現場取票嗎' },
+  { text: '台中文心秀泰充電樁是新款還是舊款?' },
+];
+
 export function createBaseTemplateExample(
   message: Message
 ): ConversationMessage {
@@ -56,7 +64,7 @@ export function createHintTemplateExample(): ConversationMessage {
     template: {
       type: MessageTemplateType.HINT,
       text: '目前位於: 板橋秀泰',
-      quickReplies: [],
+      quickReplies,
     },
   });
 }
@@ -100,7 +108,7 @@ export function createButtonTemplateExample(): ConversationMessage {
         type: 'uri',
         uri: 'https://www.showtimes.com.tw/programs/11502',
       },
-      quickReplies: [],
+      quickReplies,
     },
   });
 }
@@ -117,7 +125,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
     idx: 0,
     template: {
       type: MessageTemplateType.CAROUSEL,
-      quickReplies: [],
+      quickReplies,
       columns: [
         {
           title: '死侍與金鋼狼',
@@ -358,7 +366,7 @@ export function createChartTemplateExample(): ConversationMessage {
         },
       ],
       defaultChart: 'bar',
-      quickReplies: [],
+      quickReplies,
     },
   });
 }
@@ -378,7 +386,7 @@ export function createImageTemplateExample(
       type: MessageTemplateType.IMAGE,
       originalContentUrl: `https://dummyimage.com/${width}x${height}/000/fff&text=Hello+World`,
       previewImageUrl: `https://dummyimage.com/${width}x${height}/000/fff`,
-      quickReplies: [{ text: 'a' }, { text: 'b' }, { text: 'c' }],
+      quickReplies,
     },
   });
 }
