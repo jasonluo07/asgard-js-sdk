@@ -362,3 +362,21 @@ export function createChartTemplateExample(): ConversationMessage {
     },
   });
 }
+
+export function createImageTemplateExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: '這是圖片範例',
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.IMAGE,
+      originalContentUrl:
+        'https://dummyimage.com/400x400/000/fff&text=Hello+World',
+      previewImageUrl: 'https://dummyimage.com/400x400/000/fff',
+      quickReplies: [{ text: 'a' }, { text: 'b' }, { text: 'c' }],
+    },
+  });
+}
