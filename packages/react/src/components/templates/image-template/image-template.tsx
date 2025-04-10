@@ -21,7 +21,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
     <TemplateBox type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
       <div className={styles.image_box}>
-        <img src={previewImageUrl} alt="" />
+        <img src={previewImageUrl} alt="Message image" />
       </div>
       <div className={styles.quick_replies_box}></div>
       <Time className={styles.time} time={message.time} />
