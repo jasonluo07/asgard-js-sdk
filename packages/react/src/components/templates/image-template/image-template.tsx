@@ -1,9 +1,8 @@
 import { ReactNode } from 'react';
-import { TemplateBox } from '../template-box';
+import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './image-template.module.scss';
 import { ConversationBotMessage } from '@asgard-js/core';
-import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { ImageMessageTemplate } from '../../../../../core/src';
 
@@ -20,11 +19,14 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
   return (
     <TemplateBox type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
-      <div className={styles.image_box}>
-        <img src={previewImageUrl} alt="Message image" />
-      </div>
-      <div className={styles.quick_replies_box}></div>
-      <Time className={styles.time} time={message.time} />
+      <TemplateBoxContent
+        quickReplies={template.quickReplies}
+        time={message.time}
+      >
+        <div className={styles.image_box}>
+          <img src={previewImageUrl} alt="Message image" />
+        </div>
+      </TemplateBoxContent>
     </TemplateBox>
   );
 }
