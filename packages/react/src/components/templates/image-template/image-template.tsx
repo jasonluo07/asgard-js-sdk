@@ -1,10 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './image-template.module.scss';
 import { ConversationBotMessage } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { ImageMessageTemplate } from '../../../../../core/src';
+import CloseSvg from 'src/icons/close.svg?react';
 
 interface ImageTemplateProps {
   message: ConversationBotMessage;
@@ -13,9 +14,25 @@ interface ImageTemplateProps {
 export function ImageTemplate(props: ImageTemplateProps): ReactNode {
   const { message } = props;
   const template = message.message.template as ImageMessageTemplate;
-  const { previewImageUrl } = template;
+  const { previewImageUrl, originalContentUrl } = template;
   const { avatar } = useAsgardContext();
-
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  if (isFullScreen) {
+    return (
+      <div
+        className={styles.full_screen}
+        onClick={() => setIsFullScreen(false)}
+      >
+        <div className={styles.full_screen_close}>
+          <CloseSvg />
+        </div>
+        <div
+          className={styles.imageOrigin}
+          style={{ backgroundImage: `url(${originalContentUrl})` }}
+        />
+      </div>
+    );
+  }
   return (
     <TemplateBox type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
@@ -23,7 +40,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
         quickReplies={template.quickReplies}
         time={message.time}
       >
-        <div className={styles.image_box}>
+        <div className={styles.image_box} onClick={() => setIsFullScreen(true)}>
           <img src={previewImageUrl} alt="Message image" />
         </div>
       </TemplateBoxContent>
