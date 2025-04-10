@@ -8,12 +8,13 @@ import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 interface ChatbotHeaderProps {
   title: string;
+  customActions?: ReactNode[];
   onClose?: () => void;
   onReset?: () => void;
 }
 
 export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
-  const { title, onReset, onClose } = props;
+  const { title, onReset, onClose, customActions } = props;
 
   const { chatbot } = useAsgardThemeContext();
 
@@ -58,6 +59,7 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
           <h4>{title}</h4>
         </div>
         <div className={styles.chatbot_header__extra}>
+          {customActions}
           <div onClick={_onReset}>
             <RefreshSvg />
           </div>
