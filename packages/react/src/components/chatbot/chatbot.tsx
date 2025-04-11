@@ -16,6 +16,7 @@ import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
   title: string;
+  customActions?: ReactNode[];
   theme?: Partial<AsgardThemeContextValue>;
   config: ClientConfig;
   customChannelId: string;
@@ -30,6 +31,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
 export function Chatbot(props: ChatbotProps): ReactNode {
   const {
     title,
+    customActions,
     theme,
     config,
     customChannelId,
@@ -53,7 +55,12 @@ export function Chatbot(props: ChatbotProps): ReactNode {
         botTypingPlaceholder={botTypingPlaceholder}
       >
         <ChatbotContainer fullScreen={fullScreen}>
-          <ChatbotHeader title={title} onReset={onReset} onClose={onClose} />
+          <ChatbotHeader
+            title={title}
+            onReset={onReset}
+            onClose={onClose}
+            customActions={customActions}
+          />
           <AsgardTemplateContextProvider
             onErrorClick={onErrorClick}
             errorMessageRenderer={errorMessageRenderer}
