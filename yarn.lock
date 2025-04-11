@@ -5995,7 +5995,7 @@ fast-fifo@^1.2.0, fast-fifo@^1.3.2:
   resolved "https://registry.npmjs.org/fast-fifo/-/fast-fifo-1.3.2.tgz"
   integrity sha512-/d9sfos4yxzpwkDkuN7k2SqFKtYNmCTzgfEpz82x34IM9/zc8KGxQoXg1liNC/izpRM/MBdt44Nmx41ZWqk+FQ==
 
-fast-glob@^3.2.12, fast-glob@^3.2.5, fast-glob@^3.2.7, fast-glob@^3.3.2:
+fast-glob@^3.2.11, fast-glob@^3.2.12, fast-glob@^3.2.5, fast-glob@^3.2.7, fast-glob@^3.3.2:
   version "3.3.3"
   resolved "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.3.tgz"
   integrity sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==
@@ -6303,6 +6303,15 @@ fs-extra@^10.0.0:
   version "10.1.0"
   resolved "https://registry.npmjs.org/fs-extra/-/fs-extra-10.1.0.tgz"
   integrity sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==
+  dependencies:
+    graceful-fs "^4.2.0"
+    jsonfile "^6.0.1"
+    universalify "^2.0.0"
+
+fs-extra@^11.1.0:
+  version "11.3.0"
+  resolved "https://registry.npmjs.org/fs-extra/-/fs-extra-11.3.0.tgz#0daced136bbaf65a555a326719af931adc7a314d"
+  integrity sha512-Z4XaCL6dUDHfP/jT25jJKMmtxvuwbkrD1vNSMFlo9lNLY2c5FHYSQgHPRZUjAB26TpDEoW9HCOgplrdbaPV/ew==
   dependencies:
     graceful-fs "^4.2.0"
     jsonfile "^6.0.1"
@@ -8718,6 +8727,11 @@ p-locate@^6.0.0:
   dependencies:
     p-limit "^4.0.0"
 
+p-map@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.npmjs.org/p-map/-/p-map-7.0.3.tgz#7ac210a2d36f81ec28b736134810f7ba4418cdb6"
+  integrity sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==
+
 p-retry@^6.2.0:
   version "6.2.1"
   resolved "https://registry.npmjs.org/p-retry/-/p-retry-6.2.1.tgz"
@@ -10009,11 +10023,6 @@ semver@^6.3.1:
   resolved "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz"
   integrity sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==
 
-semver@^7.7.1:
-  version "7.7.1"
-  resolved "https://registry.npmjs.org/semver/-/semver-7.7.1.tgz"
-  integrity sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==
-
 semver@~7.5.4:
   version "7.5.4"
   resolved "https://registry.npmjs.org/semver/-/semver-7.5.4.tgz"
@@ -11233,20 +11242,6 @@ vega-embed@^6.5.1:
     vega-themes "^2.15.0"
     vega-tooltip "^0.35.2"
 
-vega-embed@^7.0.2:
-  version "7.0.2"
-  resolved "https://registry.npmjs.org/vega-embed/-/vega-embed-7.0.2.tgz"
-  integrity sha512-ZHQPWSs9mUTGJPZ5yQVhHV+OLDCoTIjR//De93vG6igZX1MQCVo03ePWlfWCUAnPV1IsKfeJLqA3K/Qd11bAFQ==
-  dependencies:
-    fast-json-patch "^3.1.1"
-    json-stringify-pretty-compact "^4.0.0"
-    semver "^7.7.1"
-    tslib "^2.8.1"
-    vega-interpreter "^2.0.0"
-    vega-schema-url-parser "^3.0.2"
-    vega-themes "3.0.0"
-    vega-tooltip "1.0.0"
-
 vega-encode@~5.0.0:
   version "5.0.0"
   resolved "https://registry.npmjs.org/vega-encode/-/vega-encode-5.0.0.tgz"
@@ -11337,13 +11332,6 @@ vega-interpreter@^1.0.5:
   integrity sha512-p408/0IPevyR/bIKdXGNzOixkTYCkH83zNhGypRqDxd/qVrdJVrh9RcECOYx1MwEc6JTB1BeK2lArHiGGuG7Hw==
   dependencies:
     vega-util "^1.17.3"
-
-vega-interpreter@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npmjs.org/vega-interpreter/-/vega-interpreter-2.0.0.tgz"
-  integrity sha512-ZjA7AC+xjfi4k9vgA49N5F/bS4fzf9E1KC0ljey4uMgHbmtKR53BWyOOzxHk+btfS9bEJ5gUvuoZzfqG3wIWEg==
-  dependencies:
-    vega-util "^2.0.0"
 
 vega-label@~2.0.0:
   version "2.0.0"
@@ -11445,11 +11433,6 @@ vega-schema-url-parser@^2.2.0:
   resolved "https://registry.npmjs.org/vega-schema-url-parser/-/vega-schema-url-parser-2.2.0.tgz"
   integrity sha512-yAtdBnfYOhECv9YC70H2gEiqfIbVkq09aaE4y/9V/ovEFmH9gPKaEgzIZqgT7PSPQjKhsNkb6jk6XvSoboxOBw==
 
-vega-schema-url-parser@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.npmjs.org/vega-schema-url-parser/-/vega-schema-url-parser-3.0.2.tgz"
-  integrity sha512-xAnR7KAvNPYewI3O0l5QGdT8Tv0+GCZQjqfP39cW/hbe/b3aYMAQ39vm8O2wfXUHzm04xTe7nolcsx8WQNVLRQ==
-
 vega-selections@^6.0.0:
   version "6.0.0"
   resolved "https://registry.npmjs.org/vega-selections/-/vega-selections-6.0.0.tgz"
@@ -11466,11 +11449,6 @@ vega-statistics@^2.0.0, vega-statistics@~2.0.0:
   dependencies:
     d3-array "^3.2.4"
 
-vega-themes@3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/vega-themes/-/vega-themes-3.0.0.tgz"
-  integrity sha512-1iFiI3BNmW9FrsLnDLx0ZKEddsCitRY3XmUAwp6qmp+p+IXyJYc9pfjlVj9E6KXBPfm4cQyU++s0smKNiWzO4g==
-
 vega-themes@^2.15.0:
   version "2.15.0"
   resolved "https://registry.npmjs.org/vega-themes/-/vega-themes-2.15.0.tgz"
@@ -11483,13 +11461,6 @@ vega-time@^3.0.0, vega-time@~3.0.0:
   dependencies:
     d3-array "^3.2.4"
     d3-time "^3.1.0"
-    vega-util "^2.0.0"
-
-vega-tooltip@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/vega-tooltip/-/vega-tooltip-1.0.0.tgz"
-  integrity sha512-P1R0JP29v0qnTuwzCQ0SPJlkjAzr6qeyj+H4VgUFSykHmHc1OBxda//XBaFDl/bZgIscEMvjKSjZpXd84x3aZQ==
-  dependencies:
     vega-util "^2.0.0"
 
 vega-tooltip@^0.35.2:
@@ -11709,6 +11680,17 @@ vite-plugin-dts@~3.8.1:
     kolorist "^1.8.0"
     magic-string "^0.30.8"
     vue-tsc "^1.8.27"
+
+vite-plugin-static-copy@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.npmjs.org/vite-plugin-static-copy/-/vite-plugin-static-copy-2.3.1.tgz#f3b9ce44529d7728b2b61837ac18e06791489e06"
+  integrity sha512-EfsPcBm3ewg3UMG8RJaC0ADq6/qnUZnokXx4By4+2cAcipjT9i0Y0owIJGqmZI7d6nxk4qB1q5aXOwNuSyPdyA==
+  dependencies:
+    chokidar "^3.5.3"
+    fast-glob "^3.2.11"
+    fs-extra "^11.1.0"
+    p-map "^7.0.3"
+    picocolors "^1.0.0"
 
 vite-plugin-svgr@^4.3.0:
   version "4.3.0"
