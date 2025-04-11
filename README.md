@@ -30,7 +30,7 @@ const App = () => {
         },
         transformSsePayload: (payload) => {
           return payload;
-        }
+        },
       }}
       customChannelId="your-channel-id"
       initMessages={[]}
@@ -118,7 +118,7 @@ const defaultTheme = {
     color: 'var(--asg-color-text)',
     backgroundColor: 'var(--asg-color-primary)',
   },
-}
+};
 ```
 
 ### Usage Example
@@ -159,6 +159,7 @@ To develop the React package locally, follow these steps:
 1. Clone the repository and navigate to the project root directory.
 
 2. Install dependencies:
+
 ```sh
 yarn install
 ```
@@ -184,6 +185,14 @@ yarn watch:react
 yarn serve:react-demo
 ```
 
+Setup your npm release token,
+
+```sh
+cd ~/
+touch .npmrc
+echo "//registry.npmjs.org/:_authToken={{YOUR_TOKEN}}" >> .npmrc
+```
+
 For working with both core and React packages:
 
 ```sh
@@ -192,6 +201,7 @@ yarn lint:packages
 
 # Build core package (required for React package)
 yarn build:core
+yarn build:react
 
 # Release packages
 yarn release:core  # Release core package
