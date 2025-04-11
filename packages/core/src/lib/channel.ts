@@ -41,6 +41,7 @@ export default class Channel {
 
   public static async reset(
     config: ChannelConfig,
+    payload?: Pick<FetchSsePayload, 'text' | 'payload'>,
     options?: FetchSseOptions
   ): Promise<Channel> {
     const channel = new Channel(config);
@@ -48,7 +49,7 @@ export default class Channel {
     try {
       channel.subscribe();
 
-      await channel.resetChannel(options);
+      await channel.resetChannel(payload, options);
 
       return channel;
     } catch (error) {
@@ -99,13 +100,17 @@ export default class Channel {
     });
   }
 
-  private resetChannel(options?: FetchSseOptions): Promise<void> {
+  private resetChannel(
+    payload?: Pick<FetchSsePayload, 'text' | 'payload'>,
+    options?: FetchSseOptions
+  ): Promise<void> {
     return this.fetchSse(
       {
         action: FetchSseAction.RESET_CHANNEL,
         customChannelId: this.customChannelId,
         customMessageId: this.customMessageId,
-        text: '',
+        text: payload?.text || '',
+        payload: payload?.payload,
       },
       options
     );

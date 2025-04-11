@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface UseChannelProps {
   defaultIsOpen?: boolean;
+  resetPayload?: Pick<FetchSsePayload, 'text' | 'payload'>;
   client: AsgardServiceClient | null;
   customChannelId: string;
   customMessageId?: string;
@@ -22,7 +23,7 @@ export interface UseChannelReturn {
   isConnecting: boolean;
   conversation: Conversation | null;
   sendMessage?: (payload: Pick<FetchSsePayload, 'text' | 'payload'>) => void;
-  resetChannel?: () => void;
+  resetChannel?: (payload: Pick<FetchSsePayload, 'text' | 'payload'>) => void;
   closeChannel?: () => void;
 }
 
@@ -30,6 +31,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const {
     client,
     defaultIsOpen,
+    resetPayload,
     customChannelId,
     customMessageId,
     initMessages,
@@ -49,40 +51,45 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
-  const resetChannel = useCallback(async () => {
-    const conversation = new Conversation({
-      messages: new Map(
-        initMessages?.map((message) => [message.messageId, message])
-      ),
-    });
+  const resetChannel = useCallback(
+    async (payload?: Pick<FetchSsePayload, 'text' | 'payload'>) => {
+      const conversation = new Conversation({
+        messages: new Map(
+          initMessages?.map((message) => [message.messageId, message])
+        ),
+      });
 
-    setIsResetting(true);
-    setIsConnecting(true);
-    setConversation(conversation);
+      setIsResetting(true);
+      setIsConnecting(true);
+      setConversation(conversation);
 
-    const channel = await Channel.reset(
-      {
-        client,
-        customChannelId,
-        customMessageId,
-        conversation,
-        statesObserver: (states: ChannelStates): void => {
-          setIsConnecting(states.isConnecting);
-          setConversation(states.conversation);
+      const channel = await Channel.reset(
+        {
+          client,
+          customChannelId,
+          customMessageId,
+          conversation,
+          statesObserver: (states: ChannelStates): void => {
+            setIsConnecting(states.isConnecting);
+            setConversation(states.conversation);
+          },
         },
-      },
-      {
-        onSseCompleted() {
-          setIsResetting(false);
-        },
-        onSseError() {
-          setIsResetting(false);
-        },
-      }
-    );
+        payload,
+        {
+          onSseCompleted() {
+            setIsResetting(false);
+          },
+          onSseError() {
+            setIsResetting(false);
+          },
+        }
+      );
 
-    setChannel(channel);
-  }, [client, customChannelId, customMessageId, initMessages]);
+      setIsOpen(true);
+      setChannel(channel);
+    },
+    [client, customChannelId, customMessageId, initMessages]
+  );
 
   const closeChannel = useCallback(() => {
     setChannel((prevChannel) => {
@@ -103,8 +110,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   );
 
   useEffect(() => {
-    if (!channel && isOpen) resetChannel();
-  }, [channel, isOpen, resetChannel]);
+    if (!channel && isOpen) resetChannel(resetPayload);
+  }, [channel, isOpen, resetChannel, resetPayload]);
 
   useEffect(() => {
     return (): void => closeChannel();
