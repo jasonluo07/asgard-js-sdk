@@ -21,8 +21,8 @@ export function Root(): ReactNode {
     // createButtonTemplateExample(),
     // createCarouselTemplateExample(),
     // createChartTemplateExample(),
-    createImageTemplateExample(400, 600),
-    createImageTemplateExample(600, 400),
+    // createImageTemplateExample(400, 600),
+    // createImageTemplateExample(600, 400),
   ]);
 
   return (

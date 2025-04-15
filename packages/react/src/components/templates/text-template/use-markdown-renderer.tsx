@@ -6,9 +6,23 @@ import {
   useRef,
   useState,
 } from 'react';
-import { marked, Tokens, Lexer } from 'marked';
+import { Marked, Tokens, Lexer } from 'marked';
+import { markedHighlight } from 'marked-highlight';
+import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 import classes from './text-template.module.scss';
+
+const marked = new Marked(
+  markedHighlight({
+    emptyLangClass: 'hljs',
+    langPrefix: 'hljs language-',
+    highlight(code: any, lang: any, info: any) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+
+      return hljs.highlight(code, { language }).value;
+    },
+  })
+);
 
 interface MarkdownRenderResult {
   htmlBlocks: ReactNode;
