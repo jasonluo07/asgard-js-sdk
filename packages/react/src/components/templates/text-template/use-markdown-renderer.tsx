@@ -43,8 +43,10 @@ type Token =
 function isCompleteParagraph(raw: string): boolean {
   return (
     raw.trim().endsWith('\n\n') ||
+    raw.trim().endsWith('\n') ||
     raw.trim().endsWith('.') ||
-    raw.trim().endsWith('。')
+    raw.trim().endsWith('。') ||
+    raw.trim().endsWith('！')
   );
 }
 
@@ -119,7 +121,7 @@ export function useMarkdownRenderer(
     return (
       <div
         className={classes.md_container}
-        dangerouslySetInnerHTML={{ __html: blocks.join('') }}
+        dangerouslySetInnerHTML={{ __html: blocks.join('\n') }}
       />
     );
   }, [blocks]);
