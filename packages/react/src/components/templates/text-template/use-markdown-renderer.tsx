@@ -12,7 +12,6 @@ import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 import classes from './text-template.module.scss';
 
-hljs.highlightAll();
 const marked = new Marked(
   markedHighlight({
     emptyLangClass: 'hljs',
