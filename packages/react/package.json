@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@types/dom-speech-recognition": "^0.0.4",
-    "vite-plugin-static-copy": "^2.3.1",
     "vite-plugin-svgr": "^4.3.0"
   }
 }

@@ -1,9 +1,11 @@
 @use '../../../styles';
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&family=Space+Grotesk:wght@300..700&display=swap');
+
 .chatbot_root {
   @include styles.generate();
 
-  font-family: 'SpaceGrotesk', 'NotoSansTC', sans-serif;
+  font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
 
   * {
     line-height: 1.5;

@@ -3,20 +3,6 @@
 @use './radius';
 @use './spacing';
 
-@font-face {
-  font-family: 'SpaceGrotesk';
-  src: url('/assets/fonts/SpaceGrotesk-Regular.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'NotoSansTC';
-  src: url('/assets/fonts/NotoSansTC-Regular.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
 @mixin generate() {
   @include colors.generate();
   @include palette.generate();
