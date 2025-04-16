@@ -103,7 +103,13 @@ export function useMarkdownRenderer(
           newBlocks.push(blockInCache);
         } else {
           const html = marked.parser([token]);
-          const clean = DOMPurify.sanitize(html);
+          const wrappedHtml = html
+            .replace(
+              '<table>',
+              `<div class="${classes.table_container}"><table>`
+            )
+            .replace('</table>', '</table></div>');
+          const clean = DOMPurify.sanitize(wrappedHtml);
           cacheRef.current.set(raw, clean);
           newBlocks.push(clean);
         }
