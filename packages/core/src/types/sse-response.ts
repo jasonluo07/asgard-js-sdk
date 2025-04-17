@@ -44,10 +44,7 @@ export interface LocationMessageTemplate extends MessageTemplate {
 export interface ChartMessageTemplate extends MessageTemplate {
   type: MessageTemplateType.CHART;
   title: string;
-  description: string;
-  data: {
-    values: Record<string, unknown>[];
-  };
+  text: string;
   chartOptions: {
     type: string;
     title: string;

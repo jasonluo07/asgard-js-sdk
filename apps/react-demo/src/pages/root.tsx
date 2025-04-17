@@ -6,8 +6,8 @@ import {
   // createCarouselTemplateExample,
   // createHintTemplateExample,
   // createTextTemplateExample,
-  // createChartTemplateExample,
-  createImageTemplateExample,
+  createChartTemplateExample,
+  // createImageTemplateExample,
 } from './const';
 
 const { VITE_ENDPOINT, VITE_API_KEY } = import.meta.env;
@@ -20,7 +20,7 @@ export function Root(): ReactNode {
     // createHintTemplateExample(),
     // createButtonTemplateExample(),
     // createCarouselTemplateExample(),
-    // createChartTemplateExample(),
+    createChartTemplateExample(),
     // createImageTemplateExample(400, 600),
     // createImageTemplateExample(600, 400),
   ]);

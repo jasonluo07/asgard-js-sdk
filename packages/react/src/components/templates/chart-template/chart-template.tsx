@@ -24,35 +24,37 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
     template?.defaultChart ?? template?.chartOptions?.[0]?.type
   );
 
-  const spec = useMemo<VisualizationSpec>(
+  const options = useMemo(() => template.chartOptions, [template]);
+
+  const spec = useMemo(
     () =>
-      template?.chartOptions?.find((item) => item.type === option)
-        ?.spec as VisualizationSpec,
+      (template?.chartOptions?.find((item) => item.type === option)?.spec ??
+        options[0].spec) as VisualizationSpec,
     [option, template.chartOptions]
   );
-
-  const options = template.chartOptions;
 
   return (
     <TemplateBox type="bot" direction="vertical">
       <Avatar avatar={avatar} />
       <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
         <div>{template.title}</div>
-        <div>{template.description}</div>
+        <div>{template.text}</div>
       </div>
-      <div className={styles.quick_replies_box}>
-        {options.map((option) => (
-          <button
-            key={option.type}
-            className={styles.quick_reply}
-            onClick={() => setOption(option.type)}
-          >
-            {option.title}
-          </button>
-        ))}
-      </div>
+      {options.length > 1 && (
+        <div className={styles.quick_replies_box}>
+          {options.map((option) => (
+            <button
+              key={option.type}
+              className={styles.quick_reply}
+              onClick={() => setOption(option.type)}
+            >
+              {option.title}
+            </button>
+          ))}
+        </div>
+      )}
       <TemplateBoxContent quickReplies={template?.quickReplies}>
-        <VegaLite data={template.data} spec={spec} />
+        <VegaLite spec={spec} />
       </TemplateBoxContent>
       <Time className={styles.chart_time} time={message.time} />
     </TemplateBox>
