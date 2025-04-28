@@ -62,8 +62,9 @@ export default App;
   - `botProviderEndpoint?`: `string` - Bot provider endpoint URL
   - `onExecutionError?`: `(error: ErrorEventData) => void` - Error handler for execution errors
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
-- `enableLoadConfigFromService?`: `boolean` - Enable loading configuration from service
-- `loadingComponent?`: `ReactNode` - Custom loading component
+- **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
+- **loadingComponent?**: `ReactNode` - Custom loading component
+- **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
 - **customChannelId**: `string` - Custom channel identifier for the chat session
 - **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat
 - **debugMode**: `boolean` - Enable debug mode, defaults to `false`
