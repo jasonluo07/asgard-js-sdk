@@ -8,6 +8,7 @@ import {
   AsgardServiceContextProvider,
   AsgardTemplateContextProvider,
   AsgardTemplateContextValue,
+  AsgardAppInitializationContextProvider,
 } from 'src/context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
@@ -24,6 +25,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   fullScreen?: boolean;
   avatar?: string;
   botTypingPlaceholder?: string;
+  enableLoadConfigFromService?: boolean;
   onReset?: () => void;
   onClose?: () => void;
 }
@@ -39,6 +41,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     fullScreen = false,
     avatar,
     botTypingPlaceholder,
+    enableLoadConfigFromService = false,
     onReset,
     onClose,
     onErrorClick,
@@ -46,30 +49,35 @@ export function Chatbot(props: ChatbotProps): ReactNode {
   } = props;
 
   return (
-    <AsgardThemeContextProvider theme={theme}>
-      <AsgardServiceContextProvider
-        avatar={avatar}
-        config={config}
-        customChannelId={customChannelId}
-        initMessages={initMessages}
-        botTypingPlaceholder={botTypingPlaceholder}
-      >
-        <ChatbotContainer fullScreen={fullScreen}>
-          <ChatbotHeader
-            title={title}
-            onReset={onReset}
-            onClose={onClose}
-            customActions={customActions}
-          />
-          <AsgardTemplateContextProvider
-            onErrorClick={onErrorClick}
-            errorMessageRenderer={errorMessageRenderer}
-          >
-            <ChatbotBody />
-          </AsgardTemplateContextProvider>
-          <ChatbotFooter />
-        </ChatbotContainer>
-      </AsgardServiceContextProvider>
-    </AsgardThemeContextProvider>
+    <AsgardAppInitializationContextProvider
+      enabled={enableLoadConfigFromService}
+      asyncInitializers={{}}
+    >
+      <AsgardThemeContextProvider theme={theme}>
+        <AsgardServiceContextProvider
+          avatar={avatar}
+          config={config}
+          customChannelId={customChannelId}
+          initMessages={initMessages}
+          botTypingPlaceholder={botTypingPlaceholder}
+        >
+          <ChatbotContainer fullScreen={fullScreen}>
+            <ChatbotHeader
+              title={title}
+              onReset={onReset}
+              onClose={onClose}
+              customActions={customActions}
+            />
+            <AsgardTemplateContextProvider
+              onErrorClick={onErrorClick}
+              errorMessageRenderer={errorMessageRenderer}
+            >
+              <ChatbotBody />
+            </AsgardTemplateContextProvider>
+            <ChatbotFooter />
+          </ChatbotContainer>
+        </AsgardServiceContextProvider>
+      </AsgardThemeContextProvider>
+    </AsgardAppInitializationContextProvider>
   );
 }
