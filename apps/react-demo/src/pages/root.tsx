@@ -38,6 +38,7 @@ export function Root(): ReactNode {
         }}
         avatar="./showtime.webp"
         enableLoadConfigFromService={true}
+        loadingComponent={<div>Custom Loading...</div>}
         botTypingPlaceholder="typing"
         customChannelId={customChannelId}
         initMessages={initMessages}

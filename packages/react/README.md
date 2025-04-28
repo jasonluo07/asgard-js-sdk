@@ -63,6 +63,7 @@ export default App;
   - `onExecutionError?`: `(error: ErrorEventData) => void` - Error handler for execution errors
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
 - `enableLoadConfigFromService?`: `boolean` - Enable loading configuration from service
+- `loadingComponent?`: `ReactNode` - Custom loading component
 - **customChannelId**: `string` - Custom channel identifier for the chat session
 - **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat
 - **debugMode**: `boolean` - Enable debug mode, defaults to `false`
