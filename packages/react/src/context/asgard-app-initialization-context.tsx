@@ -16,8 +16,20 @@ type AsyncInitializers = {
   [key: string]: () => Promise<unknown>;
 };
 
+export interface Annotations {
+  embedConfig: {
+    theme: {
+      chatbot: Record<string, unknown>;
+      botMessage: Record<string, unknown>;
+      userMessage: Record<string, unknown>;
+    };
+  };
+}
+
 export interface AsgardAppInitializationContextValue {
-  data: Record<string, unknown>;
+  data: {
+    annotations?: Annotations;
+  };
   loading: boolean;
   error: Error | null;
 }
@@ -54,13 +66,15 @@ export const AsgardAppInitializationContextProvider = (
   const asyncInitializers = useMemo(
     () =>
       deepMerge(
-        { theme: botProviderModels.getAsgardBotProviderMetadata },
+        { annotations: botProviderModels.getAnnotations },
         asyncInitializersFromProp
       ),
     [asyncInitializersFromProp, botProviderModels]
   );
 
-  const [data, setData] = useState<Record<string, unknown>>({});
+  const [data, setData] = useState<AsgardAppInitializationContextValue['data']>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

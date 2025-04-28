@@ -1,4 +1,5 @@
 import { ClientConfig } from '@asgard-js/core';
+import { annotationSelectorFromBotProviderMetadata } from '../utils/selectors';
 
 export type BotProviderMetadataResponse = {
   name: string;
@@ -15,7 +16,7 @@ export type BotProviderMetadataResponse = {
     apiVersion: string;
     time: string;
     fieldsType: string;
-    fieldsV1: Record<string, any>;
+    fieldsV1: Record<string, unknown>;
     subresource: string;
   }>;
 };
@@ -24,6 +25,7 @@ export const getBotProviderModels = (
   config: ClientConfig
 ): {
   getAsgardBotProviderMetadata: () => Promise<BotProviderMetadataResponse>;
+  getAnnotations: () => Promise<Record<string, unknown>>;
 } => {
   if (!config.botProviderEndpoint) {
     throw new Error('Bot provider endpoint is not defined in the config');
@@ -53,7 +55,14 @@ export const getBotProviderModels = (
     return json.data;
   }
 
+  async function getAnnotations(): Promise<Record<string, unknown>> {
+    const metadata = await getAsgardBotProviderMetadata();
+
+    return annotationSelectorFromBotProviderMetadata(metadata);
+  }
+
   return {
     getAsgardBotProviderMetadata,
+    getAnnotations,
   };
 };

@@ -5,8 +5,10 @@ import {
   ReactNode,
   useContext,
   useMemo,
+  useCallback,
 } from 'react';
 import { deepMerge } from 'src/utils/deep-merge';
+import { useAsgardAppInitializationContext } from 'src/context/asgard-app-initialization-context';
 
 export interface AsgardThemeContextValue {
   chatbot: Pick<
@@ -56,11 +58,31 @@ export function AsgardThemeContextProvider(
   }>
 ): ReactNode {
   const { children, theme = {} } = props;
+  const {
+    data: { annotations },
+  } = useAsgardAppInitializationContext();
 
-  const value = useMemo(
-    () => deepMerge(defaultAsgardThemeContextValue, theme),
-    [theme]
+  const deepMergeTheme = useCallback(
+    function () {
+      /**
+       * Orders of theme (high to low):
+       * 1. Theme from props
+       * 2. Theme from annotations
+       * 3. Default theme
+       */
+
+      const themeFromAnnotations = annotations?.embedConfig?.theme ?? {};
+      const tempTheme = deepMerge(
+        defaultAsgardThemeContextValue,
+        themeFromAnnotations
+      );
+
+      return deepMerge(tempTheme, theme);
+    },
+    [theme, annotations?.embedConfig?.theme]
   );
+
+  const value = useMemo(() => deepMergeTheme(), [deepMergeTheme]);
 
   return (
     <AsgardThemeContext.Provider value={value}>
