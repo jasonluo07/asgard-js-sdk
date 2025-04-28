@@ -2,17 +2,22 @@ import React, {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   PropsWithChildren,
   ReactNode,
 } from 'react';
+import { ClientConfig } from '@asgard-js/core';
+import { getBotProviderModels } from 'src/models/bot-provider';
+
+import { deepMerge } from 'src/utils/deep-merge';
 
 type AsyncInitializers = {
-  [key: string]: () => Promise<any>;
+  [key: string]: () => Promise<unknown>;
 };
 
 export interface AsgardAppInitializationContextValue {
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   loading: boolean;
   error: Error | null;
 }
@@ -26,6 +31,7 @@ export const AsgardAppInitializationContext =
 
 export interface AsgardAppInitializationContextProviderProps {
   enabled: boolean;
+  config: ClientConfig;
   asyncInitializers: AsyncInitializers;
   loadingComponent?: React.ReactNode;
 }
@@ -35,12 +41,26 @@ export const AsgardAppInitializationContextProvider = (
 ): ReactNode => {
   const {
     enabled,
-    asyncInitializers,
+    asyncInitializers: asyncInitializersFromProp,
     children,
     loadingComponent = <div>Loading...</div>,
   } = props;
 
-  const [data, setData] = useState<Record<string, any>>({});
+  const botProviderModels = useMemo(
+    () => getBotProviderModels(props.config),
+    [props.config]
+  );
+
+  const asyncInitializers = useMemo(
+    () =>
+      deepMerge(
+        { theme: botProviderModels.getAsgardBotProviderMetadata },
+        asyncInitializersFromProp
+      ),
+    [asyncInitializersFromProp, botProviderModels]
+  );
+
+  const [data, setData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

@@ -26,6 +26,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   avatar?: string;
   botTypingPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
+  asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
   onClose?: () => void;
 }
@@ -42,6 +43,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     avatar,
     botTypingPlaceholder,
     enableLoadConfigFromService = false,
+    asyncInitializers = {},
     onReset,
     onClose,
     onErrorClick,
@@ -51,7 +53,8 @@ export function Chatbot(props: ChatbotProps): ReactNode {
   return (
     <AsgardAppInitializationContextProvider
       enabled={enableLoadConfigFromService}
-      asyncInitializers={{}}
+      config={config}
+      asyncInitializers={asyncInitializers}
     >
       <AsgardThemeContextProvider theme={theme}>
         <AsgardServiceContextProvider
