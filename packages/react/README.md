@@ -24,7 +24,8 @@ const App = () => {
       title="Asgard AI Chatbot"
       config={{
         apiKey: 'your-api-key',
-        endpoint: 'https://api.asgard-ai.com',
+        endpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
+        botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
         onExecutionError: (error) => {
           console.error('Execution error:', error);
         },
@@ -32,6 +33,7 @@ const App = () => {
           return payload;
         }
       }}
+      enableLoadConfigFromService={true}
       customChannelId="your-channel-id"
       initMessages={[]}
       debugMode={false}
@@ -57,8 +59,12 @@ export default App;
 - **config**: `ClientConfig` - Configuration object for the Asgard service client, including:
   - `apiKey`: `string` (required) - API key for authentication
   - `endpoint`: `string` (required) - API endpoint URL
+  - `botProviderEndpoint?`: `string` - Bot provider endpoint URL
   - `onExecutionError?`: `(error: ErrorEventData) => void` - Error handler for execution errors
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
+- **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
+- **loadingComponent?**: `ReactNode` - Custom loading component
+- **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
 - **customChannelId**: `string` - Custom channel identifier for the chat session
 - **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat
 - **debugMode**: `boolean` - Enable debug mode, defaults to `false`
@@ -70,6 +76,12 @@ export default App;
 - **onClose**: `() => void` - Callback function when chat is closed
 
 ### Theme Configuration
+The theme configuration can be obtained from the bot provider metadata of `annotations` field and `theme` props.
+
+The priority of themes is as follows (high to low):
+1. Theme from props
+2. Theme from annotations from bot provider metadata
+3. Default theme
 
 ```typescript
 interface AsgardThemeContextValue {

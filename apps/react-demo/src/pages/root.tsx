@@ -10,7 +10,8 @@ import {
   // createImageTemplateExample,
 } from './const';
 
-const { VITE_ENDPOINT, VITE_API_KEY } = import.meta.env;
+const { VITE_ENDPOINT, VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta
+  .env;
 
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
@@ -32,9 +33,12 @@ export function Root(): ReactNode {
         title="Chatbot"
         config={{
           endpoint: VITE_ENDPOINT,
+          botProviderEndpoint: VITE_BOT_PROVIDER_ENDPOINT,
           apiKey: VITE_API_KEY,
         }}
         avatar="./showtime.webp"
+        enableLoadConfigFromService={true}
+        loadingComponent={<div>Custom Loading...</div>}
         botTypingPlaceholder="typing"
         customChannelId={customChannelId}
         initMessages={initMessages}
