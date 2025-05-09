@@ -42,6 +42,9 @@ export function Root(): ReactNode {
         botTypingPlaceholder="typing"
         customChannelId={customChannelId}
         initMessages={initMessages}
+        onTemplateBtnClick={(payload) => {
+          console.log('onTemplateBtnClick', payload);
+        }}
       />
     </div>
   );
