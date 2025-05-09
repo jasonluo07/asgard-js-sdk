@@ -10,26 +10,30 @@ import { ConversationErrorMessage } from '@asgard-js/core';
 export interface AsgardTemplateContextValue {
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
+  onTemplateBtnClick?: (payload: any) => void;
 }
 
 export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
   onErrorClick: undefined,
   errorMessageRenderer: undefined,
+  onTemplateBtnClick: undefined,
 });
 
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
+  onTemplateBtnClick?: (payload: any) => void;
 }
 
 export function AsgardTemplateContextProvider(
   props: AsgardTemplateContextProviderProps
 ): ReactNode {
-  const { children, onErrorClick, errorMessageRenderer } = props;
+  const { children, onErrorClick, errorMessageRenderer, onTemplateBtnClick } =
+    props;
 
   const contextValue = useMemo(
-    () => ({ onErrorClick, errorMessageRenderer }),
-    [errorMessageRenderer, onErrorClick]
+    () => ({ onErrorClick, errorMessageRenderer, onTemplateBtnClick }),
+    [errorMessageRenderer, onErrorClick, onTemplateBtnClick]
   );
 
   return (

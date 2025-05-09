@@ -6,6 +6,7 @@ import {
   CarouselMessageTemplate,
 } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardTemplateContext } from 'src/context/asgard-template-context';
 
 interface CardProps {
   template: ButtonMessageTemplate | CarouselMessageTemplate['columns'][number];
@@ -15,6 +16,7 @@ export function Card(props: CardProps): ReactNode {
   const { template } = props;
 
   const { sendMessage } = useAsgardContext();
+  const { onTemplateBtnClick } = useAsgardTemplateContext();
 
   const src = useMemo(() => {
     return (
@@ -49,12 +51,12 @@ export function Card(props: CardProps): ReactNode {
             return;
           case 'emit':
           case 'EMIT':
-            // TODO: handle emit action
+            onTemplateBtnClick?.(action.payload);
             return;
         }
       };
     },
-    [sendMessage]
+    [sendMessage, onTemplateBtnClick]
   );
 
   return (

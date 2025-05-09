@@ -48,6 +48,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     loadingComponent,
     onReset,
     onClose,
+    onTemplateBtnClick,
     onErrorClick,
     errorMessageRenderer,
   } = props;
@@ -77,6 +78,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
             <AsgardTemplateContextProvider
               onErrorClick={onErrorClick}
               errorMessageRenderer={errorMessageRenderer}
+              onTemplateBtnClick={onTemplateBtnClick}
             >
               <ChatbotBody />
             </AsgardTemplateContextProvider>
