@@ -40,12 +40,16 @@ export function Card(props: CardProps): ReactNode {
       return function clickHandler() {
         switch (action.type) {
           case 'message':
+          case 'MESSAGE':
             sendMessage?.({ text: action.text });
-
             return;
           case 'uri':
-            window.open(action.uri, '_blank');
-
+          case 'URI':
+            window.open(action.uri, action.target || '_self');
+            return;
+          case 'emit':
+          case 'EMIT':
+            // TODO: handle emit action
             return;
         }
       };

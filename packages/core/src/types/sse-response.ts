@@ -56,14 +56,19 @@ export interface ChartMessageTemplate extends MessageTemplate {
 
 export type ButtonAction =
   | {
-      type: 'message';
+      type: 'message' | 'MESSAGE';
       text: string;
       uri?: null;
     }
   | {
-      type: 'uri';
+      type: 'uri' | 'URI';
       text?: null;
       uri: string;
+      target?: '_blank' | '_self' | '_parent' | '_top';
+    }
+  | {
+      type: 'emit' | 'EMIT';
+      payload: any;
     };
 
 export interface ButtonMessageTemplate extends MessageTemplate {
