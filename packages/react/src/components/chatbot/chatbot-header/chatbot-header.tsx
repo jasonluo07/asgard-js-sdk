@@ -52,11 +52,11 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_header}>
+    <div className={styles.chatbot_header} style={chatbot?.header?.style}>
       <div className={styles.chatbot_header__content} style={contentStyles}>
         <div className={styles.chatbot_header__title}>
           <ProfileIcon avatar={avatar} />
-          <h4>{title}</h4>
+          <h4 style={chatbot?.header?.title?.style}>{title}</h4>
         </div>
         <div className={styles.chatbot_header__extra}>
           {customActions}
