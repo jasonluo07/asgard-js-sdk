@@ -24,9 +24,69 @@ export interface AsgardThemeContextValue {
     | 'borderRadius'
   > & {
     contentMaxWidth?: CSSProperties['maxWidth'];
+    header?: Partial<{
+      style: CSSProperties;
+      title: {
+        style: CSSProperties;
+      };
+    }>;
+    footer?: Partial<{
+      style: CSSProperties;
+      textArea: {
+        style: CSSProperties;
+      };
+    }>;
   };
   botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
   userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
+  template?: Partial<{
+    /**
+     * first level for common/shared properties.
+     * Check MessageTemplate type for more details (packages/core/src/types/sse-response.ts).
+     */
+    quickReplies?: Partial<{
+      style: CSSProperties;
+      button: {
+        style: CSSProperties;
+      };
+    }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    TextMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    HintMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    ImageMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    VideoMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    AudioMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    LocationMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    ChartMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    ButtonMessageTemplate: Partial<{ style: CSSProperties }>;
+    /**
+     * TBD: Fill the necessary properties based on the requirements.
+     */
+    CarouselMessageTemplate: Partial<{ style: CSSProperties }>;
+  }>;
 }
 
 export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
@@ -37,6 +97,18 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     borderColor: 'var(--asg-color-border)',
     borderRadius: 'var(--asg-radius-md)',
     contentMaxWidth: '1200px',
+    header: {
+      style: {},
+      title: {
+        style: {},
+      },
+    },
+    footer: {
+      style: {},
+      textArea: {
+        style: {},
+      },
+    },
   },
   botMessage: {
     color: 'var(--asg-color-text)',
@@ -45,6 +117,41 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
   userMessage: {
     color: 'var(--asg-color-text)',
     backgroundColor: 'var(--asg-color-primary)',
+  },
+  template: {
+    quickReplies: {
+      style: {},
+      button: {
+        style: {},
+      },
+    },
+    TextMessageTemplate: {
+      style: {},
+    },
+    HintMessageTemplate: {
+      style: {},
+    },
+    ImageMessageTemplate: {
+      style: {},
+    },
+    VideoMessageTemplate: {
+      style: {},
+    },
+    AudioMessageTemplate: {
+      style: {},
+    },
+    LocationMessageTemplate: {
+      style: {},
+    },
+    ChartMessageTemplate: {
+      style: {},
+    },
+    ButtonMessageTemplate: {
+      style: {},
+    },
+    CarouselMessageTemplate: {
+      style: {},
+    },
   },
 };
 
