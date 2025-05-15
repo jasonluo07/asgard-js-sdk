@@ -113,9 +113,18 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
         style: {},
       },
     },
+    body: {
+      style: {},
+    },
     footer: {
       style: {},
       textArea: {
+        style: {},
+      },
+      submitButton: {
+        style: {},
+      },
+      speechInputButton: {
         style: {},
       },
     },
