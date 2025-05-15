@@ -6,7 +6,7 @@ import {
   ConversationMessage,
   MessageTemplateType,
 } from '@asgard-js/core';
-import { useAsgardTemplateContext } from 'src/context';
+import { useAsgardTemplateContext, useAsgardThemeContext } from 'src/context';
 
 interface HintTemplateProps {
   message: ConversationMessage;
@@ -15,6 +15,7 @@ interface HintTemplateProps {
 export function HintTemplate(props: HintTemplateProps): ReactNode {
   const { message } = props;
 
+  const { template: themeTemplate } = useAsgardThemeContext();
   const { onErrorClick, errorMessageRenderer } = useAsgardTemplateContext();
 
   const onErrorHintClick = useCallback(() => {
@@ -50,7 +51,10 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
   if (template.type !== MessageTemplateType.HINT) return null;
 
   return (
-    <div className={classes.hint_root}>
+    <div
+      className={classes.hint_root}
+      style={themeTemplate?.HintMessageTemplate?.style}
+    >
       <div className={classes.time}>{formatTime(message.time)}</div>
       {template.text}
     </div>

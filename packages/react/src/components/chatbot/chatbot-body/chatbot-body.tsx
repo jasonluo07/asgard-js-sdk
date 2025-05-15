@@ -23,7 +23,7 @@ export function ChatbotBody(): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_body}>
+    <div className={styles.chatbot_body} style={chatbot?.body?.style}>
       <div className={styles.chatbot_body__content} style={contentStyles}>
         {Array.from(messages?.values() ?? []).map((message) => (
           <ConversationMessageRenderer

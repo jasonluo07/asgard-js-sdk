@@ -24,15 +24,25 @@ export interface AsgardThemeContextValue {
     | 'borderRadius'
   > & {
     contentMaxWidth?: CSSProperties['maxWidth'];
+    style?: CSSProperties;
     header?: Partial<{
       style: CSSProperties;
       title: {
         style: CSSProperties;
       };
     }>;
+    body?: Partial<{
+      style: CSSProperties;
+    }>;
     footer?: Partial<{
       style: CSSProperties;
       textArea: {
+        style: CSSProperties;
+      };
+      submitButton: {
+        style: CSSProperties;
+      };
+      speechInputButton: {
         style: CSSProperties;
       };
     }>;

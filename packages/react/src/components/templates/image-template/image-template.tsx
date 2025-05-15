@@ -4,6 +4,7 @@ import { Avatar } from '../avatar';
 import styles from './image-template.module.scss';
 import { ConversationBotMessage } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 import { ImageMessageTemplate } from '../../../../../core/src';
 import CloseSvg from 'src/icons/close.svg?react';
 
@@ -15,6 +16,9 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
   const { message } = props;
   const template = message.message.template as ImageMessageTemplate;
   const { previewImageUrl, originalContentUrl } = template;
+
+  const { template: themeTemplate } = useAsgardThemeContext();
+
   const { avatar } = useAsgardContext();
   const [isFullScreen, setIsFullScreen] = useState(false);
   if (isFullScreen) {
@@ -34,7 +38,11 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
     );
   }
   return (
-    <TemplateBox type="bot" direction="horizontal">
+    <TemplateBox
+      type="bot"
+      direction="horizontal"
+      style={themeTemplate?.ImageMessageTemplate?.style}
+    >
       <Avatar avatar={avatar} />
       <TemplateBoxContent
         quickReplies={template.quickReplies}

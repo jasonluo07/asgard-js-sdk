@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from 'react';
+import { CSSProperties, ReactNode, useMemo } from 'react';
 import styles from './template-box.module.scss';
 import clsx from 'clsx';
 
@@ -7,15 +7,17 @@ type TemplateBoxProps =
       type: 'user';
       direction: 'horizontal';
       children: ReactNode;
+      style?: CSSProperties;
     }
   | {
       type: 'bot';
       direction: 'horizontal' | 'vertical';
       children: ReactNode;
+      style?: CSSProperties;
     };
 
 export function TemplateBox(props: TemplateBoxProps): ReactNode {
-  const { type, direction = 'horizontal', children } = props;
+  const { type, direction = 'horizontal', children, style } = props;
 
   const boxClassName = useMemo(() => {
     switch (type) {
@@ -33,5 +35,9 @@ export function TemplateBox(props: TemplateBoxProps): ReactNode {
     }
   }, [direction, type]);
 
-  return <div className={boxClassName}>{children}</div>;
+  return (
+    <div className={boxClassName} style={style}>
+      {children}
+    </div>
+  );
 }

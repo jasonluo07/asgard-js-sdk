@@ -83,11 +83,12 @@ export function ChatbotFooter(): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_footer}>
+    <div className={styles.chatbot_footer} style={chatbot.footer?.style}>
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <textarea
           ref={textareaRef}
           className={styles.chatbot_textarea}
+          style={chatbot.footer?.textArea?.style}
           disabled={isConnecting}
           cols={40}
           value={value}
@@ -103,6 +104,7 @@ export function ChatbotFooter(): ReactNode {
               styles.chatbot_submit_button,
               disabled && styles.chatbot_submit_button__disabled
             )}
+            style={chatbot.footer?.submitButton?.style}
             disabled={disabled}
             onClick={onSubmit}
           >
@@ -115,6 +117,7 @@ export function ChatbotFooter(): ReactNode {
               styles.chatbot_submit_button,
               isConnecting && styles.chatbot_submit_button__disabled
             )}
+            style={chatbot.footer?.speechInputButton?.style}
           />
         )}
       </div>
