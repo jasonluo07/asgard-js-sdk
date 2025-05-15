@@ -107,6 +107,7 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     borderColor: 'var(--asg-color-border)',
     borderRadius: 'var(--asg-radius-md)',
     contentMaxWidth: '1200px',
+    style: {},
     header: {
       style: {},
       title: {
