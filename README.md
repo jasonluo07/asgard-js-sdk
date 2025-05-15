@@ -84,27 +84,68 @@ The priority of themes is as follows (high to low):
 3. Default theme
 
 ```typescript
-interface AsgardThemeContextValue {
-  chatbot: {
-    width?: string;
-    height?: string;
-    maxWidth?: string;
-    minWidth?: string;
-    maxHeight?: string;
-    minHeight?: string;
-    backgroundColor?: string;
-    borderColor?: string;
-    borderRadius?: string;
-    contentMaxWidth?: string;
+export interface AsgardThemeContextValue {
+  chatbot: Pick<
+    CSSProperties,
+    | 'width'
+    | 'height'
+    | 'maxWidth'
+    | 'minWidth'
+    | 'maxHeight'
+    | 'minHeight'
+    | 'backgroundColor'
+    | 'borderColor'
+    | 'borderRadius'
+  > & {
+    contentMaxWidth?: CSSProperties['maxWidth'];
+    style?: CSSProperties;
+    header?: Partial<{
+      style: CSSProperties;
+      title: {
+        style: CSSProperties;
+      };
+    }>;
+    body?: Partial<{
+      style: CSSProperties;
+    }>;
+    footer?: Partial<{
+      style: CSSProperties;
+      textArea: {
+        style: CSSProperties;
+      };
+      submitButton: {
+        style: CSSProperties;
+      };
+      speechInputButton: {
+        style: CSSProperties;
+      };
+    }>;
   };
-  botMessage: {
-    color?: string;
-    backgroundColor?: string;
-  };
-  userMessage: {
-    color?: string;
-    backgroundColor?: string;
-  };
+  botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
+  userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
+  template?: Partial<{
+    /**
+     * first level for common/shared properties.
+     * Check MessageTemplate type for more details (packages/core/src/types/sse-response.ts).
+     */
+    quickReplies?: Partial<{
+      style: CSSProperties;
+      button: {
+        style: CSSProperties;
+      };
+    }>;
+    TextMessageTemplate: Partial<{ style: CSSProperties }>;
+    HintMessageTemplate: Partial<{ style: CSSProperties }>;
+    ImageMessageTemplate: Partial<{ style: CSSProperties }>;
+    ChartMessageTemplate: Partial<{ style: CSSProperties }>;
+    ButtonMessageTemplate: Partial<{ style: CSSProperties }>;
+    CarouselMessageTemplate: Partial<{ style: CSSProperties }>;
+
+    // Didn't implement yet
+    VideoMessageTemplate: Partial<{ style: CSSProperties }>;
+    AudioMessageTemplate: Partial<{ style: CSSProperties }>;
+    LocationMessageTemplate: Partial<{ style: CSSProperties }>;
+  }>;
 }
 ```
 
@@ -121,6 +162,27 @@ const defaultTheme = {
     borderColor: 'var(--asg-color-border)',
     borderRadius: 'var(--asg-radius-md)',
     contentMaxWidth: '1200px',
+    header: {
+      style: {},
+      title: {
+        style: {},
+      },
+    },
+    body: {
+      style: {},
+    },
+    footer: {
+      style: {},
+      textArea: {
+        style: {},
+      },
+      submitButton: {
+        style: {},
+      },
+      speechInputButton: {
+        style: {},
+      },
+    },
   },
   botMessage: {
     color: 'var(--asg-color-text)',
@@ -129,6 +191,41 @@ const defaultTheme = {
   userMessage: {
     color: 'var(--asg-color-text)',
     backgroundColor: 'var(--asg-color-primary)',
+  },
+  template: {
+    quickReplies: {
+      style: {},
+      button: {
+        style: {},
+      },
+    },
+    TextMessageTemplate: {
+      style: {},
+    },
+    HintMessageTemplate: {
+      style: {},
+    },
+    ImageMessageTemplate: {
+      style: {},
+    },
+    VideoMessageTemplate: {
+      style: {},
+    },
+    AudioMessageTemplate: {
+      style: {},
+    },
+    LocationMessageTemplate: {
+      style: {},
+    },
+    ChartMessageTemplate: {
+      style: {},
+    },
+    ButtonMessageTemplate: {
+      style: {},
+    },
+    CarouselMessageTemplate: {
+      style: {},
+    },
   },
 }
 ```
