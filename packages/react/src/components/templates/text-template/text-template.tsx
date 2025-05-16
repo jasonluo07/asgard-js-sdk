@@ -25,6 +25,8 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
     20
   );
 
+  const rootStyle = theme?.template?.TextMessageTemplate?.style;
+
   const styles = useMemo<CSSProperties>(() => {
     switch (message.type) {
       case 'user':
@@ -46,7 +48,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
 
   if (message.type === 'user') {
     return (
-      <TemplateBox type="user" direction="horizontal">
+      <TemplateBox type="user" direction="horizontal" style={rootStyle}>
         <div
           className={clsx(classes.text, classes['text--user'])}
           style={styles}
@@ -59,7 +61,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
   }
 
   return (
-    <TemplateBox type="bot" direction="horizontal">
+    <TemplateBox type="bot" direction="horizontal" style={rootStyle}>
       <Avatar avatar={avatar} />
       <TemplateBoxContent
         time={message.time}

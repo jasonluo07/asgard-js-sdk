@@ -9,6 +9,7 @@ import {
 } from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 interface CarouselTemplateProps {
   message: ConversationBotMessage;
@@ -17,12 +18,17 @@ interface CarouselTemplateProps {
 export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
   const { message } = props;
 
+  const { template: themeTemplate } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
 
   const template = message.message.template as CarouselMessageTemplate;
 
   return (
-    <TemplateBox type="bot" direction="vertical">
+    <TemplateBox
+      type="bot"
+      direction="vertical"
+      style={themeTemplate?.CarouselMessageTemplate?.style}
+    >
       <Avatar avatar={avatar} />
       <TemplateBoxContent quickReplies={template.quickReplies}>
         <div className={styles.carousel_root}>

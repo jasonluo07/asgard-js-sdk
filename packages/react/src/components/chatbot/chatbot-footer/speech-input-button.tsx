@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  CSSProperties,
 } from 'react';
 import MicSvg from 'src/icons/mic.svg?react';
 import StopSvg from 'src/icons/stop.svg?react';
@@ -15,10 +16,11 @@ import StopSvg from 'src/icons/stop.svg?react';
 interface SpeechInputButtonProps {
   setValue: Dispatch<SetStateAction<string>>;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
-  const { setValue, className } = props;
+  const { setValue, className, style } = props;
 
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -118,6 +120,7 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
   return (
     <div
       className={className}
+      style={style}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
       onTouchStart={onTouchStart}

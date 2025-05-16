@@ -1,6 +1,7 @@
 import { ReactNode, useCallback } from 'react';
 import styles from './quick-replies.module.scss';
 import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 interface QuickRepliesProps {
   quickReplies: { text: string }[];
@@ -9,6 +10,7 @@ interface QuickRepliesProps {
 export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { quickReplies } = props;
 
+  const { template } = useAsgardThemeContext();
   const { sendMessage, isConnecting } = useAsgardContext();
 
   const onClick = useCallback(
@@ -21,11 +23,15 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
   }
 
   return (
-    <div className={styles.quick_replies_box}>
+    <div
+      className={styles.quick_replies_box}
+      style={template?.quickReplies?.style}
+    >
       {quickReplies.map((quickReply) => (
         <button
           key={quickReply.text}
           className={styles.quick_reply}
+          style={template?.quickReplies?.button?.style}
           disabled={isConnecting}
           onClick={() => onClick(quickReply.text)}
         >

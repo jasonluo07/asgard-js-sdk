@@ -9,6 +9,7 @@ import { ChartMessageTemplate } from '../../../../../core/src';
 import { VegaLite, VisualizationSpec } from 'react-vega';
 import clsx from 'clsx';
 import classes from './chart-template.module.scss';
+import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 
 interface ChartTemplateProps {
   message: ConversationBotMessage;
@@ -18,6 +19,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
   const { message } = props;
   const template = message.message.template as ChartMessageTemplate;
 
+  const { template: themeTemplate } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
 
   const [option, setOption] = useState(
@@ -34,7 +36,11 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
   );
 
   return (
-    <TemplateBox type="bot" direction="vertical">
+    <TemplateBox
+      type="bot"
+      direction="vertical"
+      style={themeTemplate?.ChartMessageTemplate?.style}
+    >
       <Avatar avatar={avatar} />
       <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
         <div>{template.title}</div>

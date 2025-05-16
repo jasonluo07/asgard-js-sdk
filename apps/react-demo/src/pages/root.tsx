@@ -45,6 +45,34 @@ export function Root(): ReactNode {
         onTemplateBtnClick={(payload) => {
           console.log('onTemplateBtnClick', payload);
         }}
+        theme={{
+          chatbot: {
+            header: {
+              style: {
+                backgroundColor: 'tomato',
+              },
+              title: {
+                style: {
+                  color: 'yellow',
+                },
+              },
+            },
+          },
+          template: {
+            quickReplies: {
+              style: {
+                backgroundColor: 'blue',
+              },
+              button: {
+                style: {
+                  backgroundColor: 'green',
+                  color: 'yellow',
+                  border: '1px solid red',
+                },
+              },
+            },
+          },
+        }}
       />
     </div>
   );
