@@ -16,6 +16,7 @@ import {
 import {
   useAsgardServiceClient,
   useChannel,
+  UseChannelProps,
   UseChannelReturn,
 } from 'src/hooks';
 
@@ -56,6 +57,7 @@ export interface AsgardServiceContextProviderProps {
   customMessageId?: string;
   delayTime?: number;
   initMessages?: ConversationMessage[];
+  onSseMessage?: UseChannelProps['onSseMessage'];
 }
 
 export function AsgardServiceContextProvider(
@@ -69,6 +71,7 @@ export function AsgardServiceContextProvider(
     botTypingPlaceholder,
     customChannelId,
     initMessages,
+    onSseMessage,
   } = props;
 
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
@@ -87,6 +90,7 @@ export function AsgardServiceContextProvider(
     client,
     customChannelId,
     initMessages,
+    onSseMessage,
   });
 
   const contextValue = useMemo(

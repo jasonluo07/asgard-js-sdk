@@ -10,6 +10,7 @@ import {
   AsgardTemplateContextProvider,
   AsgardTemplateContextValue,
   AsgardAppInitializationContextProvider,
+  AsgardServiceContextProviderProps,
 } from 'src/context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
@@ -23,6 +24,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   config: ClientConfig;
   customChannelId: string;
   initMessages?: ConversationMessage[];
+  onSseMessage?: AsgardServiceContextProviderProps['onSseMessage'];
   fullScreen?: boolean;
   avatar?: string;
   botTypingPlaceholder?: string;
@@ -48,6 +50,7 @@ export const Chatbot = forwardRef(function Chatbot(
     config,
     customChannelId,
     initMessages,
+    onSseMessage,
     fullScreen = false,
     avatar,
     botTypingPlaceholder,
@@ -75,6 +78,7 @@ export const Chatbot = forwardRef(function Chatbot(
           config={config}
           customChannelId={customChannelId}
           initMessages={initMessages}
+          onSseMessage={onSseMessage}
           botTypingPlaceholder={botTypingPlaceholder}
         >
           <ChatbotContainer fullScreen={fullScreen}>
