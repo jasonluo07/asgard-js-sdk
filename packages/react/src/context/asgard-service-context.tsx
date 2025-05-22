@@ -5,11 +5,11 @@ import {
 } from '@asgard-js/core';
 import {
   createContext,
-  DetailedHTMLProps,
-  HTMLAttributes,
+  ForwardedRef,
   ReactNode,
   RefObject,
   useContext,
+  useImperativeHandle,
   useMemo,
   useRef,
 } from 'react';
@@ -44,9 +44,11 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   botTypingPlaceholder: undefined,
 });
 
-interface AsgardServiceContextProviderProps
-  extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+export interface AsgardServiceContextProviderProps {
   children: ReactNode;
+  parentRef?: ForwardedRef<
+    Partial<{ serviceContext?: AsgardServiceContextValue }>
+  >;
   avatar?: string;
   config: ClientConfig;
   botTypingPlaceholder?: string;
@@ -62,6 +64,7 @@ export function AsgardServiceContextProvider(
   const {
     avatar,
     children,
+    parentRef,
     config,
     botTypingPlaceholder,
     customChannelId,
@@ -113,6 +116,12 @@ export function AsgardServiceContextProvider(
       botTypingPlaceholder,
     ]
   );
+
+  useImperativeHandle(parentRef, () => {
+    return {
+      serviceContext: contextValue,
+    };
+  });
 
   return (
     <AsgardServiceContext.Provider value={contextValue}>
