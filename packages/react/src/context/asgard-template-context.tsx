@@ -5,12 +5,23 @@ import {
   useContext,
   useMemo,
 } from 'react';
-import { ConversationErrorMessage } from '@asgard-js/core';
+import { ConversationErrorMessage, FetchSsePayload } from '@asgard-js/core';
 
 export interface AsgardTemplateContextValue {
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
-  onTemplateBtnClick?: (payload: any) => void;
+  onTemplateBtnClick?: (
+    payload: Record<string, unknown>,
+    {
+      sse,
+    }: {
+      sse: {
+        sendMessage: (
+          payload: Pick<FetchSsePayload, 'text' | 'payload'>
+        ) => void;
+      };
+    }
+  ) => void;
 }
 
 export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
@@ -22,7 +33,18 @@ export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
-  onTemplateBtnClick?: (payload: any) => void;
+  onTemplateBtnClick?: (
+    payload: Record<string, unknown>,
+    {
+      sse,
+    }: {
+      sse: {
+        sendMessage: (
+          payload: Pick<FetchSsePayload, 'text' | 'payload'>
+        ) => void;
+      };
+    }
+  ) => void;
 }
 
 export function AsgardTemplateContextProvider(

@@ -5,17 +5,18 @@ import {
 } from '@asgard-js/core';
 import {
   createContext,
-  DetailedHTMLProps,
-  HTMLAttributes,
+  ForwardedRef,
   ReactNode,
   RefObject,
   useContext,
+  useImperativeHandle,
   useMemo,
   useRef,
 } from 'react';
 import {
   useAsgardServiceClient,
   useChannel,
+  UseChannelProps,
   UseChannelReturn,
 } from 'src/hooks';
 
@@ -44,9 +45,11 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   botTypingPlaceholder: undefined,
 });
 
-interface AsgardServiceContextProviderProps
-  extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+export interface AsgardServiceContextProviderProps {
   children: ReactNode;
+  parentRef?: ForwardedRef<
+    Partial<{ serviceContext?: AsgardServiceContextValue }>
+  >;
   avatar?: string;
   config: ClientConfig;
   botTypingPlaceholder?: string;
@@ -54,6 +57,7 @@ interface AsgardServiceContextProviderProps
   customMessageId?: string;
   delayTime?: number;
   initMessages?: ConversationMessage[];
+  onSseMessage?: UseChannelProps['onSseMessage'];
 }
 
 export function AsgardServiceContextProvider(
@@ -62,10 +66,12 @@ export function AsgardServiceContextProvider(
   const {
     avatar,
     children,
+    parentRef,
     config,
     botTypingPlaceholder,
     customChannelId,
     initMessages,
+    onSseMessage,
   } = props;
 
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
@@ -84,6 +90,7 @@ export function AsgardServiceContextProvider(
     client,
     customChannelId,
     initMessages,
+    onSseMessage,
   });
 
   const contextValue = useMemo(
@@ -113,6 +120,12 @@ export function AsgardServiceContextProvider(
       botTypingPlaceholder,
     ]
   );
+
+  useImperativeHandle(parentRef, () => {
+    return {
+      serviceContext: contextValue,
+    };
+  });
 
   return (
     <AsgardServiceContext.Provider value={contextValue}>

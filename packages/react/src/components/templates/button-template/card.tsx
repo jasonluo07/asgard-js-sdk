@@ -44,14 +44,23 @@ export function Card(props: CardProps): ReactNode {
           case 'message':
           case 'MESSAGE':
             sendMessage?.({ text: action.text });
+
             return;
           case 'uri':
           case 'URI':
             window.open(action.uri, action.target || '_self');
+
             return;
           case 'emit':
           case 'EMIT':
-            onTemplateBtnClick?.(action.payload);
+            onTemplateBtnClick?.(action.payload, {
+              sse: {
+                sendMessage: (payload) => {
+                  sendMessage?.(payload);
+                },
+              },
+            });
+
             return;
         }
       };

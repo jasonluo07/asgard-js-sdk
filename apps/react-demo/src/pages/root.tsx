@@ -1,5 +1,5 @@
-import { Chatbot } from '@asgard-js/react';
-import { ReactNode, useState } from 'react';
+import { Chatbot, ChatbotRef } from '@asgard-js/react';
+import { ReactNode, useRef, useState } from 'react';
 import { ConversationMessage } from '@asgard-js/core';
 import {
   // createButtonTemplateExample,
@@ -26,9 +26,32 @@ export function Root(): ReactNode {
     // createImageTemplateExample(600, 400),
   ]);
 
+  const chatbotRef = useRef<ChatbotRef>(null);
+
   return (
-    <div style={{ width: '800px' }}>
+    <div style={{ width: '800px', position: 'relative' }}>
+      <button
+        style={{
+          position: 'absolute',
+          top: '80px',
+          right: '50%',
+          transform: 'translateX(50%)',
+          zIndex: 10,
+          border: '1px solid white',
+          borderRadius: '5px',
+          color: 'white',
+          backgroundColor: 'transparent',
+          cursor: 'pointer',
+          padding: '0.5rem 1rem',
+        }}
+        onClick={() =>
+          chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })
+        }
+      >
+        Send a message from outside of chatbot
+      </button>
       <Chatbot
+        ref={chatbotRef}
         fullScreen
         title="Chatbot"
         config={{
@@ -42,8 +65,17 @@ export function Root(): ReactNode {
         botTypingPlaceholder="typing"
         customChannelId={customChannelId}
         initMessages={initMessages}
-        onTemplateBtnClick={(payload) => {
-          console.log('onTemplateBtnClick', payload);
+        onSseMessage={(response, ctx) => {
+          if (response.eventType === 'asgard.run.done') {
+            console.log('onSseMessage', response, ctx.conversation);
+
+            setTimeout(() => {
+              // delay some time to wait for the serviceContext to be available
+              chatbotRef.current?.serviceContext?.sendMessage?.({
+                text: 'Say hi after 5 seconds',
+              });
+            }, 5000);
+          }
         }}
         theme={{
           chatbot: {

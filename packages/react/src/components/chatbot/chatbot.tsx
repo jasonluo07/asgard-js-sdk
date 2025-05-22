@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { forwardRef, ForwardedRef, ReactNode } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
@@ -6,9 +6,11 @@ import {
 } from 'src/context/asgard-theme-context';
 import {
   AsgardServiceContextProvider,
+  AsgardServiceContextValue,
   AsgardTemplateContextProvider,
   AsgardTemplateContextValue,
   AsgardAppInitializationContextProvider,
+  AsgardServiceContextProviderProps,
 } from 'src/context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
@@ -22,6 +24,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   config: ClientConfig;
   customChannelId: string;
   initMessages?: ConversationMessage[];
+  onSseMessage?: AsgardServiceContextProviderProps['onSseMessage'];
   fullScreen?: boolean;
   avatar?: string;
   botTypingPlaceholder?: string;
@@ -32,7 +35,14 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   loadingComponent?: ReactNode;
 }
 
-export function Chatbot(props: ChatbotProps): ReactNode {
+export interface ChatbotRef {
+  serviceContext?: AsgardServiceContextValue;
+}
+
+export const Chatbot = forwardRef(function Chatbot(
+  props: ChatbotProps,
+  ref: ForwardedRef<ChatbotRef>
+): ReactNode {
   const {
     title,
     customActions,
@@ -40,6 +50,7 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     config,
     customChannelId,
     initMessages,
+    onSseMessage,
     fullScreen = false,
     avatar,
     botTypingPlaceholder,
@@ -62,10 +73,12 @@ export function Chatbot(props: ChatbotProps): ReactNode {
     >
       <AsgardThemeContextProvider theme={theme}>
         <AsgardServiceContextProvider
+          parentRef={ref}
           avatar={avatar}
           config={config}
           customChannelId={customChannelId}
           initMessages={initMessages}
+          onSseMessage={onSseMessage}
           botTypingPlaceholder={botTypingPlaceholder}
         >
           <ChatbotContainer fullScreen={fullScreen}>
@@ -88,4 +101,4 @@ export function Chatbot(props: ChatbotProps): ReactNode {
       </AsgardThemeContextProvider>
     </AsgardAppInitializationContextProvider>
   );
-}
+});

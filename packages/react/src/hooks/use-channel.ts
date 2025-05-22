@@ -4,17 +4,25 @@ import {
   ChannelStates,
   Conversation,
   ConversationMessage,
+  EventType,
   FetchSsePayload,
+  SseResponse,
 } from '@asgard-js/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-interface UseChannelProps {
+export interface UseChannelProps {
   defaultIsOpen?: boolean;
   resetPayload?: Pick<FetchSsePayload, 'text' | 'payload'>;
   client: AsgardServiceClient | null;
   customChannelId: string;
   customMessageId?: string;
   initMessages?: ConversationMessage[];
+  onSseMessage?: (
+    response: SseResponse<EventType>,
+    context: {
+      conversation: Conversation | null;
+    }
+  ) => void;
 }
 
 export interface UseChannelReturn {
@@ -35,6 +43,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     customChannelId,
     customMessageId,
     initMessages,
+    onSseMessage,
   } = props;
 
   if (!client) {
@@ -82,13 +91,18 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           onSseError() {
             setIsResetting(false);
           },
+          onSseMessage(response: SseResponse<EventType>) {
+            onSseMessage?.(response, {
+              conversation,
+            });
+          },
         }
       );
 
       setIsOpen(true);
       setChannel(channel);
     },
-    [client, customChannelId, customMessageId, initMessages]
+    [client, customChannelId, customMessageId, initMessages, onSseMessage]
   );
 
   const closeChannel = useCallback(() => {
