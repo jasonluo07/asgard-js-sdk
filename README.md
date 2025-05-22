@@ -15,38 +15,77 @@ yarn add @asgard-js/core @asgard-js/react
 Here's a basic example of how to use the React components:
 
 ```javascript
-import React from 'react';
+import React, { useRef } from 'react';
 import { Chatbot } from '@asgard-js/react';
+
+const chatbotRef = useRef(null);
 
 const App = () => {
   return (
-    <Chatbot
-      title="Asgard AI Chatbot"
-      config={{
-        apiKey: 'your-api-key',
-        endpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
-        botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
-        onExecutionError: (error) => {
-          console.error('Execution error:', error);
-        },
-        transformSsePayload: (payload) => {
-          return payload;
+    <div style={{ width: '800px', position: 'relative' }}>
+      <button
+        style={{
+          position: 'absolute',
+          top: '80px',
+          right: '50%',
+          transform: 'translateX(50%)',
+          zIndex: 10,
+          border: '1px solid white',
+          borderRadius: '5px',
+          color: 'white',
+          backgroundColor: 'transparent',
+          cursor: 'pointer',
+          padding: '0.5rem 1rem',
+        }}
+        onClick={() =>
+          chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })
         }
-      }}
-      enableLoadConfigFromService={true}
-      customChannelId="your-channel-id"
-      initMessages={[]}
-      debugMode={false}
-      fullScreen={false}
-      avatar="https://example.com/avatar.png"
-      botTypingPlaceholder="Bot is typing..."
-      onReset={() => {
-        console.log('Chat reset');
-      }}
-      onClose={() => {
-        console.log('Chat closed');
-      }}
-    />
+      >
+        Send a message from outside of chatbot
+      </button>
+      <Chatbot
+        ref={chatbotRef}
+        title="Asgard AI Chatbot"
+        config={{
+          apiKey: 'your-api-key',
+          endpoint:
+            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
+          botProviderEndpoint:
+            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+          onExecutionError: (error) => {
+            console.error('Execution error:', error);
+          },
+          transformSsePayload: (payload) => {
+            return payload;
+          },
+        }}
+        enableLoadConfigFromService={true}
+        customChannelId="your-channel-id"
+        initMessages={[]}
+        debugMode={false}
+        fullScreen={false}
+        avatar="https://example.com/avatar.png"
+        botTypingPlaceholder="Bot is typing..."
+        onReset={() => {
+          console.log('Chat reset');
+        }}
+        onClose={() => {
+          console.log('Chat closed');
+        }}
+        onSseMessage={(response, ctx) => {
+          if (response.eventType === 'asgard.run.done') {
+            console.log('onSseMessage', response, ctx.conversation);
+
+            setTimeout(() => {
+              // delay some time to wait for the serviceContext to be available
+              chatbotRef.current?.serviceContext?.sendMessage?.({
+                text: 'Say hi after 5 seconds',
+              });
+            }, 5000);
+          }
+        }}
+      />
+    </div>
   );
 };
 
@@ -74,11 +113,15 @@ export default App;
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
 - **onReset**: `() => void` - Callback function when chat is reset
 - **onClose**: `() => void` - Callback function when chat is closed
+- **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
+- **ref**: `ForwardedRef<ChatbotRef>` - Forwarded ref to access the chatbot instance. It can be used to access the chatbot instance and do some actions like sending messages to the bot. ChatbotRef extends the ref of the chatbot instance and provides some additional methods like `serviceContext.sendMessage` to interact with the chatbot instance.
 
 ### Theme Configuration
+
 The theme configuration can be obtained from the bot provider metadata of `annotations` field and `theme` props.
 
 The priority of themes is as follows (high to low):
+
 1. Theme from props
 2. Theme from annotations from bot provider metadata
 3. Default theme
@@ -228,7 +271,7 @@ const defaultTheme = {
       style: {},
     },
   },
-}
+};
 ```
 
 ### Usage Example
