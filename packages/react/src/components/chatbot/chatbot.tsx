@@ -1,4 +1,4 @@
-import { forwardRef, ForwardedRef, ReactNode } from 'react';
+import { forwardRef, ForwardedRef, ReactNode, CSSProperties } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
@@ -18,6 +18,8 @@ import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
+  className?: string;
+  style?: CSSProperties;
   title: string;
   customActions?: ReactNode[];
   theme?: Partial<AsgardThemeContextValue>;
@@ -55,13 +57,15 @@ export const Chatbot = forwardRef(function Chatbot(
     avatar,
     botTypingPlaceholder,
     enableLoadConfigFromService = false,
-    asyncInitializers = {},
+    asyncInitializers,
     loadingComponent,
     onReset,
     onClose,
     onTemplateBtnClick,
     onErrorClick,
     errorMessageRenderer,
+    className,
+    style,
   } = props;
 
   return (
@@ -81,7 +85,11 @@ export const Chatbot = forwardRef(function Chatbot(
           onSseMessage={onSseMessage}
           botTypingPlaceholder={botTypingPlaceholder}
         >
-          <ChatbotContainer fullScreen={fullScreen}>
+          <ChatbotContainer
+            fullScreen={fullScreen}
+            className={className}
+            style={style}
+          >
             <ChatbotHeader
               title={title}
               onReset={onReset}
