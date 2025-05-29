@@ -39,6 +39,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
   }
   return (
     <TemplateBox
+      className="asgard-image-template"
       type="bot"
       direction="horizontal"
       style={themeTemplate?.ImageMessageTemplate?.style}

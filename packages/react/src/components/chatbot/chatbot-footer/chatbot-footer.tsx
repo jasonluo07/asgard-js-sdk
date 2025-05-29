@@ -83,7 +83,10 @@ export function ChatbotFooter(): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_footer} style={chatbot.footer?.style}>
+    <div
+      className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
+      style={chatbot.footer?.style}
+    >
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <textarea
           ref={textareaRef}

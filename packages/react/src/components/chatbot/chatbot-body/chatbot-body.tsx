@@ -4,6 +4,7 @@ import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
 import { BotTypingPlaceholder } from '../../templates';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import clsx from 'clsx';
 
 export function ChatbotBody(): ReactNode {
   const { chatbot } = useAsgardThemeContext();
@@ -23,7 +24,10 @@ export function ChatbotBody(): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_body} style={chatbot?.body?.style}>
+    <div
+      className={clsx('asgard-chatbot-body', styles.chatbot_body)}
+      style={chatbot?.body?.style}
+    >
       <div className={styles.chatbot_body__content} style={contentStyles}>
         {Array.from(messages?.values() ?? []).map((message) => (
           <ConversationMessageRenderer

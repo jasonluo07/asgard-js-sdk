@@ -48,7 +48,12 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
 
   if (message.type === 'user') {
     return (
-      <TemplateBox type="user" direction="horizontal" style={rootStyle}>
+      <TemplateBox
+        className="asgard-text-template asgard-text-template--user"
+        type="user"
+        direction="horizontal"
+        style={rootStyle}
+      >
         <div
           className={clsx(classes.text, classes['text--user'])}
           style={styles}
@@ -61,7 +66,12 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
   }
 
   return (
-    <TemplateBox type="bot" direction="horizontal" style={rootStyle}>
+    <TemplateBox
+      className="asgard-text-template asgard-text-template--bot"
+      type="bot"
+      direction="horizontal"
+      style={rootStyle}
+    >
       <Avatar avatar={avatar} />
       <TemplateBoxContent
         time={message.time}

@@ -37,6 +37,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
 
   return (
     <TemplateBox
+      className="asgard-chart-template"
       type="bot"
       direction="vertical"
       style={themeTemplate?.ChartMessageTemplate?.style}

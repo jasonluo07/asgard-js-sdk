@@ -51,7 +51,11 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
   if (!_isTyping) return null;
 
   return (
-    <TemplateBox type="bot" direction="horizontal">
+    <TemplateBox
+      className="asgard-text-template asgard-text-template--bot"
+      type="bot"
+      direction="horizontal"
+    >
       <Avatar avatar={avatar} />
       <TemplateBoxContent time={new Date()}>
         <div

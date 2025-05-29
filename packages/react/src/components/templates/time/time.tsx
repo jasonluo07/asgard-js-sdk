@@ -13,5 +13,9 @@ export function Time(props: TimeProps): ReactNode {
 
   if (!time) return null;
 
-  return <div className={clsx(styles.time, className)}>{formatTime(time)}</div>;
+  return (
+    <div className={clsx('asgard-time', styles.time, className)}>
+      {formatTime(time)}
+    </div>
+  );
 }

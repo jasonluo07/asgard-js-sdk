@@ -7,6 +7,7 @@ import {
   MessageTemplateType,
 } from '@asgard-js/core';
 import { useAsgardTemplateContext, useAsgardThemeContext } from 'src/context';
+import clsx from 'clsx';
 
 interface HintTemplateProps {
   message: ConversationMessage;
@@ -26,7 +27,12 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
 
   if (message.type === 'error')
     return (
-      <div className={classes.hint_root}>
+      <div
+        className={clsx(
+          'asgard-hint-template asgard-hint-template--error',
+          classes.hint_root
+        )}
+      >
         {errorMessageRenderer?.(message) ?? (
           <>
             <div className={classes.error_hint_title}>
@@ -52,7 +58,10 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
 
   return (
     <div
-      className={classes.hint_root}
+      className={clsx(
+        'asgard-hint-template asgard-hint-template--hint',
+        classes.hint_root
+      )}
       style={themeTemplate?.HintMessageTemplate?.style}
     >
       <div className={classes.time}>{formatTime(message.time)}</div>

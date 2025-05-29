@@ -7,17 +7,19 @@ type TemplateBoxProps =
       type: 'user';
       direction: 'horizontal';
       children: ReactNode;
+      className?: string;
       style?: CSSProperties;
     }
   | {
       type: 'bot';
       direction: 'horizontal' | 'vertical';
       children: ReactNode;
+      className?: string;
       style?: CSSProperties;
     };
 
 export function TemplateBox(props: TemplateBoxProps): ReactNode {
-  const { type, direction = 'horizontal', children, style } = props;
+  const { type, direction = 'horizontal', children, style, className } = props;
 
   const boxClassName = useMemo(() => {
     switch (type) {
@@ -36,7 +38,10 @@ export function TemplateBox(props: TemplateBoxProps): ReactNode {
   }, [direction, type]);
 
   return (
-    <div className={boxClassName} style={style}>
+    <div
+      className={clsx('asgard-template-box', boxClassName, className)}
+      style={style}
+    >
       {children}
     </div>
   );
