@@ -46,6 +46,10 @@ export function createSseObservable(
       headers,
       body: payload ? JSON.stringify(payload) : undefined,
       signal: controller.signal,
+      /**
+       * Allow SSE to work when the page is hidden.
+       * https://github.com/Azure/fetch-event-source/issues/17#issuecomment-1525904929
+       */
       openWhenHidden: true,
       onopen: async (response) => {
         if (!response.ok) {
