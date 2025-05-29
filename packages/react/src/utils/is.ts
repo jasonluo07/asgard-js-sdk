@@ -68,5 +68,5 @@ export function isEqual(a: unknown, b: unknown): boolean {
   }
 
   // Fallback for functions, symbols, etc. (compare by reference)
-  return false;
+  return a === b;
 }

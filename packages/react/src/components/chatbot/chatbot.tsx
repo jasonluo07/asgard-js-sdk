@@ -59,7 +59,7 @@ export const Chatbot = forwardRef(function Chatbot(
     botTypingPlaceholder,
     enableLoadConfigFromService = false,
     maintainConnectionWhenClosed = false,
-    asyncInitializers,
+    asyncInitializers = {},
     loadingComponent,
     onReset,
     onClose,
