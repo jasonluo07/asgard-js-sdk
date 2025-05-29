@@ -1,4 +1,4 @@
-import { forwardRef, ForwardedRef, ReactNode } from 'react';
+import { forwardRef, ForwardedRef, ReactNode, CSSProperties } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
@@ -18,6 +18,8 @@ import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
+  className?: string;
+  style?: CSSProperties;
   title: string;
   customActions?: ReactNode[];
   theme?: Partial<AsgardThemeContextValue>;
@@ -29,6 +31,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   avatar?: string;
   botTypingPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
+  maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
   onClose?: () => void;
@@ -55,6 +58,7 @@ export const Chatbot = forwardRef(function Chatbot(
     avatar,
     botTypingPlaceholder,
     enableLoadConfigFromService = false,
+    maintainConnectionWhenClosed = false,
     asyncInitializers = {},
     loadingComponent,
     onReset,
@@ -62,6 +66,8 @@ export const Chatbot = forwardRef(function Chatbot(
     onTemplateBtnClick,
     onErrorClick,
     errorMessageRenderer,
+    className,
+    style,
   } = props;
 
   return (
@@ -81,12 +87,17 @@ export const Chatbot = forwardRef(function Chatbot(
           onSseMessage={onSseMessage}
           botTypingPlaceholder={botTypingPlaceholder}
         >
-          <ChatbotContainer fullScreen={fullScreen}>
+          <ChatbotContainer
+            fullScreen={fullScreen}
+            className={className}
+            style={style}
+          >
             <ChatbotHeader
               title={title}
               onReset={onReset}
               onClose={onClose}
               customActions={customActions}
+              maintainConnectionWhenClosed={maintainConnectionWhenClosed}
             />
             <AsgardTemplateContextProvider
               onErrorClick={onErrorClick}

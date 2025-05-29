@@ -9,12 +9,19 @@ import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 interface ChatbotHeaderProps {
   title: string;
   customActions?: ReactNode[];
+  maintainConnectionWhenClosed?: boolean;
   onClose?: () => void;
   onReset?: () => void;
 }
 
 export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
-  const { title, onReset, onClose, customActions } = props;
+  const {
+    title,
+    onReset,
+    onClose,
+    customActions,
+    maintainConnectionWhenClosed,
+  } = props;
 
   const { chatbot } = useAsgardThemeContext();
 
@@ -45,10 +52,13 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
       if (!isResetting) {
         e.stopPropagation();
         onClose?.();
-        closeChannel?.();
+
+        if (!maintainConnectionWhenClosed) {
+          closeChannel?.();
+        }
       }
     },
-    [isResetting, onClose, closeChannel]
+    [isResetting, onClose, closeChannel, maintainConnectionWhenClosed]
   );
 
   return (
