@@ -21,6 +21,7 @@ export function ButtonTemplate(props: ButtonTemplateProps): ReactNode {
 
   return (
     <TemplateBox
+      className="asgard-button-template"
       type="bot"
       direction="horizontal"
       style={themeTemplate?.ButtonMessageTemplate?.style}

@@ -7,6 +7,7 @@ import {
 } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardTemplateContext } from 'src/context/asgard-template-context';
+import clsx from 'clsx';
 
 interface CardProps {
   template: ButtonMessageTemplate | CarouselMessageTemplate['columns'][number];
@@ -69,7 +70,7 @@ export function Card(props: CardProps): ReactNode {
   );
 
   return (
-    <div className={styles.card_root}>
+    <div className={clsx('asgard-card', styles.card_root)}>
       {template?.thumbnailImageUrl && (
         <img
           alt={template?.title}

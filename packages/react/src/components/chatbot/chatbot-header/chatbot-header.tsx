@@ -5,6 +5,7 @@ import { useAsgardContext } from 'src/context/asgard-service-context';
 import RefreshSvg from 'src/icons/refresh.svg?react';
 import CloseSvg from 'src/icons/close.svg?react';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import clsx from 'clsx';
 
 interface ChatbotHeaderProps {
   title: string;
@@ -52,7 +53,10 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
   );
 
   return (
-    <div className={styles.chatbot_header} style={chatbot?.header?.style}>
+    <div
+      className={clsx('asgard-chatbot-header', styles.chatbot_header)}
+      style={chatbot?.header?.style}
+    >
       <div className={styles.chatbot_header__content} style={contentStyles}>
         <div className={styles.chatbot_header__title}>
           <ProfileIcon avatar={avatar} />

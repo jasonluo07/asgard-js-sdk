@@ -2,6 +2,7 @@ import { ReactNode, useCallback } from 'react';
 import styles from './quick-replies.module.scss';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import clsx from 'clsx';
 
 interface QuickRepliesProps {
   quickReplies: { text: string }[];
@@ -24,7 +25,7 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
 
   return (
     <div
-      className={styles.quick_replies_box}
+      className={clsx('asgard-quick-replies', styles.quick_replies_box)}
       style={template?.quickReplies?.style}
     >
       {quickReplies.map((quickReply) => (

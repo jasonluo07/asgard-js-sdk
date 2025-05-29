@@ -25,6 +25,7 @@ export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
 
   return (
     <TemplateBox
+      className="asgard-carousel-template"
       type="bot"
       direction="vertical"
       style={themeTemplate?.CarouselMessageTemplate?.style}
