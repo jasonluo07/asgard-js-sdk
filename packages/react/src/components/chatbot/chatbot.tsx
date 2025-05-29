@@ -31,6 +31,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   avatar?: string;
   botTypingPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
+  maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
   onClose?: () => void;
@@ -57,6 +58,7 @@ export const Chatbot = forwardRef(function Chatbot(
     avatar,
     botTypingPlaceholder,
     enableLoadConfigFromService = false,
+    maintainConnectionWhenClosed = false,
     asyncInitializers,
     loadingComponent,
     onReset,
@@ -95,6 +97,7 @@ export const Chatbot = forwardRef(function Chatbot(
               onReset={onReset}
               onClose={onClose}
               customActions={customActions}
+              maintainConnectionWhenClosed={maintainConnectionWhenClosed}
             />
             <AsgardTemplateContextProvider
               onErrorClick={onErrorClick}
