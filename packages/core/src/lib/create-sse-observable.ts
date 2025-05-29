@@ -46,6 +46,7 @@ export function createSseObservable(
       headers,
       body: payload ? JSON.stringify(payload) : undefined,
       signal: controller.signal,
+      openWhenHidden: true,
       onopen: async (response) => {
         if (!response.ok) {
           subscriber.error(response);
