@@ -102,6 +102,7 @@ export default App;
   - `onExecutionError?`: `(error: ErrorEventData) => void` - Error handler for execution errors
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
 - **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
+- **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
 - **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
 - **customChannelId**: `string` - Custom channel identifier for the chat session
