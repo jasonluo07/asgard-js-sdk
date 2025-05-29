@@ -1,27 +1,33 @@
-export function isEqual(value: unknown, other: unknown): boolean {
-  if (typeof value !== 'object' && typeof other !== 'object') {
-    return Object.is(value, other);
-  }
-
-  if (value === null && other === null) {
+/**
+ * Performs a deep equality check between two values (primitive, array, plain object).
+ * - Functions are compared by reference.
+ * - No circular reference support.
+ * - Returns true if deeply equal, false otherwise.
+ */
+export function isEqual(a: unknown, b: unknown): boolean {
+  // Check for strict equality first (handles primitives and reference equality)
+  if (a === b) {
     return true;
   }
 
-  if (typeof value !== typeof other) {
+  // Handle null cases
+  if (a === null || b === null) {
+    return a === b;
+  }
+
+  // Compare types
+  if (typeof a !== typeof b) {
     return false;
   }
 
-  if (value === other) {
-    return true;
-  }
-
-  if (Array.isArray(value) && Array.isArray(other)) {
-    if (value.length !== other.length) {
+  // Handle arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) {
       return false;
     }
 
-    for (let i = 0; i < value.length; i++) {
-      if (!isEqual(value[i], other[i])) {
+    for (let i = 0; i < a.length; i++) {
+      if (!isEqual(a[i], b[i])) {
         return false;
       }
     }
@@ -29,32 +35,29 @@ export function isEqual(value: unknown, other: unknown): boolean {
     return true;
   }
 
-  if (Array.isArray(value) || Array.isArray(other)) {
+  // If one is array and the other is not
+  if (Array.isArray(a) || Array.isArray(b)) {
     return false;
   }
 
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof other === 'object' &&
-    other !== null
-  ) {
-    const valueKeys = Object.keys(value as object);
-    const otherKeys = Object.keys(other as object);
-
-    if (valueKeys.length !== otherKeys.length) {
+  // Handle objects (but not functions)
+  if (typeof a === 'object' && typeof b === 'object') {
+    const aKeys = Object.keys(a as object);
+    const bKeys = Object.keys(b as object);
+    if (aKeys.length !== bKeys.length) {
       return false;
     }
 
-    for (const key of valueKeys) {
-      if (!(key in (other as object))) {
+    for (const key of aKeys) {
+      // Use Object.prototype.hasOwnProperty.call to be safe
+      if (!Object.prototype.hasOwnProperty.call(b, key)) {
         return false;
       }
 
       if (
         !isEqual(
-          (value as Record<string, unknown>)[key],
-          (other as Record<string, unknown>)[key]
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key]
         )
       ) {
         return false;
@@ -64,5 +67,6 @@ export function isEqual(value: unknown, other: unknown): boolean {
     return true;
   }
 
+  // Fallback for functions, symbols, etc. (compare by reference)
   return false;
 }
