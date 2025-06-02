@@ -22,15 +22,5 @@
     "eslint.config.mjs",
     "eslint.config.cjs"
   ],
-  "references": [
-    {
-      "path": "../../packages/core"
-    },
-    {
-      "path": "../../packages/react"
-    },
-    {
-      "path": "../react-demo"
-    }
-  ]
+  "references": []
 }
