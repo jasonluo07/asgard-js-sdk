@@ -99,15 +99,21 @@ export default App;
   - `apiKey`: `string` (required) - API key for authentication
   - `endpoint`: `string` (required) - API endpoint URL
   - `botProviderEndpoint?`: `string` - Bot provider endpoint URL
-  - `onExecutionError?`: `(error: ErrorEventData) => void` - Error handler for execution errors
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
+  - `debugMode?`: `boolean` - Enable debug mode, defaults to `false`
+  - `onRunInit?`: `InitEventHandler` - Handler for run initialization events
+  - `onMessage?`: `MessageEventHandler` - Handler for message events
+  - `onToolCall?`: `ToolCallEventHandler` - Handler for tool call events
+  - `onProcess?`: `ProcessEventHandler` - Handler for process events
+  - `onRunDone?`: `DoneEventHandler` - Handler for run completion events
+  - `onRunError?`: `ErrorEventHandler` - Error handler for execution errors
+- **customActions?**: `ReactNode[]` - Custom actions to display on the chatbot header
 - **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
 - **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
 - **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
 - **customChannelId**: `string` - Custom channel identifier for the chat session
 - **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat
-- **debugMode**: `boolean` - Enable debug mode, defaults to `false`
 - **fullScreen**: `boolean` - Display chatbot in full screen mode, defaults to `false`
 - **avatar**: `string` - URL for the chatbot's avatar image
 - **botTypingPlaceholder**: `string` - Text to display while the bot is typing

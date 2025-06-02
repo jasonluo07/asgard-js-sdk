@@ -10,7 +10,8 @@ export function useAsgardServiceClient(
 ): AsgardServiceClient | null {
   const { config } = props;
 
-  const { onRunInit, onProcess, onMessage, onRunDone, onRunError } = config;
+  const { onRunInit, onProcess, onMessage, onToolCall, onRunDone, onRunError } =
+    config;
 
   const clientRef = useRef<AsgardServiceClient | null>(null);
 
@@ -44,6 +45,12 @@ export function useAsgardServiceClient(
 
     clientRef.current.on(EventType.MESSAGE, onMessage);
   }, [onMessage]);
+
+  useEffect(() => {
+    if (!clientRef.current || !onToolCall) return;
+
+    clientRef.current.on(EventType.TOOL_CALL, onToolCall);
+  }, [onToolCall]);
 
   useEffect(() => {
     if (!clientRef.current || !onRunDone) return;
