@@ -24,4 +24,4 @@ function updateVersion(file, newVersion) {
 updateVersion(corePath, newVersion);
 updateVersion(reactPath, newVersion);
 
-console.log(`new_version=${newVersion}`); // output for workflow
+console.log(newVersion); // output for workflow
