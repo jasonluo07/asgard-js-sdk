@@ -12,6 +12,9 @@ export enum EventType {
   MESSAGE_START = 'asgard.message.start',
   MESSAGE_DELTA = 'asgard.message.delta',
   MESSAGE_COMPLETE = 'asgard.message.complete',
+  TOOL_CALL = 'asgard.tool_call',
+  TOOL_CALL_START = 'asgard.tool_call.start',
+  TOOL_CALL_COMPLETE = 'asgard.tool_call.complete',
   DONE = 'asgard.run.done',
   ERROR = 'asgard.run.error',
 }
