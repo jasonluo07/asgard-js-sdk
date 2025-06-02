@@ -1,0 +1,108 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-**'
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # for tags
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Bump version (core & react)
+        id: bump
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          node scripts/bump-version.js "$TAG_NAME" > version.txt
+          NEW_VERSION=$(cat version.txt)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/core/package.json packages/react/package.json
+          git commit -m "chore(release): v${{ steps.bump.outputs.new_version }}"
+          git tag @asgard-js/core@${{ steps.bump.outputs.new_version }}
+          git tag @asgard-js/react@${{ steps.bump.outputs.new_version }}
+          git push origin main
+          git push origin @asgard-js/core@${{ steps.bump.outputs.new_version }}
+          git push origin @asgard-js/react@${{ steps.bump.outputs.new_version }}
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Generate core changelog
+        id: changelog_core
+        run: |
+          CURR_TAG="@asgard-js/core@${{ steps.bump.outputs.new_version }}"
+          PREV_TAG=$(git tag --list "@asgard-js/core@*" --sort=-v:refname | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then PREV_TAG=$(git tag --list "@asgard-js/core@*" --sort=-v:refname | sed -n '1p'); fi
+          if [ -n "$PREV_TAG" ]; then
+            git log "$PREV_TAG..$CURR_TAG" -- packages/core --pretty=format:"* %s (%h)" > core-changelog.md
+          else
+            git log "$CURR_TAG" -- packages/core --pretty=format:"* %s (%h)" > core-changelog.md
+          fi
+
+      - name: Create GitHub Release for core
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURR_TAG="@asgard-js/core@${{ steps.bump.outputs.new_version }}"
+          gh release create "$CURR_TAG" --repo "$GITHUB_REPOSITORY" --notes-file core-changelog.md --title "$CURR_TAG" || \
+          gh release edit "$CURR_TAG" --repo "$GITHUB_REPOSITORY" --notes-file core-changelog.md --title "$CURR_TAG"
+
+      - name: Generate react changelog
+        id: changelog_react
+        run: |
+          CURR_TAG="@asgard-js/react@${{ steps.bump.outputs.new_version }}"
+          PREV_TAG=$(git tag --list "@asgard-js/react@*" --sort=-v:refname | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then PREV_TAG=$(git tag --list "@asgard-js/react@*" --sort=-v:refname | sed -n '1p'); fi
+          if [ -n "$PREV_TAG" ]; then
+            git log "$PREV_TAG..$CURR_TAG" -- packages/react --pretty=format:"* %s (%h)" > react-changelog.md
+          else
+            git log "$CURR_TAG" -- packages/react --pretty=format:"* %s (%h)" > react-changelog.md
+          fi
+
+      - name: Create GitHub Release for react
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURR_TAG="@asgard-js/react@${{ steps.bump.outputs.new_version }}"
+          gh release create "$CURR_TAG" --repo "$GITHUB_REPOSITORY" --notes-file react-changelog.md --title "$CURR_TAG" || \
+          gh release edit "$CURR_TAG" --repo "$GITHUB_REPOSITORY" --notes-file react-changelog.md --title "$CURR_TAG"
+
+      - name: Build core
+        run: npm run build:core
+
+      - name: Build react
+        run: npm run build:react
+
+      - name: Release core
+        run: npm run release:core --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Release react
+        run: npm run release:react --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
