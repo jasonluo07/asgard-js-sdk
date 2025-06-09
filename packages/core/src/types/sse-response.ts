@@ -133,6 +133,20 @@ export interface ErrorEventData {
   error: ErrorMessage;
 }
 
+export interface ToolCallBaseEventData {
+  processId: string;
+  callSeq: number;
+  toolCall: {
+    toolsetName: string;
+    toolName: string;
+    parameter: Record<string, unknown>;
+  };
+}
+
+export interface ToolCallCompleteEventData extends ToolCallBaseEventData {
+  toolCallResult: Record<string, unknown>;
+}
+
 export interface Fact<Type extends EventType> {
   runInit: null;
   runDone: null;
@@ -140,6 +154,16 @@ export interface Fact<Type extends EventType> {
   messageStart: IsEqual<Type, EventType.MESSAGE_START, MessageEventData>;
   messageDelta: IsEqual<Type, EventType.MESSAGE_DELTA, MessageEventData>;
   messageComplete: IsEqual<Type, EventType.MESSAGE_COMPLETE, MessageEventData>;
+  toolCallStart: IsEqual<
+    Type,
+    EventType.TOOL_CALL_START,
+    ToolCallBaseEventData
+  >;
+  toolCallComplete: IsEqual<
+    Type,
+    EventType.TOOL_CALL_COMPLETE,
+    ToolCallCompleteEventData
+  >;
 }
 
 export interface SseResponse<Type extends EventType> {

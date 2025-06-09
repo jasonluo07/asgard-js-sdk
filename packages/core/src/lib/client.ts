@@ -61,6 +61,14 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         );
 
         break;
+      case EventType.TOOL_CALL_START:
+      case EventType.TOOL_CALL_COMPLETE:
+        this.sseEmitter.emit(
+          EventType.TOOL_CALL,
+          response as Parameters<SseEvents[EventType.TOOL_CALL]>[0]
+        );
+
+        break;
       case EventType.DONE:
         this.sseEmitter.emit(
           EventType.DONE,

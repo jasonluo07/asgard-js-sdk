@@ -19,10 +19,14 @@ export type ProcessEventHandler = EventHandler<
 >;
 export type DoneEventHandler = EventHandler<SseResponse<EventType.DONE>>;
 export type ErrorEventHandler = EventHandler<SseResponse<EventType.ERROR>>;
+export type ToolCallEventHandler = EventHandler<
+  SseResponse<EventType.TOOL_CALL_START | EventType.TOOL_CALL_COMPLETE>
+>;
 
 export interface SseHandlers {
   onRunInit?: InitEventHandler;
   onMessage?: MessageEventHandler;
+  onToolCall?: ToolCallEventHandler;
   onProcess?: ProcessEventHandler;
   onRunDone?: DoneEventHandler;
   onRunError?: ErrorEventHandler;
@@ -56,6 +60,7 @@ export interface SseEvents {
   [EventType.INIT]: InitEventHandler;
   [EventType.PROCESS]: ProcessEventHandler;
   [EventType.MESSAGE]: MessageEventHandler;
+  [EventType.TOOL_CALL]: ToolCallEventHandler;
   [EventType.DONE]: DoneEventHandler;
   [EventType.ERROR]: ErrorEventHandler;
 }
