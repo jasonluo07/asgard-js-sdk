@@ -33,7 +33,15 @@ export interface SseHandlers {
 }
 
 export interface ClientConfig extends SseHandlers {
-  endpoint: string;
+  /**
+   * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
+   * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
+   */
+  endpoint?: string;
+  /**
+   * Base URL for the bot provider service.
+   * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
+   */
   botProviderEndpoint?: string;
   apiKey?: string;
   debugMode?: boolean;

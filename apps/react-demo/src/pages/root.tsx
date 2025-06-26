@@ -10,8 +10,7 @@ import {
   // createImageTemplateExample,
 } from './const';
 
-const { VITE_ENDPOINT, VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta
-  .env;
+const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
 
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
@@ -86,7 +85,6 @@ export function Root(): ReactNode {
             fullScreen
             title="Chatbot"
             config={{
-              endpoint: VITE_ENDPOINT,
               botProviderEndpoint: VITE_BOT_PROVIDER_ENDPOINT,
               apiKey: VITE_API_KEY,
             }}
@@ -102,6 +100,7 @@ export function Root(): ReactNode {
             }}
             onSseMessage={(response, ctx) => {
               if (response.eventType === 'asgard.run.done') {
+                // eslint-disable-next-line no-console
                 console.log('onSseMessage', response, ctx.conversation);
 
                 setTimeout(() => {
