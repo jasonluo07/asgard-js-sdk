@@ -48,13 +48,9 @@ const App = () => {
         title="Asgard AI Chatbot"
         config={{
           apiKey: 'your-api-key',
-          endpoint:
-            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
           botProviderEndpoint:
             'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
-          onExecutionError: (error) => {
-            console.error('Execution error:', error);
-          },
+          debugMode: true, // Enable to see deprecation warnings
           transformSsePayload: (payload) => {
             return payload;
           },
@@ -92,13 +88,42 @@ const App = () => {
 export default App;
 ```
 
+## Migration from `endpoint` to `botProviderEndpoint`
+
+**Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
+
+### Before (Deprecated)
+```javascript
+config: {
+  apiKey: 'your-api-key',
+  endpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+}
+```
+
+### After (Recommended)
+```javascript
+config: {
+  apiKey: 'your-api-key', 
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  // SSE endpoint is automatically derived as: botProviderEndpoint + '/message/sse'
+}
+```
+
+**Benefits:**
+- Simplified configuration with single endpoint
+- Reduced chance of configuration errors
+- Automatic endpoint derivation
+
+**Backward Compatibility:** Existing code using `endpoint` will continue to work but may show deprecation warnings when `debugMode` is enabled.
+
 ### Chatbot Component Props
 
 - **title**: `string` - The title of the chatbot.
 - **config**: `ClientConfig` - Configuration object for the Asgard service client, including:
   - `apiKey`: `string` (required) - API key for authentication
-  - `endpoint`: `string` (required) - API endpoint URL
-  - `botProviderEndpoint?`: `string` - Bot provider endpoint URL
+  - `botProviderEndpoint`: `string` (required) - Bot provider endpoint URL (SSE endpoint will be auto-derived)
+  - `endpoint?`: `string` (deprecated) - Legacy API endpoint URL. Use `botProviderEndpoint` instead.
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
   - `debugMode?`: `boolean` - Enable debug mode, defaults to `false`
   - `onRunInit?`: `InitEventHandler` - Handler for run initialization events
@@ -311,6 +336,96 @@ const App = () => {
 ```
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
+
+## Testing
+
+The SDK includes comprehensive tests using Vitest for both packages.
+
+### Running Tests
+
+```sh
+# Run all tests
+npm test
+# or
+yarn test
+
+# Run specific package tests
+yarn test:core     # Core package tests
+yarn test:react    # React package tests
+
+# Run tests in watch mode
+yarn test:core:watch    # Core package watch mode
+yarn test:react:watch   # React package watch mode
+
+# Run tests with UI
+yarn test:core:ui       # Core package UI
+yarn test:react:ui      # React package UI
+
+# Run tests with coverage
+yarn test:core:coverage    # Core package coverage
+yarn test:react:coverage   # React package coverage
+yarn test:coverage         # All packages coverage
+```
+
+### Test Structure
+
+Tests are co-located with source files using `.spec.ts` and `.spec.tsx` extensions:
+
+**Core Package:**
+- `packages/core/src/lib/client.spec.ts` - AsgardServiceClient tests including deprecation scenarios
+- Test environment: jsdom with Vitest
+- 7 test cases covering all configuration scenarios
+
+**React Package:**
+- `packages/react/src/components/chatbot/chatbot.spec.tsx` - React component tests
+- Test environment: jsdom with React Testing Library
+- Setup file: `packages/react/src/test-setup.ts`
+
+### Writing Tests
+
+Both packages use Vitest with the following setup:
+- TypeScript support
+- jsdom environment for DOM APIs
+- ESLint integration
+- Coverage reporting with v8 provider
+- React Testing Library for component testing
+
+Example test patterns:
+```javascript
+// Core package test
+import { describe, it, expect } from 'vitest';
+import { AsgardServiceClient } from './client';
+
+describe('AsgardServiceClient', () => {
+  it('should derive endpoint from botProviderEndpoint', () => {
+    const client = new AsgardServiceClient({
+      botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123',
+      apiKey: 'test-key',
+    });
+    
+    expect(client).toBeDefined();
+  });
+});
+
+// React package test
+import { describe, it, expect } from 'vitest';
+import { render } from '@testing-library/react';
+import { Chatbot } from './chatbot';
+
+describe('Chatbot Component', () => {
+  it('should render without crashing', () => {
+    const { container } = render(
+      <Chatbot
+        title="Test"
+        config={{ botProviderEndpoint: 'https://api.example.com', apiKey: 'test' }}
+        customChannelId="test"
+      />
+    );
+    
+    expect(container).toBeInTheDocument();
+  });
+});
+```
 
 ## Development
 
