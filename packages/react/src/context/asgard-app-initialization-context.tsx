@@ -18,11 +18,32 @@ type AsyncInitializers = {
 
 export interface Annotations {
   embedConfig: {
+    avatar?: string;
+    botTypingPlaceholder?: string;
+    debugMode?: boolean;
+    fullScreen?: boolean;
+    inputPlaceholder?: string;
     theme: {
-      chatbot: Record<string, unknown>;
-      botMessage: Record<string, unknown>;
-      userMessage: Record<string, unknown>;
+      chatbot: {
+        backgroundColor?: string;
+        borderColor?: string;
+        inactiveColor?: string;
+        primaryComponent?: {
+          mainColor?: string;
+          secondaryColor?: string;
+        };
+      };
+      botMessage: {
+        backgroundColor?: string;
+        carouselButtonBackgroundColor?: string;
+        color?: string;
+      };
+      userMessage: {
+        backgroundColor?: string;
+        color?: string;
+      };
     };
+    title?: string;
   };
 }
 
@@ -93,7 +114,7 @@ export const AsgardAppInitializationContextProvider = (
           const value = await fn();
 
           return [key, value];
-        } catch (e) {
+        } catch {
           return [key, undefined];
         }
       })
