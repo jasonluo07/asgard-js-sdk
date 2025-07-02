@@ -1,7 +1,6 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState, CSSProperties } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import styles from './chart-template.module.scss';
 import { ConversationBotMessage } from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
@@ -19,7 +18,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
   const { message } = props;
   const template = message.message.template as ChartMessageTemplate;
 
-  const { template: themeTemplate } = useAsgardThemeContext();
+  const { template: themeTemplate, botMessage } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
 
   const [option, setOption] = useState(
@@ -35,6 +34,14 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
     [option, template.chartOptions]
   );
 
+  const styles = useMemo<CSSProperties>(
+    () => ({
+      color: botMessage?.color,
+      backgroundColor: botMessage?.backgroundColor,
+    }),
+    [botMessage]
+  );
+
   return (
     <TemplateBox
       className="asgard-chart-template"
@@ -48,11 +55,11 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
         <div>{template.text}</div>
       </div>
       {options.length > 1 && (
-        <div className={styles.quick_replies_box}>
+        <div className={classes.quick_replies_box}>
           {options.map((option) => (
             <button
               key={option.type}
-              className={styles.quick_reply}
+              className={classes.quick_reply}
               onClick={() => setOption(option.type)}
             >
               {option.title}
@@ -63,7 +70,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
       <TemplateBoxContent quickReplies={template?.quickReplies}>
         <VegaLite spec={spec} />
       </TemplateBoxContent>
-      <Time className={styles.chart_time} time={message.time} />
+      <Time className={classes.chart_time} time={message.time} />
     </TemplateBox>
   );
 }

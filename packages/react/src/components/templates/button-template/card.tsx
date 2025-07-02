@@ -1,4 +1,10 @@
-import { MouseEventHandler, ReactNode, useCallback, useMemo } from 'react';
+import {
+  MouseEventHandler,
+  ReactNode,
+  useCallback,
+  useMemo,
+  CSSProperties,
+} from 'react';
 import styles from './card.module.scss';
 import {
   ButtonAction,
@@ -11,10 +17,16 @@ import clsx from 'clsx';
 
 interface CardProps {
   template: ButtonMessageTemplate | CarouselMessageTemplate['columns'][number];
+  customStyle?: {
+    style?: CSSProperties;
+    button?: {
+      style?: CSSProperties;
+    };
+  };
 }
 
 export function Card(props: CardProps): ReactNode {
-  const { template } = props;
+  const { template, customStyle } = props;
 
   const { sendMessage } = useAsgardContext();
   const { onTemplateBtnClick } = useAsgardTemplateContext();
@@ -70,7 +82,10 @@ export function Card(props: CardProps): ReactNode {
   );
 
   return (
-    <div className={clsx('asgard-card', styles.card_root)}>
+    <div
+      className={clsx('asgard-card', styles.card_root)}
+      style={customStyle?.style}
+    >
       {template?.thumbnailImageUrl && (
         <img
           alt={template?.title}
@@ -89,7 +104,11 @@ export function Card(props: CardProps): ReactNode {
         <div className={styles.card_description}>{template?.text}</div>
         <div className={styles.card_actions}>
           {template?.buttons?.map((btn, index) => (
-            <button key={index} onClick={handleClick(btn.action)}>
+            <button
+              key={index}
+              onClick={handleClick(btn.action)}
+              style={customStyle?.button?.style}
+            >
               {btn.label}
             </button>
           ))}

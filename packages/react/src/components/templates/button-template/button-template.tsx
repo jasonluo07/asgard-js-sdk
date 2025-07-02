@@ -31,7 +31,14 @@ export function ButtonTemplate(props: ButtonTemplateProps): ReactNode {
         time={message.time}
         quickReplies={template?.quickReplies}
       >
-        <Card template={template} />
+        <Card
+          template={template}
+          customStyle={{
+            button: {
+              style: themeTemplate?.ButtonMessageTemplate?.button?.style ?? {},
+            },
+          }}
+        />
       </TemplateBoxContent>
     </TemplateBox>
   );
