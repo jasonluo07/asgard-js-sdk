@@ -3,6 +3,7 @@ import {
   KeyboardEventHandler,
   ReactNode,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -81,6 +82,16 @@ export function ChatbotFooter(): ReactNode {
     },
     [isComposing, isConnecting, sendMessage, value]
   );
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.setProperty(
+        '--asg-color-text-placeholder',
+        chatbot.footer?.textArea?.['::placeholder']?.color ??
+          'var(--asg-color-text-placeholder)'
+      );
+    }
+  }, [chatbot.footer?.textArea]);
 
   return (
     <div
