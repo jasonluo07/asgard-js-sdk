@@ -72,7 +72,10 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
           <ProfileIcon avatar={avatar} />
           <h4 style={chatbot?.header?.title?.style}>{title}</h4>
         </div>
-        <div className={styles.chatbot_header__extra}>
+        <div
+          className={styles.chatbot_header__extra}
+          style={chatbot?.header?.actionButton?.style}
+        >
           {customActions}
           <div onClick={_onReset}>
             <RefreshSvg />

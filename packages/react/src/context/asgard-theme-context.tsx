@@ -8,7 +8,10 @@ import {
   useCallback,
 } from 'react';
 import { deepMerge } from 'src/utils/deep-merge';
-import { useAsgardAppInitializationContext } from 'src/context/asgard-app-initialization-context';
+import {
+  useAsgardAppInitializationContext,
+  Annotations,
+} from 'src/context/asgard-app-initialization-context';
 
 export interface AsgardThemeContextValue {
   chatbot: Pick<
@@ -24,10 +27,20 @@ export interface AsgardThemeContextValue {
     | 'borderRadius'
   > & {
     contentMaxWidth?: CSSProperties['maxWidth'];
+    backgroundColor?: CSSProperties['backgroundColor'];
+    borderColor?: CSSProperties['borderColor'];
+    inactiveColor?: CSSProperties['color'];
+    primaryComponent?: {
+      mainColor?: CSSProperties['color'];
+      secondaryColor?: CSSProperties['color'];
+    };
     style?: CSSProperties;
     header?: Partial<{
       style: CSSProperties;
       title: {
+        style: CSSProperties;
+      };
+      actionButton?: {
         style: CSSProperties;
       };
     }>;
@@ -38,6 +51,7 @@ export interface AsgardThemeContextValue {
       style: CSSProperties;
       textArea: {
         style: CSSProperties;
+        '::placeholder': CSSProperties;
       };
       submitButton: {
         style: CSSProperties;
@@ -59,6 +73,9 @@ export interface AsgardThemeContextValue {
       button: {
         style: CSSProperties;
       };
+    }>;
+    time?: Partial<{
+      style: CSSProperties;
     }>;
     /**
      * TBD: Fill the necessary properties based on the requirements.
@@ -91,11 +108,24 @@ export interface AsgardThemeContextValue {
     /**
      * TBD: Fill the necessary properties based on the requirements.
      */
-    ButtonMessageTemplate: Partial<{ style: CSSProperties }>;
+    ButtonMessageTemplate: Partial<{
+      style: CSSProperties;
+      button?: {
+        style: CSSProperties;
+      };
+    }>;
     /**
      * TBD: Fill the necessary properties based on the requirements.
      */
-    CarouselMessageTemplate: Partial<{ style: CSSProperties }>;
+    CarouselMessageTemplate: Partial<{
+      style: CSSProperties;
+      card: {
+        style: CSSProperties;
+        button?: {
+          style: CSSProperties;
+        };
+      };
+    }>;
   }>;
 }
 
@@ -113,6 +143,9 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
       title: {
         style: {},
       },
+      actionButton: {
+        style: {},
+      },
     },
     body: {
       style: {},
@@ -121,6 +154,9 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
       style: {},
       textArea: {
         style: {},
+        '::placeholder': {
+          color: 'var(--asg-color-text-placeholder)',
+        },
       },
       submitButton: {
         style: {},
@@ -145,6 +181,9 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
         style: {},
       },
     },
+    time: {
+      style: {},
+    },
     TextMessageTemplate: {
       style: {},
     },
@@ -168,9 +207,22 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     },
     ButtonMessageTemplate: {
       style: {},
+      button: {
+        style: {
+          border: '1px solid var(--asg-color-border)',
+        },
+      },
     },
     CarouselMessageTemplate: {
       style: {},
+      card: {
+        style: {},
+        button: {
+          style: {
+            border: '1px solid var(--asg-color-border)',
+          },
+        },
+      },
     },
   },
 };
@@ -198,11 +250,128 @@ export function AsgardThemeContextProvider(
        * 3. Default theme
        */
 
-      const themeFromAnnotations = annotations?.embedConfig?.theme ?? {};
-      const tempTheme = deepMerge(
-        defaultAsgardThemeContextValue,
-        themeFromAnnotations
-      );
+      const themeFromAnnotations: Annotations['embedConfig']['theme'] =
+        annotations?.embedConfig?.theme ?? {
+          chatbot: {},
+          botMessage: {},
+          userMessage: {},
+        };
+
+      const tempTheme = deepMerge(defaultAsgardThemeContextValue, {
+        chatbot: {
+          backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
+          borderColor: themeFromAnnotations.chatbot?.borderColor,
+          header: {
+            title: {
+              style: {
+                color:
+                  themeFromAnnotations.chatbot?.primaryComponent
+                    ?.secondaryColor, // Title text color
+              },
+            },
+            actionButton: {
+              style: {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
+          },
+          body: {
+            style: {
+              // Time/timestamp text color
+              color: themeFromAnnotations.chatbot?.inactiveColor,
+            },
+          },
+          footer: {
+            textArea: {
+              style: {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+                borderColor: themeFromAnnotations.chatbot?.borderColor,
+                backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
+              },
+              '::placeholder': {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
+            submitButton: {
+              style: {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
+            speechInputButton: {
+              style: {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
+          },
+        },
+        botMessage: {
+          backgroundColor: themeFromAnnotations.botMessage?.backgroundColor, // #585858
+          color: themeFromAnnotations.botMessage?.color,
+        },
+        userMessage: {
+          backgroundColor: themeFromAnnotations.userMessage?.backgroundColor,
+          color: themeFromAnnotations.userMessage?.color,
+        },
+        template: {
+          quickReplies: {
+            button: {
+              style: {
+                color:
+                  themeFromAnnotations.chatbot?.primaryComponent
+                    ?.secondaryColor, // Button text (#FFFFFF)
+                borderColor: themeFromAnnotations.chatbot?.borderColor,
+                backgroundColor: themeFromAnnotations.botMessage
+                  ?.backgroundColor
+                  ? `${themeFromAnnotations.botMessage.backgroundColor}33`
+                  : undefined,
+              },
+            },
+          },
+          time: {
+            style: {
+              color: themeFromAnnotations.chatbot?.inactiveColor,
+            },
+          },
+          TextMessageTemplate: {
+            style: {
+              // For unset messages
+              color:
+                themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+            },
+          },
+          ButtonMessageTemplate: {
+            button: {
+              style: {
+                borderColor: themeFromAnnotations.chatbot?.borderColor,
+                backgroundColor:
+                  themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
+                color:
+                  themeFromAnnotations.chatbot?.primaryComponent
+                    ?.secondaryColor,
+              },
+            },
+          },
+          CarouselMessageTemplate: {
+            card: {
+              style: {
+                backgroundColor:
+                  themeFromAnnotations.botMessage
+                    ?.carouselButtonBackgroundColor,
+              },
+              button: {
+                style: {
+                  borderColor: themeFromAnnotations.chatbot?.borderColor,
+                  backgroundColor:
+                    themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
+                  color:
+                    themeFromAnnotations.chatbot?.primaryComponent
+                      ?.secondaryColor,
+                },
+              },
+            },
+          },
+        },
+      });
 
       return deepMerge(tempTheme, theme);
     },

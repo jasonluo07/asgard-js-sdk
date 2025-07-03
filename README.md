@@ -175,10 +175,20 @@ export interface AsgardThemeContextValue {
     | 'borderRadius'
   > & {
     contentMaxWidth?: CSSProperties['maxWidth'];
+    backgroundColor?: CSSProperties['backgroundColor'];
+    borderColor?: CSSProperties['borderColor'];
+    inactiveColor?: CSSProperties['color'];
+    primaryComponent?: {
+      mainColor?: CSSProperties['color'];
+      secondaryColor?: CSSProperties['color'];
+    };
     style?: CSSProperties;
     header?: Partial<{
       style: CSSProperties;
       title: {
+        style: CSSProperties;
+      };
+      actionButton?: {
         style: CSSProperties;
       };
     }>;
@@ -189,6 +199,7 @@ export interface AsgardThemeContextValue {
       style: CSSProperties;
       textArea: {
         style: CSSProperties;
+        '::placeholder': CSSProperties;
       };
       submitButton: {
         style: CSSProperties;
@@ -211,12 +222,28 @@ export interface AsgardThemeContextValue {
         style: CSSProperties;
       };
     }>;
+    time?: Partial<{
+      style: CSSProperties;
+    }>;
     TextMessageTemplate: Partial<{ style: CSSProperties }>;
     HintMessageTemplate: Partial<{ style: CSSProperties }>;
     ImageMessageTemplate: Partial<{ style: CSSProperties }>;
     ChartMessageTemplate: Partial<{ style: CSSProperties }>;
-    ButtonMessageTemplate: Partial<{ style: CSSProperties }>;
-    CarouselMessageTemplate: Partial<{ style: CSSProperties }>;
+    ButtonMessageTemplate: Partial<{ 
+      style: CSSProperties;
+      button?: {
+        style: CSSProperties;
+      };
+    }>;
+    CarouselMessageTemplate: Partial<{ 
+      style: CSSProperties;
+      card: {
+        style: CSSProperties;
+        button?: {
+          style: CSSProperties;
+        };
+      };
+    }>;
 
     // Didn't implement yet
     VideoMessageTemplate: Partial<{ style: CSSProperties }>;
@@ -245,6 +272,9 @@ const defaultTheme = {
       title: {
         style: {},
       },
+      actionButton: {
+        style: {},
+      },
     },
     body: {
       style: {},
@@ -253,6 +283,9 @@ const defaultTheme = {
       style: {},
       textArea: {
         style: {},
+        '::placeholder': {
+          color: 'var(--asg-color-text-placeholder)',
+        },
       },
       submitButton: {
         style: {},
@@ -277,6 +310,9 @@ const defaultTheme = {
         style: {},
       },
     },
+    time: {
+      style: {},
+    },
     TextMessageTemplate: {
       style: {},
     },
@@ -300,9 +336,22 @@ const defaultTheme = {
     },
     ButtonMessageTemplate: {
       style: {},
+      button: {
+        style: {
+          border: '1px solid var(--asg-color-border)',
+        },
+      },
     },
     CarouselMessageTemplate: {
       style: {},
+      card: {
+        style: {},
+        button: {
+          style: {
+            border: '1px solid var(--asg-color-border)',
+          },
+        },
+      },
     },
   },
 };
