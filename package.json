@@ -19,7 +19,6 @@
     "build:react": "nx run @asgard-js/react:build --skip-nx-cache --verbose",
     "watch:react": "nx build @asgard-js/react --watch",
     "test": "nx run-many --target=test --projects=@asgard-js/core,@asgard-js/react",
-    "test:packages": "nx run-many --target=test --projects=@asgard-js/core,@asgard-js/react",
     "test:watch": "nx run-many --target=test --projects=@asgard-js/core,@asgard-js/react --watch",
     "test:coverage": "nx run-many --target=test --projects=@asgard-js/core,@asgard-js/react --coverage",
     "lint:packages": "nx run-many --target=lint --projects=@asgard-js/core,@asgard-js/react",
