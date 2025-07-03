@@ -48,3 +48,6 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 test-output
 .aider*
+
+# claude code
+.mcp.json

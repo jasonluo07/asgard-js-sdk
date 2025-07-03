@@ -48,13 +48,9 @@ const App = () => {
         title="Asgard AI Chatbot"
         config={{
           apiKey: 'your-api-key',
-          endpoint:
-            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
           botProviderEndpoint:
             'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
-          onExecutionError: (error) => {
-            console.error('Execution error:', error);
-          },
+          debugMode: true, // Enable to see deprecation warnings
           transformSsePayload: (payload) => {
             return payload;
           },
@@ -92,13 +88,42 @@ const App = () => {
 export default App;
 ```
 
+## Migration from `endpoint` to `botProviderEndpoint`
+
+**Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
+
+### Before (Deprecated)
+```javascript
+config: {
+  apiKey: 'your-api-key',
+  endpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+}
+```
+
+### After (Recommended)
+```javascript
+config: {
+  apiKey: 'your-api-key', 
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  // SSE endpoint is automatically derived as: botProviderEndpoint + '/message/sse'
+}
+```
+
+**Benefits:**
+- Simplified configuration with single endpoint
+- Reduced chance of configuration errors
+- Automatic endpoint derivation
+
+**Backward Compatibility:** Existing code using `endpoint` will continue to work but may show deprecation warnings when `debugMode` is enabled.
+
 ### Chatbot Component Props
 
 - **title**: `string` - The title of the chatbot.
 - **config**: `ClientConfig` - Configuration object for the Asgard service client, including:
   - `apiKey`: `string` (required) - API key for authentication
-  - `endpoint`: `string` (required) - API endpoint URL
-  - `botProviderEndpoint?`: `string` - Bot provider endpoint URL
+  - `botProviderEndpoint`: `string` (required) - Bot provider endpoint URL (SSE endpoint will be auto-derived)
+  - `endpoint?`: `string` (deprecated) - Legacy API endpoint URL. Use `botProviderEndpoint` instead.
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
   - `debugMode?`: `boolean` - Enable debug mode, defaults to `false`
   - `onRunInit?`: `InitEventHandler` - Handler for run initialization events
@@ -312,6 +337,79 @@ const App = () => {
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
 
+## Testing
+
+The React package includes comprehensive tests using Vitest and React Testing Library.
+
+### Running Tests
+
+```sh
+# Run tests once
+npm test
+# or
+yarn test:react
+
+# Run tests in watch mode
+npm run test:watch
+# or 
+yarn test:react:watch
+
+# Run tests with UI
+npm run test:ui
+# or
+yarn test:react:ui
+
+# Run tests with coverage
+npm run test:coverage
+# or
+yarn test:react:coverage
+```
+
+### Test Structure
+
+Tests are located alongside source files with `.spec.tsx` extensions:
+- `src/components/chatbot/chatbot.spec.tsx` - React component tests
+- Test environment: jsdom with React Testing Library
+- Setup file: `src/test-setup.ts` (includes jest-dom)
+- Coverage reports available in `test-output/vitest/coverage/`
+
+### Writing Tests
+
+The package uses Vitest for testing with the following setup:
+- TypeScript support
+- jsdom environment for DOM APIs
+- React Testing Library for component testing
+- jest-dom matchers for enhanced assertions
+- ESLint integration
+- Coverage reporting with v8 provider
+
+Example test structure:
+```javascript
+import { describe, it, expect } from 'vitest';
+import { render } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { Chatbot } from './chatbot';
+
+describe('Chatbot Component', () => {
+  it('should render without crashing', () => {
+    const config = {
+      botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123',
+      apiKey: 'test-key',
+    };
+
+    const { container } = render(
+      <Chatbot
+        title="Test Chatbot"
+        config={config}
+        customChannelId="test-channel"
+      />
+    );
+
+    expect(container).toBeInTheDocument();
+  });
+});
+```
+
 ## Development
 
 To develop the React package locally, follow these steps:
@@ -345,6 +443,14 @@ yarn watch:react
 yarn serve:react-demo
 ```
 
+Setup your npm release token:
+
+```sh
+cd ~/
+touch .npmrc
+echo "//registry.npmjs.org/:_authToken={{YOUR_TOKEN}}" >> .npmrc
+```
+
 For working with both core and React packages:
 
 ```sh
@@ -353,6 +459,7 @@ yarn lint:packages
 
 # Build core package (required for React package)
 yarn build:core
+yarn build:react
 
 # Release packages
 yarn release:core  # Release core package

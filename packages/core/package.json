@@ -5,6 +5,18 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "rxjs": "^7.8.1"
   },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.6",
+    "@vitest/ui": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "vitest": "^1.6.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "typings": "./dist/index.d.ts",

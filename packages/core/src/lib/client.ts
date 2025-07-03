@@ -13,21 +13,39 @@ import { EventEmitter } from './event-emitter';
 
 export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey?: string;
-  private endpoint: string;
+  private endpoint!: string;
   private debugMode?: boolean;
   private destroy$ = new Subject<void>();
   private sseEmitter = new EventEmitter<SseEvents>();
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 
   constructor(config: ClientConfig) {
-    if (!config.endpoint) {
-      throw new Error('endpoint must be required');
+    // Validate that either endpoint or botProviderEndpoint is provided
+    if (!config.endpoint && !config.botProviderEndpoint) {
+      throw new Error('Either endpoint or botProviderEndpoint must be provided');
     }
 
     this.apiKey = config.apiKey;
-    this.endpoint = config.endpoint;
     this.debugMode = config.debugMode;
     this.transformSsePayload = config.transformSsePayload;
+
+    // Handle endpoint derivation and deprecation
+    if (!config.endpoint && config.botProviderEndpoint) {
+      // Derive endpoint from botProviderEndpoint (new recommended way)
+      // Handle trailing slashes to prevent double slashes
+      const baseEndpoint = config.botProviderEndpoint.replace(/\/+$/, '');
+      this.endpoint = `${baseEndpoint}/message/sse`;
+    } else if (config.endpoint) {
+      // Use provided endpoint but warn about deprecation
+      this.endpoint = config.endpoint;
+      if (this.debugMode) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[AsgardServiceClient] The "endpoint" option is deprecated and will be removed in the next major version. ' +
+          `Please use "botProviderEndpoint" instead. The SSE endpoint will be automatically derived as "\${botProviderEndpoint}/message/sse".`
+        );
+      }
+    }
   }
 
   on<K extends keyof SseEvents>(event: K, listener: SseEvents[K]): void {
