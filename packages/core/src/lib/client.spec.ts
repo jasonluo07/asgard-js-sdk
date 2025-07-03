@@ -120,5 +120,31 @@ describe('AsgardServiceClient', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((client as any).transformSsePayload).toBe(transformSsePayload);
     });
+
+    it('should handle trailing slash in botProviderEndpoint correctly', () => {
+      const config: ClientConfig = {
+        botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123/',
+        apiKey: 'test-key',
+      };
+
+      const client = new AsgardServiceClient(config);
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((client as any).endpoint).toBe('https://api.example.com/bot-provider/bp-123/message/sse');
+      expect(consoleSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle multiple trailing slashes in botProviderEndpoint', () => {
+      const config: ClientConfig = {
+        botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123///',
+        apiKey: 'test-key',
+      };
+
+      const client = new AsgardServiceClient(config);
+      
+      // Should remove all trailing slashes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((client as any).endpoint).toBe('https://api.example.com/bot-provider/bp-123/message/sse');
+    });
   });
 });

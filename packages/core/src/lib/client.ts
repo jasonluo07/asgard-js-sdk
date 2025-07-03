@@ -32,7 +32,9 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     // Handle endpoint derivation and deprecation
     if (!config.endpoint && config.botProviderEndpoint) {
       // Derive endpoint from botProviderEndpoint (new recommended way)
-      this.endpoint = `${config.botProviderEndpoint}/message/sse`;
+      // Handle trailing slashes to prevent double slashes
+      const baseEndpoint = config.botProviderEndpoint.replace(/\/+$/, '');
+      this.endpoint = `${baseEndpoint}/message/sse`;
     } else if (config.endpoint) {
       // Use provided endpoint but warn about deprecation
       this.endpoint = config.endpoint;
@@ -40,7 +42,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         // eslint-disable-next-line no-console
         console.warn(
           '[AsgardServiceClient] The "endpoint" option is deprecated and will be removed in the next major version. ' +
-          'Please use "botProviderEndpoint" instead. The SSE endpoint will be automatically derived as "${botProviderEndpoint}/message/sse".'
+          `Please use "botProviderEndpoint" instead. The SSE endpoint will be automatically derived as "\${botProviderEndpoint}/message/sse".`
         );
       }
     }
