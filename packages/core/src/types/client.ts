@@ -32,21 +32,36 @@ export interface SseHandlers {
   onRunError?: ErrorEventHandler;
 }
 
-export interface ClientConfig extends SseHandlers {
-  /**
-   * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
-   * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
-   */
-  endpoint?: string;
-  /**
-   * Base URL for the bot provider service.
-   * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
-   */
-  botProviderEndpoint?: string;
+export type ClientConfig = SseHandlers & {
   apiKey?: string;
   debugMode?: boolean;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
-}
+} & (
+  | { 
+      /**
+       * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
+       * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
+       */
+      endpoint: string; 
+      /**
+       * Base URL for the bot provider service.
+       * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
+       */
+      botProviderEndpoint?: string; 
+    }
+  | { 
+      /**
+       * Base URL for the bot provider service.
+       * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
+       */
+      botProviderEndpoint: string; 
+      /**
+       * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
+       * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
+       */
+      endpoint?: string; 
+    }
+);
 
 export interface FetchSsePayload {
   customChannelId: string;
