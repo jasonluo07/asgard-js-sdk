@@ -17,9 +17,9 @@ describe('AsgardServiceClient', () => {
 
   describe('constructor', () => {
     it('should throw error when neither endpoint nor botProviderEndpoint is provided', () => {
-      const config: ClientConfig = {
+      const config = {
         apiKey: 'test-key',
-      };
+      } as any; // Use 'as any' to bypass TypeScript checking for testing runtime behavior
 
       expect(() => new AsgardServiceClient(config)).toThrow(
         'Either endpoint or botProviderEndpoint must be provided'
@@ -119,6 +119,32 @@ describe('AsgardServiceClient', () => {
       expect((client as any).debugMode).toBe(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((client as any).transformSsePayload).toBe(transformSsePayload);
+    });
+
+    it('should handle trailing slash in botProviderEndpoint correctly', () => {
+      const config: ClientConfig = {
+        botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123/',
+        apiKey: 'test-key',
+      };
+
+      const client = new AsgardServiceClient(config);
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((client as any).endpoint).toBe('https://api.example.com/bot-provider/bp-123/message/sse');
+      expect(consoleSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle multiple trailing slashes in botProviderEndpoint', () => {
+      const config: ClientConfig = {
+        botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123///',
+        apiKey: 'test-key',
+      };
+
+      const client = new AsgardServiceClient(config);
+      
+      // Should remove all trailing slashes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((client as any).endpoint).toBe('https://api.example.com/bot-provider/bp-123/message/sse');
     });
   });
 });

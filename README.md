@@ -117,6 +117,8 @@ config: {
 
 **Backward Compatibility:** Existing code using `endpoint` will continue to work but may show deprecation warnings when `debugMode` is enabled.
 
+**Note:** If both `endpoint` and `botProviderEndpoint` are provided, the `endpoint` value takes precedence and will be used with a deprecation warning.
+
 ### Chatbot Component Props
 
 - **title**: `string` - The title of the chatbot.
