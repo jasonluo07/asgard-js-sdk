@@ -28,7 +28,46 @@ export const getBotProviderModels = (
   getAnnotations: () => Promise<Record<string, unknown>>;
 } => {
   if (!config.botProviderEndpoint) {
-    throw new Error('Bot provider endpoint is not defined in the config');
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[getBotProviderModels] botProviderEndpoint is not defined in config. ' +
+      'Bot provider features will be disabled. Consider providing botProviderEndpoint for full functionality.'
+    );
+    
+    const stubGetAsgardBotProviderMetadata = async (): Promise<BotProviderMetadataResponse> => {
+      return {
+        name: '',
+        namespace: '',
+        uid: '',
+        resourceVersion: '0',
+        generation: 0,
+        creationTimestamp: new Date().toISOString(),
+        labels: {},
+        annotations: {
+          'asgard-ai.com/additional-annotation': JSON.stringify({
+            embedConfig: {
+              theme: {
+                chatbot: {},
+                botMessage: {},
+                userMessage: {},
+              },
+            },
+          }),
+        },
+        managedFields: [],
+      };
+    };
+
+    const stubGetAnnotations = async (): Promise<Record<string, unknown>> => {
+      const metadata = await stubGetAsgardBotProviderMetadata();
+
+      return annotationSelectorFromBotProviderMetadata(metadata);
+    };
+
+    return {
+      getAsgardBotProviderMetadata: stubGetAsgardBotProviderMetadata,
+      getAnnotations: stubGetAnnotations,
+    };
   }
 
   const headers: Record<string, string> = {};
