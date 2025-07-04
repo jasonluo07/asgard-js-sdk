@@ -31,9 +31,7 @@
     "highlight.js": "^11.11.1",
     "marked": "^15.0.8",
     "marked-highlight": "^2.2.1",
-    "react-vega": "^7.6.0",
-    "vega": "^6.1.2",
-    "vega-lite": "^6.1.0"
+    "react-vega": "^7.6.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
@@ -50,7 +48,9 @@
   "peerDependencies": {
     "@asgard-js/core": "^0.0.26",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "vega": "^6.1.2",
+    "vega-lite": "^6.1.0"
   },
   "scripts": {
     "test": "vitest run",
