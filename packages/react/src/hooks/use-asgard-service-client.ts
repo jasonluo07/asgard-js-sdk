@@ -1,4 +1,8 @@
-import { ClientConfig, AsgardServiceClient, EventType } from '@asgard-js/core';
+import {
+  ClientConfig,
+  AsgardServiceClient,
+  EventType,
+} from '@jasonluo07/asgard-js-core';
 import { useEffect, useRef } from 'react';
 
 interface UseAsgardServiceClientProps {

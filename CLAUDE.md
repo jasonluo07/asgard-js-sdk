@@ -5,18 +5,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is the Asgard JS SDK, a TypeScript monorepo that provides JavaScript/React integration with the Asgard AI platform. It consists of two main packages:
-- `@asgard-js/core` - Core functionality for API communication, SSE handling, and conversation management
-- `@asgard-js/react` - React components and hooks for building chat interfaces
+
+- `@jasonluo07/asgard-js-core` - Core functionality for API communication, SSE handling, and conversation management
+- `@jasonluo07/asgard-js-react` - React components and hooks for building chat interfaces
 
 ## Development Commands
 
 ### Setup
+
 ```bash
 yarn install
 yarn build:core  # Must build core first as it's a dependency
 ```
 
 ### Development
+
 ```bash
 yarn serve:react-demo   # Run React demo app (http://localhost:4200)
 yarn watch:core        # Watch mode for core package
@@ -24,6 +27,7 @@ yarn watch:react       # Watch mode for React package
 ```
 
 ### Testing
+
 ```bash
 yarn test:core         # Run core package tests
 yarn test:react        # Run React package tests
@@ -31,6 +35,7 @@ yarn test:react-demo-e2e  # Run E2E tests with Playwright
 ```
 
 ### Linting
+
 ```bash
 yarn lint:packages     # Lint both core and react packages
 yarn lint:core        # Lint core package only
@@ -38,12 +43,14 @@ yarn lint:react       # Lint react package only
 ```
 
 ### Building
+
 ```bash
 yarn build:core       # Build core package
 yarn build:react      # Build React package
 ```
 
 ### Publishing
+
 ```bash
 yarn release:core     # Publish core package to npm
 yarn release:react    # Publish React package to npm
@@ -52,19 +59,24 @@ yarn release:react    # Publish React package to npm
 ## Architecture Overview
 
 ### Core Package (`packages/core`)
+
 The core package implements:
+
 - **AsgardServiceClient**: Main client class for API communication
 - **SSE Event Handling**: Real-time communication via Server-Sent Events using RxJS
 - **Conversation Management**: Channel and Conversation classes for managing chat sessions
 - **Type Definitions**: Comprehensive TypeScript types in `src/types/`
 
 Key patterns:
+
 - Event-driven architecture using EventEmitter
 - Observable streams for handling SSE events
 - Modular design with clear separation of concerns
 
 ### React Package (`packages/react`)
+
 The React package provides:
+
 - **Chatbot Component**: Main chat interface component with extensive customization
 - **Template System**: Message templates (text, image, carousel, button, etc.)
 - **Context Providers**: Service, theme, and template contexts for state management
@@ -72,12 +84,14 @@ The React package provides:
 - **Theme System**: CSS variables-based theming with full customization support
 
 Key patterns:
+
 - Component composition with templates
 - Context API for global state
 - Custom hooks for encapsulating business logic
 - SCSS modules for component styling
 
 ### Monorepo Structure
+
 - Uses Nx 20.4 for build orchestration
 - Shared TypeScript configuration
 - Centralized dependency management
@@ -91,6 +105,7 @@ Key patterns:
 - **Coverage**: V8 provider with coverage reports
 
 To run a single test file:
+
 ```bash
 cd packages/core && yarn vitest run src/lib/client.spec.ts
 cd packages/react && yarn vitest run src/components/chatbot.spec.tsx
@@ -99,6 +114,7 @@ cd packages/react && yarn vitest run src/components/chatbot.spec.tsx
 ## Code Style Requirements
 
 The project enforces strict TypeScript and linting rules:
+
 - Explicit return types required for all functions
 - Module boundary types must be explicit
 - No unused variables or parameters
@@ -122,18 +138,21 @@ The project enforces strict TypeScript and linting rules:
 ## Common Development Tasks
 
 ### Adding a New Template Type
+
 1. Create template component in `packages/react/src/components/templates/`
 2. Add type definition in `packages/react/src/models/template.ts`
 3. Update template factory in the templates directory
 4. Add corresponding styles in SCSS
 
 ### Modifying API Communication
+
 1. Update types in `packages/core/src/types/`
 2. Modify client methods in `packages/core/src/lib/client.ts`
 3. Update SSE event handling if needed
 4. Ensure backward compatibility
 
 ### Testing SSE Events
+
 The core package includes utilities for testing SSE event streams. Use the mock SSE server in tests to simulate real-time events.
 
 ## Publishing Workflow

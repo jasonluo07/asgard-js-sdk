@@ -1,11 +1,11 @@
 {
-  "name": "@asgard-js/react",
+  "name": "@jasonluo07/asgard-js-react",
   "version": "0.0.27",
   "publishConfig": {
     "access": "public"
   },
   "nx": {
-    "name": "@asgard-js/react",
+    "name": "@jasonluo07/asgard-js-react",
     "projectType": "library",
     "sourceRoot": "packages/react/src"
   },
@@ -46,7 +46,7 @@
     "vitest": "^1.6.0"
   },
   "peerDependencies": {
-    "@asgard-js/core": "^0.0.27",
+    "@jasonluo07/asgard-js-core": "^0.0.27",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "vega": "^6.1.2",

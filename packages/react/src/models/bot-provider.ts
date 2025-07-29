@@ -1,4 +1,4 @@
-import { ClientConfig } from '@asgard-js/core';
+import { ClientConfig } from '@jasonluo07/asgard-js-core';
 import { annotationSelectorFromBotProviderMetadata } from '../utils/selectors';
 
 export type BotProviderMetadataResponse = {

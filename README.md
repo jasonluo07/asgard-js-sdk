@@ -7,7 +7,7 @@ This package provides React components and hooks for integrating with the Asgard
 To install the React package, use the following command:
 
 ```sh
-yarn add @asgard-js/core @asgard-js/react
+yarn add @jasonluo07/asgard-js-core @jasonluo07/asgard-js-react
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ Here's a basic example of how to use the React components:
 
 ```javascript
 import React, { useRef } from 'react';
-import { Chatbot } from '@asgard-js/react';
+import { Chatbot } from '@jasonluo07/asgard-js-react';
 
 const chatbotRef = useRef(null);
 
@@ -93,6 +93,7 @@ export default App;
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
 
 ### Before (Deprecated)
+
 ```javascript
 config: {
   apiKey: 'your-api-key',
@@ -102,15 +103,17 @@ config: {
 ```
 
 ### After (Recommended)
+
 ```javascript
 config: {
-  apiKey: 'your-api-key', 
+  apiKey: 'your-api-key',
   botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   // SSE endpoint is automatically derived as: botProviderEndpoint + '/message/sse'
 }
 ```
 
 **Benefits:**
+
 - Simplified configuration with single endpoint
 - Reduced chance of configuration errors
 - Automatic endpoint derivation
@@ -229,13 +232,13 @@ export interface AsgardThemeContextValue {
     HintMessageTemplate: Partial<{ style: CSSProperties }>;
     ImageMessageTemplate: Partial<{ style: CSSProperties }>;
     ChartMessageTemplate: Partial<{ style: CSSProperties }>;
-    ButtonMessageTemplate: Partial<{ 
+    ButtonMessageTemplate: Partial<{
       style: CSSProperties;
       button?: {
         style: CSSProperties;
       };
     }>;
-    CarouselMessageTemplate: Partial<{ 
+    CarouselMessageTemplate: Partial<{
       style: CSSProperties;
       card: {
         style: CSSProperties;
@@ -423,11 +426,13 @@ yarn test:coverage         # All packages coverage
 Tests are co-located with source files using `.spec.ts` and `.spec.tsx` extensions:
 
 **Core Package:**
+
 - `packages/core/src/lib/client.spec.ts` - AsgardServiceClient tests including deprecation scenarios
 - Test environment: jsdom with Vitest
 - 7 test cases covering all configuration scenarios
 
 **React Package:**
+
 - `packages/react/src/components/chatbot/chatbot.spec.tsx` - React component tests
 - Test environment: jsdom with React Testing Library
 - Setup file: `packages/react/src/test-setup.ts`
@@ -435,6 +440,7 @@ Tests are co-located with source files using `.spec.ts` and `.spec.tsx` extensio
 ### Writing Tests
 
 Both packages use Vitest with the following setup:
+
 - TypeScript support
 - jsdom environment for DOM APIs
 - ESLint integration
@@ -442,6 +448,7 @@ Both packages use Vitest with the following setup:
 - React Testing Library for component testing
 
 Example test patterns:
+
 ```javascript
 // Core package test
 import { describe, it, expect } from 'vitest';
@@ -453,7 +460,7 @@ describe('AsgardServiceClient', () => {
       botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123',
       apiKey: 'test-key',
     });
-    
+
     expect(client).toBeDefined();
   });
 });
@@ -468,11 +475,14 @@ describe('Chatbot Component', () => {
     const { container } = render(
       <Chatbot
         title="Test"
-        config={{ botProviderEndpoint: 'https://api.example.com', apiKey: 'test' }}
+        config={{
+          botProviderEndpoint: 'https://api.example.com',
+          apiKey: 'test',
+        }}
         customChannelId="test"
       />
     );
-    
+
     expect(container).toBeInTheDocument();
   });
 });

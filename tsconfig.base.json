@@ -33,8 +33,8 @@
     "target": "esnext",
     "verbatimModuleSyntax": false,
     "paths": {
-      "@asgard-js/core": ["packages/core/src/index.ts"],
-      "@asgard-js/react": ["packages/react/src/index.ts"]
+      "@jasonluo07/asgard-js-core": ["packages/core/src/index.ts"],
+      "@jasonluo07/asgard-js-react": ["packages/react/src/index.ts"]
     }
   }
 }

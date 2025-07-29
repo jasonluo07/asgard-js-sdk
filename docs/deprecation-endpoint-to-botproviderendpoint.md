@@ -7,6 +7,7 @@ This proposal outlines the deprecation of the `endpoint` configuration option in
 ## Background
 
 Currently, the SDK requires two separate endpoint configurations:
+
 - `endpoint`: The full SSE endpoint URL (e.g., `https://api.example.com/ns/xxx/bot-provider/bp-xxx/message/sse`)
 - `botProviderEndpoint`: The base bot provider URL (e.g., `https://api.example.com/ns/xxx/bot-provider/bp-xxx`)
 
@@ -14,17 +15,20 @@ This creates redundancy and potential for configuration errors, as the `endpoint
 
 ## Current State Analysis
 
-### Core Package (`@asgard-js/core`)
+### Core Package (`@jasonluo07/asgard-js-core`)
+
 - `endpoint` is a required field in the `ClientConfig` interface
 - Used by `AsgardServiceClient` for SSE communication
 - Passed to `createSseObservable` for making SSE requests
 
-### React Package (`@asgard-js/react`)
+### React Package (`@jasonluo07/asgard-js-react`)
+
 - `botProviderEndpoint` is optional in `ClientConfig`
 - Used in `getBotProviderModels` for fetching metadata
 - Used in app initialization context for loading configuration
 
 ### Demo Applications
+
 - Currently configure both `endpoint` and `botProviderEndpoint` separately
 
 ## Proposed Changes
@@ -32,6 +36,7 @@ This creates redundancy and potential for configuration errors, as the `endpoint
 ### Phase 1: Core Package Updates
 
 #### 1. Update ClientConfig Interface
+
 ```typescript
 // packages/core/src/types/client.ts
 export interface ClientConfig extends SseHandlers {
@@ -40,13 +45,13 @@ export interface ClientConfig extends SseHandlers {
    * If provided, it will be used. Otherwise, it will be derived as `${botProviderEndpoint}/message/sse`
    */
   endpoint?: string;
-  
+
   /**
    * Base URL for the bot provider service.
    * The SSE endpoint will be derived as `${botProviderEndpoint}/message/sse`
    */
   botProviderEndpoint?: string;
-  
+
   apiKey?: string;
   debugMode?: boolean;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
@@ -54,6 +59,7 @@ export interface ClientConfig extends SseHandlers {
 ```
 
 #### 2. Update AsgardServiceClient Constructor
+
 ```typescript
 // packages/core/src/lib/client.ts
 constructor(config: ClientConfig) {
@@ -61,7 +67,7 @@ constructor(config: ClientConfig) {
   if (!config.endpoint && !config.botProviderEndpoint) {
     throw new Error('Either endpoint or botProviderEndpoint must be provided');
   }
-  
+
   if (!config.endpoint && config.botProviderEndpoint) {
     // Derive endpoint from botProviderEndpoint
     this.endpoint = `${config.botProviderEndpoint}/message/sse`;
@@ -75,7 +81,7 @@ constructor(config: ClientConfig) {
       );
     }
   }
-  
+
   this.apiKey = config.apiKey;
   this.debugMode = config.debugMode;
   this.transformSsePayload = config.transformSsePayload;
@@ -89,6 +95,7 @@ No changes needed to the React package as it already uses `botProviderEndpoint` 
 ### Phase 3: Demo Application Updates
 
 #### Update React Demo Configuration
+
 ```typescript
 // apps/react-demo/src/pages/root.tsx
 <Chatbot
@@ -102,7 +109,9 @@ No changes needed to the React package as it already uses `botProviderEndpoint` 
 ```
 
 #### Update Environment Variables
+
 Remove `VITE_ENDPOINT` from `.env` files and update `.env.example`:
+
 ```env
 # Remove this line:
 # VITE_ENDPOINT=https://api.dev.asgard-ai.com/.../message/sse
@@ -117,11 +126,12 @@ VITE_API_KEY=your-api-key
 ### For SDK Users
 
 #### Before (Current Usage)
+
 ```typescript
 const client = new AsgardServiceClient({
   endpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx/message/sse',
   botProviderEndpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx',
-  apiKey: 'xxx'
+  apiKey: 'xxx',
 });
 
 // Or in React:
@@ -129,16 +139,17 @@ const client = new AsgardServiceClient({
   config={{
     endpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx/message/sse',
     botProviderEndpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx',
-    apiKey: 'xxx'
+    apiKey: 'xxx',
   }}
-/>
+/>;
 ```
 
 #### After (Recommended)
+
 ```typescript
 const client = new AsgardServiceClient({
   botProviderEndpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx',
-  apiKey: 'xxx'
+  apiKey: 'xxx',
   // endpoint is automatically derived as botProviderEndpoint + '/message/sse'
 });
 
@@ -146,13 +157,15 @@ const client = new AsgardServiceClient({
 <Chatbot
   config={{
     botProviderEndpoint: 'https://api.example.com/ns/xxx/bot-provider/bp-xxx',
-    apiKey: 'xxx'
+    apiKey: 'xxx',
   }}
-/>
+/>;
 ```
 
 #### Transition Period
+
 During the transition period, both approaches will work:
+
 - If only `botProviderEndpoint` is provided: The SSE endpoint will be automatically derived
 - If only `endpoint` is provided: It will work but show a deprecation warning
 - If both are provided: The `endpoint` will be used with a deprecation warning
@@ -181,6 +194,7 @@ During the transition period, both approaches will work:
 ## Rollback Plan
 
 If issues arise:
+
 1. The change is backward compatible, so no immediate rollback needed
 2. Can extend deprecation timeline if needed
 3. Can provide migration tools if complex use cases are discovered

@@ -5,7 +5,7 @@ import {
   ConversationErrorMessage,
   ConversationMessage,
   MessageTemplateType,
-} from '@asgard-js/core';
+} from '@jasonluo07/asgard-js-core';
 import { useAsgardTemplateContext, useAsgardThemeContext } from 'src/context';
 import clsx from 'clsx';
 

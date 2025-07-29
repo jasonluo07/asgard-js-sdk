@@ -10,7 +10,7 @@ import {
   ButtonAction,
   ButtonMessageTemplate,
   CarouselMessageTemplate,
-} from '@asgard-js/core';
+} from '@jasonluo07/asgard-js-core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardTemplateContext } from 'src/context/asgard-template-context';
 import clsx from 'clsx';

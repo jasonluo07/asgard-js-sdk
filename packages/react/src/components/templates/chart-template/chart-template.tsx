@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useState, CSSProperties } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import { ConversationBotMessage } from '@asgard-js/core';
+import { ConversationBotMessage } from '@jasonluo07/asgard-js-core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { ChartMessageTemplate } from '../../../../../core/src';

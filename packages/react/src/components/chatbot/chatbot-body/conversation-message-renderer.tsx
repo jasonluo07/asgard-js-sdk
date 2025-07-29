@@ -1,5 +1,8 @@
 import { ReactNode } from 'react';
-import { ConversationMessage, MessageTemplateType } from '@asgard-js/core';
+import {
+  ConversationMessage,
+  MessageTemplateType,
+} from '@jasonluo07/asgard-js-core';
 import {
   BotTypingBox,
   ButtonTemplate,

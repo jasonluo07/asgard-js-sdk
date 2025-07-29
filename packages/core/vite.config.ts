@@ -34,7 +34,7 @@ export default defineConfig({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
-      name: '@asgard-js/core',
+      name: '@jasonluo07/asgard-js-core',
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
@@ -58,7 +58,7 @@ export default defineConfig({
         },
         {
           format: 'umd',
-          name: '@asgard-js/core',
+          name: '@jasonluo07/asgard-js-core',
           sourcemap: true,
           dir: 'dist',
           entryFileNames: 'index.js',

@@ -7,7 +7,7 @@ import {
   EventType,
   FetchSsePayload,
   SseResponse,
-} from '@asgard-js/core';
+} from '@jasonluo07/asgard-js-core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface UseChannelProps {

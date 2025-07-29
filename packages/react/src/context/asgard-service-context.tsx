@@ -2,7 +2,7 @@ import {
   AsgardServiceClient,
   ClientConfig,
   ConversationMessage,
-} from '@asgard-js/core';
+} from '@jasonluo07/asgard-js-core';
 import {
   createContext,
   ForwardedRef,

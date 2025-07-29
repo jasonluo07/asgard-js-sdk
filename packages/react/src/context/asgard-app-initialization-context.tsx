@@ -6,7 +6,7 @@ import React, {
   PropsWithChildren,
   ReactNode,
 } from 'react';
-import { ClientConfig } from '@asgard-js/core';
+import { ClientConfig } from '@jasonluo07/asgard-js-core';
 import { getBotProviderModels } from 'src/models/bot-provider';
 import { useDeepCompareMemo } from 'src/hooks';
 import { deepMerge } from 'src/utils/deep-merge';

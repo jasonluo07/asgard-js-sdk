@@ -5,7 +5,10 @@ import {
   useContext,
   useMemo,
 } from 'react';
-import { ConversationErrorMessage, FetchSsePayload } from '@asgard-js/core';
+import {
+  ConversationErrorMessage,
+  FetchSsePayload,
+} from '@jasonluo07/asgard-js-core';
 
 export interface AsgardTemplateContextValue {
   onErrorClick?: (message: ConversationErrorMessage) => void;
