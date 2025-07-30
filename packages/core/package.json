@@ -1,6 +1,6 @@
 {
   "name": "@jasonluo07/asgard-js-core",
-  "version": "0.0.30-canary.3",
+  "version": "0.0.30-canary.4",
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
     "rxjs": "^7.8.1"
