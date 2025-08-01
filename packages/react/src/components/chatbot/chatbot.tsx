@@ -1,5 +1,5 @@
 import { forwardRef, ForwardedRef, ReactNode, CSSProperties } from 'react';
-import { ClientConfig, ConversationMessage } from '@jasonluo07/asgard-js-core';
+import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
   AsgardThemeContextValue,

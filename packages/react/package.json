@@ -1,11 +1,11 @@
 {
-  "name": "@jasonluo07/asgard-js-react",
+  "name": "@asgard-js/react",
   "version": "0.0.31-canary.2",
   "publishConfig": {
     "access": "public"
   },
   "nx": {
-    "name": "@jasonluo07/asgard-js-react",
+    "name": "@asgard-js/react",
     "projectType": "library",
     "sourceRoot": "packages/react/src"
   },
@@ -54,7 +54,7 @@
     "vitest": "^1.6.0"
   },
   "peerDependencies": {
-    "@jasonluo07/asgard-js-core": "^0.0.31-canary.2",
+    "@asgard-js/core": "^0.0.31-canary.2",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

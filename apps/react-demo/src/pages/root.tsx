@@ -1,6 +1,6 @@
-import { Chatbot, ChatbotRef } from '@jasonluo07/asgard-js-react';
+import { Chatbot, ChatbotRef } from '@asgard-js/react';
 import { ReactNode, useCallback, useRef, useState } from 'react';
-import { ConversationMessage } from '@jasonluo07/asgard-js-core';
+import { ConversationMessage } from '@asgard-js/core';
 import {
   createButtonTemplateExample,
   createCarouselTemplateExample,

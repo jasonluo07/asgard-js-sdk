@@ -15,13 +15,13 @@ This creates redundancy and potential for configuration errors, as the `endpoint
 
 ## Current State Analysis
 
-### Core Package (`@jasonluo07/asgard-js-core`)
+### Core Package (`@asgard-js/core`)
 
 - `endpoint` is a required field in the `ClientConfig` interface
 - Used by `AsgardServiceClient` for SSE communication
 - Passed to `createSseObservable` for making SSE requests
 
-### React Package (`@jasonluo07/asgard-js-react`)
+### React Package (`@asgard-js/react`)
 
 - `botProviderEndpoint` is optional in `ClientConfig`
 - Used in `getBotProviderModels` for fetching metadata

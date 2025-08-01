@@ -5,10 +5,7 @@ import {
   useContext,
   useMemo,
 } from 'react';
-import {
-  ConversationErrorMessage,
-  FetchSsePayload,
-} from '@jasonluo07/asgard-js-core';
+import { ConversationErrorMessage, FetchSsePayload } from '@asgard-js/core';
 
 export interface AsgardTemplateContextValue {
   onErrorClick?: (message: ConversationErrorMessage) => void;
@@ -56,11 +53,21 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
 export function AsgardTemplateContextProvider(
   props: AsgardTemplateContextProviderProps
 ): ReactNode {
-  const { children, onErrorClick, errorMessageRenderer, onTemplateBtnClick, defaultLinkTarget } =
-    props;
+  const {
+    children,
+    onErrorClick,
+    errorMessageRenderer,
+    onTemplateBtnClick,
+    defaultLinkTarget,
+  } = props;
 
   const contextValue = useMemo(
-    () => ({ onErrorClick, errorMessageRenderer, onTemplateBtnClick, defaultLinkTarget }),
+    () => ({
+      onErrorClick,
+      errorMessageRenderer,
+      onTemplateBtnClick,
+      defaultLinkTarget,
+    }),
     [errorMessageRenderer, onErrorClick, onTemplateBtnClick, defaultLinkTarget]
   );
 

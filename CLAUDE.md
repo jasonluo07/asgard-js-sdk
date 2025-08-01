@@ -3,14 +3,15 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## First to read
+
 - Always read the `docs/agent-rules.md` file first
 
 ## Project Overview
 
 This is the Asgard JS SDK, a TypeScript monorepo that provides JavaScript/React integration with the Asgard AI platform. It consists of two main packages:
 
-- `@jasonluo07/asgard-js-core` - Core functionality for API communication, SSE handling, and conversation management
-- `@jasonluo07/asgard-js-react` - React components and hooks for building chat interfaces
+- `@asgard-js/core` - Core functionality for API communication, SSE handling, and conversation management
+- `@asgard-js/react` - React components and hooks for building chat interfaces
 
 ## Development Commands
 
@@ -161,12 +162,14 @@ The core package includes utilities for testing SSE event streams. Use the mock 
 ## React-Markdown Migration Status
 
 ### ✅ Phase 1: Core Migration (Completed)
+
 - Migrated from `marked` to `react-markdown` with `remark-gfm` support
 - All basic markdown features working: headers, formatting, lists, links, images, tables, code blocks
 - Maintained backward compatibility and existing styling
 - 22 tests added covering core markdown functionality
 
 ### ✅ Phase 2: Math Support (Completed)
+
 - Added KaTeX math rendering support with `remark-math` and `rehype-katex`
 - Supports both inline math (`$...$`) and block math (`$$...$$`)
 - Complex expressions: fractions, Greek letters, matrices, equations, integrals
@@ -176,17 +179,20 @@ The core package includes utilities for testing SSE event streams. Use the mock 
 - **Test Results**: 88/88 tests passing (100% success rate)
 
 **Dependencies Added**:
+
 - `remark-math`: ^6.0.0
-- `rehype-katex`: ^7.0.1  
+- `rehype-katex`: ^7.0.1
 - `katex`: ^0.16.22
 
 **Files Modified**:
+
 - `use-react-markdown-renderer.tsx`: Core math rendering implementation with cache management
 - `use-react-markdown-renderer.spec.tsx`: Comprehensive test suite (88 tests)
 - `const.ts`: Fixed demo math content escaping
 - `text-template.module.scss`: Table container styling
 
 **Phase 2 Extensions**:
+
 - **Cache Management**: MAX_CACHE_SIZE (100) with LRU eviction strategy
 - **Memory Safety**: Prevents unlimited cache growth in production
 - **Performance Optimization**: Maintains fast rendering with size limits

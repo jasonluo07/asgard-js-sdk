@@ -6,7 +6,7 @@ import { Card } from '../button-template/card';
 import {
   CarouselMessageTemplate,
   ConversationBotMessage,
-} from '@jasonluo07/asgard-js-core';
+} from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';

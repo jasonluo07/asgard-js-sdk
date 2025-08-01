@@ -7,7 +7,7 @@ This package provides React components and hooks for integrating with the Asgard
 To install the React package, use the following command:
 
 ```sh
-yarn add @jasonluo07/asgard-js-core @jasonluo07/asgard-js-react
+yarn add @asgard-js/core @asgard-js/react
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ Here's a basic example of how to use the React components:
 
 ```javascript
 import React, { useRef } from 'react';
-import { Chatbot } from '@jasonluo07/asgard-js-react';
+import { Chatbot } from '@asgard-js/react';
 
 const chatbotRef = useRef(null);
 

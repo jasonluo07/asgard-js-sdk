@@ -1,5 +1,5 @@
 {
-  "name": "@jasonluo07/asgard-js-core",
+  "name": "@asgard-js/core",
   "version": "0.0.31-canary.2",
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
@@ -28,7 +28,7 @@
     "access": "public"
   },
   "nx": {
-    "name": "@jasonluo07/asgard-js-core",
+    "name": "@asgard-js/core",
     "sourceRoot": "packages/core/src",
     "projectType": "library"
   },

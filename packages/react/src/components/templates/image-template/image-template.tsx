@@ -2,7 +2,7 @@ import { ReactNode, useState } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './image-template.module.scss';
-import { ConversationBotMessage } from '@jasonluo07/asgard-js-core';
+import { ConversationBotMessage } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
 import { ImageMessageTemplate } from '../../../../../core/src';

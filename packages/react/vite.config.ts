@@ -37,7 +37,7 @@ export default defineConfig({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
-      name: '@jasonluo07/asgard-js-react',
+      name: '@asgard-js/react',
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
@@ -45,12 +45,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        '@jasonluo07/asgard-js-core',
-      ],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@asgard-js/core'],
     },
   },
   test: {

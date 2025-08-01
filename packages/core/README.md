@@ -7,7 +7,7 @@ This package contains the core functionalities of the AsgardJs SDK, providing es
 To install the core package, use the following command:
 
 ```sh
-yarn add @jasonluo07/asgard-js-core
+yarn add @asgard-js/core
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ yarn add @jasonluo07/asgard-js-core
 Here's a basic example of how to use the core package:
 
 ```javascript
-import { AsgardServiceClient } from '@jasonluo07/asgard-js-core';
+import { AsgardServiceClient } from '@asgard-js/core';
 
 const client = new AsgardServiceClient({
   apiKey: 'your-api-key',
@@ -146,11 +146,7 @@ Higher-level abstraction for managing a conversation channel with reactive state
 #### Example Usage
 
 ```javascript
-import {
-  AsgardServiceClient,
-  Channel,
-  Conversation,
-} from '@jasonluo07/asgard-js-core';
+import { AsgardServiceClient, Channel, Conversation } from '@asgard-js/core';
 
 const client = new AsgardServiceClient({
   botProviderEndpoint: 'https://api.example.com/bot-provider/123',
@@ -199,7 +195,7 @@ Immutable conversation state manager that handles message updates and SSE event 
 #### Example Usage
 
 ```javascript
-import { Conversation } from '@jasonluo07/asgard-js-core';
+import { Conversation } from '@asgard-js/core';
 
 // Create new conversation
 const conversation = new Conversation({ messages: new Map() });

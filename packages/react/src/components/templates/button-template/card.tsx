@@ -10,7 +10,7 @@ import {
   ButtonAction,
   ButtonMessageTemplate,
   CarouselMessageTemplate,
-} from '@jasonluo07/asgard-js-core';
+} from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardTemplateContext } from 'src/context/asgard-template-context';
 import { safeWindowOpen } from 'src/utils/uri-validation';
@@ -62,7 +62,10 @@ export function Card(props: CardProps): ReactNode {
             return;
           case 'uri':
           case 'URI':
-            safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
+            safeWindowOpen(
+              action.uri,
+              action.target || defaultLinkTarget || '_blank'
+            );
 
             return;
           case 'emit':

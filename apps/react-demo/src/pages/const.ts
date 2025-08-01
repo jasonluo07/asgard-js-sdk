@@ -3,7 +3,7 @@ import {
   EventType,
   Message,
   MessageTemplateType,
-} from '@jasonluo07/asgard-js-core';
+} from '@asgard-js/core';
 
 const quickReplies = [
   { text: '死侍有上映嗎?' },

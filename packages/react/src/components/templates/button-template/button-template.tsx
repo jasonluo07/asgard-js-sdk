@@ -1,7 +1,4 @@
-import {
-  ButtonMessageTemplate,
-  ConversationBotMessage,
-} from '@jasonluo07/asgard-js-core';
+import { ButtonMessageTemplate, ConversationBotMessage } from '@asgard-js/core';
 import { ReactNode } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
