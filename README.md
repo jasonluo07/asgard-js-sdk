@@ -401,8 +401,6 @@ The SDK includes comprehensive tests using Vitest for both packages.
 
 ```sh
 # Run all tests
-npm test
-# or
 yarn test
 
 # Run specific package tests
@@ -523,7 +521,7 @@ yarn watch:react
 yarn serve:react-demo
 ```
 
-Setup your npm release token,
+Setup your npm registry token for yarn publishing,
 
 ```sh
 cd ~/

@@ -399,23 +399,15 @@ The React package includes comprehensive tests using Vitest and React Testing Li
 
 ```sh
 # Run tests once
-npm test
-# or
 yarn test:react
 
 # Run tests in watch mode
-npm run test:watch
-# or
 yarn test:react:watch
 
 # Run tests with UI
-npm run test:ui
-# or
 yarn test:react:ui
 
 # Run tests with coverage
-npm run test:coverage
-# or
 yarn test:react:coverage
 ```
 
@@ -500,7 +492,7 @@ yarn watch:react
 yarn serve:react-demo
 ```
 
-Setup your npm release token:
+Setup your npm registry token for yarn publishing:
 
 ```sh
 cd ~/

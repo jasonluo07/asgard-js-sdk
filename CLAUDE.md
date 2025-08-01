@@ -55,8 +55,8 @@ yarn build:react      # Build React package
 ### Publishing
 
 ```bash
-yarn release:core     # Publish core package to npm
-yarn release:react    # Publish React package to npm
+yarn release:core     # Publish core package to npm registry
+yarn release:react    # Publish React package to npm registry
 ```
 
 ## Architecture Overview
@@ -136,7 +136,7 @@ The project enforces strict TypeScript and linting rules:
 
 5. **Version Management**: Use `scripts/bump-version.js` for version updates across packages.
 
-6. **Local Development**: Supports local npm registry (Verdaccio) for testing package installations.
+6. **Local Development**: Supports local npm registry (Verdaccio) for testing package installations with yarn.
 
 ## Common Development Tasks
 
@@ -199,4 +199,4 @@ The core package includes utilities for testing SSE event streams. Use the mock 
 3. Build packages: `yarn build:core && yarn build:react`
 4. Publish: `yarn release:core && yarn release:react`
 
-Ensure `~/.npmrc` has proper npm authentication token before publishing.
+Ensure `~/.npmrc` has proper npm authentication token before publishing (yarn uses the same npm registry authentication).

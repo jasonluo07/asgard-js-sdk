@@ -224,23 +224,15 @@ The core package includes comprehensive tests using Vitest.
 
 ```sh
 # Run tests once
-npm test
-# or
 yarn test:core
 
 # Run tests in watch mode
-npm run test:watch
-# or
 yarn test:core:watch
 
 # Run tests with UI
-npm run test:ui
-# or
 yarn test:core:ui
 
 # Run tests with coverage
-npm run test:coverage
-# or
 yarn test:core:coverage
 ```
 
@@ -309,7 +301,7 @@ yarn build:core
 yarn watch:core
 ```
 
-Setup your npm release token:
+Setup your npm registry token for yarn publishing:
 
 ```sh
 cd ~/
