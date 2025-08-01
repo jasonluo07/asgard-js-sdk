@@ -1,11 +1,11 @@
 export type { Subscription } from 'rxjs';
 
-export type * from 'src/types';
+export type * from './types';
 
-export * from 'src/constants/enum';
+export * from './constants/enum';
 
-export { default as AsgardServiceClient } from 'src/lib/client';
+export { default as AsgardServiceClient } from './lib/client';
 
-export { default as Channel } from 'src/lib/channel';
+export { default as Channel } from './lib/channel';
 
-export { default as Conversation } from 'src/lib/conversation';
+export { default as Conversation } from './lib/conversation';

@@ -1,4 +1,4 @@
-import { EventType, FetchSseAction } from 'src/constants/enum';
+import { EventType, FetchSseAction } from '../constants/enum';
 import { SseResponse } from './sse-response';
 import { EventHandler } from './event-emitter';
 
@@ -79,11 +79,11 @@ export interface FetchSseOptions {
   onSseCompleted?: () => void;
 }
 
-export interface SseEvents {
+export type SseEvents = {
   [EventType.INIT]: InitEventHandler;
   [EventType.PROCESS]: ProcessEventHandler;
-  [EventType.MESSAGE]: MessageEventHandler;
+  [EventType.MESSAGE]: MessageEventHandler;  
   [EventType.TOOL_CALL]: ToolCallEventHandler;
   [EventType.DONE]: DoneEventHandler;
   [EventType.ERROR]: ErrorEventHandler;
-}
+};

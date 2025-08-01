@@ -83,14 +83,14 @@ function isCompleteParagraph(raw: string): boolean {
 }
 
 // Custom table renderer to maintain current styling
-const TableRenderer = ({ children, ...props }: any): ReactNode => (
+const TableRenderer = ({ children, ...props }: React.ComponentProps<'table'>): ReactNode => (
   <div className={classes.table_container}>
     <table {...props}>{children}</table>
   </div>
 );
 
 // Custom code renderer to maintain highlight.js classes exactly
-const CodeRenderer = ({ children, className, ...props }: any): ReactNode => {
+const CodeRenderer = ({ children, className, ...props }: React.ComponentProps<'code'>): ReactNode => {
   return (
     <code className={`hljs ${className || ''}`} {...props}>
       {children}
@@ -99,7 +99,7 @@ const CodeRenderer = ({ children, className, ...props }: any): ReactNode => {
 };
 
 // Custom link renderer to integrate defaultLinkTarget prop
-const LinkRenderer = ({ children, href, ...props }: any): ReactNode => {
+const LinkRenderer = ({ children, href, ...props }: React.ComponentProps<'a'>): ReactNode => {
   const { defaultLinkTarget } = useAsgardTemplateContext();
 
   const handleClick = useCallback(
@@ -120,13 +120,13 @@ const LinkRenderer = ({ children, href, ...props }: any): ReactNode => {
 };
 
 // Custom math renderers for inline and block math expressions
-const InlineMathRenderer = ({ children, ...props }: any): ReactNode => (
+const InlineMathRenderer = ({ children, ...props }: React.ComponentProps<'span'>): ReactNode => (
   <span className="math math-inline" {...props}>
     {children}
   </span>
 );
 
-const BlockMathRenderer = ({ children, ...props }: any): ReactNode => (
+const BlockMathRenderer = ({ children, ...props }: React.ComponentProps<'div'>): ReactNode => (
   <div className="math math-display" {...props}>
     {children}
   </div>
@@ -138,7 +138,7 @@ const components = {
   code: CodeRenderer,
   a: LinkRenderer,
   math: InlineMathRenderer, // Inline math: $expression$
-  div: ({ className, ...props }: any): ReactNode => {
+  div: ({ className, ...props }: React.ComponentProps<'div'>): ReactNode => {
     // Block math: $$expression$$
     // Check for KaTeX display math classes
     if (
@@ -149,7 +149,9 @@ const components = {
         <BlockMathRenderer
           className={`math math-display ${className || ''}`}
           {...props}
-        />
+        >
+          {props.children}
+        </BlockMathRenderer>
       );
     }
 

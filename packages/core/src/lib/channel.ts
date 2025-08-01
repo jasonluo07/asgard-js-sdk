@@ -6,8 +6,9 @@ import {
   FetchSsePayload,
   IAsgardServiceClient,
   ObserverOrNext,
-} from 'src/types';
-import { FetchSseAction } from 'src/constants/enum';
+  SseResponse,
+} from '../types';
+import { FetchSseAction, EventType } from '../constants/enum';
 import Conversation from './conversation';
 
 export default class Channel {
@@ -82,11 +83,11 @@ export default class Channel {
 
       this.client.fetchSse(payload, {
         onSseStart: options?.onSseStart,
-        onSseMessage: (response) => {
+        onSseMessage: (response: SseResponse<EventType>) => {
           options?.onSseMessage?.(response);
           this.conversation$.next(this.conversation$.value.onMessage(response));
         },
-        onSseError: (err) => {
+        onSseError: (err: unknown) => {
           options?.onSseError?.(err);
           this.isConnecting$.next(false);
           reject(err);

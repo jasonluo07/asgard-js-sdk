@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface UseChannelProps {
   defaultIsOpen?: boolean;
-  resetPayload?: Pick<FetchSsePayload, 'text' | 'payload'>;
+  resetPayload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>;
   client: AsgardServiceClient | null;
   customChannelId: string;
   customMessageId?: string;
@@ -30,8 +30,8 @@ export interface UseChannelReturn {
   isResetting: boolean;
   isConnecting: boolean;
   conversation: Conversation | null;
-  sendMessage?: (payload: Pick<FetchSsePayload, 'text' | 'payload'>) => void;
-  resetChannel?: (payload?: Pick<FetchSsePayload, 'text' | 'payload'>) => void;
+  sendMessage?: (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
+  resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
 }
 
@@ -61,7 +61,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [conversation, setConversation] = useState<Conversation | null>(null);
 
   const resetChannel = useCallback(
-    async (payload?: Pick<FetchSsePayload, 'text' | 'payload'>) => {
+    async (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => {
       const conversation = new Conversation({
         messages: new Map(
           initMessages?.map((message) => [message.messageId, message])
@@ -106,7 +106,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   );
 
   const closeChannel = useCallback(() => {
-    setChannel((prevChannel) => {
+    setChannel((prevChannel: Channel | null) => {
       prevChannel?.close();
 
       return null;
@@ -118,9 +118,9 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (payload: Pick<FetchSsePayload, 'text' | 'payload'>) =>
-      channel?.sendMessage(payload),
-    [channel]
+    (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) =>
+      channel?.sendMessage({ ...payload, customMessageId }),
+    [channel, customMessageId]
   );
 
   useEffect(() => {

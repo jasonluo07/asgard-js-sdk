@@ -5,10 +5,10 @@ import {
   FetchSseOptions,
   SseResponse,
   SseEvents,
-} from 'src/types';
+} from '../types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
-import { EventType } from 'src/constants/enum';
+import { EventType } from '../constants/enum';
 import { EventEmitter } from './event-emitter';
 
 export default class AsgardServiceClient implements IAsgardServiceClient {

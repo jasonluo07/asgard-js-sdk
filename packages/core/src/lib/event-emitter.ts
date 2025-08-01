@@ -1,4 +1,4 @@
-import { Listeners } from 'src/types';
+import { Listeners } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class EventEmitter<Events extends Record<string, any>> {
@@ -14,7 +14,7 @@ export class EventEmitter<Events extends Record<string, any>> {
     if (!this.listeners[event]) return;
 
     this.listeners = Object.assign({}, this.listeners, {
-      [event]: (this.listeners[event] ?? []).filter((l) => l !== listener),
+      [event]: (this.listeners[event] ?? []).filter((l: Events[K]) => l !== listener),
     });
   }
 
@@ -25,6 +25,6 @@ export class EventEmitter<Events extends Record<string, any>> {
   emit<K extends keyof Events>(event: K, ...args: Parameters<Events[K]>): void {
     if (!this.listeners[event]) return;
 
-    this.listeners[event].forEach((listener) => listener(...args));
+    this.listeners[event].forEach((listener: Events[K]) => listener(...args));
   }
 }

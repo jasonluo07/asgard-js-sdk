@@ -17,7 +17,7 @@ export interface AsgardTemplateContextValue {
     }: {
       sse: {
         sendMessage: (
-          payload: Pick<FetchSsePayload, 'text' | 'payload'>
+          payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>
         ) => void;
       };
     }
@@ -42,7 +42,7 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
     }: {
       sse: {
         sendMessage: (
-          payload: Pick<FetchSsePayload, 'text' | 'payload'>
+          payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>
         ) => void;
       };
     }

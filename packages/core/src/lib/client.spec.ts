@@ -19,7 +19,7 @@ describe('AsgardServiceClient', () => {
     it('should throw error when neither endpoint nor botProviderEndpoint is provided', () => {
       const config = {
         apiKey: 'test-key',
-      } as any; // Use 'as any' to bypass TypeScript checking for testing runtime behavior
+      } as unknown as ClientConfig;
 
       expect(() => new AsgardServiceClient(config)).toThrow(
         'Either endpoint or botProviderEndpoint must be provided'

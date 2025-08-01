@@ -107,7 +107,7 @@ export function Card(props: CardProps): ReactNode {
         <h5 className={styles.card_title}>{template?.title}</h5>
         <div className={styles.card_description}>{template?.text}</div>
         <div className={styles.card_actions}>
-          {template?.buttons?.map((btn, index) => (
+          {template?.buttons?.map((btn: { label: string; action: ButtonAction }, index: number) => (
             <button
               key={index}
               onClick={handleClick(btn.action)}

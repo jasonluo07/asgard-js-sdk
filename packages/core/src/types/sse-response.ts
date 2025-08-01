@@ -1,4 +1,4 @@
-import { EventType, MessageTemplateType } from 'src/constants/enum';
+import { EventType, MessageTemplateType } from '../constants/enum';
 
 export interface MessageTemplate {
   quickReplies: { text: string }[];
@@ -68,7 +68,7 @@ export type ButtonAction =
     }
   | {
       type: 'emit' | 'EMIT';
-      payload: any;
+      payload: Record<string, unknown>;
     };
 
 export interface ButtonMessageTemplate extends MessageTemplate {

@@ -23,7 +23,7 @@ describe('useMarkdownRenderer - Simple Tests', () => {
   });
 
   it('should handle null input safely', () => {
-    const { result } = renderHook(() => useMarkdownRenderer(null as any));
+    const { result } = renderHook(() => useMarkdownRenderer(null));
 
     expect(result.current.htmlBlocks).toBeDefined();
     expect(result.current.lastTypingText).toBe('');
@@ -658,7 +658,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
       const mathText = 'Cached math: $E = mc^2$';
       
       // First render
-      const { result: result1 } = renderHook(() => useMarkdownRenderer(mathText, 0));
+      renderHook(() => useMarkdownRenderer(mathText, 0));
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Second render should be faster (cached)
@@ -679,7 +679,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
     });
 
     it('should not evict entries when cache is below limit', () => {
-      const cache = new Map<string, any>();
+      const cache = new Map<string, string>();
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       
@@ -691,7 +691,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
     });
 
     it('should evict oldest entry when cache reaches MAX_CACHE_SIZE', () => {
-      const cache = new Map<string, any>();
+      const cache = new Map<string, string>();
       
       // Fill cache to exactly MAX_CACHE_SIZE
       for (let i = 0; i < MAX_CACHE_SIZE; i++) {
@@ -710,7 +710,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
     });
 
     it('should implement LRU eviction strategy correctly', () => {
-      const cache = new Map<string, any>();
+      const cache = new Map<string, string>();
       
       // Fill cache to MAX_CACHE_SIZE
       for (let i = 0; i < MAX_CACHE_SIZE; i++) {
@@ -732,7 +732,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
     });
 
     it('should handle empty cache gracefully', () => {
-      const cache = new Map<string, any>();
+      const cache = new Map<string, string>();
       
       manageCacheSize(cache);
       
@@ -740,7 +740,7 @@ a_{m1} & a_{m2} & \\cdots & a_{mn}
     });
 
     it('should handle cache with exactly MAX_CACHE_SIZE entries', () => {
-      const cache = new Map<string, any>();
+      const cache = new Map<string, string>();
       
       // Fill cache to exactly MAX_CACHE_SIZE
       for (let i = 0; i < MAX_CACHE_SIZE; i++) {
