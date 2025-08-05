@@ -2,10 +2,9 @@ import { ReactNode, useState } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import styles from './image-template.module.scss';
-import { ConversationBotMessage } from '@asgard-js/core';
+import { ConversationBotMessage, ImageMessageTemplate } from '@asgard-js/core';
 import { useAsgardContext } from 'src/context/asgard-service-context';
 import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
-import { ImageMessageTemplate } from '../../../../../core/src';
 import CloseSvg from 'src/icons/close.svg?react';
 
 interface ImageTemplateProps {
@@ -37,6 +36,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
       </div>
     );
   }
+
   return (
     <TemplateBox
       className="asgard-image-template"
@@ -50,7 +50,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
         time={message.time}
       >
         <div className={styles.image_box} onClick={() => setIsFullScreen(true)}>
-          <img src={previewImageUrl} alt="Message image" />
+          <img src={previewImageUrl} alt="Conversation content" />
         </div>
       </TemplateBoxContent>
     </TemplateBox>

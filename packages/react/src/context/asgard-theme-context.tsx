@@ -257,7 +257,7 @@ export function AsgardThemeContextProvider(
           userMessage: {},
         };
 
-      const tempTheme = deepMerge(defaultAsgardThemeContextValue, {
+      const tempTheme = deepMerge(defaultAsgardThemeContextValue as unknown as Record<string, unknown>, {
         chatbot: {
           backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
           borderColor: themeFromAnnotations.chatbot?.borderColor,

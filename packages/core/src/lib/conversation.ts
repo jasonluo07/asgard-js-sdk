@@ -1,5 +1,5 @@
-import { EventType } from 'src/constants/enum';
-import { ConversationMessage, SseResponse } from 'src/types';
+import { EventType } from '../constants/enum';
+import { ConversationMessage, SseResponse } from '../types';
 
 interface IConversation {
   messages: Map<string, ConversationMessage> | null;

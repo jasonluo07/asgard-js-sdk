@@ -1,6 +1,6 @@
 import { Observer } from 'rxjs';
-import { EventType } from 'src/constants/enum';
-import Conversation from 'src/lib/conversation';
+import { EventType } from '../constants/enum';
+import Conversation from '../lib/conversation';
 import { IAsgardServiceClient } from './client';
 import { ErrorMessage, Message } from './sse-response';
 

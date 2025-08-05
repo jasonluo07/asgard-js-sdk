@@ -6,6 +6,7 @@ import { Card } from '../button-template/card';
 import {
   CarouselMessageTemplate,
   ConversationBotMessage,
+  ButtonMessageTemplate,
 } from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
@@ -33,7 +34,7 @@ export function CarouselTemplate(props: CarouselTemplateProps): ReactNode {
       <Avatar avatar={avatar} />
       <TemplateBoxContent quickReplies={template.quickReplies}>
         <div className={styles.carousel_root}>
-          {template.columns?.map((column, index) => (
+          {template.columns?.map((column: Omit<ButtonMessageTemplate, 'type' | 'quickReplies'>, index: number) => (
             <Card
               key={index}
               template={column}

@@ -1,10 +1,9 @@
 import { ReactNode, useMemo, useState, CSSProperties } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import { ConversationBotMessage } from '@asgard-js/core';
+import { ConversationBotMessage, ChartMessageTemplate } from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from 'src/context/asgard-service-context';
-import { ChartMessageTemplate } from '../../../../../core/src';
 import { VegaLite, VisualizationSpec } from 'react-vega';
 import clsx from 'clsx';
 import classes from './chart-template.module.scss';
@@ -29,9 +28,9 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
 
   const spec = useMemo(
     () =>
-      (template?.chartOptions?.find((item) => item.type === option)?.spec ??
+      (template?.chartOptions?.find((item: { type: string; title: string; spec: Record<string, unknown> }) => item.type === option)?.spec ??
         options[0].spec) as VisualizationSpec,
-    [option, template.chartOptions]
+    [option, template.chartOptions, options]
   );
 
   const styles = useMemo<CSSProperties>(
@@ -56,7 +55,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
       </div>
       {options.length > 1 && (
         <div className={classes.quick_replies_box}>
-          {options.map((option) => (
+          {options.map((option: { type: string; title: string; spec: Record<string, unknown> }) => (
             <button
               key={option.type}
               className={classes.quick_reply}

@@ -3,8 +3,8 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from '@microsoft/fetch-event-source';
-import { FetchSsePayload, SseResponse } from 'src/types';
-import { EventType } from 'src/constants/enum';
+import { FetchSsePayload, SseResponse } from '../types';
+import { EventType } from '../constants/enum';
 
 interface CreateSseObservableOptions {
   endpoint: string;
