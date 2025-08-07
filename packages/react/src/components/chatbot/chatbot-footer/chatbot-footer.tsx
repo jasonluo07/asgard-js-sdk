@@ -14,15 +14,19 @@ import SendSvg from '../../../icons/send.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 
 export function ChatbotFooter(): ReactNode {
   const { sendMessage, isConnecting } = useAsgardContext();
 
   const { chatbot } = useAsgardThemeContext();
+  const { data: { annotations } } = useAsgardAppInitializationContext();
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const inputPlaceholder = annotations?.embedConfig?.inputPlaceholder || 'Enter message';
 
   const disabled = useMemo(
     () => isConnecting || !value.trim(),
@@ -106,7 +110,7 @@ export function ChatbotFooter(): ReactNode {
           disabled={isConnecting}
           cols={40}
           value={value}
-          placeholder="Enter message"
+          placeholder={inputPlaceholder}
           onChange={onChange}
           onKeyDown={onKeyDown}
           onCompositionStart={() => setIsComposing(true)}
