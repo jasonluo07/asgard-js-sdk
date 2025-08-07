@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useMarkdownRenderer, manageCacheSize, MAX_CACHE_SIZE } from './use-react-markdown-renderer';
+import { useMarkdownRenderer, manageCacheSize, MAX_CACHE_SIZE } from '../../../hooks/use-react-markdown-renderer';
 import { AsgardTemplateContextProvider } from '../../../context/asgard-template-context';
 
 describe('useMarkdownRenderer - Simple Tests', () => {

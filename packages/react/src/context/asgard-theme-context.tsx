@@ -7,11 +7,11 @@ import {
   useMemo,
   useCallback,
 } from 'react';
-import { deepMerge } from 'src/utils/deep-merge';
+import { deepMerge } from '../utils/deep-merge';
 import {
   useAsgardAppInitializationContext,
   Annotations,
-} from 'src/context/asgard-app-initialization-context';
+} from './asgard-app-initialization-context';
 
 export interface AsgardThemeContextValue {
   chatbot: Pick<

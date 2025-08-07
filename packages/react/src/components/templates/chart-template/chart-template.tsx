@@ -3,11 +3,11 @@ import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import { ConversationBotMessage, ChartMessageTemplate } from '@asgard-js/core';
 import { Time } from '../time';
-import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
 import { VegaLite, VisualizationSpec } from 'react-vega';
 import clsx from 'clsx';
 import classes from './chart-template.module.scss';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 interface ChartTemplateProps {
   message: ConversationBotMessage;

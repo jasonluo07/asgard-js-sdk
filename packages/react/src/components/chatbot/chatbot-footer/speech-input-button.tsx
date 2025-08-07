@@ -10,8 +10,8 @@ import {
   useState,
   CSSProperties,
 } from 'react';
-import MicSvg from 'src/icons/mic.svg?react';
-import StopSvg from 'src/icons/stop.svg?react';
+import MicSvg from '../../../icons/mic.svg?react';
+import StopSvg from '../../../icons/stop.svg?react';
 
 interface SpeechInputButtonProps {
   setValue: Dispatch<SetStateAction<string>>;

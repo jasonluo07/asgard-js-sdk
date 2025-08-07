@@ -1,12 +1,12 @@
 import { CSSProperties, ReactNode, useCallback, useMemo, useRef } from 'react';
-import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
 import clsx from 'clsx';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import { useDebounce, useResizeObserver } from 'src/hooks';
+import { useDebounce, useResizeObserver } from '../../../hooks';
 import classes from './text-template.module.scss';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
-import { useMarkdownRenderer } from './use-react-markdown-renderer';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { useMarkdownRenderer } from '../../../hooks/use-react-markdown-renderer';
 interface BotTypingBoxProps {
   isTyping: boolean;
   typingText: string | null;

@@ -18,7 +18,7 @@ import {
   useChannel,
   UseChannelProps,
   UseChannelReturn,
-} from 'src/hooks';
+} from '../hooks';
 
 export interface AsgardServiceContextValue {
   avatar?: string;

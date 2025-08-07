@@ -8,12 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
-import SendSvg from 'src/icons/send.svg?react';
+import SendSvg from '../../../icons/send.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 export function ChatbotFooter(): ReactNode {
   const { sendMessage, isConnecting } = useAsgardContext();

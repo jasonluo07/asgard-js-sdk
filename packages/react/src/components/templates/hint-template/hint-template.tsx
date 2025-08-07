@@ -1,12 +1,12 @@
 import { ReactNode, useCallback } from 'react';
 import classes from './hint-template.module.scss';
-import { formatTime } from 'src/utils';
+import { formatTime } from '../../../utils';
 import {
   ConversationErrorMessage,
   ConversationMessage,
   MessageTemplateType,
 } from '@asgard-js/core';
-import { useAsgardTemplateContext, useAsgardThemeContext } from 'src/context';
+import { useAsgardTemplateContext, useAsgardThemeContext } from '../../../context';
 import clsx from 'clsx';
 
 interface HintTemplateProps {

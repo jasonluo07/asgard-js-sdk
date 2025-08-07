@@ -1,8 +1,8 @@
 import { PropsWithChildren, ReactNode, useRef, CSSProperties } from 'react';
-import { useUpdateVh } from 'src/hooks';
+import { useUpdateVh } from '../../../hooks';
 import { ChatbotFullScreenContainer } from './chatbot-full-screen-container';
 import classes from './chatbot-container.module.scss';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import clsx from 'clsx';
 
 interface ChatbotContainerProps extends PropsWithChildren {

@@ -11,9 +11,9 @@ import {
   ButtonMessageTemplate,
   CarouselMessageTemplate,
 } from '@asgard-js/core';
-import { useAsgardContext } from 'src/context/asgard-service-context';
-import { useAsgardTemplateContext } from 'src/context/asgard-template-context';
-import { safeWindowOpen } from 'src/utils/uri-validation';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { safeWindowOpen } from '../../../utils/uri-validation';
 import clsx from 'clsx';
 
 interface CardProps {

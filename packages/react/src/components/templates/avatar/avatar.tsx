@@ -1,6 +1,6 @@
 import { memo, ReactNode } from 'react';
 import styles from './avatar.module.scss';
-import BotSvg from 'src/icons/bot.svg?react';
+import BotSvg from '../../../icons/bot.svg?react';
 import clsx from 'clsx';
 
 interface AvatarProps {

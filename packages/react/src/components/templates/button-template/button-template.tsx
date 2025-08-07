@@ -3,8 +3,8 @@ import { ReactNode } from 'react';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
 import { Card } from './card';
-import { useAsgardContext } from 'src/context/asgard-service-context';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 interface ButtonTemplateProps {
   message: ConversationBotMessage;

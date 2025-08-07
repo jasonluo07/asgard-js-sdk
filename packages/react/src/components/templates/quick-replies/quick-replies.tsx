@@ -1,7 +1,7 @@
 import { ReactNode, useCallback } from 'react';
 import styles from './quick-replies.module.scss';
-import { useAsgardContext } from 'src/context/asgard-service-context';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import clsx from 'clsx';
 
 interface QuickRepliesProps {

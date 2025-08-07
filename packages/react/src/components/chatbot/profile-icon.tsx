@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import ProfileSvg from 'src/icons/profile.svg?react';
+import ProfileSvg from '../../icons/profile.svg?react';
 
 interface ProfileIconProps {
   avatar?: string;

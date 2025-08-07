@@ -9,8 +9,8 @@ import {
   ButtonMessageTemplate,
 } from '@asgard-js/core';
 import { Time } from '../time';
-import { useAsgardContext } from 'src/context/asgard-service-context';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 interface CarouselTemplateProps {
   message: ConversationBotMessage;

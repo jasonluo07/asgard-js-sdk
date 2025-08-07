@@ -1,8 +1,8 @@
 import { ReactNode, useMemo } from 'react';
-import { formatTime } from 'src/utils';
+import { formatTime } from '../../../utils';
 import styles from './time.module.scss';
 import clsx from 'clsx';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 interface TimeProps {
   time?: Date;

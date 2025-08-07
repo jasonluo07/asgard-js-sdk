@@ -1,6 +1,6 @@
 import { ReactNode, useMemo } from 'react';
 import { BotTypingBox } from './bot-typing-box';
-import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
 
 interface BotTypingPlaceholderProps {
   placeholder: string;

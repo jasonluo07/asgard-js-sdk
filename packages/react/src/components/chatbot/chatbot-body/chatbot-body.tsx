@@ -1,9 +1,9 @@
 import { ReactNode, useEffect, useMemo } from 'react';
-import { useAsgardContext } from 'src/context/asgard-service-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
 import { BotTypingPlaceholder } from '../../templates';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import clsx from 'clsx';
 
 export function ChatbotBody(): ReactNode {

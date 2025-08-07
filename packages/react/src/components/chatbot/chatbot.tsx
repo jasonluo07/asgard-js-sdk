@@ -3,7 +3,7 @@ import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
   AsgardThemeContextValue,
-} from 'src/context/asgard-theme-context';
+} from '../../context/asgard-theme-context';
 import {
   AsgardServiceContextProvider,
   AsgardServiceContextValue,
@@ -11,7 +11,7 @@ import {
   AsgardTemplateContextValue,
   AsgardAppInitializationContextProvider,
   AsgardServiceContextProviderProps,
-} from 'src/context';
+} from '../../context';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';

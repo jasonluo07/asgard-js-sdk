@@ -1,13 +1,13 @@
 import { MouseEventHandler, ReactNode, useCallback, useMemo } from 'react';
 import styles from './chatbot-header.module.scss';
 import { ProfileIcon } from '../profile-icon';
-import RefreshSvg from 'src/icons/refresh.svg?react';
-import CloseSvg from 'src/icons/close.svg?react';
+import RefreshSvg from '../../../icons/refresh.svg?react';
+import CloseSvg from '../../../icons/close.svg?react';
 import {
   useAsgardAppInitializationContext,
   useAsgardThemeContext,
   useAsgardContext,
-} from 'src/context/';
+} from '../../../context/';
 import clsx from 'clsx';
 
 interface ChatbotHeaderProps {

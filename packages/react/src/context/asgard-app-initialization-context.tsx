@@ -7,10 +7,10 @@ import React, {
   ReactNode,
 } from 'react';
 import { ClientConfig } from '@asgard-js/core';
-import { getBotProviderModels } from 'src/models/bot-provider';
-import { useDeepCompareMemo } from 'src/hooks';
-import { deepMerge } from 'src/utils/deep-merge';
-import { extractRefs } from 'src/utils/extractors';
+import { getBotProviderModels } from '../models/bot-provider';
+import { useDeepCompareMemo } from '../hooks';
+import { deepMerge } from '../utils/deep-merge';
+import { extractRefs } from '../utils/extractors';
 
 type AsyncInitializers = {
   [key: string]: () => Promise<unknown>;

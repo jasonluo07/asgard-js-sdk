@@ -5,9 +5,9 @@ import { TemplateBox, TemplateBoxContent } from '../template-box';
 import classes from './text-template.module.scss';
 import { Avatar } from '../avatar';
 import { Time } from '../time';
-import { useAsgardContext } from 'src/context/asgard-service-context';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
-import { useMarkdownRenderer } from './use-react-markdown-renderer';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { useMarkdownRenderer } from '../../../hooks/use-react-markdown-renderer';
 
 interface TextTemplateProps {
   message: ConversationMessage;

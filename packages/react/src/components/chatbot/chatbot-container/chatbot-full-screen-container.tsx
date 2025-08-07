@@ -5,9 +5,9 @@ import {
   useOnScreenKeyboardScrollFix,
   usePreventOverScrolling,
   useViewportSize,
-} from 'src/hooks';
+} from '../../../hooks';
 import classes from './chatbot-container.module.scss';
-import { useAsgardThemeContext } from 'src/context/asgard-theme-context';
+import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 export function ChatbotFullScreenContainer(
   props: PropsWithChildren
