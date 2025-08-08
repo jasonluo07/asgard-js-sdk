@@ -94,7 +94,6 @@ export function Root(): ReactNode {
             enableLoadConfigFromService={true}
             maintainConnectionWhenClosed={true}
             loadingComponent={<div>Custom Loading...</div>}
-            botTypingPlaceholder="typing"
             customChannelId={customChannelId}
             initMessages={initMessages}
             onClose={() => {
