@@ -113,7 +113,13 @@ const LinkRenderer = ({ children, href, ...props }: React.ComponentProps<'a'>): 
   );
 
   return (
-    <a href={href} onClick={handleClick} rel="noopener noreferrer" {...props}>
+    <a 
+      href={href} 
+      onClick={handleClick} 
+      rel="noopener noreferrer" 
+      style={{ color: 'var(--bot-message-hyperlink-color, #4467eb)' }}
+      {...props}
+    >
       {children}
     </a>
   );

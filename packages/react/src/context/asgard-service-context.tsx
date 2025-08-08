@@ -19,6 +19,7 @@ import {
   UseChannelProps,
   UseChannelReturn,
 } from '../hooks';
+import { useAsgardAppInitializationContext } from './asgard-app-initialization-context';
 
 export interface AsgardServiceContextValue {
   avatar?: string;
@@ -68,11 +69,19 @@ export function AsgardServiceContextProvider(
     children,
     parentRef,
     config,
-    botTypingPlaceholder,
+    botTypingPlaceholder: botTypingPlaceholderFromProps,
     customChannelId,
     initMessages,
     onSseMessage,
   } = props;
+
+  const { data } = useAsgardAppInitializationContext();
+  const { annotations } = data;
+  
+  // API 優先，Props 次之，最後才是預設值
+  const botTypingPlaceholder = 
+    annotations?.embedConfig?.botTypingPlaceholder || 
+    botTypingPlaceholderFromProps;
 
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
 
