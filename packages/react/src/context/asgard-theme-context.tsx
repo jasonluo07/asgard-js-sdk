@@ -4,12 +4,10 @@ import {
   PropsWithChildren,
   ReactNode,
   useContext,
-  useEffect,
   useMemo,
   useCallback,
 } from 'react';
 import { deepMerge } from '../utils/deep-merge';
-import { addTransparency, darkenColor } from '../utils/color-utils';
 import {
   useAsgardAppInitializationContext,
   Annotations,
@@ -333,7 +331,7 @@ export function AsgardThemeContextProvider(
                 borderColor: themeFromAnnotations.chatbot?.borderColor,
                 backgroundColor: themeFromAnnotations.botMessage
                   ?.backgroundColor
-                  ? addTransparency(themeFromAnnotations.botMessage.backgroundColor, 0.2)
+                  ? `${themeFromAnnotations.botMessage.backgroundColor}33`
                   : undefined,
               },
             },
@@ -348,9 +346,6 @@ export function AsgardThemeContextProvider(
               // For unset messages
               color:
                 themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
-              backgroundColor: themeFromAnnotations.botMessage?.backgroundColor
-                ? addTransparency(themeFromAnnotations.botMessage.backgroundColor, 0.2)
-                : undefined,
             },
           },
           ButtonMessageTemplate: {
@@ -393,17 +388,6 @@ export function AsgardThemeContextProvider(
   );
 
   const value = useMemo(() => deepMergeTheme(), [deepMergeTheme]);
-
-  // 設置 CSS 自定義屬性
-  useEffect(() => {
-    const botMessageBgColor = annotations?.embedConfig?.theme?.botMessage?.backgroundColor;
-    if (botMessageBgColor) {
-      document.documentElement.style.setProperty(
-        '--bot-message-hyperlink-color',
-        darkenColor(botMessageBgColor, 0.2)
-      );
-    }
-  }, [annotations?.embedConfig?.theme?.botMessage?.backgroundColor]);
 
   return (
     <AsgardThemeContext.Provider value={value}>

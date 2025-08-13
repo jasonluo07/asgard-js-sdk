@@ -31,7 +31,7 @@ export function createTextTemplateExample(): ConversationMessage {
   const messageId = crypto.randomUUID();
 
   return createBaseTemplateExample({
-    text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。\n\n更多資訊請參考 [秀泰影城官網](https://www.showtimes.com.tw) 或 [聯絡我們](https://www.showtimes.com.tw/contact)。\n\n(目前資料更新至 2024/08)',
+    text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。(目前資料更新至 2024/08)',
     template: {
       type: MessageTemplateType.TEXT,
       text: '',
