@@ -65,6 +65,8 @@ export interface AsgardThemeContextValue {
   botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'> & {
     carouselButtonBackgroundColor?: CSSProperties['backgroundColor'];
     linkColor?: CSSProperties['color'];
+    unsentBackgroundColor?: CSSProperties['backgroundColor'];
+    quickReplyBackgroundColor?: CSSProperties['backgroundColor'];
   };
   userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
   template?: Partial<{
@@ -323,6 +325,12 @@ export function AsgardThemeContextProvider(
           linkColor: themeFromAnnotations.botMessage?.backgroundColor 
             ? darkenColor(themeFromAnnotations.botMessage.backgroundColor, 0.2)
             : undefined,
+          unsentBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
+            : undefined,
+          quickReplyBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
+            : undefined,
         },
         userMessage: {
           backgroundColor: themeFromAnnotations.userMessage?.backgroundColor,
@@ -450,6 +458,12 @@ export function AsgardThemeContextProvider(
             color: propsTheme.botMessage?.color,
             linkColor: propsTheme.botMessage?.backgroundColor 
               ? darkenColor(propsTheme.botMessage.backgroundColor, 0.2)
+              : undefined,
+            unsentBackgroundColor: propsTheme.botMessage?.backgroundColor 
+              ? `color-mix(in srgb, ${propsTheme.botMessage.backgroundColor} 20%, transparent)`
+              : undefined,
+            quickReplyBackgroundColor: propsTheme.botMessage?.backgroundColor 
+              ? `color-mix(in srgb, ${propsTheme.botMessage.backgroundColor} 20%, transparent)`
               : undefined,
           },
           userMessage: {

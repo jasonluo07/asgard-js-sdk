@@ -9,7 +9,6 @@ import {
   createChartTemplateExample,
   createImageTemplateExample,
   createMathTemplateExample,
-  createTextWithLinksTemplateExample,
 } from './const';
 
 const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
@@ -20,7 +19,6 @@ export function Root(): ReactNode {
 
   const [initMessages] = useState<ConversationMessage[]>([
     createTextTemplateExample(),
-    createTextWithLinksTemplateExample(),
     createMathTemplateExample(),
     createHintTemplateExample(),
     createButtonTemplateExample(),
