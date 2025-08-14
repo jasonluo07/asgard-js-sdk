@@ -61,7 +61,9 @@ export interface AsgardThemeContextValue {
       };
     }>;
   };
-  botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
+  botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'> & {
+    carouselButtonBackgroundColor?: CSSProperties['backgroundColor'];
+  };
   userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
   template?: Partial<{
     /**
