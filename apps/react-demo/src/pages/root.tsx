@@ -91,7 +91,7 @@ export function Root(): ReactNode {
               apiKey: VITE_API_KEY,
             }}
             avatar="./showtime.webp"
-            enableLoadConfigFromService={true}
+            // enableLoadConfigFromService={true}
             maintainConnectionWhenClosed={true}
             loadingComponent={<div>Custom Loading...</div>}
             botTypingPlaceholder="typing"
@@ -100,46 +100,22 @@ export function Root(): ReactNode {
             onClose={() => {
               setIsOpen(false);
             }}
-            onSseMessage={(response, ctx) => {
-              if (response.eventType === 'asgard.run.done') {
-                // eslint-disable-next-line no-console
-                console.log('onSseMessage', response, ctx.conversation);
-
-                setTimeout(() => {
-                  // delay some time to wait for the serviceContext to be available
-                  chatbotRef.current?.serviceContext?.sendMessage?.({
-                    text: 'Say hi after 5 seconds',
-                  });
-                }, 5000);
-              }
-            }}
             theme={{
+              botMessage: {
+                backgroundColor: '#640000',
+                carouselButtonBackgroundColor: '#2a0a0a',
+                color: '#3b26be',
+              },
               chatbot: {
-                header: {
-                  style: {
-                    backgroundColor: 'tomato',
-                  },
-                  title: {
-                    style: {
-                      color: 'yellow',
-                    },
-                  },
+                backgroundColor: '#e75b5b',
+                borderColor: '#c23737',
+                inactiveColor: '#0c5f12',
+                primaryComponent: {
+                  mainColor: '#000000',
+                  secondaryColor: '#ff06fd',
                 },
               },
-              template: {
-                quickReplies: {
-                  style: {
-                    backgroundColor: 'blue',
-                  },
-                  button: {
-                    style: {
-                      backgroundColor: 'green',
-                      color: 'yellow',
-                      border: '1px solid red',
-                    },
-                  },
-                },
-              },
+              userMessage: { backgroundColor: '#4767EB', color: '#FFFFFF' },
             }}
           />
         </div>
