@@ -533,3 +533,32 @@ This demonstrates the power of **react-markdown** with **KaTeX** integration! �
     },
   });
 }
+
+export function createTextWithLinksTemplateExample(): ConversationMessage {
+  const messageId = crypto.randomUUID();
+
+  return createBaseTemplateExample({
+    text: `# Hyperlink Demo
+
+這是測試超連結顏色的範例：
+
+- 官方網站：[秀泰影城](https://www.showtimes.com.tw)
+- 電話：[客服專線](tel:0800-123-456)  
+- 電郵：[service@showtimes.com.tw](mailto:service@showtimes.com.tw)
+
+超連結顏色會比 botMessage.backgroundColor 深 20%。`,
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      quickReplies: [
+        { text: '測試連結' },
+        { text: '顏色測試' },
+      ],
+    },
+    messageId,
+    replyToCustomMessageId: '',
+    payload: undefined,
+    isDebug: false,
+    idx: 0,
+  });
+}

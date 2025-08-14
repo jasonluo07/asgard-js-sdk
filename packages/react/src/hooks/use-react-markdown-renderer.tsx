@@ -14,6 +14,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import classes from '../components/templates/text-template/text-template.module.scss';
 import { useAsgardTemplateContext } from '../context/asgard-template-context';
+import { useAsgardThemeContext } from '../context/asgard-theme-context';
 import { safeWindowOpen } from '../utils/uri-validation';
 
 interface MarkdownRenderResult {
@@ -98,9 +99,10 @@ const CodeRenderer = ({ children, className, ...props }: React.ComponentProps<'c
   );
 };
 
-// Custom link renderer to integrate defaultLinkTarget prop
+// Custom link renderer to integrate defaultLinkTarget prop and theme colors
 const LinkRenderer = ({ children, href, ...props }: React.ComponentProps<'a'>): ReactNode => {
   const { defaultLinkTarget } = useAsgardTemplateContext();
+  const { botMessage } = useAsgardThemeContext();
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -113,7 +115,17 @@ const LinkRenderer = ({ children, href, ...props }: React.ComponentProps<'a'>): 
   );
 
   return (
-    <a href={href} onClick={handleClick} rel="noopener noreferrer" {...props}>
+    <a 
+      href={href} 
+      onClick={handleClick} 
+      rel="noopener noreferrer" 
+      style={{ 
+        color: botMessage?.linkColor || '#0066cc',
+        textDecoration: 'underline',
+        ...props.style 
+      }}
+      {...props}
+    >
       {children}
     </a>
   );

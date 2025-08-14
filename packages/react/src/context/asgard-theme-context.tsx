@@ -8,6 +8,7 @@ import {
   useCallback,
 } from 'react';
 import { deepMerge } from '../utils/deep-merge';
+import { darkenColor } from '../utils/color-utils';
 import {
   useAsgardAppInitializationContext,
   Annotations,
@@ -63,6 +64,7 @@ export interface AsgardThemeContextValue {
   };
   botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'> & {
     carouselButtonBackgroundColor?: CSSProperties['backgroundColor'];
+    linkColor?: CSSProperties['color'];
   };
   userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
   template?: Partial<{
@@ -318,6 +320,9 @@ export function AsgardThemeContextProvider(
         botMessage: {
           backgroundColor: themeFromAnnotations.botMessage?.backgroundColor, // #585858
           color: themeFromAnnotations.botMessage?.color,
+          linkColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? darkenColor(themeFromAnnotations.botMessage.backgroundColor, 0.2)
+            : undefined,
         },
         userMessage: {
           backgroundColor: themeFromAnnotations.userMessage?.backgroundColor,
@@ -443,6 +448,9 @@ export function AsgardThemeContextProvider(
           botMessage: {
             backgroundColor: propsTheme.botMessage?.backgroundColor,
             color: propsTheme.botMessage?.color,
+            linkColor: propsTheme.botMessage?.backgroundColor 
+              ? darkenColor(propsTheme.botMessage.backgroundColor, 0.2)
+              : undefined,
           },
           userMessage: {
             backgroundColor: propsTheme.userMessage?.backgroundColor,
