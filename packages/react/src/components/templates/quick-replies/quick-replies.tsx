@@ -11,7 +11,7 @@ interface QuickRepliesProps {
 export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { quickReplies } = props;
 
-  const { template } = useAsgardThemeContext();
+  const { template, botMessage } = useAsgardThemeContext();
   const { sendMessage, isConnecting } = useAsgardContext();
 
   const onClick = useCallback(
@@ -32,7 +32,10 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
         <button
           key={quickReply.text}
           className={styles.quick_reply}
-          style={template?.quickReplies?.button?.style}
+          style={{
+            ...template?.quickReplies?.button?.style,
+            backgroundColor: botMessage?.quickReplyBackgroundColor || template?.quickReplies?.button?.style?.backgroundColor,
+          }}
           disabled={isConnecting}
           onClick={() => onClick(quickReply.text)}
         >

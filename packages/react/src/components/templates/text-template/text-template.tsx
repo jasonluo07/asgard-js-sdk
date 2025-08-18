@@ -19,6 +19,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
   const { avatar } = useAsgardContext();
 
   const theme = useAsgardThemeContext();
+  const { botMessage } = theme;
 
   const { htmlBlocks, lastTypingText } = useMarkdownRenderer(
     (message as ConversationBotMessage)?.message?.text || '',
@@ -40,9 +41,12 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
           backgroundColor: theme?.botMessage?.backgroundColor,
         };
       default:
-        return {};
+        return {
+          color: theme?.chatbot?.primaryComponent?.secondaryColor || theme?.template?.TextMessageTemplate?.style?.color,
+          backgroundColor: botMessage?.unsentBackgroundColor,
+        };
     }
-  }, [message, theme]);
+  }, [message, theme, botMessage]);
 
   if (message.type === 'error') return null;
 

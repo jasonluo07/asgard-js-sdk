@@ -65,7 +65,12 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
       style={themeTemplate?.HintMessageTemplate?.style}
     >
       <div className={classes.time}>{formatTime(message.time)}</div>
-      {template.text}
+      <div 
+        className={classes.hint_text}
+        style={themeTemplate?.HintMessageTemplate?.style}
+      >
+        {template.text}
+      </div>
     </div>
   );
 }

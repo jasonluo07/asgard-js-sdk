@@ -8,6 +8,7 @@ import {
   useCallback,
 } from 'react';
 import { deepMerge } from '../utils/deep-merge';
+import { darkenColor } from '../utils/color-utils';
 import {
   useAsgardAppInitializationContext,
   Annotations,
@@ -61,7 +62,12 @@ export interface AsgardThemeContextValue {
       };
     }>;
   };
-  botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
+  botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'> & {
+    carouselButtonBackgroundColor?: CSSProperties['backgroundColor'];
+    linkColor?: CSSProperties['color'];
+    unsentBackgroundColor?: CSSProperties['backgroundColor'];
+    quickReplyBackgroundColor?: CSSProperties['backgroundColor'];
+  };
   userMessage: Pick<CSSProperties, 'color' | 'backgroundColor'>;
   template?: Partial<{
     /**
@@ -316,6 +322,15 @@ export function AsgardThemeContextProvider(
         botMessage: {
           backgroundColor: themeFromAnnotations.botMessage?.backgroundColor, // #585858
           color: themeFromAnnotations.botMessage?.color,
+          linkColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? darkenColor(themeFromAnnotations.botMessage.backgroundColor, 0.2)
+            : undefined,
+          unsentBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
+            : undefined,
+          quickReplyBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+            ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
+            : undefined,
         },
         userMessage: {
           backgroundColor: themeFromAnnotations.userMessage?.backgroundColor,
@@ -381,6 +396,136 @@ export function AsgardThemeContextProvider(
           },
         },
       });
+
+      // Handle theme prop that contains backend format (like themeFromAnnotations)
+      const propsTheme = theme as any; // Cast to handle backend format
+      const propsHasBackendFormat = propsTheme.chatbot?.primaryComponent || propsTheme.chatbot?.backgroundColor || propsTheme.botMessage || propsTheme.userMessage;
+      
+      if (propsHasBackendFormat) {
+        // Apply same transformation logic as tempTheme for props theme
+        const transformedPropsTheme = deepMerge(defaultAsgardThemeContextValue as unknown as Record<string, unknown>, {
+          chatbot: {
+            backgroundColor: propsTheme.chatbot?.backgroundColor,
+            borderColor: propsTheme.chatbot?.borderColor,
+            header: {
+              style: {
+                borderBottomColor: propsTheme.chatbot?.borderColor,
+              },
+              title: {
+                style: {
+                  color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                },
+              },
+              actionButton: {
+                style: {
+                  color: propsTheme.chatbot?.inactiveColor,
+                },
+              },
+            },
+            body: {
+              style: {
+                // Time/timestamp text color
+                color: propsTheme.chatbot?.inactiveColor,
+              },
+            },
+            footer: {
+              style: {
+                borderTopColor: propsTheme.chatbot?.borderColor,
+              },
+              textArea: {
+                style: {
+                  color: propsTheme.chatbot?.inactiveColor,
+                  backgroundColor: propsTheme.chatbot?.backgroundColor,
+                },
+                '::placeholder': {
+                  color: propsTheme.chatbot?.inactiveColor,
+                },
+              },
+              submitButton: {
+                style: {
+                  color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                },
+              },
+              speechInputButton: {
+                style: {
+                  color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                },
+              },
+            },
+          },
+          botMessage: {
+            backgroundColor: propsTheme.botMessage?.backgroundColor,
+            color: propsTheme.botMessage?.color,
+            linkColor: propsTheme.botMessage?.backgroundColor 
+              ? darkenColor(propsTheme.botMessage.backgroundColor, 0.2)
+              : undefined,
+            unsentBackgroundColor: propsTheme.botMessage?.backgroundColor 
+              ? `color-mix(in srgb, ${propsTheme.botMessage.backgroundColor} 20%, transparent)`
+              : undefined,
+            quickReplyBackgroundColor: propsTheme.botMessage?.backgroundColor 
+              ? `color-mix(in srgb, ${propsTheme.botMessage.backgroundColor} 20%, transparent)`
+              : undefined,
+          },
+          userMessage: {
+            backgroundColor: propsTheme.userMessage?.backgroundColor,
+            color: propsTheme.userMessage?.color,
+          },
+          template: {
+            quickReplies: {
+              button: {
+                style: {
+                  color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                  borderColor: propsTheme.chatbot?.borderColor,
+                  backgroundColor: propsTheme.botMessage?.backgroundColor
+                    ? `${propsTheme.botMessage.backgroundColor}33`
+                    : undefined,
+                },
+              },
+            },
+            time: {
+              style: {
+                color: propsTheme.chatbot?.inactiveColor,
+              },
+            },
+            TextMessageTemplate: {
+              style: {
+                // For unset messages
+                color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+              },
+            },
+            HintMessageTemplate: {
+              style: {
+                color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+              },
+            },
+            ButtonMessageTemplate: {
+              button: {
+                style: {
+                  borderColor: propsTheme.chatbot?.borderColor,
+                  backgroundColor: propsTheme.chatbot?.primaryComponent?.mainColor,
+                  color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                },
+              },
+            },
+            CarouselMessageTemplate: {
+              card: {
+                style: {
+                  backgroundColor: propsTheme.botMessage?.carouselButtonBackgroundColor,
+                },
+                button: {
+                  style: {
+                    borderColor: propsTheme.chatbot?.borderColor,
+                    backgroundColor: propsTheme.chatbot?.primaryComponent?.mainColor,
+                    color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
+                  },
+                },
+              },
+            },
+          },
+        });
+        
+        return deepMerge(tempTheme, transformedPropsTheme);
+      }
 
       return deepMerge(tempTheme, theme);
     },
