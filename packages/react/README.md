@@ -62,6 +62,7 @@ const App = () => {
         fullScreen={false}
         avatar="https://example.com/avatar.png"
         botTypingPlaceholder="Bot is typing..."
+        inputPlaceholder="Type your message here..."
         defaultLinkTarget="_blank"
         onReset={() => {
           console.log('Chat reset');
@@ -146,6 +147,7 @@ config: {
 - **fullScreen**: `boolean` - Display chatbot in full screen mode, defaults to `false`
 - **avatar**: `string` - URL for the chatbot's avatar image
 - **botTypingPlaceholder**: `string` - Text to display while the bot is typing
+- **inputPlaceholder**: `string` - Custom placeholder text for the message input field
 - **defaultLinkTarget?**: `'_blank' | '_self' | '_parent' | '_top'` - Default target for opening URIs when not specified by the API. Defaults to `'_blank'` (opens in new tab).
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
 - **onReset**: `() => void` - Callback function when chat is reset
