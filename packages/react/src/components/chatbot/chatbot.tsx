@@ -30,6 +30,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   fullScreen?: boolean;
   avatar?: string;
   botTypingPlaceholder?: string;
+  inputPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
   maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
@@ -58,6 +59,7 @@ export const Chatbot = forwardRef(function Chatbot(
     fullScreen = false,
     avatar,
     botTypingPlaceholder,
+    inputPlaceholder,
     enableLoadConfigFromService = false,
     maintainConnectionWhenClosed = false,
     asyncInitializers = {},
@@ -88,6 +90,7 @@ export const Chatbot = forwardRef(function Chatbot(
           initMessages={initMessages}
           onSseMessage={onSseMessage}
           botTypingPlaceholder={botTypingPlaceholder}
+          inputPlaceholder={inputPlaceholder}
         >
           <ChatbotContainer
             fullScreen={fullScreen}

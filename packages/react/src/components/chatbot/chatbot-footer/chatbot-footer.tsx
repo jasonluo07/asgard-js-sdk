@@ -16,8 +16,8 @@ import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting } = useAsgardContext();
-
+  const { sendMessage, isConnecting, inputPlaceholder } = useAsgardContext();
+  
   const { chatbot } = useAsgardThemeContext();
 
   const [value, setValue] = useState('');
@@ -106,7 +106,7 @@ export function ChatbotFooter(): ReactNode {
           disabled={isConnecting}
           cols={40}
           value={value}
-          placeholder="Enter message"
+          placeholder={inputPlaceholder || "Enter message"}
           onChange={onChange}
           onKeyDown={onKeyDown}
           onCompositionStart={() => setIsComposing(true)}
