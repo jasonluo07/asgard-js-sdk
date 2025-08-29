@@ -366,7 +366,7 @@ export function AsgardThemeContextProvider(
           ButtonMessageTemplate: {
             button: {
               style: {
-                borderColor: themeFromAnnotations.chatbot?.borderColor,
+                borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                 backgroundColor:
                   themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                 color:
@@ -384,7 +384,7 @@ export function AsgardThemeContextProvider(
               },
               button: {
                 style: {
-                  borderColor: themeFromAnnotations.chatbot?.borderColor,
+                  borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                   backgroundColor:
                     themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                   color:
@@ -501,7 +501,7 @@ export function AsgardThemeContextProvider(
             ButtonMessageTemplate: {
               button: {
                 style: {
-                  borderColor: propsTheme.chatbot?.borderColor,
+                  borderColor: propsTheme.chatbot?.primaryComponent?.mainColor,
                   backgroundColor: propsTheme.chatbot?.primaryComponent?.mainColor,
                   color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
                 },
@@ -514,7 +514,7 @@ export function AsgardThemeContextProvider(
                 },
                 button: {
                   style: {
-                    borderColor: propsTheme.chatbot?.borderColor,
+                    borderColor: propsTheme.chatbot?.primaryComponent?.mainColor,
                     backgroundColor: propsTheme.chatbot?.primaryComponent?.mainColor,
                     color: propsTheme.chatbot?.primaryComponent?.secondaryColor,
                   },
