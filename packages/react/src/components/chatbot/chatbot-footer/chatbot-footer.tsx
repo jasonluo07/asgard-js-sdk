@@ -205,56 +205,107 @@ export function ChatbotFooter(): ReactNode {
           style={{ display: 'none' }}
         />
         
-        {/* 檔案預覽列表 */}
+        {/* 檔案預覽列表 - Claude 風格 */}
         {selectedFiles.length > 0 && (
           <div style={{
-            width: '100%',
-            padding: '8px',
-            background: 'rgba(0, 0, 0, 0.05)',
-            borderRadius: '4px',
-            marginBottom: '8px',
-            maxHeight: '100px',
-            overflowY: 'auto'
+            display: 'flex',
+            gap: '8px',
+            flexWrap: 'wrap',
+            paddingBottom: '12px'
           }}>
-            <div style={{ fontSize: '12px', marginBottom: '4px', color: '#666' }}>
-              已選擇 {selectedFiles.length} 個檔案：
-            </div>
-            {selectedFiles.map((file, index) => (
-              <div key={index} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '4px',
-                marginBottom: '2px',
-                background: 'white',
-                borderRadius: '3px',
-                fontSize: '12px'
-              }}>
-                <span style={{ 
-                  flex: 1, 
-                  overflow: 'hidden', 
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+            {selectedFiles.map((file, index) => {
+              // 建立預覽 URL
+              const previewUrl = URL.createObjectURL(file);
+              
+              return (
+                <div key={index} style={{
+                  position: 'relative',
+                  width: '240px',
+                  background: '#2d2d2d',
+                  border: '1px solid #3d3d3d',
+                  borderRadius: '8px',
+                  overflow: 'hidden'
                 }}>
-                  📷 {file.name} ({(file.size / 1024).toFixed(0)} KB)
-                </span>
-                <button
-                  onClick={() => handleRemoveFile(index)}
-                  style={{
-                    marginLeft: '8px',
-                    padding: '2px 6px',
-                    background: '#ff4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontSize: '11px'
-                  }}
-                >
-                  移除
-                </button>
-              </div>
-            ))}
+                  {/* 圖片預覽區 */}
+                  <div style={{
+                    width: '100%',
+                    height: '160px',
+                    background: '#1a1a1a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative'
+                  }}>
+                    <img 
+                      src={previewUrl}
+                      alt={file.name}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain'
+                      }}
+                      onLoad={() => URL.revokeObjectURL(previewUrl)}
+                    />
+                    
+                    {/* 移除按鈕 */}
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      style={{
+                        position: 'absolute',
+                        top: '8px',
+                        right: '8px',
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '4px',
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        backdropFilter: 'blur(4px)',
+                        color: 'white',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '16px',
+                        padding: 0,
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                      }}
+                      aria-label="移除"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  
+                  {/* 檔案資訊 */}
+                  <div style={{
+                    padding: '8px 12px',
+                    borderTop: '1px solid #3d3d3d'
+                  }}>
+                    <div style={{ 
+                      color: '#e0e0e0',
+                      fontSize: '13px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      marginBottom: '2px'
+                    }}>
+                      {file.name}
+                    </div>
+                    <div style={{ 
+                      color: '#888',
+                      fontSize: '11px'
+                    }}>
+                      {file.type.split('/')[1].toUpperCase()} • {(file.size / 1024).toFixed(0)} KB
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
         
