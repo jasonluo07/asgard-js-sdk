@@ -16,19 +16,22 @@ import GallerySvg from '../../../icons/gallery.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId } = useAsgardContext();
 
   const { chatbot } = useAsgardThemeContext();
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const disabled = useMemo(
-    () => isConnecting || !value.trim(),
-    [isConnecting, value]
+    () => isConnecting || (!value.trim() && selectedFiles.length === 0),
+    [isConnecting, value, selectedFiles.length]
   );
 
   const contentStyles = useMemo(
@@ -55,16 +58,70 @@ export function ChatbotFooter(): ReactNode {
     []
   );
 
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
     if (!isComposing && !isConnecting) {
-      sendMessage?.({ text: value });
-      setValue('');
+      const hasFiles = selectedFiles.length > 0;
+      const messageText = value.trim();
+      
+      try {
+        let blobIds: string[] | undefined;
+        
+        // 如果有檔案，先上傳
+        if (hasFiles && client?.uploadFile && customChannelId) {
+          console.log('開始上傳檔案...');
+          blobIds = [];
+          
+          for (const file of selectedFiles) {
+            try {
+              console.log(`上傳檔案: ${file.name}`);
+              const response = await client.uploadFile(file, customChannelId);
+              
+              if (response.isSuccess && response.data?.[0]) {
+                const blobData = response.data[0];
+                blobIds.push(blobData.blobId);
+                console.log(`✓ 檔案 ${file.name} 上傳成功，blobId: ${blobData.blobId}`);
+              } else {
+                console.error(`檔案 ${file.name} 上傳失敗:`, response.error);
+              }
+            } catch (error) {
+              console.error(`檔案 ${file.name} 上傳出錯:`, error);
+              alert(`檔案 ${file.name} 上傳失敗`);
+            }
+          }
+          
+          if (blobIds.length === 0) {
+            console.error('所有檔案上傳失敗');
+            return;
+          }
+        }
+        
+        // 發送訊息（包含 blobIds）
+        if (messageText || blobIds) {
+          const payload: any = { 
+            text: messageText || '' 
+          };
+          
+          if (blobIds && blobIds.length > 0) {
+            payload.blobIds = blobIds;
+            console.log('發送訊息，附帶 blobIds:', blobIds);
+          }
+          
+          sendMessage?.(payload);
+        }
 
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '36px';
+        // 清空輸入和檔案
+        setValue('');
+        setSelectedFiles([]);
+
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '36px';
+        }
+      } catch (error) {
+        console.error('發送訊息失敗:', error);
+        alert('發送訊息失敗，請重試');
       }
     }
-  }, [isComposing, isConnecting, sendMessage, value]);
+  }, [isComposing, isConnecting, sendMessage, value, selectedFiles, client, customChannelId]);
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
@@ -72,18 +129,55 @@ export function ChatbotFooter(): ReactNode {
         event.key === 'Enter' &&
         !isComposing &&
         !isConnecting &&
-        value.trim()
+        (value.trim() || selectedFiles.length > 0)
       ) {
-        sendMessage?.({ text: value });
-        setValue('');
-
-        const element = event.target as HTMLTextAreaElement;
-
-        element.style.height = '36px';
+        event.preventDefault();
+        onSubmit();
       }
     },
-    [isComposing, isConnecting, sendMessage, value]
+    [isComposing, isConnecting, value, selectedFiles.length, onSubmit]
   );
+
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (files && files.length > 0) {
+        console.log('選擇的檔案:', files);
+        
+        // 驗證檔案
+        const { validFiles, errors } = validateImageFiles(files);
+        
+        if (errors.length > 0) {
+          console.error('檔案驗證錯誤:', errors);
+          // TODO: 之後可以顯示錯誤訊息給使用者
+          alert('檔案驗證錯誤:\n' + errors.join('\n'));
+        }
+        
+        if (validFiles.length > 0) {
+          console.log('有效的檔案:', validFiles);
+          setSelectedFiles(prev => [...prev, ...validFiles]);
+          
+          // Log 檔案資訊
+          validFiles.forEach(file => {
+            console.log(`✓ ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`);
+          });
+        }
+      }
+      // 清空 input 值，允許重複選擇相同檔案
+      event.target.value = '';
+    },
+    []
+  );
+
+  const handleGalleryClick = useCallback(() => {
+    console.log('Gallery clicked - opening file selector');
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    console.log(`移除檔案 index: ${index}`);
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -101,6 +195,69 @@ export function ChatbotFooter(): ReactNode {
       style={chatbot.footer?.style}
     >
       <div className={styles.chatbot_footer__content} style={contentStyles}>
+        {/* 隱藏的檔案輸入 */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
+        
+        {/* 檔案預覽列表 */}
+        {selectedFiles.length > 0 && (
+          <div style={{
+            width: '100%',
+            padding: '8px',
+            background: 'rgba(0, 0, 0, 0.05)',
+            borderRadius: '4px',
+            marginBottom: '8px',
+            maxHeight: '100px',
+            overflowY: 'auto'
+          }}>
+            <div style={{ fontSize: '12px', marginBottom: '4px', color: '#666' }}>
+              已選擇 {selectedFiles.length} 個檔案：
+            </div>
+            {selectedFiles.map((file, index) => (
+              <div key={index} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '4px',
+                marginBottom: '2px',
+                background: 'white',
+                borderRadius: '3px',
+                fontSize: '12px'
+              }}>
+                <span style={{ 
+                  flex: 1, 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  📷 {file.name} ({(file.size / 1024).toFixed(0)} KB)
+                </span>
+                <button
+                  onClick={() => handleRemoveFile(index)}
+                  style={{
+                    marginLeft: '8px',
+                    padding: '2px 6px',
+                    background: '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    fontSize: '11px'
+                  }}
+                >
+                  移除
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className={styles.attachment_buttons}>
           <button
             className={styles.attachment_button}
@@ -112,11 +269,31 @@ export function ChatbotFooter(): ReactNode {
           </button>
           <button
             className={styles.attachment_button}
-            onClick={() => console.log('Gallery clicked')}
+            onClick={handleGalleryClick}
             disabled={isConnecting}
             title="選擇照片"
+            style={{ position: 'relative' }}
           >
             <GallerySvg />
+            {selectedFiles.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: 'red',
+                color: 'white',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold'
+              }}>
+                {selectedFiles.length}
+              </span>
+            )}
           </button>
         </div>
         <textarea
@@ -132,7 +309,7 @@ export function ChatbotFooter(): ReactNode {
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
         />
-        {value ? (
+        {value || selectedFiles.length > 0 ? (
           <button
             className={clsx(
               styles.chatbot_submit_button,

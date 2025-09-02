@@ -30,7 +30,7 @@ export interface UseChannelReturn {
   isResetting: boolean;
   isConnecting: boolean;
   conversation: Conversation | null;
-  sendMessage?: (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
+  sendMessage?: (payload: Pick<FetchSsePayload, 'text' | 'blobIds'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
 }
@@ -118,7 +118,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) =>
+    (payload: Pick<FetchSsePayload, 'text' | 'blobIds'> & Partial<Pick<FetchSsePayload, 'payload'>>) =>
       channel?.sendMessage({ ...payload, customMessageId }),
     [channel, customMessageId]
   );

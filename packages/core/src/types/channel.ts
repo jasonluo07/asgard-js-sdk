@@ -23,6 +23,7 @@ export type ConversationUserMessage = {
   type: 'user';
   messageId: string;
   text: string;
+  blobIds?: string[]; // 使用者上傳的檔案 blob IDs
   time: Date;
 };
 

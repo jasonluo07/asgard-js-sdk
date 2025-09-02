@@ -118,7 +118,7 @@ export default class Channel {
   }
 
   public sendMessage(
-    payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload'>,
+    payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload' | 'blobIds'>,
     options?: FetchSseOptions
   ): Promise<void> {
     const text = payload.text.trim();
@@ -129,6 +129,7 @@ export default class Channel {
         type: 'user',
         messageId,
         text,
+        blobIds: payload.blobIds,
         time: new Date(),
       })
     );
@@ -140,6 +141,7 @@ export default class Channel {
         customMessageId: messageId,
         payload: payload?.payload,
         text,
+        blobIds: payload?.blobIds, // 新增：支援 blobIds
       },
       options
     );

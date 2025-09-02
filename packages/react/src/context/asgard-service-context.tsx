@@ -23,6 +23,7 @@ import {
 export interface AsgardServiceContextValue {
   avatar?: string;
   client: AsgardServiceClient | null;
+  customChannelId?: string;
   isOpen: boolean;
   isResetting: boolean;
   isConnecting: boolean;
@@ -38,6 +39,7 @@ export interface AsgardServiceContextValue {
 export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   avatar: undefined,
   client: null,
+  customChannelId: undefined,
   isOpen: false,
   isResetting: false,
   isConnecting: false,
@@ -101,6 +103,7 @@ export function AsgardServiceContextProvider(
     () => ({
       avatar,
       client,
+      customChannelId,
       isOpen,
       isResetting,
       isConnecting,
@@ -115,6 +118,7 @@ export function AsgardServiceContextProvider(
     [
       avatar,
       client,
+      customChannelId,
       isOpen,
       isResetting,
       isConnecting,
