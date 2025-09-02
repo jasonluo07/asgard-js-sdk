@@ -26,6 +26,7 @@ export function ChatbotFooter(): ReactNode {
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,6 +92,7 @@ export function ChatbotFooter(): ReactNode {
           
           if (blobIds.length === 0) {
             console.error('所有檔案上傳失敗');
+            
             return;
           }
         }
@@ -163,6 +165,7 @@ export function ChatbotFooter(): ReactNode {
           });
         }
       }
+      
       // 清空 input 值，允許重複選擇相同檔案
       event.target.value = '';
     },
@@ -237,7 +240,20 @@ export function ChatbotFooter(): ReactNode {
                       style={{
                         maxWidth: '100%',
                         maxHeight: '100%',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
+                        cursor: 'pointer',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onClick={() => {
+                        // 建立新的預覽 URL 給 Modal 使用
+                        const modalUrl = URL.createObjectURL(file);
+                        setPreviewImage({ url: modalUrl, name: file.name });
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = '0.8';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = '1';
                       }}
                       onLoad={() => URL.revokeObjectURL(previewUrl)}
                     />
@@ -390,6 +406,111 @@ export function ChatbotFooter(): ReactNode {
           />
         )}
       </div>
+      
+      {/* 圖片放大預覽 Modal */}
+      {previewImage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+          onClick={() => {
+            // 釋放 Modal 的預覽 URL
+            if (previewImage.url) {
+              URL.revokeObjectURL(previewImage.url);
+            }
+
+            setPreviewImage(null);
+          }}
+        >
+          {/* 圖片和檔名容器 */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '16px'
+          }}>
+            {/* 圖片 */}
+            <img
+              src={previewImage.url}
+              alt={previewImage.name}
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '75vh',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            {/* 檔名顯示 */}
+            <div style={{
+              color: 'white',
+              fontSize: '14px',
+              padding: '8px 16px',
+              background: 'rgba(0, 0, 0, 0.5)',
+              borderRadius: '8px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              {previewImage.name}
+            </div>
+          </div>
+          
+          {/* 關閉按鈕 */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (previewImage.url) {
+                URL.revokeObjectURL(previewImage.url);
+              }
+
+              setPreviewImage(null);
+            }}
+            
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              padding: 0,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            aria-label="關閉預覽"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
