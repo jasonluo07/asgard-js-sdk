@@ -194,24 +194,19 @@ export function ChatbotFooter(): ReactNode {
       className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
       style={chatbot.footer?.style}
     >
-      <div className={styles.chatbot_footer__content} style={contentStyles}>
-        {/* 隱藏的檔案輸入 */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-          onChange={handleFileSelect}
-          style={{ display: 'none' }}
-        />
-        
-        {/* 檔案預覽列表 - Claude 風格 */}
-        {selectedFiles.length > 0 && (
+      {/* 檔案預覽列表 - 獨立區域 */}
+      {selectedFiles.length > 0 && (
+        <div style={{
+          width: '100%',
+          maxWidth: contentStyles.maxWidth,
+          margin: '0 auto',
+          padding: '12px',
+          paddingBottom: '0'
+        }}>
           <div style={{
             display: 'flex',
             gap: '8px',
-            flexWrap: 'wrap',
-            paddingBottom: '12px'
+            flexWrap: 'wrap'
           }}>
             {selectedFiles.map((file, index) => {
               // 建立預覽 URL
@@ -220,7 +215,7 @@ export function ChatbotFooter(): ReactNode {
               return (
                 <div key={index} style={{
                   position: 'relative',
-                  width: '240px',
+                  width: '180px',
                   background: '#2d2d2d',
                   border: '1px solid #3d3d3d',
                   borderRadius: '8px',
@@ -229,7 +224,7 @@ export function ChatbotFooter(): ReactNode {
                   {/* 圖片預覽區 */}
                   <div style={{
                     width: '100%',
-                    height: '160px',
+                    height: '120px',
                     background: '#1a1a1a',
                     display: 'flex',
                     alignItems: 'center',
@@ -252,12 +247,12 @@ export function ChatbotFooter(): ReactNode {
                       onClick={() => handleRemoveFile(index)}
                       style={{
                         position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '24px',
-                        height: '24px',
+                        top: '6px',
+                        right: '6px',
+                        width: '20px',
+                        height: '20px',
                         borderRadius: '4px',
-                        background: 'rgba(0, 0, 0, 0.6)',
+                        background: 'rgba(0, 0, 0, 0.7)',
                         backdropFilter: 'blur(4px)',
                         color: 'white',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -265,15 +260,15 @@ export function ChatbotFooter(): ReactNode {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         padding: 0,
                         transition: 'background 0.2s'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)';
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.9)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)';
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
                       }}
                       aria-label="移除"
                     >
@@ -283,22 +278,22 @@ export function ChatbotFooter(): ReactNode {
                   
                   {/* 檔案資訊 */}
                   <div style={{
-                    padding: '8px 12px',
+                    padding: '6px 8px',
                     borderTop: '1px solid #3d3d3d'
                   }}>
                     <div style={{ 
                       color: '#e0e0e0',
-                      fontSize: '13px',
+                      fontSize: '12px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      marginBottom: '2px'
+                      marginBottom: '1px'
                     }}>
                       {file.name}
                     </div>
                     <div style={{ 
                       color: '#888',
-                      fontSize: '11px'
+                      fontSize: '10px'
                     }}>
                       {file.type.split('/')[1].toUpperCase()} • {(file.size / 1024).toFixed(0)} KB
                     </div>
@@ -307,7 +302,19 @@ export function ChatbotFooter(): ReactNode {
               );
             })}
           </div>
-        )}
+        </div>
+      )}
+      
+      <div className={styles.chatbot_footer__content} style={contentStyles}>
+        {/* 隱藏的檔案輸入 */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
         
         <div className={styles.attachment_buttons}>
           <button
