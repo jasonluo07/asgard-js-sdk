@@ -58,7 +58,7 @@ export function Root(): ReactNode {
         <div
           style={{ position: 'relative', display: isOpen ? 'block' : 'none' }}
         >
-          <button
+          {/* <button
             style={{
               position: 'absolute',
               top: '80px',
@@ -79,7 +79,7 @@ export function Root(): ReactNode {
             }
           >
             Send a message from outside of chatbot
-          </button>
+          </button> */}
           <Chatbot
             ref={chatbotRef}
             asyncInitializers={{
@@ -92,7 +92,7 @@ export function Root(): ReactNode {
               apiKey: VITE_API_KEY,
             }}
             avatar="./showtime.webp"
-            // enableLoadConfigFromService={true}
+            enableLoadConfigFromService={true}
             maintainConnectionWhenClosed={true}
             loadingComponent={<div>Custom Loading...</div>}
             botTypingPlaceholder="typing"
@@ -101,23 +101,23 @@ export function Root(): ReactNode {
             onClose={() => {
               setIsOpen(false);
             }}
-            theme={{
-              botMessage: {
-                backgroundColor: '#640000',
-                carouselButtonBackgroundColor: '#2a0a0a',
-                color: '#3b26be',
-              },
-              chatbot: {
-                backgroundColor: '#e75b5b',
-                borderColor: '#c23737',
-                inactiveColor: '#0c5f12',
-                primaryComponent: {
-                  mainColor: '#000000',
-                  secondaryColor: '#ff06fd',
-                },
-              },
-              userMessage: { backgroundColor: '#4767EB', color: '#FFFFFF' },
-            }}
+            // theme={{
+            //   botMessage: {
+            //     backgroundColor: '#640000',
+            //     carouselButtonBackgroundColor: '#2a0a0a',
+            //     color: '#3b26be',
+            //   },
+            //   chatbot: {
+            //     backgroundColor: '#e75b5b',
+            //     borderColor: '#c23737',
+            //     inactiveColor: '#0c5f12',
+            //     primaryComponent: {
+            //       mainColor: '#000000',
+            //       secondaryColor: '#ff06fd',
+            //     },
+            //   },
+            //   userMessage: { backgroundColor: '#4767EB', color: '#FFFFFF' },
+            // }}
           />
         </div>
       </div>
