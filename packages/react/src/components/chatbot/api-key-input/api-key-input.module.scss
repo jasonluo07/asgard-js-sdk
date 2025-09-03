@@ -1,27 +1,22 @@
 .container {
   width: 220px;
-  background: rgba(45, 45, 45, 0.95);
+  background-color: var(--asg-color-bg);
   border-radius: 12px;
-  padding: 24px 20px 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  padding: 12px 20px;
+  border: 0.5px solid #434343;
 }
 
 .header {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 12px;
-  opacity: 0.7;
+  width: 24px;
+  height: 24px;
 }
 
 .title {
@@ -29,21 +24,18 @@
   font-size: 18px;
   font-weight: 500;
   color: white;
-  text-align: center;
 }
 
 .form {
   width: 100%;
-}
-
-.inputGroup {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .label {
   display: block;
   font-size: 14px;
-  font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 8px;
 }
@@ -128,7 +120,7 @@
 .submitButton {
   width: 100%;
   height: 42px;
-  background: #5856D6;
+  background: #5856d6;
   border: none;
   border-radius: 6px;
   color: white;
@@ -139,7 +131,7 @@
   outline: none;
 
   &:hover:not(:disabled) {
-    background: #4845C7;
+    background: #4845c7;
     transform: translateY(-1px);
   }
 
