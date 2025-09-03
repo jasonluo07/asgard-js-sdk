@@ -24,6 +24,7 @@ export type ConversationUserMessage = {
   messageId: string;
   text: string;
   blobIds?: string[]; // 使用者上傳的檔案 blob IDs
+  filePreviewUrls?: string[]; // 檔案的本地預覽 URLs (用於前端顯示)
   time: Date;
 };
 

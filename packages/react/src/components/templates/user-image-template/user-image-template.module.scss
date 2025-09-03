@@ -1,33 +1,124 @@
-.user_image_message {
+// 訊息包裝器
+.message_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 75%;
+}
+
+// 文字泡泡框
+.text_bubble {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  
+  &--user {
+    background: #4767eb;
+    color: white;
+    border-top-right-radius: 0;
+  }
+}
+
+// 檔案資訊泡泡框
+.files_bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  
+  &--user {
+    background: #4767eb;
+    color: white;
+    border-top-right-radius: 0;
+  }
+  
+  .file_icon {
+    font-size: 16px;
+  }
+  
+  .file_text {
+    font-size: 14px;
+  }
+}
+
+// 圖片容器 - 不在泡泡框內
+.images_container {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+}
 
-  .text_content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin-bottom: 4px;
+// 單個圖片包裝器
+.image_wrapper {
+  position: relative;
+  width: 300px;
+  aspect-ratio: 3 / 2;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  align-self: flex-end;
+}
+
+// 上傳的圖片
+.uploaded_image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  
+  &:hover {
+    opacity: 0.95;
   }
+}
 
-  .files_container {
-    margin-top: 8px;
-    padding: 12px;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
+// 圖片模態框
+.image_modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  cursor: pointer;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+  
+  .modal_image {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
     border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.2s ease;
   }
+}
 
-  .file_info {
-    font-size: 14px;
-    color: #495057;
-    font-weight: 500;
-    margin-bottom: 4px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
+}
 
-  .file_note {
-    font-size: 12px;
-    color: #6c757d;
-    font-style: italic;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
   }
 }

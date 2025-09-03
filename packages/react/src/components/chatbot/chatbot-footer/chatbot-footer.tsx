@@ -26,6 +26,7 @@ export function ChatbotFooter(): ReactNode {
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,8 +98,8 @@ export function ChatbotFooter(): ReactNode {
           }
         }
         
-        // 發送訊息（包含 blobIds）
-        if (messageText || blobIds) {
+        // 發送訊息（包含 blobIds 和 filePreviewUrls）
+        if (messageText || blobIds || filePreviewUrls.length > 0) {
           const payload: any = { 
             text: messageText || '' 
           };
@@ -108,12 +109,19 @@ export function ChatbotFooter(): ReactNode {
             console.log('發送訊息，附帶 blobIds:', blobIds);
           }
           
+          // 傳遞檔案預覽 URLs
+          if (filePreviewUrls.length > 0) {
+            payload.filePreviewUrls = filePreviewUrls;
+            console.log('傳遞檔案預覽 URLs:', filePreviewUrls);
+          }
+          
           sendMessage?.(payload);
         }
 
         // 清空輸入和檔案
         setValue('');
         setSelectedFiles([]);
+        setFilePreviewUrls([]);
 
         if (textareaRef.current) {
           textareaRef.current.style.height = '36px';
@@ -123,7 +131,7 @@ export function ChatbotFooter(): ReactNode {
         alert('發送訊息失敗，請重試');
       }
     }
-  }, [isComposing, isConnecting, sendMessage, value, selectedFiles, client, customChannelId]);
+  }, [isComposing, isConnecting, sendMessage, value, selectedFiles, filePreviewUrls, client, customChannelId]);
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
@@ -159,10 +167,21 @@ export function ChatbotFooter(): ReactNode {
           console.log('有效的檔案:', validFiles);
           setSelectedFiles(prev => [...prev, ...validFiles]);
           
-          // Log 檔案資訊
-          validFiles.forEach(file => {
+          // 建立本地預覽 URLs
+          const newPreviewUrls: string[] = [];
+          for (const file of validFiles) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (e.target?.result && typeof e.target.result === 'string') {
+                newPreviewUrls.push(e.target.result);
+                if (newPreviewUrls.length === validFiles.length) {
+                  setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+                }
+              }
+            };
+            reader.readAsDataURL(file);
             console.log(`✓ ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`);
-          });
+          }
         }
       }
       
@@ -179,6 +198,7 @@ export function ChatbotFooter(): ReactNode {
 
   const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
     console.log(`移除檔案 index: ${index}`);
   }, []);
 

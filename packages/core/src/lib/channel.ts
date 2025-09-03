@@ -118,7 +118,7 @@ export default class Channel {
   }
 
   public sendMessage(
-    payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload' | 'blobIds'>,
+    payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload' | 'blobIds'> & { filePreviewUrls?: string[] },
     options?: FetchSseOptions
   ): Promise<void> {
     const text = payload.text.trim();
@@ -130,6 +130,7 @@ export default class Channel {
         messageId,
         text,
         blobIds: payload.blobIds,
+        filePreviewUrls: payload.filePreviewUrls,
         time: new Date(),
       })
     );
