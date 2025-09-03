@@ -199,23 +199,35 @@ export const Chatbot = forwardRef(function Chatbot(
     );
   }
 
-  // For non-authenticated states, render without AsgardServiceContextProvider
+  // For non-authenticated states, provide AsgardServiceContextProvider but without SSE connection
   return (
     <AsgardThemeContextProvider theme={theme}>
-      <ChatbotContainer
-        fullScreen={fullScreen}
-        className={className}
-        style={style}
+      <AsgardServiceContextProvider
+        parentRef={ref}
+        avatar={avatar}
+        config={config}
+        customChannelId={customChannelId}
+        initMessages={initMessages}
+        onSseMessage={onSseMessage}
+        onAuthError={onAuthError}
+        botTypingPlaceholder={botTypingPlaceholder}
+        inputPlaceholder={inputPlaceholder}
       >
-        <ChatbotHeader
-          title={title}
-          onReset={onReset}
-          onClose={onClose}
-          customActions={customActions}
-          maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-        />
-        {renderContent()}
-      </ChatbotContainer>
+        <ChatbotContainer
+          fullScreen={fullScreen}
+          className={className}
+          style={style}
+        >
+          <ChatbotHeader
+            title={title}
+            onReset={onReset}
+            onClose={onClose}
+            customActions={customActions}
+            maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+          />
+          {renderContent()}
+        </ChatbotContainer>
+      </AsgardServiceContextProvider>
     </AsgardThemeContextProvider>
   );
 });
