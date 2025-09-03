@@ -1,7 +1,8 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import clsx from 'clsx';
-import ProfileSvg from '../../../icons/profile.svg?react';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { useAsgardContext } from '../../../context/asgard-service-context';
+import { ProfileIcon } from '../profile-icon';
 import styles from './api-key-input.module.scss';
 
 export interface ApiKeyInputProps {
@@ -26,6 +27,7 @@ export function ApiKeyInput({
   const [apiKey, setApiKey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { chatbot } = useAsgardThemeContext();
+  const { avatar } = useAsgardContext();
 
   const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
@@ -51,8 +53,8 @@ export function ApiKeyInput({
       }}
     >
       <div className={styles.header}>
-        <ProfileSvg className={styles.icon} />
-        <h2 className={styles.title}>{title}</h2>
+        <ProfileIcon avatar={avatar} />
+        <h2 className={styles.title} style={chatbot?.header?.title?.style}>{title}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
