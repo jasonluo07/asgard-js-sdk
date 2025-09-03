@@ -11,7 +11,6 @@ import {
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
-import CameraSvg from '../../../icons/camera.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
@@ -311,29 +310,6 @@ export function ChatbotFooter(): ReactNode {
                       ×
                     </button>
                   </div>
-                  
-                  {/* 檔案資訊 */}
-                  <div style={{
-                    padding: '6px 8px',
-                    borderTop: '1px solid #3d3d3d'
-                  }}>
-                    <div style={{ 
-                      color: '#e0e0e0',
-                      fontSize: '12px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      marginBottom: '1px'
-                    }}>
-                      {file.name}
-                    </div>
-                    <div style={{ 
-                      color: '#888',
-                      fontSize: '10px'
-                    }}>
-                      {file.type.split('/')[1].toUpperCase()} • {(file.size / 1024).toFixed(0)} KB
-                    </div>
-                  </div>
                 </div>
               );
             })}
@@ -353,14 +329,14 @@ export function ChatbotFooter(): ReactNode {
         />
         
         <div className={styles.attachment_buttons}>
-          <button
+          {/* <button
             className={styles.attachment_button}
             onClick={() => console.log('Camera clicked')}
             disabled={isConnecting}
             title="拍照"
           >
             <CameraSvg />
-          </button>
+          </button> */}
           <button
             className={styles.attachment_button}
             onClick={handleGalleryClick}
@@ -369,25 +345,6 @@ export function ChatbotFooter(): ReactNode {
             style={{ position: 'relative' }}
           >
             <GallerySvg />
-            {selectedFiles.length > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                background: 'red',
-                color: 'white',
-                borderRadius: '50%',
-                width: '18px',
-                height: '18px',
-                fontSize: '11px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold'
-              }}>
-                {selectedFiles.length}
-              </span>
-            )}
           </button>
         </div>
         <textarea

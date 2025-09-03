@@ -82,19 +82,9 @@
   border: none;
   background: transparent;
   border-radius: 6px;
-  color: rgba(140, 140, 140, 1);
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background: rgba(67, 67, 67, 0.3);
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  &:active:not(:disabled) {
-    background: rgba(67, 67, 67, 0.5);
-    transform: scale(0.95);
-  }
 
   &:disabled {
     opacity: 0.5;
