@@ -33,13 +33,7 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
         style={rootStyle}
       >
         <div className={styles.message_wrapper}>
-          {message.message.text && (
-            <div className={clsx(styles.text_bubble, styles['text_bubble--user'])} style={textStyles}>
-              {message.message.text}
-            </div>
-          )}
-          
-          {message.message.filePreviewUrls && message.message.filePreviewUrls.length > 0 && (
+                    {message.message.filePreviewUrls && message.message.filePreviewUrls.length > 0 && (
             <div className={styles.images_container}>
               {message.message.filePreviewUrls.map((url, index) => (
                 <div key={index} className={styles.image_wrapper}>
@@ -54,14 +48,10 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
               ))}
             </div>
           )}
-          
-          {(!message.message.filePreviewUrls || message.message.filePreviewUrls.length === 0) &&
-           message.message.blobIds && message.message.blobIds.length > 0 && (
-            <div className={clsx(styles.files_bubble, styles['files_bubble--user'])} style={textStyles}>
-              <span className={styles.file_icon} role="img" aria-label="附件">📎</span>
-              <div className={styles.file_text}>
-                已附加 {message.message.blobIds.length} 個檔案
-              </div>
+
+          {message.message.text && (
+            <div className={clsx(styles.text_bubble, styles['text_bubble--user'])} style={textStyles}>
+              {message.message.text}
             </div>
           )}
         </div>
