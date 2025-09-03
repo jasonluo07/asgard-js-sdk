@@ -116,6 +116,10 @@ export function ApiKeyInput({
           className={clsx(styles.submitButton, {
             [styles.loading]: loading,
           })}
+          style={{
+            backgroundColor: chatbot?.mainColor,
+            color: chatbot?.secondaryColor,
+          }}
         >
           {loading ? 'Loading...' : 'Continue'}
         </button>

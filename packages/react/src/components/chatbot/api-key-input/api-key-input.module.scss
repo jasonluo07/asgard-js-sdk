@@ -120,9 +120,9 @@
 .submitButton {
   width: 100%;
   height: 42px;
-  background: #5856d6;
   border: none;
   border-radius: 6px;
+  background-color: #5856d6;
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -131,7 +131,7 @@
   outline: none;
 
   &:hover:not(:disabled) {
-    background: #4845c7;
+    opacity: 0.9;
     transform: translateY(-1px);
   }
 

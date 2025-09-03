@@ -31,6 +31,8 @@ export interface AsgardThemeContextValue {
     backgroundColor?: CSSProperties['backgroundColor'];
     borderColor?: CSSProperties['borderColor'];
     inactiveColor?: CSSProperties['color'];
+    mainColor?: CSSProperties['color'];
+    secondaryColor?: CSSProperties['color'];
     primaryComponent?: {
       mainColor?: CSSProperties['color'];
       secondaryColor?: CSSProperties['color'];
@@ -267,6 +269,9 @@ export function AsgardThemeContextProvider(
         chatbot: {
           backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
           borderColor: themeFromAnnotations.chatbot?.borderColor,
+          mainColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
+          secondaryColor: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+          
           header: {
             style: {
               borderBottomColor: themeFromAnnotations.chatbot?.borderColor,
@@ -407,6 +412,8 @@ export function AsgardThemeContextProvider(
           chatbot: {
             backgroundColor: propsTheme.chatbot?.backgroundColor,
             borderColor: propsTheme.chatbot?.borderColor,
+            mainColor: propsTheme.chatbot?.primaryComponent?.mainColor,
+            secondaryColor: propsTheme.chatbot?.primaryComponent?.secondaryColor,
             header: {
               style: {
                 borderBottomColor: propsTheme.chatbot?.borderColor,
