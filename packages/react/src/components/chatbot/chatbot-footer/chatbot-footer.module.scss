@@ -201,7 +201,6 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.3s ease;
 }
 
 .image_modal_content {
@@ -209,7 +208,6 @@
   flex-direction: column;
   align-items: center;
   gap: var(--asg-spacing-4, 16px);
-  animation: scaleIn 0.3s ease;
 }
 
 .image_modal_image {
@@ -221,20 +219,6 @@
   user-select: none;
 }
 
-.image_modal_filename {
-  color: white;
-  font-size: 14px;
-  padding: var(--asg-spacing-2, 8px) var(--asg-spacing-4, 16px);
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: var(--asg-radius-md, 8px);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  max-width: 300px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 .image_modal_close_button {
   position: absolute;
@@ -265,22 +249,3 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}

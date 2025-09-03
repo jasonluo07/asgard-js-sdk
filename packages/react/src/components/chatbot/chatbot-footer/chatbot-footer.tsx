@@ -306,9 +306,6 @@ export function ChatbotFooter(): ReactNode {
               onClick={(e) => e.stopPropagation()}
             />
             
-            <div className={styles.image_modal_filename}>
-              {previewImage.name}
-            </div>
           </div>
           
           <button
