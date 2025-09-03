@@ -172,7 +172,7 @@ export function Root(): ReactNode {
                 "borderColor": "#434343",
                 "inactiveColor": "#8C8C8C",
                 "primaryComponent": {
-                  "mainColor": "#4767EB",
+                  "mainColor": "##ebe246",
                   "secondaryColor": "#FFFFFF"
                 }
               },
