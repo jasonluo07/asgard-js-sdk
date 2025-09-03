@@ -162,21 +162,21 @@ export function Root(): ReactNode {
               setIsOpen(false);
             }}
             theme={{
-              "chatbot": {
-                  "width": "",
-                  "height": "",
-                  "backgroundColor": "#b33737",
-                  "borderRadius": "",
-                  "primaryComponent": {}
-              },
               "botMessage": {
-                  "color": "",
-                  "backgroundColor": ""
+                "backgroundColor": "#8728a6",
+                "carouselButtonBackgroundColor": "#333333",
+                "color": "#FFFFFF"
               },
-              "userMessage": {
-                  "color": "",
-                  "backgroundColor": ""
-              }
+              "chatbot": {
+                "backgroundColor": "#ea8585",
+                "borderColor": "#434343",
+                "inactiveColor": "#8C8C8C",
+                "primaryComponent": {
+                  "mainColor": "#4767EB",
+                  "secondaryColor": "#FFFFFF"
+                }
+              },
+              "userMessage": { "backgroundColor": "#1f2d67", "color": "#12cc27" }
             }}
           />
         </div>
