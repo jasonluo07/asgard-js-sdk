@@ -5,7 +5,7 @@ import { BlobUploadResponse } from './blob';
 
 export interface IAsgardServiceClient {
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
-  uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>; // 新增：上傳檔案方法
+  uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
 }
 
 export type InitEventHandler = EventHandler<SseResponse<EventType.INIT>>;
@@ -71,7 +71,7 @@ export interface FetchSsePayload {
   text: string;
   payload?: Record<string, unknown>;
   action: FetchSseAction;
-  blobIds?: string[]; // 新增：支援附加檔案的 blob IDs
+  blobIds?: string[];
 }
 
 export interface FetchSseOptions {

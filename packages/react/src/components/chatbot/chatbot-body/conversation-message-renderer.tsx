@@ -21,11 +21,10 @@ export function ConversationMessageRenderer(
   const { message } = props;
 
   if (message.type === 'user') {
-    // 如果使用者訊息包含圖片，使用 UserImageTemplate
     if (message.blobIds && message.blobIds.length > 0) {
       return <UserImageTemplate message={{ type: 'user', message }} />;
     }
-    // 否則使用普通的 TextTemplate
+
     return <TextTemplate message={message} />;
   }
 

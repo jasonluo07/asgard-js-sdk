@@ -213,7 +213,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     if (!baseEndpoint.includes('/generic/')) {
       // 假設 baseEndpoint 格式為：https://api.example.com/ns/{namespace}/bot-provider/{name}
       // 需要插入 /generic
-      const match = baseEndpoint.match(/^(https?:\/\/[^\/]+)(\/.*)/);
+      const match = baseEndpoint.match(/^(https?:\/\/[^/]+)(\/.*)/);
       if (match) {
         const [, domain, path] = match;
         baseEndpoint = `${domain}/generic${path}`;

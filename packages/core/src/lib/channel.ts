@@ -142,7 +142,7 @@ export default class Channel {
         customMessageId: messageId,
         payload: payload?.payload,
         text,
-        blobIds: payload?.blobIds, // 新增：支援 blobIds
+        blobIds: payload?.blobIds,
       },
       options
     );

@@ -6,10 +6,10 @@ export interface BlobUploadResponse {
 }
 
 export interface BlobData {
-  channelId: string;  // 後端使用 string 防止 JS overflow
-  blobId: string;     // 後端使用 string 防止 JS overflow
+  channelId: string;
+  blobId: string;
   fileType: 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'AUDIO' | 'UNKNOWN';
-  fileName: string | null;  // 可能為 null
+  fileName: string | null;
   size: number;
   mime: string;
 }
@@ -19,5 +19,5 @@ export interface FileAttachment {
   fileName: string;
   mime: string;
   size: number;
-  url?: string; // 預覽 URL（如果有的話）
+  url?: string;
 }

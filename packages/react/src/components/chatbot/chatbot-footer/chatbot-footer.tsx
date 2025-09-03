@@ -67,57 +67,46 @@ export function ChatbotFooter(): ReactNode {
       try {
         let blobIds: string[] | undefined;
         
-        // 如果有檔案，先上傳
         if (hasFiles && client?.uploadFile && customChannelId) {
-          console.log('開始上傳檔案...');
           blobIds = [];
           
           for (const file of selectedFiles) {
             try {
-              console.log(`上傳檔案: ${file.name}`);
               const response = await client.uploadFile(file, customChannelId);
               
               if (response.isSuccess && response.data?.[0]) {
                 const blobData = response.data[0];
                 blobIds.push(blobData.blobId);
-                console.log(`✓ 檔案 ${file.name} 上傳成功，blobId: ${blobData.blobId}`);
               } else {
-                console.error(`檔案 ${file.name} 上傳失敗:`, response.error);
+                // Upload failed, continue with next file
               }
-            } catch (error) {
-              console.error(`檔案 ${file.name} 上傳出錯:`, error);
+            } catch {
               alert(`檔案 ${file.name} 上傳失敗`);
             }
           }
           
           if (blobIds.length === 0) {
-            console.error('所有檔案上傳失敗');
             
             return;
           }
         }
         
-        // 發送訊息（包含 blobIds 和 filePreviewUrls）
         if (messageText || blobIds || filePreviewUrls.length > 0) {
-          const payload: any = { 
+          const payload: { text: string; blobIds?: string[]; filePreviewUrls?: string[] } = { 
             text: messageText || '' 
           };
           
           if (blobIds && blobIds.length > 0) {
             payload.blobIds = blobIds;
-            console.log('發送訊息，附帶 blobIds:', blobIds);
           }
           
-          // 傳遞檔案預覽 URLs
           if (filePreviewUrls.length > 0) {
             payload.filePreviewUrls = filePreviewUrls;
-            console.log('傳遞檔案預覽 URLs:', filePreviewUrls);
           }
           
           sendMessage?.(payload);
         }
 
-        // 清空輸入和檔案
         setValue('');
         setSelectedFiles([]);
         setFilePreviewUrls([]);
@@ -125,8 +114,7 @@ export function ChatbotFooter(): ReactNode {
         if (textareaRef.current) {
           textareaRef.current.style.height = '36px';
         }
-      } catch (error) {
-        console.error('發送訊息失敗:', error);
+      } catch {
         alert('發送訊息失敗，請重試');
       }
     }
@@ -151,26 +139,20 @@ export function ChatbotFooter(): ReactNode {
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
       if (files && files.length > 0) {
-        console.log('選擇的檔案:', files);
         
-        // 驗證檔案
         const { validFiles, errors } = validateImageFiles(files);
         
         if (errors.length > 0) {
-          console.error('檔案驗證錯誤:', errors);
-          // TODO: 之後可以顯示錯誤訊息給使用者
           alert('檔案驗證錯誤:\n' + errors.join('\n'));
         }
         
         if (validFiles.length > 0) {
-          console.log('有效的檔案:', validFiles);
           setSelectedFiles(prev => [...prev, ...validFiles]);
           
-          // 建立本地預覽 URLs
           const newPreviewUrls: string[] = [];
           for (const file of validFiles) {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (e): void => {
               if (e.target?.result && typeof e.target.result === 'string') {
                 newPreviewUrls.push(e.target.result);
                 if (newPreviewUrls.length === validFiles.length) {
@@ -178,27 +160,24 @@ export function ChatbotFooter(): ReactNode {
                 }
               }
             };
+
             reader.readAsDataURL(file);
-            console.log(`✓ ${file.name} (${file.type}, ${(file.size / 1024).toFixed(2)} KB)`);
           }
         }
       }
       
-      // 清空 input 值，允許重複選擇相同檔案
       event.target.value = '';
     },
     []
   );
 
   const handleGalleryClick = useCallback(() => {
-    console.log('Gallery clicked - opening file selector');
     fileInputRef.current?.click();
   }, []);
 
   const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
-    console.log(`移除檔案 index: ${index}`);
   }, []);
 
   useEffect(() => {
@@ -216,95 +195,29 @@ export function ChatbotFooter(): ReactNode {
       className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
       style={chatbot.footer?.style}
     >
-      {/* 檔案預覽列表 - 獨立區域 */}
       {selectedFiles.length > 0 && (
-        <div style={{
-          width: '100%',
-          maxWidth: contentStyles.maxWidth,
-          margin: '0 auto',
-          padding: '12px',
-          paddingBottom: '0'
-        }}>
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            flexWrap: 'wrap'
-          }}>
+        <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
+          <div className={styles.file_preview_grid}>
             {selectedFiles.map((file, index) => {
-              // 建立預覽 URL
               const previewUrl = URL.createObjectURL(file);
               
               return (
-                <div key={index} style={{
-                  position: 'relative',
-                  width: '180px',
-                  background: '#2d2d2d',
-                  border: '1px solid #3d3d3d',
-                  borderRadius: '8px',
-                  overflow: 'hidden'
-                }}>
-                  {/* 圖片預覽區 */}
-                  <div style={{
-                    width: '100%',
-                    height: '120px',
-                    background: '#1a1a1a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative'
-                  }}>
+                <div key={index} className={styles.file_preview_item}>
+                  <div className={styles.file_preview_image_area}>
                     <img 
                       src={previewUrl}
                       alt={file.name}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'contain',
-                        cursor: 'pointer',
-                        transition: 'opacity 0.2s'
-                      }}
+                      className={styles.file_preview_image}
                       onClick={() => {
-                        // 建立新的預覽 URL 給 Modal 使用
                         const modalUrl = URL.createObjectURL(file);
                         setPreviewImage({ url: modalUrl, name: file.name });
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = '0.8';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = '1';
                       }}
                       onLoad={() => URL.revokeObjectURL(previewUrl)}
                     />
                     
-                    {/* 移除按鈕 */}
                     <button
                       onClick={() => handleRemoveFile(index)}
-                      style={{
-                        position: 'absolute',
-                        top: '6px',
-                        right: '6px',
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '4px',
-                        background: 'rgba(0, 0, 0, 0.7)',
-                        backdropFilter: 'blur(4px)',
-                        color: 'white',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '14px',
-                        padding: 0,
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.9)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
-                      }}
+                      className={styles.file_remove_button}
                       aria-label="移除"
                     >
                       ×
@@ -318,31 +231,21 @@ export function ChatbotFooter(): ReactNode {
       )}
       
       <div className={styles.chatbot_footer__content} style={contentStyles}>
-        {/* 隱藏的檔案輸入 */}
         <input
           ref={fileInputRef}
           type="file"
           multiple
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           onChange={handleFileSelect}
-          style={{ display: 'none' }}
+          className={styles.file_input_hidden}
         />
         
         <div className={styles.attachment_buttons}>
-          {/* <button
-            className={styles.attachment_button}
-            onClick={() => console.log('Camera clicked')}
-            disabled={isConnecting}
-            title="拍照"
-          >
-            <CameraSvg />
-          </button> */}
           <button
             className={styles.attachment_button}
             onClick={handleGalleryClick}
             disabled={isConnecting}
             title="選擇照片"
-            style={{ position: 'relative' }}
           >
             <GallerySvg />
           </button>
@@ -384,24 +287,10 @@ export function ChatbotFooter(): ReactNode {
         )}
       </div>
       
-      {/* 圖片放大預覽 Modal */}
       {previewImage && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-          }}
+          className={styles.image_modal}
           onClick={() => {
-            // 釋放 Modal 的預覽 URL
             if (previewImage.url) {
               URL.revokeObjectURL(previewImage.url);
             }
@@ -409,42 +298,19 @@ export function ChatbotFooter(): ReactNode {
             setPreviewImage(null);
           }}
         >
-          {/* 圖片和檔名容器 */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '16px'
-          }}>
-            {/* 圖片 */}
+          <div className={styles.image_modal_content}>
             <img
               src={previewImage.url}
               alt={previewImage.name}
-              style={{
-                maxWidth: '90vw',
-                maxHeight: '75vh',
-                objectFit: 'contain',
-                borderRadius: '8px',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)'
-              }}
+              className={styles.image_modal_image}
               onClick={(e) => e.stopPropagation()}
             />
             
-            {/* 檔名顯示 */}
-            <div style={{
-              color: 'white',
-              fontSize: '14px',
-              padding: '8px 16px',
-              background: 'rgba(0, 0, 0, 0.5)',
-              borderRadius: '8px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}>
+            <div className={styles.image_modal_filename}>
               {previewImage.name}
             </div>
           </div>
           
-          {/* 關閉按鈕 */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -454,34 +320,7 @@ export function ChatbotFooter(): ReactNode {
 
               setPreviewImage(null);
             }}
-            
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '20px',
-              padding: 0,
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            className={styles.image_modal_close_button}
             aria-label="關閉預覽"
           >
             ✕
