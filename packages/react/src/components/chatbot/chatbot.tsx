@@ -23,7 +23,7 @@ import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 
-type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error';
+type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalidApiKey';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
@@ -123,6 +123,24 @@ export const Chatbot = forwardRef(function Chatbot(
           </div>
         );
       
+      case 'invalidApiKey':
+        return (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            flex: 1,
+            padding: '20px'
+          }}>
+            <ApiKeyInput
+              title={title}
+              onSubmit={onApiKeySubmit || (() => {})}
+              placeholder="Enter your key"
+              error="Please check if the key is correct."
+            />
+          </div>
+        );
+      
       case 'error':
         return (
           <div style={{ 
@@ -159,7 +177,7 @@ export const Chatbot = forwardRef(function Chatbot(
   };
 
   // Don't initialize SSE connection when explicitly needing API key or in error state
-  if (authState !== 'needApiKey' && authState !== 'error') {
+  if (authState !== 'needApiKey' && authState !== 'error' && authState !== 'invalidApiKey') {
     return (
       <AsgardAppInitializationContextProvider
         enabled={enableLoadConfigFromService}
