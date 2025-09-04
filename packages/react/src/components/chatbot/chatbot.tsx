@@ -17,13 +17,12 @@ import {
   AsgardAppInitializationContextProvider,
   AsgardServiceContextProviderProps,
 } from '../../context';
+import { AuthState } from '@asgard-js/core';
 import { ApiKeyInput } from './api-key-input';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
-
-type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalidApiKey';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
