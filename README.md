@@ -89,6 +89,21 @@ const App = () => {
 export default App;
 ```
 
+### File Upload Feature
+
+The SDK supports image upload with drag & drop, multiple file selection, and preview functionality.
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  // File upload automatically enabled
+/>
+```
+
 ## Migration from `endpoint` to `botProviderEndpoint`
 
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
