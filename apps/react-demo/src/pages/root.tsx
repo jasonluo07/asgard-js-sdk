@@ -1,6 +1,6 @@
 import { Chatbot, ChatbotRef } from '@asgard-js/react';
 import { ReactNode, useCallback, useRef, useState } from 'react';
-import { ConversationMessage } from '@asgard-js/core';
+import { ConversationMessage, AuthState } from '@asgard-js/core';
 import {
   createButtonTemplateExample,
   createCarouselTemplateExample,
@@ -16,7 +16,7 @@ const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
   const [isOpen, setIsOpen] = useState(true);
-  const [authState, setAuthState] = useState<'loading' | 'needApiKey' | 'authenticated' | 'error'>('authenticated');
+  const [authState, setAuthState] = useState<AuthState>('authenticated');
 
   const [initMessages] = useState<ConversationMessage[]>([
     createTextTemplateExample(),
@@ -32,6 +32,18 @@ export function Root(): ReactNode {
   const chatbotRef = useRef<ChatbotRef>(null);
   const fetchContextForInitialization = useCallback(() => {
     return Promise.resolve('init');
+  }, []);
+
+  const handleApiKeySubmit = useCallback(async (apiKey: string) => {
+    console.log('Demo: API Key submitted:', apiKey);
+    // Simulate API key validation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (apiKey === 'wrong-key') {
+      setAuthState('invalidApiKey');
+    } else {
+      setAuthState('authenticated');
+    }
   }, []);
 
   return (
@@ -104,9 +116,9 @@ export function Root(): ReactNode {
             padding: '0.3rem 0.8rem',
             fontSize: '12px'
           }}
-          onClick={() => setAuthState('error')}
+          onClick={() => setAuthState('invalidApiKey')}
         >
-          Error
+          Invalid API Key
         </button>
       </div>
       <div style={{ width: '800px', position: 'relative' }}>
@@ -158,6 +170,7 @@ export function Root(): ReactNode {
             
             // Auth state prop
             authState={authState}
+            onApiKeySubmit={handleApiKeySubmit}
             onClose={() => {
               setIsOpen(false);
             }}
