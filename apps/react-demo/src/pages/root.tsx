@@ -64,7 +64,7 @@ export function Root(): ReactNode {
           setIsOpen((prev) => !prev);
         }}
       >
-        Toggle Chatbot
+        Toggle
       </button>
       
       <div style={{ position: 'fixed', top: '1rem', left: '1rem', zIndex: 11, display: 'flex', gap: '8px', flexDirection: 'column' }}>
@@ -185,7 +185,7 @@ export function Root(): ReactNode {
                 "borderColor": "#434343",
                 "inactiveColor": "#8C8C8C",
                 "primaryComponent": {
-                  "mainColor": "##ebe246",
+                  "mainColor": "#ebe246",
                   "secondaryColor": "#FFFFFF"
                 }
               },
