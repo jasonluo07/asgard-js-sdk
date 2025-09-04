@@ -1,4 +1,4 @@
-.container {
+.api_key_input {
   width: 220px;
   background-color: var(--asg-color-bg);
   border-radius: 12px;
@@ -6,7 +6,7 @@
   border: 0.5px solid var(--asg-color-border);
 }
 
-.header {
+.api_key_input__header {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -14,38 +14,38 @@
   margin-bottom: 12px;
 }
 
-.icon {
+.api_key_input__icon {
   width: 24px;
   height: 24px;
 }
 
-.title {
+.api_key_input__title {
   margin: 0;
   font-size: 18px;
   font-weight: 500;
   color: white;
 }
 
-.form {
+.api_key_input__form {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.label {
+.api_key_input__label {
   display: block;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 8px;
 }
 
-.inputWrapper {
+.api_key_input__input_wrapper {
   position: relative;
   width: 100%;
 }
 
-.input {
+.api_key_input__input {
   width: 100%;
   height: 42px;
   padding: 0 40px 0 12px;
@@ -68,18 +68,18 @@
     background: rgba(255, 255, 255, 0.08);
   }
 
-  &.error {
+  &--error {
     border-color: rgba(255, 69, 58, 0.6);
     background: rgba(255, 69, 58, 0.05);
   }
 
-  &.disabled {
+  &--disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 }
 
-.toggleButton {
+.api_key_input__toggle_button {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -106,18 +106,18 @@
   }
 }
 
-.toggleIcon {
+.api_key_input__toggle_icon {
   width: 16px;
   height: 16px;
 }
 
-.errorMessage {
+.api_key_input__error_message {
   margin-top: 6px;
   font-size: 12px;
   color: rgba(255, 69, 58, 0.8);
 }
 
-.submitButton {
+.api_key_input__submit_button {
   width: 100%;
   height: 42px;
   border: none;
@@ -130,14 +130,6 @@
   transition: all 0.2s ease;
   outline: none;
 
-  &:hover:not(:disabled) {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
 
   &:disabled {
     opacity: 0.5;
@@ -145,7 +137,7 @@
     transform: none;
   }
 
-  &.loading {
+  &--loading {
     position: relative;
     color: transparent;
 
@@ -177,7 +169,7 @@
 
 // 響應式設計
 @media (max-width: 280px) {
-  .container {
+  .api_key_input {
     width: 100%;
     min-width: 200px;
   }

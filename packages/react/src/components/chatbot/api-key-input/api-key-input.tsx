@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { ProfileIcon } from '../profile-icon';
+import EyeSvg from '../../../icons/eye.svg?react';
+import EyeOffSvg from '../../../icons/eye-off.svg?react';
 import styles from './api-key-input.module.scss';
 
 export interface ApiKeyInputProps {
@@ -46,29 +48,29 @@ export function ApiKeyInput({
 
   return (
     <div 
-      className={clsx(styles.container, className)}
+      className={clsx(styles.api_key_input, className)}
       style={{
         backgroundColor: chatbot.backgroundColor,
         borderColor: chatbot.borderColor,
       }}
     >
-      <div className={styles.header}>
+      <div className={styles.api_key_input__header}>
         <ProfileIcon avatar={avatar} />
-        <h2 className={styles.title} style={chatbot?.header?.title?.style}>{title}</h2>
+        <h2 className={styles.api_key_input__title} style={chatbot?.header?.title?.style}>{title}</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.api_key_input__form}>
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Key</label>
-          <div className={styles.inputWrapper}>
+          <label className={styles.api_key_input__label}>Key</label>
+          <div className={styles.api_key_input__input_wrapper}>
             <input
               type={showPassword ? 'text' : 'password'}
               value={apiKey}
               onChange={handleInputChange}
               placeholder={placeholder}
-              className={clsx(styles.input, {
-                [styles.error]: error,
-                [styles.disabled]: loading,
+              className={clsx(styles.api_key_input__input, {
+                [styles['api_key_input__input--error']]: error,
+                [styles['api_key_input__input--disabled']]: loading,
               })}
               disabled={loading}
               autoComplete="off"
@@ -77,44 +79,26 @@ export function ApiKeyInput({
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className={styles.toggleButton}
+                className={styles.api_key_input__toggle_button}
                 disabled={loading}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                <svg
-                  className={styles.toggleIcon}
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {showPassword ? (
-                    <>
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </>
-                  ) : (
-                    <>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </>
-                  )}
-                </svg>
+                {showPassword ? (
+                  <EyeOffSvg className={styles.api_key_input__toggle_icon} />
+                ) : (
+                  <EyeSvg className={styles.api_key_input__toggle_icon} />
+                )}
               </button>
             )}
           </div>
-          {error && <div className={styles.errorMessage}>{error}</div>}
+          {error && <div className={styles.api_key_input__error_message}>{error}</div>}
         </div>
 
         <button
           type="submit"
           disabled={!apiKey.trim() || loading}
-          className={clsx(styles.submitButton, {
-            [styles.loading]: loading,
+          className={clsx(styles.api_key_input__submit_button, {
+            [styles['api_key_input__submit_button--loading']]: loading,
           })}
           style={{
             backgroundColor: chatbot?.mainColor,
