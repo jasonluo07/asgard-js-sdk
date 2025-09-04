@@ -1,5 +1,7 @@
 import { Chatbot, ChatbotRef } from '@asgard-js/react';
 import { ReactNode, useCallback, useRef, useState } from 'react';
+import clsx from 'clsx';
+import styles from './root.module.scss';
 import { ConversationMessage, AuthState } from '@asgard-js/core';
 import {
   createButtonTemplateExample,
@@ -67,55 +69,27 @@ export function Root(): ReactNode {
         Toggle
       </button>
       
-      <div style={{ position: 'fixed', top: '1rem', left: '1rem', zIndex: 11, display: 'flex', gap: '8px', flexDirection: 'column' }}>
+      <div className={styles.root__debug_panel}>
         <button
-          style={{
-            border: '1px solid blue',
-            borderRadius: '5px',
-            color: 'blue',
-            cursor: 'pointer',
-            padding: '0.3rem 0.8rem',
-            fontSize: '12px'
-          }}
+          className={clsx(styles.root__debug_button, styles['root__debug_button--authenticated'])}
           onClick={() => setAuthState('authenticated')}
         >
           Authenticated
         </button>
         <button
-          style={{
-            border: '1px solid orange',
-            borderRadius: '5px',
-            color: 'orange',
-            cursor: 'pointer',
-            padding: '0.3rem 0.8rem',
-            fontSize: '12px'
-          }}
+          className={clsx(styles.root__debug_button, styles['root__debug_button--need-api-key'])}
           onClick={() => setAuthState('needApiKey')}
         >
           Need API Key
         </button>
         <button
-          style={{
-            border: '1px solid gray',
-            borderRadius: '5px',
-            color: 'gray',
-            cursor: 'pointer',
-            padding: '0.3rem 0.8rem',
-            fontSize: '12px'
-          }}
+          className={clsx(styles.root__debug_button, styles['root__debug_button--loading'])}
           onClick={() => setAuthState('loading')}
         >
           Loading
         </button>
         <button
-          style={{
-            border: '1px solid red',
-            borderRadius: '5px',
-            color: 'red',
-            cursor: 'pointer',
-            padding: '0.3rem 0.8rem',
-            fontSize: '12px'
-          }}
+          className={clsx(styles.root__debug_button, styles['root__debug_button--invalid-api-key'])}
           onClick={() => setAuthState('invalidApiKey')}
         >
           Invalid API Key

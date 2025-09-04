@@ -18,11 +18,13 @@ import {
   AsgardServiceContextProviderProps,
 } from '../../context';
 import { AuthState } from '@asgard-js/core';
+import clsx from 'clsx';
 import { ApiKeyInput } from './api-key-input';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
+import styles from './chatbot.module.scss';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
@@ -94,26 +96,14 @@ export const Chatbot = forwardRef(function Chatbot(
     switch (authState) {
       case 'loading':
         return (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flex: 1,
-            padding: '20px'
-          }}>
+          <div className={styles.chatbot__auth_state_container}>
             {loadingComponent || <div>Loading...</div>}
           </div>
         );
       
       case 'needApiKey':
         return (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flex: 1,
-            padding: '20px'
-          }}>
+          <div className={styles.chatbot__auth_state_container}>
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || (() => {})}
@@ -124,13 +114,7 @@ export const Chatbot = forwardRef(function Chatbot(
       
       case 'invalidApiKey':
         return (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flex: 1,
-            padding: '20px'
-          }}>
+          <div className={styles.chatbot__auth_state_container}>
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || (() => {})}
@@ -142,17 +126,10 @@ export const Chatbot = forwardRef(function Chatbot(
       
       case 'error':
         return (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            flex: 1,
-            padding: '20px',
-            color: '#ff6b6b'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '16px', marginBottom: '8px' }}>⚠️</div>
-              <div>Something went wrong. Please try again later.</div>
+          <div className={clsx(styles.chatbot__auth_state_container, styles.chatbot__error_state)}>
+            <div className={styles.chatbot__error_state__content}>
+              <div className={styles.chatbot__error_state__icon}>⚠️</div>
+              <div className={styles.chatbot__error_state__message}>Something went wrong. Please try again later.</div>
             </div>
           </div>
         );
