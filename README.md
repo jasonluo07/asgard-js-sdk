@@ -89,6 +89,45 @@ const App = () => {
 export default App;
 ```
 
+### API Key Authentication
+
+For embedded applications that require dynamic API key input, you can use the authentication state management:
+
+```javascript
+import React, { useState } from 'react';
+import { Chatbot } from '@asgard-js/react';
+import { AuthState } from '@asgard-js/core';
+
+const EmbedApp = () => {
+  const [authState, setAuthState] = useState<AuthState>('needApiKey');
+
+  const handleApiKeySubmit = async (apiKey: string) => {
+    setAuthState('loading');
+    
+    try {
+      // Validate the API key (implement your validation logic)
+      const isValid = await validateApiKey(apiKey);
+      setAuthState(isValid ? 'authenticated' : 'invalidApiKey');
+    } catch (error) {
+      setAuthState('error');
+    }
+  };
+
+  return (
+    <Chatbot
+      title="Asgard AI Assistant"
+      authState={authState}
+      onApiKeySubmit={handleApiKeySubmit}
+      config={{
+        botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+        // Note: Don't set apiKey here when using dynamic authentication
+      }}
+      customChannelId="embed-channel"
+    />
+  );
+};
+```
+
 ## Migration from `endpoint` to `botProviderEndpoint`
 
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
@@ -127,7 +166,7 @@ config: {
 
 - **title?**: `string` - The title of the chatbot (optional). If not provided, will use the value from the API if available.
 - **config**: `ClientConfig` - Configuration object for the Asgard service client, including:
-  - `apiKey`: `string` (required) - API key for authentication
+  - `apiKey?`: `string` (optional) - API key for authentication. Can be omitted when using dynamic authentication
   - `botProviderEndpoint`: `string` (required) - Bot provider endpoint URL (SSE endpoint will be auto-derived)
   - `endpoint?`: `string` (deprecated) - Legacy API endpoint URL. Use `botProviderEndpoint` instead.
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
@@ -150,6 +189,8 @@ config: {
 - **botTypingPlaceholder**: `string` - Text to display while the bot is typing
 - **defaultLinkTarget?**: `'_blank' | '_self' | '_parent' | '_top'` - Default target for opening URIs when not specified by the API. Defaults to `'_blank'` (opens in new tab).
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
+- **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`
+- **onApiKeySubmit?**: `(apiKey: string) => Promise<void>` - Callback function when user submits API key for authentication
 - **onReset**: `() => void` - Callback function when chat is reset
 - **onClose**: `() => void` - Callback function when chat is closed
 - **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
