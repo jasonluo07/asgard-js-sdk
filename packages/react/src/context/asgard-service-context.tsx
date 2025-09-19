@@ -61,7 +61,7 @@ export interface AsgardServiceContextProviderProps {
   delayTime?: number;
   initMessages?: ConversationMessage[];
   onSseMessage?: UseChannelProps['onSseMessage'];
-  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: any }) => void;
+  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
 }
 
 export function AsgardServiceContextProvider(
