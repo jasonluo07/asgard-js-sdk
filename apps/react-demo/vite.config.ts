@@ -1,10 +1,11 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import { defineConfig as defineVitestConfig, mergeConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import svgr from 'vite-plugin-svgr';
 
-export default defineConfig({
+const viteConfig = defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/react-demo',
   server: {
@@ -16,6 +17,13 @@ export default defineConfig({
     host: 'localhost',
   },
   plugins: [react(), svgr(), nxViteTsPaths()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler'
+      }
+    }
+  },
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
@@ -28,6 +36,9 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
+});
+
+const vitestConfig = defineVitestConfig({
   test: {
     watch: false,
     globals: true,
@@ -40,3 +51,5 @@ export default defineConfig({
     },
   },
 });
+
+export default mergeConfig(viteConfig, vitestConfig);
