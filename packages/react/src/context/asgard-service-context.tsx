@@ -63,6 +63,7 @@ export interface AsgardServiceContextProviderProps {
   delayTime?: number;
   initMessages?: ConversationMessage[];
   onSseMessage?: UseChannelProps['onSseMessage'];
+  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: any }) => void;
 }
 
 export function AsgardServiceContextProvider(
@@ -78,6 +79,7 @@ export function AsgardServiceContextProvider(
     customChannelId,
     initMessages,
     onSseMessage,
+    onAuthError,
   } = props;
 
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,7 @@ export function AsgardServiceContextProvider(
     customChannelId,
     initMessages,
     onSseMessage,
+    onAuthError,
   });
 
   const contextValue = useMemo(

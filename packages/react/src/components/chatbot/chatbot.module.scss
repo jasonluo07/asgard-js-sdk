@@ -1,0 +1,24 @@
+.chatbot__auth_state_container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 20px;
+}
+
+.chatbot__error_state {
+  color: #ff6b6b;
+}
+
+.chatbot__error_state__content {
+  text-align: center;
+}
+
+.chatbot__error_state__icon {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.chatbot__error_state__message {
+  // No additional styles needed - uses default text styling
+}

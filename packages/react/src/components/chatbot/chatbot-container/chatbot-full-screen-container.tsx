@@ -20,11 +20,11 @@ export function ChatbotFullScreenContainer(
 
   usePreventOverScrolling(containerRef);
 
-  useOnScreenKeyboardScrollFix();
-
   const [, height] = useViewportSize() ?? [];
 
   const isOnScreenKeyboardOpen = useIsOnScreenKeyboardOpen();
+
+  useOnScreenKeyboardScrollFix(isOnScreenKeyboardOpen);
 
   const styles = useMemo(() => {
     return Object.assign(

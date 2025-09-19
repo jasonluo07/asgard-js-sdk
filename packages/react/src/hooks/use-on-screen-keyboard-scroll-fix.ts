@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 
-export function useOnScreenKeyboardScrollFix(): void {
+export function useOnScreenKeyboardScrollFix(isOnScreenKeyboardOpen: boolean): void {
   useEffect(() => {
+    if (!isOnScreenKeyboardOpen) return;
+
     function handleScroll(): void {
       window.scrollTo(0, 0);
     }
@@ -11,5 +13,5 @@ export function useOnScreenKeyboardScrollFix(): void {
     return (): void => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [isOnScreenKeyboardOpen]);
 }

@@ -106,7 +106,7 @@ const client = new AsgardServiceClient({
 
 ## API Reference
 
-The core package exports three main classes for different levels of abstraction:
+The core package exports three main classes for different levels of abstraction and includes authentication types for dynamic API key management:
 
 ### AsgardServiceClient
 
@@ -114,7 +114,7 @@ The main client class for interacting with the Asgard AI platform.
 
 #### Constructor Options (ClientConfig)
 
-- **apiKey**: `string` (required) - API key for authentication
+- **apiKey**: `string` (optional) - API key for authentication. Can be provided later via dynamic authentication
 - **botProviderEndpoint**: `string` (required) - Bot provider endpoint URL (SSE endpoint will be auto-derived)
 - **endpoint?**: `string` (deprecated) - Legacy API endpoint URL. Use `botProviderEndpoint` instead.
 - **debugMode?**: `boolean` - Enable debug mode for deprecation warnings, defaults to `false`
@@ -237,6 +237,7 @@ const updatedConversation = conversation.pushMessage(userMessage);
 console.log('Messages:', Array.from(updatedConversation.messages.values()));
 ```
 
+
 ### File Upload API
 
 The core package includes file upload capabilities for sending images through the chatbot.
@@ -258,6 +259,42 @@ if (uploadResponse.isSuccess && uploadResponse.data[0]) {
 ```
 
 **Note**: `uploadFile` is optional - check `client.uploadFile` exists before use. Supports JPEG, PNG, GIF, WebP up to 20MB.
+
+### Authentication Types
+
+The core package includes authentication-related types for dynamic API key management:
+
+#### AuthState
+
+Authentication state management for applications requiring dynamic API key input:
+
+```typescript
+type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalidApiKey';
+```
+
+**States:**
+- **`loading`**: Authentication in progress
+- **`needApiKey`**: User needs to provide API key
+- **`authenticated`**: Successfully authenticated
+- **`error`**: General authentication error
+- **`invalidApiKey`**: API key is invalid
+
+**Usage:**
+```typescript
+import { AuthState } from '@asgard-js/core';
+
+function handleAuthState(state: AuthState) {
+  switch (state) {
+    case 'needApiKey':
+      // Show API key input interface
+      break;
+    case 'authenticated':
+      // Initialize chatbot normally
+      break;
+    // Handle other states...
+  }
+}
+```
 
 ## Testing
 

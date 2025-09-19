@@ -1,4 +1,9 @@
-import { forwardRef, ForwardedRef, ReactNode, CSSProperties } from 'react';
+import {
+  forwardRef,
+  ForwardedRef,
+  ReactNode,
+  CSSProperties,
+} from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   AsgardThemeContextProvider,
@@ -12,10 +17,14 @@ import {
   AsgardAppInitializationContextProvider,
   AsgardServiceContextProviderProps,
 } from '../../context';
+import { AuthState } from '@asgard-js/core';
+import clsx from 'clsx';
+import { ApiKeyInput } from './api-key-input';
 import { ChatbotHeader } from './chatbot-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
+import styles from './chatbot.module.scss';
 
 interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
@@ -38,6 +47,11 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   onClose?: () => void;
   loadingComponent?: ReactNode;
   defaultLinkTarget?: '_blank' | '_self' | '_parent' | '_top';
+  
+  // Auth state props
+  authState?: AuthState;
+  onApiKeySubmit?: (apiKey: string) => Promise<void>;
+  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: any }) => void;
 }
 
 export interface ChatbotRef {
@@ -72,38 +86,58 @@ export const Chatbot = forwardRef(function Chatbot(
     className,
     style,
     defaultLinkTarget,
+    authState = 'authenticated',
+    onApiKeySubmit,
+    onAuthError,
   } = props;
 
-  return (
-    <AsgardAppInitializationContextProvider
-      enabled={enableLoadConfigFromService}
-      config={config}
-      asyncInitializers={asyncInitializers}
-      loadingComponent={loadingComponent}
-    >
-      <AsgardThemeContextProvider theme={theme}>
-        <AsgardServiceContextProvider
-          parentRef={ref}
-          avatar={avatar}
-          config={config}
-          customChannelId={customChannelId}
-          initMessages={initMessages}
-          onSseMessage={onSseMessage}
-          botTypingPlaceholder={botTypingPlaceholder}
-          inputPlaceholder={inputPlaceholder}
-        >
-          <ChatbotContainer
-            fullScreen={fullScreen}
-            className={className}
-            style={style}
-          >
-            <ChatbotHeader
+  // Render different content based on authState
+  const renderContent = () => {
+    switch (authState) {
+      case 'loading':
+        return (
+          <div className={styles.chatbot__auth_state_container}>
+            {loadingComponent || <div>Loading...</div>}
+          </div>
+        );
+      
+      case 'needApiKey':
+        return (
+          <div className={styles.chatbot__auth_state_container}>
+            <ApiKeyInput
               title={title}
-              onReset={onReset}
-              onClose={onClose}
-              customActions={customActions}
-              maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+              onSubmit={onApiKeySubmit || (() => {})}
+              placeholder="Enter your key"
             />
+          </div>
+        );
+      
+      case 'invalidApiKey':
+        return (
+          <div className={styles.chatbot__auth_state_container}>
+            <ApiKeyInput
+              title={title}
+              onSubmit={onApiKeySubmit || (() => {})}
+              placeholder="Enter your key"
+              error="Please check if the key is correct."
+            />
+          </div>
+        );
+      
+      case 'error':
+        return (
+          <div className={clsx(styles.chatbot__auth_state_container, styles.chatbot__error_state)}>
+            <div className={styles.chatbot__error_state__content}>
+              <div className={styles.chatbot__error_state__icon}>⚠️</div>
+              <div className={styles.chatbot__error_state__message}>Something went wrong. Please try again later.</div>
+            </div>
+          </div>
+        );
+      
+      case 'authenticated':
+      default:
+        return (
+          <>
             <AsgardTemplateContextProvider
               onErrorClick={onErrorClick}
               errorMessageRenderer={errorMessageRenderer}
@@ -113,9 +147,81 @@ export const Chatbot = forwardRef(function Chatbot(
               <ChatbotBody />
             </AsgardTemplateContextProvider>
             <ChatbotFooter />
-          </ChatbotContainer>
-        </AsgardServiceContextProvider>
-      </AsgardThemeContextProvider>
-    </AsgardAppInitializationContextProvider>
+          </>
+        );
+    }
+  };
+
+  // Don't initialize SSE connection when explicitly needing API key or in error state
+  if (authState !== 'needApiKey' && authState !== 'error' && authState !== 'invalidApiKey') {
+    return (
+      <AsgardAppInitializationContextProvider
+        enabled={enableLoadConfigFromService}
+        config={config}
+        asyncInitializers={asyncInitializers}
+        loadingComponent={loadingComponent}
+      >
+        <AsgardThemeContextProvider theme={theme}>
+          <AsgardServiceContextProvider
+            parentRef={ref}
+            avatar={avatar}
+            config={config}
+            customChannelId={customChannelId}
+            initMessages={initMessages}
+            onSseMessage={onSseMessage}
+            onAuthError={onAuthError}
+            botTypingPlaceholder={botTypingPlaceholder}
+            inputPlaceholder={inputPlaceholder}
+          >
+            <ChatbotContainer
+              fullScreen={fullScreen}
+              className={className}
+              style={style}
+            >
+              <ChatbotHeader
+                title={title}
+                onReset={onReset}
+                onClose={onClose}
+                customActions={customActions}
+                maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+              />
+              {renderContent()}
+            </ChatbotContainer>
+          </AsgardServiceContextProvider>
+        </AsgardThemeContextProvider>
+      </AsgardAppInitializationContextProvider>
+    );
+  }
+
+  // For non-authenticated states, provide AsgardServiceContextProvider but without SSE connection
+  return (
+    <AsgardThemeContextProvider theme={theme}>
+      <AsgardServiceContextProvider
+        parentRef={ref}
+        avatar={avatar}
+        config={config}
+        customChannelId={customChannelId}
+        initMessages={initMessages}
+        onSseMessage={onSseMessage}
+        onAuthError={onAuthError}
+        botTypingPlaceholder={botTypingPlaceholder}
+        inputPlaceholder={inputPlaceholder}
+      >
+        <ChatbotContainer
+          fullScreen={fullScreen}
+          className={className}
+          style={style}
+        >
+          <ChatbotHeader
+            title={title}
+            onReset={onReset}
+            onClose={onClose}
+            customActions={customActions}
+            maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+          />
+          {renderContent()}
+        </ChatbotContainer>
+      </AsgardServiceContextProvider>
+    </AsgardThemeContextProvider>
   );
 });

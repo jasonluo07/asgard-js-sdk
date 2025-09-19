@@ -12,6 +12,8 @@ yarn add @asgard-js/core @asgard-js/react
 
 ## Usage
 
+### Basic Usage
+
 Here's a basic example of how to use the React components:
 
 ```javascript
@@ -107,6 +109,46 @@ The Chatbot component includes built-in file upload capabilities for sending ima
 
 **Features**: Multiple file selection, drag & drop support, file preview, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file.
 
+### API Key Authentication
+
+For applications that need dynamic API key input (such as embedded chatbots), you can use the authentication state management:
+
+```javascript
+import React, { useState } from 'react';
+import { Chatbot } from '@asgard-js/react';
+import { AuthState } from '@asgard-js/core';
+
+const EmbedApp = () => {
+  const [authState, setAuthState] = useState<AuthState>('needApiKey');
+
+  const handleApiKeySubmit = async (apiKey: string) => {
+    setAuthState('loading');
+    
+    try {
+      // Validate the API key (implement your validation logic)
+      const isValid = await validateApiKey(apiKey);
+      setAuthState(isValid ? 'authenticated' : 'invalidApiKey');
+    } catch (error) {
+      setAuthState('error');
+    }
+  };
+
+  return (
+    <Chatbot
+      title="Asgard AI Assistant"
+      authState={authState}
+      onApiKeySubmit={handleApiKeySubmit}
+      config={{
+        botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+        // Note: Don't set apiKey here when using dynamic authentication
+      }}
+      customChannelId="embed-channel"
+      fullScreen={false}
+    />
+  );
+};
+```
+
 ## Migration from `endpoint` to `botProviderEndpoint`
 
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
@@ -143,7 +185,7 @@ config: {
 
 - **title?**: `string` - The title of the chatbot (optional). If not provided, will use the value from the API if available.
 - **config**: `ClientConfig` - Configuration object for the Asgard service client, including:
-  - `apiKey`: `string` (required) - API key for authentication
+  - `apiKey?`: `string` (optional) - API key for authentication. Can be omitted when using dynamic authentication
   - `botProviderEndpoint`: `string` (required) - Bot provider endpoint URL (SSE endpoint will be auto-derived)
   - `endpoint?`: `string` (deprecated) - Legacy API endpoint URL. Use `botProviderEndpoint` instead.
   - `transformSsePayload?`: `(payload: FetchSsePayload) => FetchSsePayload` - SSE payload transformer
@@ -169,6 +211,8 @@ config: {
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
 - **onReset**: `() => void` - Callback function when chat is reset
 - **onClose**: `() => void` - Callback function when chat is closed
+- **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`
+- **onApiKeySubmit?**: `(apiKey: string) => Promise<void>` - Callback function when user submits API key for authentication
 - **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
 - **ref**: `ForwardedRef<ChatbotRef>` - Forwarded ref to access the chatbot instance. It can be used to access the chatbot instance and do some actions like sending messages to the bot. ChatbotRef extends the ref of the chatbot instance and provides some additional methods like `serviceContext.sendMessage` to interact with the chatbot instance.
 
