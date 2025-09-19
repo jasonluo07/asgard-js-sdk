@@ -403,7 +403,7 @@ export function AsgardThemeContextProvider(
       });
 
       // Handle theme prop that contains backend format (like themeFromAnnotations)
-      const propsTheme = theme as any; // Cast to handle backend format
+      const propsTheme = theme as Partial<AsgardThemeContextValue> & Record<string, unknown>;
       const propsHasBackendFormat = propsTheme.chatbot?.primaryComponent || propsTheme.chatbot?.backgroundColor || propsTheme.botMessage || propsTheme.userMessage;
       
       if (propsHasBackendFormat) {

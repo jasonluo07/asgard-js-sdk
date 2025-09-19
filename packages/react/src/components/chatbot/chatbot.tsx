@@ -51,7 +51,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   // Auth state props
   authState?: AuthState;
   onApiKeySubmit?: (apiKey: string) => Promise<void>;
-  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: any }) => void;
+  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
 }
 
 export interface ChatbotRef {
@@ -92,7 +92,7 @@ export const Chatbot = forwardRef(function Chatbot(
   } = props;
 
   // Render different content based on authState
-  const renderContent = () => {
+  const renderContent = (): React.ReactElement => {
     switch (authState) {
       case 'loading':
         return (
@@ -106,7 +106,7 @@ export const Chatbot = forwardRef(function Chatbot(
           <div className={styles.chatbot__auth_state_container}>
             <ApiKeyInput
               title={title}
-              onSubmit={onApiKeySubmit || (() => {})}
+              onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
               placeholder="Enter your key"
             />
           </div>
@@ -117,7 +117,7 @@ export const Chatbot = forwardRef(function Chatbot(
           <div className={styles.chatbot__auth_state_container}>
             <ApiKeyInput
               title={title}
-              onSubmit={onApiKeySubmit || (() => {})}
+              onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
               placeholder="Enter your key"
               error="Please check if the key is correct."
             />
@@ -128,7 +128,7 @@ export const Chatbot = forwardRef(function Chatbot(
         return (
           <div className={clsx(styles.chatbot__auth_state_container, styles.chatbot__error_state)}>
             <div className={styles.chatbot__error_state__content}>
-              <div className={styles.chatbot__error_state__icon}>⚠️</div>
+              <div className={styles.chatbot__error_state__icon}><span role="img" aria-label="warning">⚠️</span></div>
               <div className={styles.chatbot__error_state__message}>Something went wrong. Please try again later.</div>
             </div>
           </div>

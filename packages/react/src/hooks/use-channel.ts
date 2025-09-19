@@ -23,7 +23,7 @@ export interface UseChannelProps {
       conversation: Conversation | null;
     }
   ) => void;
-  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: any }) => void;
+  onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
 }
 
 export interface UseChannelReturn {
@@ -94,7 +94,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             setIsResetting(false);
             // Handle authentication and bot provider errors
             if (error && typeof error === 'object' && ('isAuthError' in error || 'isBotProviderError' in error)) {
-              onAuthError?.(error as any);
+              onAuthError?.(error as { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown });
             }
           },
           onSseMessage(response: SseResponse<EventType>) {
