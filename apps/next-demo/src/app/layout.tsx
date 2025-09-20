@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import '@asgard-js/react/style';
 
 export const metadata: Metadata = {
   title: 'Asgard Next.js Demo',

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChatbotButton, TestComponent } from '~/components';
+import { TestComponent, SimpleChatbot } from '~/components';
 
 export default function Home() {
   return (
@@ -24,14 +24,14 @@ export default function Home() {
               <li>✅ Custom path alias (~/*)</li>
               <li>✅ No Turbopack (standard Webpack)</li>
               <li>✅ Port 4300 configuration</li>
-              <li>✅ Chatbot Button (right bottom corner)</li>
+              <li>✅ Asgard Chatbot integration</li>
             </ul>
           </div>
         </div>
       </main>
 
       <div className="fixed right-5 bottom-5 md:right-6 md:bottom-6">
-        <ChatbotButton onClick={() => console.log('Chatbot button clicked!')} />
+        <SimpleChatbot />
       </div>
     </div>
   );
