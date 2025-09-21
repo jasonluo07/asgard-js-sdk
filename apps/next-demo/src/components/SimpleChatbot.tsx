@@ -35,9 +35,25 @@ const theme = {
 export default function SimpleChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [customChannelId, setCustomChannelId] = useState<string>('');
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setCustomChannelId(crypto.randomUUID());
+
+    // 檢查螢幕寬度
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    // 初始檢查
+    checkScreenSize();
+
+    // 監聽視窗大小變化
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
   }, []);
 
   return (
@@ -63,7 +79,7 @@ export default function SimpleChatbot() {
 
       {/* 聊天框 */}
       {isOpen && customChannelId && (
-        <div className="absolute bottom-16 right-0 z-50">
+        <div className={isMobile ? "" : "absolute bottom-16 right-0 z-50"}>
           <Chatbot
             config={{
               botProviderEndpoint:
@@ -74,6 +90,7 @@ export default function SimpleChatbot() {
             title="AI 助手"
             onClose={() => setIsOpen(false)}
             theme={theme}
+            fullScreen={isMobile}
           />
         </div>
       )}
