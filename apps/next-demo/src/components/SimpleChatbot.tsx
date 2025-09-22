@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { RemoveScroll } from 'react-remove-scroll';
+import { EventType, MessageTemplateType, ConversationMessage } from '@asgard-js/core';
 import { ChatIcon } from '~/icons';
 
 // 動態導入 Chatbot 以避免 SSR 問題
@@ -33,6 +34,36 @@ const theme = {
   },
 };
 
+const initMessages: ConversationMessage[] = [
+  {
+    type: 'bot',
+    messageId: 'welcome-msg',
+    eventType: EventType.MESSAGE_COMPLETE,
+    isTyping: false,
+    typingText: null,
+    message: {
+      messageId: 'welcome-msg',
+      replyToCustomMessageId: '',
+      text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。(目前資料更新至 2024/08)',
+      payload: null,
+      isDebug: false,
+      idx: 0,
+      template: {
+        type: MessageTemplateType.TEXT,
+        text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。(目前資料更新至 2024/08)',
+        quickReplies: [
+          { text: '死侍有上映嗎?' },
+          { text: '哪邊可以找得到哺乳室' },
+          { text: '請問停車場入場幾分鐘內免費' },
+          { text: '可以跨影城進行網路訂票的現場取票嗎' },
+          { text: '台中文心秀泰充電樁是新款還是舊款?' },
+        ],
+      },
+    },
+    time: new Date(),
+  },
+];
+
 export default function SimpleChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [customChannelId, setCustomChannelId] = useState<string>('');
@@ -56,7 +87,6 @@ export default function SimpleChatbot() {
       window.removeEventListener('resize', checkScreenSize);
     };
   }, []);
-
 
   return (
     <>
@@ -82,18 +112,19 @@ export default function SimpleChatbot() {
       {/* 聊天框 */}
       {isOpen && customChannelId && (
         <RemoveScroll enabled={isMobile && isOpen}>
-          <div className={isMobile ? "" : "absolute bottom-16 right-0"}>
+          <div className={isMobile ? '' : 'absolute bottom-16 right-0'}>
             <Chatbot
               config={{
-                botProviderEndpoint:
-                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || '',
-                apiKey: process.env.NEXT_PUBLIC_API_KEY || '',
+                botProviderEndpoint: 'http://localhost:4300/api/mock-sse',
+                apiKey: 'mock-api-key',
               }}
               customChannelId={customChannelId}
               title="AI 助手"
               onClose={() => setIsOpen(false)}
               theme={theme}
               fullScreen={isMobile}
+              initMessages={initMessages}
+              avatar="https://img.icons8.com/fluency/48/bot.png"
             />
           </div>
         </RemoveScroll>
