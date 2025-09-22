@@ -79,7 +79,7 @@ export default function SimpleChatbot() {
 
       {/* 聊天框 */}
       {isOpen && customChannelId && (
-        <div className={isMobile ? "" : "absolute bottom-16 right-0 z-50"}>
+        <div className={isMobile ? "" : "absolute bottom-16 right-0"}>
           <Chatbot
             config={{
               botProviderEndpoint:
