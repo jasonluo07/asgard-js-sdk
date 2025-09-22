@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { RemoveScroll } from 'react-remove-scroll';
 import { ChatIcon } from '~/icons';
 
 // 動態導入 Chatbot 以避免 SSR 問題
@@ -56,6 +57,7 @@ export default function SimpleChatbot() {
     };
   }, []);
 
+
   return (
     <>
       {/* 聊天按鈕 */}
@@ -79,20 +81,22 @@ export default function SimpleChatbot() {
 
       {/* 聊天框 */}
       {isOpen && customChannelId && (
-        <div className={isMobile ? "" : "absolute bottom-16 right-0"}>
-          <Chatbot
-            config={{
-              botProviderEndpoint:
-                process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || '',
-              apiKey: process.env.NEXT_PUBLIC_API_KEY || '',
-            }}
-            customChannelId={customChannelId}
-            title="AI 助手"
-            onClose={() => setIsOpen(false)}
-            theme={theme}
-            fullScreen={isMobile}
-          />
-        </div>
+        <RemoveScroll enabled={isMobile && isOpen}>
+          <div className={isMobile ? "" : "absolute bottom-16 right-0"}>
+            <Chatbot
+              config={{
+                botProviderEndpoint:
+                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || '',
+                apiKey: process.env.NEXT_PUBLIC_API_KEY || '',
+              }}
+              customChannelId={customChannelId}
+              title="AI 助手"
+              onClose={() => setIsOpen(false)}
+              theme={theme}
+              fullScreen={isMobile}
+            />
+          </div>
+        </RemoveScroll>
       )}
     </>
   );
