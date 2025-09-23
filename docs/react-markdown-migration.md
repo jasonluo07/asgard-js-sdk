@@ -181,7 +181,7 @@ graph TD
 
 1. **Install Dependencies**
    ```bash
-   yarn add react-markdown remark-gfm remark-math rehype-katex rehype-highlight katex
+   npm install react-markdown remark-gfm remark-math rehype-katex rehype-highlight katex
    ```
 
 2. **Create New Hook Structure**

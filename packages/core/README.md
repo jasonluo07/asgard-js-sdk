@@ -7,7 +7,7 @@ This package contains the core functionalities of the AsgardJs SDK, providing es
 To install the core package, use the following command:
 
 ```sh
-yarn add @asgard-js/core
+npm install @asgard-js/core
 ```
 
 ## Usage
@@ -256,16 +256,16 @@ The core package includes comprehensive tests using Vitest.
 
 ```sh
 # Run tests once
-yarn test:core
+npm run test:core
 
 # Run tests in watch mode
-yarn test:core:watch
+npm run test:core:watch
 
 # Run tests with UI
-yarn test:core:ui
+npm run test:core:ui
 
 # Run tests with coverage
-yarn test:core:coverage
+npm run test:core:coverage
 ```
 
 ### Test Structure
@@ -312,7 +312,7 @@ To develop the core package locally, follow these steps:
 2. Install dependencies:
 
 ```sh
-yarn install
+npm install
 ```
 
 3. Start development:
@@ -321,19 +321,19 @@ You can use the following commands to work with the core package:
 
 ```sh
 # Lint the core package
-yarn lint:core
+npm run lint:core
 
 # Run tests
-yarn test:core
+npm run test:core
 
 # Build the package
-yarn build:core
+npm run build:core
 
 # Watch mode for development
-yarn watch:core
+npm run watch:core
 ```
 
-Setup your npm registry token for yarn publishing:
+Setup your npm registry token for npm publishing:
 
 ```sh
 cd ~/
@@ -345,18 +345,18 @@ For working with both core and React packages:
 
 ```sh
 # Lint both packages
-yarn lint:packages
+npm run lint:packages
 
 # Test both packages
-yarn test
+npm test
 
 # Build core package (required for React package)
-yarn build:core
-yarn build:react
+npm run build:core
+npm run build:react
 
 # Release packages
-yarn release:core  # Release core package
-yarn release:react # Release React package
+npm run release:core  # Release core package
+npm run release:react # Release React package
 ```
 
 All builds will be available in the `dist` directory.

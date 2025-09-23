@@ -7,7 +7,7 @@ This package provides React components and hooks for integrating with the Asgard
 To install the React package, use the following command:
 
 ```sh
-yarn add @asgard-js/core @asgard-js/react
+npm install @asgard-js/core @asgard-js/react
 ```
 
 ## Usage
@@ -445,16 +445,16 @@ The React package includes comprehensive tests using Vitest and React Testing Li
 
 ```sh
 # Run tests once
-yarn test:react
+npm run test:react
 
 # Run tests in watch mode
-yarn test:react:watch
+npm run test:react:watch
 
 # Run tests with UI
-yarn test:react:ui
+npm run test:react:ui
 
 # Run tests with coverage
-yarn test:react:coverage
+npm run test:react:coverage
 ```
 
 ### Test Structure
@@ -514,7 +514,7 @@ To develop the React package locally, follow these steps:
 2. Install dependencies:
 
 ```sh
-yarn install
+npm install
 ```
 
 3. Start development:
@@ -523,22 +523,22 @@ You can use the following commands to work with the React package:
 
 ```sh
 # Lint the React package
-yarn lint:react
+npm run lint:react
 
 # Run tests
-yarn test:react
+npm run test:react
 
 # Build the package
-yarn build:react
+npm run build:react
 
 # Watch mode for development
-yarn watch:react
+npm run watch:react
 
 # Run the demo application
-yarn serve:react-demo
+npm run serve:react-demo
 ```
 
-Setup your npm registry token for yarn publishing:
+Setup your npm registry token for npm publishing:
 
 ```sh
 cd ~/
@@ -550,15 +550,15 @@ For working with both core and React packages:
 
 ```sh
 # Lint both packages
-yarn lint:packages
+npm run lint:packages
 
 # Build core package (required for React package)
-yarn build:core
-yarn build:react
+npm run build:core
+npm run build:react
 
 # Release packages
-yarn release:core  # Release core package
-yarn release:react # Release React package
+npm run release:core  # Release core package
+npm run release:react # Release React package
 ```
 
 All builds will be available in the `dist` directory of their respective packages.
