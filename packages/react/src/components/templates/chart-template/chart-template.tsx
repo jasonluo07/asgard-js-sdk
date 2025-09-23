@@ -4,7 +4,8 @@ import { Avatar } from '../avatar';
 import { ConversationBotMessage, ChartMessageTemplate } from '@asgard-js/core';
 import { Time } from '../time';
 import { useAsgardContext } from '../../../context/asgard-service-context';
-import { VegaLite, VisualizationSpec } from 'react-vega';
+import { VegaEmbed } from 'react-vega';
+import { VisualizationSpec } from 'vega-embed';
 import clsx from 'clsx';
 import classes from './chart-template.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
@@ -67,7 +68,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
         </div>
       )}
       <TemplateBoxContent quickReplies={template?.quickReplies}>
-        <VegaLite spec={spec} />
+        <VegaEmbed spec={spec} />
       </TemplateBoxContent>
       <Time className={classes.chart_time} time={message.time} />
     </TemplateBox>
