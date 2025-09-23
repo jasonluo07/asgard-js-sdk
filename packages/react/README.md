@@ -92,6 +92,23 @@ const App = () => {
 export default App;
 ```
 
+### File Upload Support
+
+The Chatbot component includes built-in file upload capabilities for sending images.
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  // File upload automatically enabled if client.uploadFile method exists
+/>
+```
+
+**Features**: Multiple file selection, drag & drop support, file preview, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file.
+
 ### API Key Authentication
 
 For applications that need dynamic API key input (such as embedded chatbots), you can use the authentication state management:

@@ -5,6 +5,7 @@ import {
   FetchSseOptions,
   SseResponse,
   SseEvents,
+  BlobUploadResponse,
 } from '../types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
@@ -14,6 +15,7 @@ import { EventEmitter } from './event-emitter';
 export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey?: string;
   private endpoint!: string;
+  private botProviderEndpoint?: string;
   private debugMode?: boolean;
   private destroy$ = new Subject<void>();
   private sseEmitter = new EventEmitter<SseEvents>();
@@ -28,6 +30,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     this.apiKey = config.apiKey;
     this.debugMode = config.debugMode;
     this.transformSsePayload = config.transformSsePayload;
+    this.botProviderEndpoint = config.botProviderEndpoint;
 
     // Handle endpoint derivation and deprecation
     if (!config.endpoint && config.botProviderEndpoint) {
@@ -137,5 +140,86 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   close(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * 上傳檔案到 Blob API
+   * 根據 API 文件：/generic/ns/{namespace}/bot-provider/{bot_provider_name}/blob
+   */
+  async uploadFile(file: File, customChannelId: string): Promise<BlobUploadResponse> {
+    const blobEndpoint = this.deriveBlobEndpoint();
+    
+    if (!blobEndpoint) {
+      throw new Error('Unable to derive blob endpoint. Please provide botProviderEndpoint in config.');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('customChannelId', customChannelId);
+
+    const headers: HeadersInit = {};
+    if (this.apiKey) {
+      headers['X-API-KEY'] = this.apiKey;
+    }
+
+    try {
+      const response = await fetch(blobEndpoint, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (this.debugMode) {
+        console.log('[AsgardServiceClient] File upload response:', result);
+      }
+      
+      return result as BlobUploadResponse;
+    } catch (error) {
+      console.error('[AsgardServiceClient] File upload error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 從 botProviderEndpoint 衍生 Blob API endpoint
+   */
+  private deriveBlobEndpoint(): string | null {
+    if (!this.botProviderEndpoint && !this.endpoint) {
+      return null;
+    }
+
+    let baseEndpoint = this.botProviderEndpoint;
+    
+    // 如果沒有 botProviderEndpoint，嘗試從 endpoint 反推
+    if (!baseEndpoint && this.endpoint) {
+      baseEndpoint = this.endpoint.replace('/message/sse', '');
+    }
+    
+    if (!baseEndpoint) {
+      return null;
+    }
+
+    // 移除尾部斜線
+    baseEndpoint = baseEndpoint.replace(/\/+$/, '');
+    
+    // 根據 API 文件，需要加上 /generic 前綴（如果還沒有的話）
+    // API 格式：/generic/ns/{namespace}/bot-provider/{bot_provider_name}/blob
+    if (!baseEndpoint.includes('/generic/')) {
+      // 假設 baseEndpoint 格式為：https://api.example.com/ns/{namespace}/bot-provider/{name}
+      // 需要插入 /generic
+      const match = baseEndpoint.match(/^(https?:\/\/[^/]+)(\/.*)/);
+      if (match) {
+        const [, domain, path] = match;
+        baseEndpoint = `${domain}/generic${path}`;
+      }
+    }
+    
+    return `${baseEndpoint}/blob`;
   }
 }

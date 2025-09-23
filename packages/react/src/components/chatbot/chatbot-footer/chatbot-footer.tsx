@@ -11,22 +11,28 @@ import {
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
+import GallerySvg from '../../../icons/gallery.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder } = useAsgardContext();
-  
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId } = useAsgardContext();
+
   const { chatbot } = useAsgardThemeContext();
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const disabled = useMemo(
-    () => isConnecting || !value.trim(),
-    [isConnecting, value]
+    () => isConnecting || (!value.trim() && selectedFiles.length === 0),
+    [isConnecting, value, selectedFiles.length]
   );
 
   const contentStyles = useMemo(
@@ -53,16 +59,66 @@ export function ChatbotFooter(): ReactNode {
     []
   );
 
-  const onSubmit = useCallback(() => {
+  const onSubmit = useCallback(async () => {
     if (!isComposing && !isConnecting) {
-      sendMessage?.({ text: value });
-      setValue('');
+      const hasFiles = selectedFiles.length > 0;
+      const messageText = value.trim();
+      
+      try {
+        let blobIds: string[] | undefined;
+        
+        if (hasFiles && client?.uploadFile && customChannelId) {
+          blobIds = [];
+          
+          for (const file of selectedFiles) {
+            try {
+              const response = await client.uploadFile(file, customChannelId);
+              
+              if (response.isSuccess && response.data?.[0]) {
+                const blobData = response.data[0];
+                blobIds.push(blobData.blobId);
+              } else {
+                // Upload failed, continue with next file
+              }
+            } catch {
+              alert(`檔案 ${file.name} 上傳失敗`);
+            }
+          }
+          
+          if (blobIds.length === 0) {
+            
+            return;
+          }
+        }
+        
+        if (messageText || blobIds || filePreviewUrls.length > 0) {
+          const payload: { text: string; blobIds?: string[]; filePreviewUrls?: string[] } = { 
+            text: messageText || '' 
+          };
+          
+          if (blobIds && blobIds.length > 0) {
+            payload.blobIds = blobIds;
+          }
+          
+          if (filePreviewUrls.length > 0) {
+            payload.filePreviewUrls = filePreviewUrls;
+          }
+          
+          sendMessage?.(payload);
+        }
 
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '36px';
+        setValue('');
+        setSelectedFiles([]);
+        setFilePreviewUrls([]);
+
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '36px';
+        }
+      } catch {
+        alert('發送訊息失敗，請重試');
       }
     }
-  }, [isComposing, isConnecting, sendMessage, value]);
+  }, [isComposing, isConnecting, sendMessage, value, selectedFiles, filePreviewUrls, client, customChannelId]);
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
     (event) => {
@@ -70,18 +126,59 @@ export function ChatbotFooter(): ReactNode {
         event.key === 'Enter' &&
         !isComposing &&
         !isConnecting &&
-        value.trim()
+        (value.trim() || selectedFiles.length > 0)
       ) {
-        sendMessage?.({ text: value });
-        setValue('');
-
-        const element = event.target as HTMLTextAreaElement;
-
-        element.style.height = '36px';
+        event.preventDefault();
+        onSubmit();
       }
     },
-    [isComposing, isConnecting, sendMessage, value]
+    [isComposing, isConnecting, value, selectedFiles.length, onSubmit]
   );
+
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (files && files.length > 0) {
+        
+        const { validFiles, errors } = validateImageFiles(files);
+        
+        if (errors.length > 0) {
+          alert('檔案驗證錯誤:\n' + errors.join('\n'));
+        }
+        
+        if (validFiles.length > 0) {
+          setSelectedFiles(prev => [...prev, ...validFiles]);
+          
+          const newPreviewUrls: string[] = [];
+          for (const file of validFiles) {
+            const reader = new FileReader();
+            reader.onload = (e): void => {
+              if (e.target?.result && typeof e.target.result === 'string') {
+                newPreviewUrls.push(e.target.result);
+                if (newPreviewUrls.length === validFiles.length) {
+                  setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+                }
+              }
+            };
+
+            reader.readAsDataURL(file);
+          }
+        }
+      }
+      
+      event.target.value = '';
+    },
+    []
+  );
+
+  const handleGalleryClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -98,7 +195,61 @@ export function ChatbotFooter(): ReactNode {
       className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
       style={chatbot.footer?.style}
     >
+      {selectedFiles.length > 0 && (
+        <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
+          <div className={styles.file_preview_grid}>
+            {selectedFiles.map((file, index) => {
+              const previewUrl = URL.createObjectURL(file);
+              
+              return (
+                <div key={index} className={styles.file_preview_item}>
+                  <div className={styles.file_preview_image_area}>
+                    <img 
+                      src={previewUrl}
+                      alt={file.name}
+                      className={styles.file_preview_image}
+                      onClick={() => {
+                        const modalUrl = URL.createObjectURL(file);
+                        setPreviewImage({ url: modalUrl, name: file.name });
+                      }}
+                      onLoad={() => URL.revokeObjectURL(previewUrl)}
+                    />
+                    
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className={styles.file_remove_button}
+                      aria-label="移除"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
       <div className={styles.chatbot_footer__content} style={contentStyles}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+          onChange={handleFileSelect}
+          className={styles.file_input_hidden}
+        />
+        
+        <div className={styles.attachment_buttons}>
+          <button
+            className={styles.attachment_button}
+            onClick={handleGalleryClick}
+            disabled={isConnecting}
+            title="選擇照片"
+          >
+            <GallerySvg />
+          </button>
+        </div>
         <textarea
           ref={textareaRef}
           className={styles.chatbot_textarea}
@@ -112,7 +263,7 @@ export function ChatbotFooter(): ReactNode {
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
         />
-        {value ? (
+        {value || selectedFiles.length > 0 ? (
           <button
             className={clsx(
               styles.chatbot_submit_button,
@@ -135,6 +286,44 @@ export function ChatbotFooter(): ReactNode {
           />
         )}
       </div>
+      
+      {previewImage && (
+        <div
+          className={styles.image_modal}
+          onClick={() => {
+            if (previewImage.url) {
+              URL.revokeObjectURL(previewImage.url);
+            }
+
+            setPreviewImage(null);
+          }}
+        >
+          <div className={styles.image_modal_content}>
+            <img
+              src={previewImage.url}
+              alt={previewImage.name}
+              className={styles.image_modal_image}
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+          </div>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (previewImage.url) {
+                URL.revokeObjectURL(previewImage.url);
+              }
+
+              setPreviewImage(null);
+            }}
+            className={styles.image_modal_close_button}
+            aria-label="關閉預覽"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

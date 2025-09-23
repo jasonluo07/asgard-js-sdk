@@ -23,6 +23,8 @@ export type ConversationUserMessage = {
   type: 'user';
   messageId: string;
   text: string;
+  blobIds?: string[];
+  filePreviewUrls?: string[];
   time: Date;
 };
 

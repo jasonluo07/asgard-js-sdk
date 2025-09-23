@@ -15,6 +15,7 @@ import {
 
 const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
 
+
 export function Root(): ReactNode {
   const [customChannelId] = useState(crypto.randomUUID());
   const [isOpen, setIsOpen] = useState(true);

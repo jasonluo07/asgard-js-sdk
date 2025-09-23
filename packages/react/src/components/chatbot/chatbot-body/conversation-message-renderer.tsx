@@ -8,6 +8,7 @@ import {
   TextTemplate,
   ChartTemplate,
   ImageTemplate,
+  UserImageTemplate,
 } from '../../templates';
 
 interface ConversationMessageRendererProps {
@@ -20,6 +21,10 @@ export function ConversationMessageRenderer(
   const { message } = props;
 
   if (message.type === 'user') {
+    if (message.blobIds && message.blobIds.length > 0) {
+      return <UserImageTemplate message={{ type: 'user', message }} />;
+    }
+
     return <TextTemplate message={message} />;
   }
 

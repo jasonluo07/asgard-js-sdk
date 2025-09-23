@@ -31,6 +31,30 @@ client.fetchSse({
   action: 'message',
 });
 
+// Upload files (optional, requires uploadFile method)
+if (client.uploadFile) {
+  const fileInput = document.querySelector('input[type="file"]');
+  const file = fileInput.files[0];
+  
+  try {
+    const uploadResponse = await client.uploadFile(file, 'your-channel-id');
+    
+    if (uploadResponse.isSuccess && uploadResponse.data[0]) {
+      const blobId = uploadResponse.data[0].blobId;
+      
+      // Send message with uploaded file
+      client.fetchSse({
+        customChannelId: 'your-channel-id',
+        text: 'Here is my image:',
+        action: 'message',
+        blobIds: [blobId]
+      });
+    }
+  } catch (error) {
+    console.error('File upload failed:', error);
+  }
+}
+
 // Listen to events
 client.on('MESSAGE', (response) => {
   console.log('Received message:', response);
@@ -105,6 +129,7 @@ The main client class for interacting with the Asgard AI platform.
 #### Methods
 
 - **fetchSse(payload, options?)**: Send a message via Server-Sent Events
+- **uploadFile(file, customChannelId)**: Upload file to Blob API and return BlobUploadResponse
 - **on(event, handler)**: Listen to specific SSE events
 - **close()**: Close the SSE connection and cleanup resources
 
@@ -211,6 +236,29 @@ const userMessage = {
 const updatedConversation = conversation.pushMessage(userMessage);
 console.log('Messages:', Array.from(updatedConversation.messages.values()));
 ```
+
+
+### File Upload API
+
+The core package includes file upload capabilities for sending images through the chatbot.
+
+```typescript
+// Upload file and send message with attachment
+const uploadResponse = await client.uploadFile(file, customChannelId);
+
+if (uploadResponse.isSuccess && uploadResponse.data[0]) {
+  const blobId = uploadResponse.data[0].blobId;
+  
+  client.fetchSse({
+    customChannelId: 'your-channel-id',
+    text: 'Here is my image',
+    action: 'message',
+    blobIds: [blobId]
+  });
+}
+```
+
+**Note**: `uploadFile` is optional - check `client.uploadFile` exists before use. Supports JPEG, PNG, GIF, WebP up to 20MB.
 
 ### Authentication Types
 
