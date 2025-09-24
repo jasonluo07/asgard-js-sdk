@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { RemoveScroll } from 'react-remove-scroll';
-import { EventType, MessageTemplateType, ConversationMessage } from '@asgard-js/core';
+import {
+  EventType,
+  MessageTemplateType,
+  ConversationMessage,
+} from '@asgard-js/core';
 import { ChatIcon } from '~/icons';
 
 // 動態導入 Chatbot 以避免 SSR 問題
@@ -115,8 +119,10 @@ export default function SimpleChatbot() {
           <div className={isMobile ? '' : 'absolute bottom-16 right-0'}>
             <Chatbot
               config={{
-                botProviderEndpoint: 'http://localhost:4300/api/mock-sse',
-                apiKey: 'mock-api-key',
+                botProviderEndpoint:
+                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
+                  'http://localhost:4300/api/mock-sse',
+                apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
               }}
               customChannelId={customChannelId}
               title="AI 助手"
