@@ -29,9 +29,9 @@ export function ChatbotBody(): ReactNode {
       style={chatbot?.body?.style}
     >
       <div className={styles.chatbot_body__content} style={contentStyles}>
-        {Array.from(messages?.values() ?? []).map((message) => (
+        {Array.from(messages?.values() ?? []).map((message, index) => (
           <ConversationMessageRenderer
-            key={message.messageId}
+            key={message.messageId || `${message.type}-${index}-${message.time.getTime()}`}
             message={message}
           />
         ))}

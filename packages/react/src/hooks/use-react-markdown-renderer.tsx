@@ -233,15 +233,19 @@ export function useMarkdownRenderer(
 
       const newBlocks: ReactNode[] = [];
 
-      for (const token of finishedTokens) {
+      for (let i = 0; i < finishedTokens.length; i++) {
+        const token = finishedTokens[i];
         const raw = getRawText(token.raw);
-        const blockInCache = cacheRef.current.get(raw);
+        // Generate a unique key that includes both the content and position
+        const uniqueKey = raw ? `${raw}-${i}` : `markdown-block-${i}`;
+        const cacheKey = `${raw}-${i}`;
+        const blockInCache = cacheRef.current.get(cacheKey);
         if (blockInCache) {
           newBlocks.push(blockInCache);
         } else {
           const reactElement = (
             <ReactMarkdown
-              key={raw}
+              key={uniqueKey}
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeHighlight, rehypeKatex]}
               components={components}
@@ -251,7 +255,7 @@ export function useMarkdownRenderer(
           );
           // Manage cache size before adding new entry
           manageCacheSize(cacheRef.current);
-          cacheRef.current.set(raw, reactElement);
+          cacheRef.current.set(cacheKey, reactElement);
           newBlocks.push(reactElement);
         }
       }
