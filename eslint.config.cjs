@@ -7,7 +7,7 @@ module.exports = [
   {
     ignores: [
       '.nx',
-      '.yarn',
+      'node_modules/.cache',
       'node_modules',
       'vitest.workspace.ts',
       '**/dist',

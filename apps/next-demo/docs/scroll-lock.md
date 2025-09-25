@@ -29,7 +29,7 @@ useEffect(() => {
 使用 `react-remove-scroll` 套件：
 
 ```bash
-yarn add react-remove-scroll
+npm install react-remove-scroll
 ```
 
 ```tsx

@@ -6,9 +6,13 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@nx/js": "^21.5.3",
+    "@nx/react": "^21.5.3",
+    "@nx/vite": "^21.5.3",
     "@types/jsdom": "^21.1.6",
     "@vitest/ui": "^1.6.0",
     "jsdom": "^24.0.0",
+    "nx": "^21.5.3",
     "vitest": "^1.6.0"
   },
   "scripts": {

@@ -21,7 +21,18 @@ export function BotTypingPlaceholder(
     [messages]
   );
 
-  if (isConnecting && !hasTypingMessage)
+  const hasCompleteBotMessage = useMemo(
+    () => {
+      const allMessages = Array.from(messages?.values() ?? []);
+      const lastBotMessage = allMessages
+        .filter((message) => message.type === 'bot')
+        .pop();
+      return lastBotMessage && !lastBotMessage.isTyping;
+    },
+    [messages]
+  );
+
+  if (isConnecting && !hasTypingMessage && !hasCompleteBotMessage)
     return <BotTypingBox isTyping typingText={placeholder} />;
 
   return null;

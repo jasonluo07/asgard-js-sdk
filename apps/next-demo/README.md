@@ -17,10 +17,10 @@ First, run the development server:
 
 ```bash
 # From the root of the monorepo
-yarn serve:next-demo
+npm run serve:next-demo
 
 # Or directly in this directory
-yarn dev
+npm run dev
 ```
 
 Open [http://localhost:4300](http://localhost:4300) with your browser to see the result.

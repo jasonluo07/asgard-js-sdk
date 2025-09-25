@@ -13,30 +13,30 @@ Asgard JS SDK is a TypeScript monorepo that provides React components and core s
 ### Development
 ```bash
 # Start demo application
-yarn serve:react-demo
+npm run serve:react-demo
 
 # Run tests
-yarn test                  # All tests
-yarn test:core            # Core package tests only
-yarn test:react           # React package tests only
-yarn test:coverage        # With coverage report
+npm test                  # All tests
+npm run test:core         # Core package tests only
+npm run test:react        # React package tests only
+npm run test:coverage     # With coverage report
 
 # Build packages
-yarn build:core           # Build core package (required before building React)
-yarn build:react          # Build React package
+npm run build:core        # Build core package (required before building React)
+npm run build:react       # Build React package
 
 # Lint code
-yarn lint:packages        # Lint both core and React packages
+npm run lint:packages     # Lint both core and React packages
 
 # Watch mode for development
-yarn watch:core           # Watch core package changes
-yarn watch:react          # Watch React package changes
+npm run watch:core        # Watch core package changes
+npm run watch:react       # Watch React package changes
 ```
 
 ### Release
 ```bash
-yarn release:core         # Publish core package to npm
-yarn release:react        # Publish React package to npm
+npm run release:core      # Publish core package to npm
+npm run release:react     # Publish React package to npm
 ```
 
 ## Architecture
