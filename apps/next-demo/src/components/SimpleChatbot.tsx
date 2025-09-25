@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { RemoveScroll } from 'react-remove-scroll';
 import {
   EventType,
   MessageTemplateType,
   ConversationMessage,
+  SseResponse,
 } from '@asgard-js/core';
+import type { ChatbotRef } from '@asgard-js/react';
 import { ChatIcon } from '~/icons';
+import QuickQuestionButtons from './QuickQuestionButtons';
 
 // 動態導入 Chatbot 以避免 SSR 問題
 const Chatbot = dynamic(
@@ -69,6 +72,8 @@ const initMessages: ConversationMessage[] = [
 ];
 
 export default function SimpleChatbot() {
+  const chatbotRef = useRef<ChatbotRef>(null);
+  const questionToSendRef = useRef<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [customChannelId, setCustomChannelId] = useState<string>('');
   const [isMobile, setIsMobile] = useState(false);
@@ -92,8 +97,49 @@ export default function SimpleChatbot() {
     };
   }, []);
 
+  // 處理快速問題按鈕點擊
+  const handleQuestionClick = (question: string) => {
+    if (!isOpen) {
+      questionToSendRef.current = question;
+      setIsOpen(true);
+    } else {
+      // 如果 Chatbot 已開啟，直接發送
+      chatbotRef.current?.serviceContext?.sendMessage?.({
+        text: question
+      });
+    }
+  };
+
+  // 處理 SSE 訊息事件
+  const handleSseMessage = (response: SseResponse<EventType>) => {
+    // 當收到 asgard.run.done 事件時，發送待發送的問題
+    if (questionToSendRef.current && response.eventType === EventType.DONE) {
+      const textToSend = questionToSendRef.current.trim();
+
+      // 如果 isConnecting 為 true，等待狀態更新
+      const waitAndSend = () => {
+        if (chatbotRef.current?.serviceContext?.isConnecting) {
+          setTimeout(waitAndSend, 0);
+        } else if (textToSend && chatbotRef.current?.serviceContext?.sendMessage) {
+          chatbotRef.current.serviceContext.sendMessage({ text: textToSend });
+        }
+      };
+
+      // 直接檢查狀態，不需要額外延遲
+      if (!chatbotRef.current?.serviceContext?.isConnecting && textToSend) {
+        chatbotRef.current?.serviceContext?.sendMessage?.({ text: textToSend });
+      } else {
+        waitAndSend();
+      }
+      questionToSendRef.current = null;
+    }
+  };
+
   return (
     <>
+      {/* 快速問題按鈕 */}
+      <QuickQuestionButtons onQuestionClick={handleQuestionClick} />
+
       {/* 聊天按鈕 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -118,12 +164,14 @@ export default function SimpleChatbot() {
         <RemoveScroll enabled={isMobile && isOpen}>
           <div className={isMobile ? '' : 'absolute bottom-16 right-0'}>
             <Chatbot
+              ref={chatbotRef}
               config={{
                 botProviderEndpoint:
                   process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
                   'http://localhost:4300/api/mock-sse',
                 apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
               }}
+              onSseMessage={handleSseMessage}
               customChannelId={customChannelId}
               title="AI 助手"
               onClose={() => setIsOpen(false)}
