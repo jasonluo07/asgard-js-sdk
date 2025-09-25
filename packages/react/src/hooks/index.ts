@@ -8,4 +8,3 @@ export * from './use-prevent-over-scrolling';
 export * from './use-update-vh';
 export * from './use-resize-observer';
 export * from './use-deep-compare-memo';
-export * from './use-react-markdown-renderer';

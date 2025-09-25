@@ -6,7 +6,6 @@ import { Avatar } from '../avatar';
 import { useDebounce, useResizeObserver } from '../../../hooks';
 import classes from './text-template.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
-import { useMarkdownRenderer } from '../../../hooks/use-react-markdown-renderer';
 interface BotTypingBoxProps {
   isTyping: boolean;
   typingText: string | null;
@@ -28,10 +27,6 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
 
   const _isTyping = useDebounce(isTyping, 500);
 
-  const { htmlBlocks, lastTypingText } = useMarkdownRenderer(
-    typingText || '',
-    20
-  );
 
   const styles = useMemo<CSSProperties>(
     () => ({
@@ -64,8 +59,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
           style={styles}
         >
           <span>
-            {htmlBlocks}
-            {lastTypingText ?? ''}
+            {typingText}
             {_isTyping && (
               <span className={classes['typing-indicator']}>
                 <div className={classes.dot} style={dotStyles} />
