@@ -6,6 +6,7 @@ import { Avatar } from '../avatar';
 import { useDebounce, useResizeObserver } from '../../../hooks';
 import classes from './text-template.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { StreamdownClient } from './streamdown-client';
 interface BotTypingBoxProps {
   isTyping: boolean;
   typingText: string | null;
@@ -59,7 +60,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
           style={styles}
         >
           <span>
-            {typingText}
+            {typingText ? <StreamdownClient>{typingText}</StreamdownClient> : null}
             {_isTyping && (
               <span className={classes['typing-indicator']}>
                 <div className={classes.dot} style={dotStyles} />
