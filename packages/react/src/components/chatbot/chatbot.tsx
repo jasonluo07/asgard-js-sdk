@@ -41,13 +41,14 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
+  enableUpload?: boolean;
   maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
   onClose?: () => void;
   loadingComponent?: ReactNode;
   defaultLinkTarget?: '_blank' | '_self' | '_parent' | '_top';
-  
+
   // Auth state props
   authState?: AuthState;
   onApiKeySubmit?: (apiKey: string) => Promise<void>;
@@ -75,6 +76,7 @@ export const Chatbot = forwardRef(function Chatbot(
     botTypingPlaceholder,
     inputPlaceholder,
     enableLoadConfigFromService = false,
+    enableUpload,
     maintainConnectionWhenClosed = false,
     asyncInitializers = {},
     loadingComponent,
@@ -172,6 +174,7 @@ export const Chatbot = forwardRef(function Chatbot(
             onAuthError={onAuthError}
             botTypingPlaceholder={botTypingPlaceholder}
             inputPlaceholder={inputPlaceholder}
+            enableUpload={enableUpload}
           >
             <ChatbotContainer
               fullScreen={fullScreen}
@@ -206,6 +209,7 @@ export const Chatbot = forwardRef(function Chatbot(
         onAuthError={onAuthError}
         botTypingPlaceholder={botTypingPlaceholder}
         inputPlaceholder={inputPlaceholder}
+        enableUpload={enableUpload}
       >
         <ChatbotContainer
           fullScreen={fullScreen}

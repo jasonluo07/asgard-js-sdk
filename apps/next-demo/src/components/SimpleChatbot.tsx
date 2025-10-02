@@ -179,6 +179,7 @@ export default function SimpleChatbot() {
               fullScreen={isMobile}
               initMessages={initMessages}
               avatar="https://img.icons8.com/fluency/48/bot.png"
+              enableUpload={true}
             />
           </div>
         </RemoveScroll>
