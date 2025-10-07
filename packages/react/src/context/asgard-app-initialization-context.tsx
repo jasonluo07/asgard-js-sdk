@@ -21,6 +21,7 @@ export interface Annotations {
     avatar?: string;
     botTypingPlaceholder?: string;
     debugMode?: boolean;
+    enableUpload?: boolean;
     fullScreen?: boolean;
     inputPlaceholder?: string;
     theme: {

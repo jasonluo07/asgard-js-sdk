@@ -13,6 +13,7 @@ export default function RealPage() {
       customChannelId={crypto.randomUUID()}
       config={CONFIG}
       fullScreen={true}
+      enableUpload={true}
     />
   );
 }

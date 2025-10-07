@@ -34,6 +34,7 @@ export interface AsgardServiceContextValue {
   closeChannel?: UseChannelReturn['closeChannel'];
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
+  enableUpload?: boolean;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
@@ -47,6 +48,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   messageBoxBottomRef: { current: null },
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
+  enableUpload: undefined,
 });
 
 export interface AsgardServiceContextProviderProps {
@@ -58,6 +60,7 @@ export interface AsgardServiceContextProviderProps {
   config: ClientConfig;
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
+  enableUpload?: boolean;
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
@@ -76,6 +79,7 @@ export function AsgardServiceContextProvider(
     config,
     botTypingPlaceholder,
     inputPlaceholder,
+    enableUpload,
     customChannelId,
     initMessages,
     onSseMessage,
@@ -116,6 +120,7 @@ export function AsgardServiceContextProvider(
       closeChannel,
       botTypingPlaceholder,
       inputPlaceholder,
+      enableUpload,
       messageBoxBottomRef,
     }),
     [
@@ -131,6 +136,7 @@ export function AsgardServiceContextProvider(
       closeChannel,
       botTypingPlaceholder,
       inputPlaceholder,
+      enableUpload,
     ]
   );
 

@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
@@ -18,9 +19,19 @@ import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp } = useAsgardContext();
+  const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
+
+  // Determine enableUpload: prioritize prop, then annotations
+  const enableUpload = useMemo(() => {
+    if (enableUploadProp !== undefined) {
+      return enableUploadProp;
+    }
+
+    return data.annotations?.embedConfig?.enableUpload ?? false;
+  }, [enableUploadProp, data.annotations?.embedConfig?.enableUpload]);
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
@@ -195,16 +206,16 @@ export function ChatbotFooter(): ReactNode {
       className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
       style={chatbot.footer?.style}
     >
-      {selectedFiles.length > 0 && (
+      {enableUpload && selectedFiles.length > 0 && (
         <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
           <div className={styles.file_preview_grid}>
             {selectedFiles.map((file, index) => {
               const previewUrl = URL.createObjectURL(file);
-              
+
               return (
                 <div key={index} className={styles.file_preview_item}>
                   <div className={styles.file_preview_image_area}>
-                    <img 
+                    <img
                       src={previewUrl}
                       alt={file.name}
                       className={styles.file_preview_image}
@@ -214,7 +225,7 @@ export function ChatbotFooter(): ReactNode {
                       }}
                       onLoad={() => URL.revokeObjectURL(previewUrl)}
                     />
-                    
+
                     <button
                       onClick={() => handleRemoveFile(index)}
                       className={styles.file_remove_button}
@@ -229,26 +240,29 @@ export function ChatbotFooter(): ReactNode {
           </div>
         </div>
       )}
-      
+
       <div className={styles.chatbot_footer__content} style={contentStyles}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-          onChange={handleFileSelect}
-          className={styles.file_input_hidden}
-        />
-        
         <div className={styles.attachment_buttons}>
-          <button
-            className={styles.attachment_button}
-            onClick={handleGalleryClick}
-            disabled={isConnecting}
-            title="選擇照片"
-          >
-            <GallerySvg />
-          </button>
+          {enableUpload && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                onChange={handleFileSelect}
+                className={styles.file_input_hidden}
+              />
+              <button
+                className={styles.attachment_button}
+                onClick={handleGalleryClick}
+                disabled={isConnecting}
+                title="選擇照片"
+              >
+                <GallerySvg />
+              </button>
+            </>
+          )}
         </div>
         <textarea
           ref={textareaRef}

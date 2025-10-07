@@ -94,7 +94,9 @@ export default App;
 
 ### File Upload Support
 
-The Chatbot component includes built-in file upload capabilities for sending images.
+The Chatbot component includes built-in file upload capabilities for sending images. You can control this feature using the `enableUpload` prop.
+
+#### Enabling File Upload
 
 ```javascript
 <Chatbot
@@ -103,11 +105,32 @@ The Chatbot component includes built-in file upload capabilities for sending ima
     botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   }}
   customChannelId="your-channel-id"
-  // File upload automatically enabled if client.uploadFile method exists
+  enableUpload={true}  // Explicitly enable file upload
 />
 ```
 
-**Features**: Multiple file selection, drag & drop support, file preview, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file.
+#### Control via Remote Configuration
+
+When `enableLoadConfigFromService` is enabled, you can also control the upload feature through the bot provider's `embedConfig`:
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  enableLoadConfigFromService={true}
+  // Upload feature will be controlled by annotations.embedConfig.enableUpload from the API
+/>
+```
+
+**Configuration Priority** (highest to lowest):
+1. `enableUpload` prop value
+2. `annotations.embedConfig.enableUpload` from bot provider metadata
+3. Default: `false`
+
+**Features**: Multiple file selection, image preview with modal view, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file, maximum 10 files at once.
 
 ### API Key Authentication
 
@@ -198,6 +221,7 @@ config: {
   - `onRunError?`: `ErrorEventHandler` - Error handler for execution errors
 - **customActions?**: `ReactNode[]` - Custom actions to display on the chatbot header
 - **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
+- **enableUpload?**: `boolean` - Enable file upload functionality. When set, it takes priority over the `embedConfig.enableUpload` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Supports image files (JPEG, PNG, GIF, WebP) up to 20MB per file, maximum 10 files at once.
 - **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
 - **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
