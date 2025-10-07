@@ -1,6 +1,7 @@
 .chatbot_body {
   overflow-x: hidden;
   overflow-y: scroll;
+  overscroll-behavior: contain;
 
   .chatbot_body__content {
     margin: 0 auto;
