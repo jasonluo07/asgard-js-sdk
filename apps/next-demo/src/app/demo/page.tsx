@@ -11,12 +11,25 @@ import {
   createCarouselTemplateExample,
   createChartTemplateExample,
   createImageTemplateExample,
+  createTextWithLinksTemplateExample,
+  createStreamdownFeaturesExample,
+  createMermaidDiagramExample,
+  createCodeBlockExample,
+  createTableExample,
 } from './const';
 
-export default function MarkdownPage() {
+export default function DemoPage() {
   const [initMessages] = useState<ConversationMessage[]>([
-    createTextTemplateExample(),
+    // Streamdown Markdown 渲染功能展示
+    createStreamdownFeaturesExample(),
+    createCodeBlockExample(),
+    createMermaidDiagramExample(),
+    createTableExample(),
     createMathTemplateExample(),
+
+    // Message Template 展示
+    createTextTemplateExample(),
+    createTextWithLinksTemplateExample(),
     createHintTemplateExample(),
     createButtonTemplateExample(),
     createCarouselTemplateExample(),

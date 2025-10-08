@@ -562,3 +562,260 @@ export function createTextWithLinksTemplateExample(): ConversationMessage {
     idx: 0,
   });
 }
+
+export function createStreamdownFeaturesExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: `# Streamdown Markdown Features Demo
+
+## Text Formatting
+
+This is **bold text**, this is *italic text*, and this is ***bold and italic***.
+
+You can also use ~~strikethrough~~ text.
+
+## Lists
+
+### Unordered List
+- First item
+- Second item
+  - Nested item 1
+  - Nested item 2
+- Third item
+
+### Ordered List
+1. First step
+2. Second step
+   1. Substep A
+   2. Substep B
+3. Third step
+
+## Blockquotes
+
+> This is a blockquote.
+>
+> It can span multiple lines and contains **formatted** text.
+>
+> > Nested blockquotes are also supported.
+
+## Inline Code and Code Blocks
+
+Use \`inline code\` for short snippets.
+
+## Horizontal Rule
+
+---
+
+## Links and Images
+
+Visit [Streamdown on GitHub](https://github.com/vercel/streamdown) for more information.
+
+## Task Lists
+
+- [x] Completed task
+- [ ] Pending task
+- [ ] Another pending task`,
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      quickReplies: [],
+    },
+  });
+}
+
+export function createCodeBlockExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: `# Code Syntax Highlighting Demo
+
+## TypeScript Example
+
+\`\`\`typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+function greetUser(user: User): string {
+  return \`Hello, \${user.name}!\`;
+}
+
+const user: User = {
+  id: 1,
+  name: "Alice",
+  email: "alice@example.com"
+};
+
+console.log(greetUser(user));
+\`\`\`
+
+## Python Example
+
+\`\`\`python
+def fibonacci(n):
+    """Generate Fibonacci sequence up to n terms"""
+    a, b = 0, 1
+    result = []
+    for _ in range(n):
+        result.append(a)
+        a, b = b, a + b
+    return result
+
+# Print first 10 Fibonacci numbers
+print(fibonacci(10))
+\`\`\`
+
+## JSON Example
+
+\`\`\`json
+{
+  "name": "Asgard JS SDK",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "^18.0.0",
+    "streamdown": "latest"
+  }
+}
+\`\`\`
+
+## Bash Example
+
+\`\`\`bash
+#!/bin/bash
+echo "Installing dependencies..."
+npm install
+npm run build
+echo "Build complete!"
+\`\`\``,
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      quickReplies: [],
+    },
+  });
+}
+
+export function createMermaidDiagramExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: `# Mermaid Diagram Examples
+
+## Flowchart
+
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+    C --> E[End]
+\`\`\`
+
+## Sequence Diagram
+
+\`\`\`mermaid
+sequenceDiagram
+    participant User
+    participant Chatbot
+    participant API
+    participant Database
+
+    User->>Chatbot: Send message
+    Chatbot->>API: Process request
+    API->>Database: Query data
+    Database-->>API: Return results
+    API-->>Chatbot: Generate response
+    Chatbot-->>User: Display message
+\`\`\`
+
+## Class Diagram
+
+\`\`\`mermaid
+classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +String breed
+        +bark()
+    }
+    class Cat {
+        +String color
+        +meow()
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat
+\`\`\``,
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      quickReplies: [],
+    },
+  });
+}
+
+export function createTableExample(): ConversationMessage {
+  return createBaseTemplateExample({
+    messageId: crypto.randomUUID(),
+    replyToCustomMessageId: '',
+    text: `# Markdown Table Examples
+
+## Simple Table
+
+| Feature | Supported | Notes |
+|---------|-----------|-------|
+| Text Formatting | ✅ | Bold, italic, strikethrough |
+| Code Blocks | ✅ | Syntax highlighting |
+| Math Equations | ✅ | KaTeX integration |
+| Mermaid Diagrams | ✅ | Flowcharts, sequences, etc. |
+| Tables | ✅ | This one! |
+
+## Alignment Examples
+
+| Left Aligned | Center Aligned | Right Aligned |
+|:-------------|:--------------:|--------------:|
+| Text | Text | Text |
+| 100 | 200 | 300 |
+| Alpha | Beta | Gamma |
+
+## Complex Table with Formatting
+
+| Package | Version | Status | Description |
+|---------|---------|--------|-------------|
+| **@asgard-js/core** | \`1.0.0\` | ✅ Active | Core client library |
+| **@asgard-js/react** | \`1.0.0\` | ✅ Active | React components |
+| **streamdown** | \`latest\` | ✅ Active | Markdown renderer |
+
+## Emoji Support
+
+| Emoji | Name | Category |
+|-------|------|----------|
+| 🚀 | Rocket | Travel |
+| 💻 | Laptop | Technology |
+| 📊 | Chart | Business |
+| 🎨 | Palette | Art |`,
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      quickReplies: [],
+    },
+  });
+}
