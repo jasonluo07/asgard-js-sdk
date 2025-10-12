@@ -7,7 +7,7 @@ import { Avatar } from '../avatar';
 import { Time } from '../time';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
-import { useMarkdownRenderer } from '../../../hooks/use-react-markdown-renderer';
+import { StreamdownClient } from './streamdown-client';
 
 interface TextTemplateProps {
   message: ConversationMessage;
@@ -21,10 +21,8 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
   const theme = useAsgardThemeContext();
   const { botMessage } = theme;
 
-  const { htmlBlocks, lastTypingText } = useMarkdownRenderer(
-    (message as ConversationBotMessage)?.message?.text || '',
-    20
-  );
+  const messageText = (message as ConversationBotMessage)?.message?.text || '';
+  const isBot = message.type === 'bot';
 
   const rootStyle = theme?.template?.TextMessageTemplate?.style;
 
@@ -85,8 +83,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
           className={clsx(classes.text, classes['text--bot'])}
           style={styles}
         >
-          {htmlBlocks}
-          {lastTypingText ?? ''}
+          {isBot ? <StreamdownClient>{messageText}</StreamdownClient> : messageText}
         </div>
       </TemplateBoxContent>
     </TemplateBox>

@@ -1,0 +1,8 @@
+/**
+ * Tailwind CSS v4 configuration for Streamdown
+ * Only scans streamdown's dist files to generate minimal CSS bundle
+ */
+@import "tailwindcss";
+
+/* Only scan streamdown's compiled JavaScript for class names */
+@source "../../../../node_modules/streamdown/dist/index.js";

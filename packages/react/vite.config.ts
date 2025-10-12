@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import { defineConfig as defineVitestConfig, mergeConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import dts from 'vite-plugin-dts';
 import svgr from 'vite-plugin-svgr';
 import * as path from 'path';
@@ -16,6 +17,7 @@ const viteConfig = defineConfig({
   },
   plugins: [
     react(),
+    tailwindcss(),
     svgr(),
     dts({
       entryRoot: 'src',
@@ -53,7 +55,10 @@ const viteConfig = defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@asgard-js/core'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@asgard-js/core', 'streamdown'],
+      output: {
+        format: 'es',
+      }
     },
   },
 });

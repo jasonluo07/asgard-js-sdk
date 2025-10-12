@@ -1,85 +1,10 @@
 import { NextRequest } from 'next/server';
-
-interface SseResponse {
-  eventType: string;
-  requestId: string;
-  eventId: string;
-  namespace: string;
-  botProviderName: string;
-  customChannelId: string;
-  fact: {
-    runInit?: Record<string, never> | null;
-    runDone?: Record<string, never> | null;
-    runError?: null;
-    processStart?: null;
-    processComplete?: null;
-    messageStart?: {
-      message: {
-        messageId: string;
-        replyToCustomMessageId: string;
-        text: string;
-        payload: null;
-        isDebug: boolean;
-        idx: null;
-        template: {
-          type: string;
-          text: string;
-        };
-      };
-    } | null;
-    messageDelta?: {
-      message: {
-        messageId: string;
-        replyToCustomMessageId: string;
-        text: string;
-        payload: null;
-        isDebug: boolean;
-        idx: number;
-        template: null;
-      };
-    } | null;
-    messageComplete?: {
-      message: {
-        messageId: string;
-        replyToCustomMessageId: string;
-        text: string;
-        payload: null;
-        isDebug: boolean;
-        idx: null;
-        template: {
-          type: string;
-          text: string;
-        };
-      };
-    } | null;
-    toolCallStart?: null;
-    toolCallComplete?: null;
-  };
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-
-function createBaseResponse(
-  eventType: string,
-  customChannelId: string
-): Omit<SseResponse, 'fact'> {
-  return {
-    eventType,
-    requestId: generateId(),
-    eventId: Date.now().toString(),
-    namespace: 'proj-mock-demo',
-    botProviderName: 'bp-mock-demo',
-    customChannelId,
-  };
-}
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export async function POST(request: NextRequest) {
+  // 延遲模擬處理時間
   await new Promise((resolve) => setTimeout(resolve, 1200));
-
-  const body = await request.json();
-  const { customChannelId, customMessageId, text } = body;
 
   // 設定 SSE headers
   const headers = new Headers({
@@ -92,158 +17,90 @@ export async function POST(request: NextRequest) {
   });
 
   const encoder = new TextEncoder();
-  const messageId = `msg-${Date.now()}`;
 
   const stream = new ReadableStream({
-    start(controller) {
-      const send = (event: string, data: SseResponse) => {
-        const message = `event:${event}\ndata:${JSON.stringify(data)}\n\n`;
-        controller.enqueue(encoder.encode(message));
-      };
+    async start(controller) {
+      try {
+        // 讀取 sse.txt 檔案（同目錄下）
+        const sseFilePath = join(process.cwd(), 'src/app/api/mock-sse/message/sse/sse2.txt');
+        const sseContent = readFileSync(sseFilePath, 'utf-8');
 
-      const sendWithDelay = (
-        delay: number,
-        event: string,
-        data: SseResponse
-      ) => {
+        // 將檔案內容按行分割
+        const lines = sseContent.split('\n');
+
+        // 用來存儲當前的事件和數據
+        let currentEvent = '';
+        let currentData = '';
+        let delay = 0;
+        const baseDelay = 10; // 基礎延遲 (毫秒) - 降低延遲提升速度
+
+        // 處理每一行
+        let eventIndex = 0;
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (line.startsWith('event:')) {
+            currentEvent = line;
+          } else if (line.startsWith('data:')) {
+            currentData = line;
+          }
+
+          // 當遇到空行時，表示一個完整的事件
+          if (line === '' && currentEvent && currentData) {
+            // 移除延遲以提升速度
+            // await new Promise(resolve => setTimeout(resolve, delay));
+
+            // 為每個事件添加唯一索引，避免 React key 重複問題
+            try {
+              const dataStr = currentData.substring(5); // 移除 "data:" 前綴
+              const dataObj = JSON.parse(dataStr);
+
+              // 添加唯一的事件索引
+              dataObj._uniqueEventIndex = eventIndex++;
+
+              // 重新序列化
+              const modifiedData = `data:${JSON.stringify(dataObj)}`;
+              const message = `${currentEvent}\n${modifiedData}\n\n`;
+              controller.enqueue(encoder.encode(message));
+            } catch (e) {
+              // 如果解析失敗，直接發送原始資料
+              const message = `${currentEvent}\n${currentData}\n\n`;
+              controller.enqueue(encoder.encode(message));
+            }
+
+            // 重置變量
+            currentEvent = '';
+            currentData = '';
+            delay += baseDelay; // 增加延遲以模擬真實的串流
+          }
+        }
+
+        // 如果最後還有剩餘的事件，發送它
+        if (currentEvent && currentData) {
+          // await new Promise(resolve => setTimeout(resolve, delay));
+
+          try {
+            const dataStr = currentData.substring(5);
+            const dataObj = JSON.parse(dataStr);
+            dataObj._uniqueEventIndex = eventIndex++;
+            const modifiedData = `data:${JSON.stringify(dataObj)}`;
+            const message = `${currentEvent}\n${modifiedData}\n\n`;
+            controller.enqueue(encoder.encode(message));
+          } catch (e) {
+            const message = `${currentEvent}\n${currentData}\n\n`;
+            controller.enqueue(encoder.encode(message));
+          }
+        }
+
+        // 關閉連接
         setTimeout(() => {
-          send(event, data);
+          controller.close();
         }, delay);
-      };
 
-      // 1. 發送 run.init
-      send('asgard.run.init', {
-        ...createBaseResponse('asgard.run.init', customChannelId),
-        fact: {
-          runInit: {} as Record<string, never>,
-          runDone: null,
-          runError: null,
-          processStart: null,
-          processComplete: null,
-          messageStart: null,
-          messageDelta: null,
-          messageComplete: null,
-          toolCallStart: null,
-          toolCallComplete: null,
-        },
-      });
-
-      // 2. 發送 message.start (延遲 100ms)
-      sendWithDelay(100, 'asgard.message.start', {
-        ...createBaseResponse('asgard.message.start', customChannelId),
-        fact: {
-          runInit: null,
-          runDone: null,
-          runError: null,
-          processStart: null,
-          processComplete: null,
-          messageStart: {
-            message: {
-              messageId,
-              replyToCustomMessageId: customMessageId,
-              text: '',
-              payload: null,
-              isDebug: false,
-              idx: null,
-              template: {
-                type: 'TEXT',
-                text: '',
-              },
-            },
-          },
-          messageDelta: null,
-          messageComplete: null,
-          toolCallStart: null,
-          toolCallComplete: null,
-        },
-      });
-
-      // 3. 模擬打字效果 - 分段發送 message.delta
-      const responseText = `你好！這是模擬 API 的回應。你剛才說：「${text}」\n\n這個模擬 API 會：\n- 模擬真實的 SSE 事件流\n- 包含完整的 Asgard 訊息格式\n- 提供打字動畫效果`;
-      let idx = 0;
-
-      const words = responseText.split('');
-
-      words.forEach((char, index) => {
-        sendWithDelay(200 + index * 50, 'asgard.message.delta', {
-          ...createBaseResponse('asgard.message.delta', customChannelId),
-          fact: {
-            runInit: null,
-            runDone: null,
-            runError: null,
-            processStart: null,
-            processComplete: null,
-            messageStart: null,
-            messageDelta: {
-              message: {
-                messageId,
-                replyToCustomMessageId: customMessageId,
-                text: char,
-                payload: null,
-                isDebug: false,
-                idx: idx++,
-                template: null,
-              },
-            },
-            messageComplete: null,
-            toolCallStart: null,
-            toolCallComplete: null,
-          },
-        });
-      });
-
-      // 4. 發送 message.complete (在所有 delta 完成後)
-      const completeDelay = 200 + words.length * 50 + 100;
-      sendWithDelay(completeDelay, 'asgard.message.complete', {
-        ...createBaseResponse('asgard.message.complete', customChannelId),
-        fact: {
-          runInit: null,
-          runDone: null,
-          runError: null,
-          processStart: null,
-          processComplete: null,
-          messageStart: null,
-          messageDelta: null,
-          messageComplete: {
-            message: {
-              messageId,
-              replyToCustomMessageId: customMessageId,
-              text: responseText,
-              payload: null,
-              isDebug: false,
-              idx: null,
-              template: {
-                type: 'TEXT',
-                text: responseText,
-              },
-            },
-          },
-          toolCallStart: null,
-          toolCallComplete: null,
-        },
-      });
-
-      // 5. 發送 run.done (最後)
-      sendWithDelay(completeDelay + 100, 'asgard.run.done', {
-        ...createBaseResponse('asgard.run.done', customChannelId),
-        fact: {
-          runInit: null,
-          runDone: {} as Record<string, never>,
-          runError: null,
-          processStart: null,
-          processComplete: null,
-          messageStart: null,
-          messageDelta: null,
-          messageComplete: null,
-          toolCallStart: null,
-          toolCallComplete: null,
-        },
-      });
-
-      // 6. 關閉連接 (最後)
-      setTimeout(() => {
-        controller.close();
-      }, completeDelay + 200);
+      } catch (error) {
+        console.error('Error reading sse.txt:', error);
+        controller.error(error);
+      }
     },
   });
 
