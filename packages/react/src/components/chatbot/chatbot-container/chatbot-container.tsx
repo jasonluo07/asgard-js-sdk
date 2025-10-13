@@ -1,5 +1,5 @@
 import { PropsWithChildren, ReactNode, useRef, CSSProperties } from 'react';
-import { useUpdateVh, usePreventScrollChaining } from '../../../hooks';
+import { useUpdateVh, usePreventScrollBoundaryChaining } from '../../../hooks';
 import { ChatbotFullScreenContainer } from './chatbot-full-screen-container';
 import classes from './chatbot-container.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
@@ -18,7 +18,7 @@ export function ChatbotContainer(props: ChatbotContainerProps): ReactNode {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useUpdateVh(rootRef);
-  usePreventScrollChaining(containerRef, '.asgard-chatbot-body');
+  usePreventScrollBoundaryChaining(containerRef);
 
   const {
     chatbot: {
