@@ -13,6 +13,7 @@ import { useAsgardAppInitializationContext } from '../../../context/asgard-app-i
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
+import DownloadSvg from '../../../icons/download.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
@@ -191,6 +192,11 @@ export function ChatbotFooter(): ReactNode {
     setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const handleDownloadClick = useCallback(() => {
+    // 下載按鈕的點擊處理
+    console.log('下載按鈕被點擊');
+  }, []);
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.setProperty(
@@ -243,6 +249,14 @@ export function ChatbotFooter(): ReactNode {
 
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <div className={styles.attachment_buttons}>
+          <button
+            className={styles.attachment_button}
+            onClick={handleDownloadClick}
+            disabled={isConnecting}
+            title="下載"
+          >
+            <DownloadSvg />
+          </button>
           {enableUpload && (
             <>
               <input
