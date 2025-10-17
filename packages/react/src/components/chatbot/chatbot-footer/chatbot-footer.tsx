@@ -20,7 +20,7 @@ import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, messages } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
@@ -192,10 +192,26 @@ export function ChatbotFooter(): ReactNode {
     setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleDownloadClick = useCallback(() => {
-    // 下載按鈕的點擊處理
-    console.log('下載按鈕被點擊');
-  }, []);
+  const handleDownloadClick = useCallback(async () => {
+    if (!messages) {
+      alert('目前沒有可下載的對話紀錄');
+      return;
+    }
+
+    try {
+      const { exportConversationToMarkdown, downloadMarkdown } = await import('../../../utils/export-conversation');
+
+      const markdown = exportConversationToMarkdown(messages, {
+        customChannelId,
+        botName: 'AI 助理',
+      });
+
+      downloadMarkdown(markdown);
+    } catch (error) {
+      console.error('下載對話紀錄失敗:', error);
+      alert('下載失敗，請重試');
+    }
+  }, [messages, customChannelId]);
 
   useEffect(() => {
     if (textareaRef.current) {

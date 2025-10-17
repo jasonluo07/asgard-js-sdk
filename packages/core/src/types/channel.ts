@@ -26,6 +26,7 @@ export type ConversationUserMessage = {
   blobIds?: string[];
   filePreviewUrls?: string[];
   time: Date;
+  traceId?: string;
 };
 
 export type ConversationBotMessage = {
@@ -36,6 +37,7 @@ export type ConversationBotMessage = {
   typingText: string | null;
   message: Message;
   time: Date;
+  traceId?: string;
 };
 
 export type ConversationErrorMessage = {
@@ -44,6 +46,7 @@ export type ConversationErrorMessage = {
   eventType: EventType;
   error: ErrorMessage;
   time: Date;
+  traceId?: string;
 };
 
 export type ConversationMessage =

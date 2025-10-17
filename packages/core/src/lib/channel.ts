@@ -21,6 +21,7 @@ export default class Channel {
   private conversation$: BehaviorSubject<Conversation>;
   private statesObserver?: ObserverOrNext<ChannelStates>;
   private statesSubscription?: Subscription;
+  private currentUserMessageId?: string;
 
   private constructor(config: ChannelConfig) {
     if (!config.client) {
@@ -85,16 +86,34 @@ export default class Channel {
         onSseStart: options?.onSseStart,
         onSseMessage: (response: SseResponse<EventType>) => {
           options?.onSseMessage?.(response);
+
+          if (this.currentUserMessageId && response.traceId) {
+            const messages = new Map(this.conversation$.value.messages);
+            const userMessage = messages.get(this.currentUserMessageId);
+
+            if (userMessage && userMessage.type === 'user') {
+              messages.set(this.currentUserMessageId, {
+                ...userMessage,
+                traceId: response.traceId,
+              });
+              this.conversation$.next(new Conversation({ messages }));
+            }
+
+            this.currentUserMessageId = undefined;
+          }
+
           this.conversation$.next(this.conversation$.value.onMessage(response));
         },
         onSseError: (err: unknown) => {
           options?.onSseError?.(err);
           this.isConnecting$.next(false);
+          this.currentUserMessageId = undefined;
           reject(err);
         },
         onSseCompleted: () => {
           options?.onSseCompleted?.();
           this.isConnecting$.next(false);
+          this.currentUserMessageId = undefined;
           resolve();
         },
       });
@@ -123,6 +142,8 @@ export default class Channel {
   ): Promise<void> {
     const text = payload.text.trim();
     const messageId = payload.customMessageId ?? crypto.randomUUID();
+
+    this.currentUserMessageId = messageId;
 
     this.conversation$.next(
       this.conversation$.value.pushMessage({

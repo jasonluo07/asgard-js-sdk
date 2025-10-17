@@ -52,6 +52,7 @@ export default class Conversation implements IConversation {
       messageId: message.messageId,
       message,
       time: new Date(),
+      traceId: response.traceId,
     });
 
     return new Conversation({ messages });
@@ -76,6 +77,7 @@ export default class Conversation implements IConversation {
       messageId: message.messageId,
       message,
       time: new Date(),
+      traceId: response.traceId ?? currentMessage.traceId,
     });
 
     return new Conversation({ messages });
@@ -88,6 +90,8 @@ export default class Conversation implements IConversation {
 
     const messages = new Map(this.messages);
 
+    const currentMessage = messages.get(message.messageId);
+
     messages.set(message.messageId, {
       type: 'bot',
       eventType: EventType.MESSAGE_COMPLETE,
@@ -96,6 +100,7 @@ export default class Conversation implements IConversation {
       messageId: message.messageId,
       message,
       time: new Date(),
+      traceId: response.traceId ?? (currentMessage?.type === 'bot' ? currentMessage.traceId : undefined),
     });
 
     return new Conversation({ messages });
@@ -113,6 +118,7 @@ export default class Conversation implements IConversation {
       messageId,
       error,
       time: new Date(),
+      traceId: response.traceId,
     });
 
     return new Conversation({ messages });
