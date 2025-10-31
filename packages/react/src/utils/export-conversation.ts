@@ -29,7 +29,7 @@ export function exportConversationToMarkdown(
   markdown += `**匯出時間**: ${exportTime}\n\n`;
 
   if (customChannelId) {
-    markdown += `**Channel ID**: ${customChannelId}\n\n`;
+    markdown += `**Channel ID**: \`${customChannelId}\`\n\n`;
   }
 
   markdown += '---\n\n';
