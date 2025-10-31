@@ -22,6 +22,7 @@ import {
 
 export interface AsgardServiceContextValue {
   avatar?: string;
+  title?: string;
   client: AsgardServiceClient | null;
   customChannelId?: string;
   isOpen: boolean;
@@ -40,6 +41,7 @@ export interface AsgardServiceContextValue {
 
 export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   avatar: undefined,
+  title: undefined,
   client: null,
   customChannelId: undefined,
   isOpen: false,
@@ -59,6 +61,7 @@ export interface AsgardServiceContextProviderProps {
     Partial<{ serviceContext?: AsgardServiceContextValue }>
   >;
   avatar?: string;
+  title?: string;
   config: ClientConfig;
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
@@ -77,6 +80,7 @@ export function AsgardServiceContextProvider(
 ): ReactNode {
   const {
     avatar,
+    title,
     children,
     parentRef,
     config,
@@ -113,6 +117,7 @@ export function AsgardServiceContextProvider(
   const contextValue = useMemo(
     () => ({
       avatar,
+      title,
       client,
       customChannelId,
       isOpen,
@@ -130,6 +135,7 @@ export function AsgardServiceContextProvider(
     }),
     [
       avatar,
+      title,
       client,
       customChannelId,
       isOpen,

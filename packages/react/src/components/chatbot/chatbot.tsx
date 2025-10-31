@@ -169,6 +169,7 @@ export const Chatbot = forwardRef(function Chatbot(
           <AsgardServiceContextProvider
             parentRef={ref}
             avatar={avatar}
+            title={title}
             config={config}
             customChannelId={customChannelId}
             initMessages={initMessages}
@@ -205,6 +206,7 @@ export const Chatbot = forwardRef(function Chatbot(
       <AsgardServiceContextProvider
         parentRef={ref}
         avatar={avatar}
+        title={title}
         config={config}
         customChannelId={customChannelId}
         initMessages={initMessages}

@@ -91,14 +91,27 @@ export function exportConversationToMarkdown(
   return markdown;
 }
 
-export function downloadMarkdown(content: string, filename?: string): void {
+export function downloadMarkdown(content: string, options?: { filename?: string; botName?: string }): void {
   const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
 
-  const defaultFilename = `conversation_${new Date().getTime()}.md`;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('zh-TW', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).replace(/\//g, '-');
+  const timeStr = now.toLocaleTimeString('zh-TW', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).replace(/:/g, '-');
+
+  const botName = options?.botName || 'Bot';
+  const defaultFilename = `${botName}_對話紀錄_${dateStr}_${timeStr}.md`;
   link.href = url;
-  link.download = filename ?? defaultFilename;
+  link.download = options?.filename ?? defaultFilename;
 
   document.body.appendChild(link);
   link.click();

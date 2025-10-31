@@ -173,13 +173,14 @@ export default function SimpleChatbot() {
               }}
               onSseMessage={handleSseMessage}
               customChannelId={customChannelId}
-              title="AI 助手"
+              title="測試人員"
               onClose={() => setIsOpen(false)}
               theme={theme}
               fullScreen={isMobile}
               initMessages={initMessages}
               avatar="https://img.icons8.com/fluency/48/bot.png"
               enableUpload={true}
+              enableExport
             />
           </div>
         </RemoveScroll>

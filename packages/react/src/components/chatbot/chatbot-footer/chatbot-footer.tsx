@@ -20,7 +20,7 @@ import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, enableExport: enableExportProp, messages } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, enableExport: enableExportProp, messages, title } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
@@ -42,6 +42,11 @@ export function ChatbotFooter(): ReactNode {
 
     return data.annotations?.embedConfig?.enableExport ?? false;
   }, [enableExportProp, data.annotations?.embedConfig?.enableExport]);
+
+  // Determine bot name: prioritize annotations, then prop, then default
+  const botName = useMemo(() => {
+    return data.annotations?.embedConfig?.title || title || 'Bot';
+  }, [data.annotations?.embedConfig?.title, title]);
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
@@ -213,15 +218,15 @@ export function ChatbotFooter(): ReactNode {
 
       const markdown = exportConversationToMarkdown(messages, {
         customChannelId,
-        botName: 'AI 助理',
+        botName,
       });
 
-      downloadMarkdown(markdown);
+      downloadMarkdown(markdown, { botName });
     } catch (error) {
       console.error('下載對話紀錄失敗:', error);
       alert('下載失敗，請重試');
     }
-  }, [messages, customChannelId]);
+  }, [messages, customChannelId, botName]);
 
   useEffect(() => {
     if (textareaRef.current) {
