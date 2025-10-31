@@ -132,6 +132,46 @@ When `enableLoadConfigFromService` is enabled, you can also control the upload f
 
 **Features**: Multiple file selection, image preview with modal view, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file, maximum 10 files at once.
 
+### Conversation Export
+
+The Chatbot component includes built-in conversation export functionality, allowing users to download chat history as Markdown files. You can control this feature using the `enableExport` prop.
+
+#### Enabling Conversation Export
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  enableExport={true}  // Explicitly enable conversation export
+/>
+```
+
+#### Control via Remote Configuration
+
+When `enableLoadConfigFromService` is enabled, you can also control the export feature through the bot provider's `embedConfig`:
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  enableLoadConfigFromService={true}
+  // Export feature will be controlled by annotations.embedConfig.enableExport from the API
+/>
+```
+
+**Configuration Priority** (highest to lowest):
+1. `enableExport` prop value
+2. `annotations.embedConfig.enableExport` from bot provider metadata
+3. Default: `false`
+
+**Features**: Download button in chatbot footer, exports conversation history with timestamps and trace IDs, human-readable filename format (`{BotName}_對話紀錄_{Date}_{Time}.md`).
+
 ### API Key Authentication
 
 For applications that need dynamic API key input (such as embedded chatbots), you can use the authentication state management:
@@ -222,6 +262,7 @@ config: {
 - **customActions?**: `ReactNode[]` - Custom actions to display on the chatbot header
 - **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
 - **enableUpload?**: `boolean` - Enable file upload functionality. When set, it takes priority over the `embedConfig.enableUpload` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Supports image files (JPEG, PNG, GIF, WebP) up to 20MB per file, maximum 10 files at once.
+- **enableExport?**: `boolean` - Enable conversation export functionality. When set, it takes priority over the `embedConfig.enableExport` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Adds a download button to the chatbot footer that exports the conversation history as a Markdown file with timestamps and trace IDs.
 - **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
 - **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
