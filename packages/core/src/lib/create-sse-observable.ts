@@ -20,6 +20,7 @@ export function createSseObservable(
 
   return new Observable<SseResponse<EventType>>((subscriber) => {
     const controller = new AbortController();
+    let currentTraceId: string | undefined;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -55,10 +56,23 @@ export function createSseObservable(
         if (!response.ok) {
           subscriber.error(response);
           controller.abort();
+        } else {
+          currentTraceId = response.headers.get('X-Trace-Id') ?? undefined;
         }
       },
       onmessage: (esm: EventSourceMessage) => {
-        subscriber.next(JSON.parse(esm.data));
+        const data = JSON.parse(esm.data) as SseResponse<EventType>;
+
+        if (currentTraceId) {
+          data.traceId = currentTraceId;
+        } else if (data.requestId) {
+          data.traceId = data.requestId;
+          if (!currentTraceId) {
+            currentTraceId = data.requestId;
+          }
+        }
+
+        subscriber.next(data);
       },
       onclose: () => {
         subscriber.complete();

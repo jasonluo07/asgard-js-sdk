@@ -169,6 +169,7 @@ export interface Fact<Type extends EventType> {
 export interface SseResponse<Type extends EventType> {
   eventType: Type;
   requestId: string;
+  traceId?: string;
   namespace: string;
   botProviderName: string;
   customChannelId: string;

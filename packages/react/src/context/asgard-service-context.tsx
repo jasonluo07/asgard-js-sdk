@@ -22,6 +22,7 @@ import {
 
 export interface AsgardServiceContextValue {
   avatar?: string;
+  title?: string;
   client: AsgardServiceClient | null;
   customChannelId?: string;
   isOpen: boolean;
@@ -35,10 +36,12 @@ export interface AsgardServiceContextValue {
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
   enableUpload?: boolean;
+  enableExport?: boolean;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   avatar: undefined,
+  title: undefined,
   client: null,
   customChannelId: undefined,
   isOpen: false,
@@ -49,6 +52,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
   enableUpload: undefined,
+  enableExport: undefined,
 });
 
 export interface AsgardServiceContextProviderProps {
@@ -57,10 +61,12 @@ export interface AsgardServiceContextProviderProps {
     Partial<{ serviceContext?: AsgardServiceContextValue }>
   >;
   avatar?: string;
+  title?: string;
   config: ClientConfig;
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
   enableUpload?: boolean;
+  enableExport?: boolean;
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
@@ -74,12 +80,14 @@ export function AsgardServiceContextProvider(
 ): ReactNode {
   const {
     avatar,
+    title,
     children,
     parentRef,
     config,
     botTypingPlaceholder,
     inputPlaceholder,
     enableUpload,
+    enableExport,
     customChannelId,
     initMessages,
     onSseMessage,
@@ -109,6 +117,7 @@ export function AsgardServiceContextProvider(
   const contextValue = useMemo(
     () => ({
       avatar,
+      title,
       client,
       customChannelId,
       isOpen,
@@ -121,10 +130,12 @@ export function AsgardServiceContextProvider(
       botTypingPlaceholder,
       inputPlaceholder,
       enableUpload,
+      enableExport,
       messageBoxBottomRef,
     }),
     [
       avatar,
+      title,
       client,
       customChannelId,
       isOpen,
@@ -137,6 +148,7 @@ export function AsgardServiceContextProvider(
       botTypingPlaceholder,
       inputPlaceholder,
       enableUpload,
+      enableExport,
     ]
   );
 

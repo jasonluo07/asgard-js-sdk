@@ -13,13 +13,14 @@ import { useAsgardAppInitializationContext } from '../../../context/asgard-app-i
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
+import DownloadSvg from '../../../icons/download.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, enableExport: enableExportProp, messages, title } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
@@ -32,6 +33,20 @@ export function ChatbotFooter(): ReactNode {
 
     return data.annotations?.embedConfig?.enableUpload ?? false;
   }, [enableUploadProp, data.annotations?.embedConfig?.enableUpload]);
+
+  // Determine enableExport: prioritize prop, then annotations
+  const enableExport = useMemo(() => {
+    if (enableExportProp !== undefined) {
+      return enableExportProp;
+    }
+
+    return data.annotations?.embedConfig?.enableExport ?? false;
+  }, [enableExportProp, data.annotations?.embedConfig?.enableExport]);
+
+  // Determine bot name: prioritize annotations, then prop, then default
+  const botName = useMemo(() => {
+    return data.annotations?.embedConfig?.title || title || 'Bot';
+  }, [data.annotations?.embedConfig?.title, title]);
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
@@ -191,6 +206,28 @@ export function ChatbotFooter(): ReactNode {
     setFilePreviewUrls(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const handleDownloadClick = useCallback(async () => {
+    if (!messages) {
+      alert('目前沒有可下載的對話紀錄');
+
+      return;
+    }
+
+    try {
+      const { exportConversationToMarkdown, downloadMarkdown } = await import('../../../utils/export-conversation');
+
+      const markdown = exportConversationToMarkdown(messages, {
+        customChannelId,
+        botName,
+      });
+
+      downloadMarkdown(markdown, { botName });
+    } catch (error) {
+      console.error('下載對話紀錄失敗:', error);
+      alert('下載失敗，請重試');
+    }
+  }, [messages, customChannelId, botName]);
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.setProperty(
@@ -243,6 +280,16 @@ export function ChatbotFooter(): ReactNode {
 
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <div className={styles.attachment_buttons}>
+          {enableExport && (
+            <button
+              className={styles.attachment_button}
+              onClick={handleDownloadClick}
+              disabled={isConnecting}
+              title="下載"
+            >
+              <DownloadSvg />
+            </button>
+          )}
           {enableUpload && (
             <>
               <input
