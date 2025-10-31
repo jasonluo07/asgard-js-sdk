@@ -42,6 +42,7 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   inputPlaceholder?: string;
   enableLoadConfigFromService?: boolean;
   enableUpload?: boolean;
+  enableExport?: boolean;
   maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
@@ -77,6 +78,7 @@ export const Chatbot = forwardRef(function Chatbot(
     inputPlaceholder,
     enableLoadConfigFromService = false,
     enableUpload,
+    enableExport,
     maintainConnectionWhenClosed = false,
     asyncInitializers = {},
     loadingComponent,
@@ -175,6 +177,7 @@ export const Chatbot = forwardRef(function Chatbot(
             botTypingPlaceholder={botTypingPlaceholder}
             inputPlaceholder={inputPlaceholder}
             enableUpload={enableUpload}
+            enableExport={enableExport}
           >
             <ChatbotContainer
               fullScreen={fullScreen}
@@ -210,6 +213,7 @@ export const Chatbot = forwardRef(function Chatbot(
         botTypingPlaceholder={botTypingPlaceholder}
         inputPlaceholder={inputPlaceholder}
         enableUpload={enableUpload}
+        enableExport={enableExport}
       >
         <ChatbotContainer
           fullScreen={fullScreen}

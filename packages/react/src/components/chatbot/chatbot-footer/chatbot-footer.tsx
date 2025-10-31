@@ -20,7 +20,7 @@ import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, messages } = useAsgardContext();
+  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, enableExport: enableExportProp, messages } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
@@ -33,6 +33,15 @@ export function ChatbotFooter(): ReactNode {
 
     return data.annotations?.embedConfig?.enableUpload ?? false;
   }, [enableUploadProp, data.annotations?.embedConfig?.enableUpload]);
+
+  // Determine enableExport: prioritize prop, then annotations
+  const enableExport = useMemo(() => {
+    if (enableExportProp !== undefined) {
+      return enableExportProp;
+    }
+
+    return data.annotations?.embedConfig?.enableExport ?? false;
+  }, [enableExportProp, data.annotations?.embedConfig?.enableExport]);
 
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
@@ -195,6 +204,7 @@ export function ChatbotFooter(): ReactNode {
   const handleDownloadClick = useCallback(async () => {
     if (!messages) {
       alert('目前沒有可下載的對話紀錄');
+
       return;
     }
 
@@ -265,14 +275,16 @@ export function ChatbotFooter(): ReactNode {
 
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <div className={styles.attachment_buttons}>
-          <button
-            className={styles.attachment_button}
-            onClick={handleDownloadClick}
-            disabled={isConnecting}
-            title="下載"
-          >
-            <DownloadSvg />
-          </button>
+          {enableExport && (
+            <button
+              className={styles.attachment_button}
+              onClick={handleDownloadClick}
+              disabled={isConnecting}
+              title="下載"
+            >
+              <DownloadSvg />
+            </button>
+          )}
           {enableUpload && (
             <>
               <input
