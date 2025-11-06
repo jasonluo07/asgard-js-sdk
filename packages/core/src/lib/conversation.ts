@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { EventType } from '../constants/enum';
 import { ConversationMessage, SseResponse } from '../types';
 
@@ -107,7 +108,7 @@ export default class Conversation implements IConversation {
   }
 
   onMessageError(response: SseResponse<EventType.ERROR>): Conversation {
-    const messageId = crypto.randomUUID();
+    const messageId = uuidv4();
     const error = response.fact.runError.error;
 
     const messages = new Map(this.messages);
