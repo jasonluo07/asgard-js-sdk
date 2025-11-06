@@ -1,4 +1,5 @@
 import { BehaviorSubject, combineLatest, map, Subscription } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import {
   ChannelConfig,
   ChannelStates,
@@ -141,7 +142,7 @@ export default class Channel {
     options?: FetchSseOptions
   ): Promise<void> {
     const text = payload.text.trim();
-    const messageId = payload.customMessageId ?? crypto.randomUUID();
+    const messageId = payload.customMessageId ?? uuidv4();
 
     this.currentUserMessageId = messageId;
 
