@@ -284,7 +284,6 @@ export function ChatbotFooter(): ReactNode {
             <button
               className={styles.attachment_button}
               onClick={handleDownloadClick}
-              disabled={isConnecting}
               title="下載"
             >
               <DownloadSvg />
@@ -303,7 +302,6 @@ export function ChatbotFooter(): ReactNode {
               <button
                 className={styles.attachment_button}
                 onClick={handleGalleryClick}
-                disabled={isConnecting}
                 title="選擇照片"
               >
                 <GallerySvg />
@@ -315,7 +313,6 @@ export function ChatbotFooter(): ReactNode {
           ref={textareaRef}
           className={styles.chatbot_textarea}
           style={chatbot.footer?.textArea?.style}
-          disabled={isConnecting}
           cols={40}
           value={value}
           placeholder={inputPlaceholder || "Enter message"}
