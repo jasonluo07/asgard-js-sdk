@@ -3,6 +3,7 @@ import { ReactNode, useCallback, useRef, useState } from 'react';
 import clsx from 'clsx';
 import styles from './root.module.scss';
 import { ConversationMessage, AuthState } from '@asgard-js/core';
+import { nanoid } from 'nanoid';
 import {
   createButtonTemplateExample,
   createCarouselTemplateExample,
@@ -17,7 +18,7 @@ const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
 
 
 export function Root(): ReactNode {
-  const [customChannelId] = useState(crypto.randomUUID());
+  const [customChannelId] = useState(nanoid());
   const [isOpen, setIsOpen] = useState(true);
   const [authState, setAuthState] = useState<AuthState>('authenticated');
 

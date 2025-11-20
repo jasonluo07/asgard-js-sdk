@@ -8,6 +8,7 @@ import {
   ConversationMessage,
   Message,
 } from '@asgard-js/core';
+import { nanoid } from 'nanoid';
 import styles from './page.module.css';
 
 const Chatbot = dynamic(
@@ -58,7 +59,7 @@ function createBaseTemplateExample(message: Message): ConversationMessage {
 }
 
 function createTextTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。(目前資料更新至 2024/08)',
@@ -76,7 +77,7 @@ function createTextTemplateExample(): ConversationMessage {
 }
 
 function createMathTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -94,7 +95,7 @@ function createMathTemplateExample(): ConversationMessage {
 }
 
 function createHintTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -112,7 +113,7 @@ function createHintTemplateExample(): ConversationMessage {
 }
 
 function createButtonTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -156,7 +157,7 @@ function createButtonTemplateExample(): ConversationMessage {
 }
 
 function createCarouselTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -219,7 +220,7 @@ function createCarouselTemplateExample(): ConversationMessage {
 }
 
 function createImageTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -252,7 +253,7 @@ export default function TemplatesPage(): JSX.Element {
   const [customChannelId, setCustomChannelId] = useState<string>('');
 
   useEffect(() => {
-    setCustomChannelId(crypto.randomUUID());
+    setCustomChannelId(nanoid());
   }, []);
 
   if (!customChannelId) {

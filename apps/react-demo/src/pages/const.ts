@@ -4,6 +4,7 @@ import {
   Message,
   MessageTemplateType,
 } from '@asgard-js/core';
+import { nanoid } from 'nanoid';
 
 const quickReplies = [
   { text: '死侍有上映嗎?' },
@@ -28,7 +29,7 @@ export function createBaseTemplateExample(
 }
 
 export function createTextTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     text: '我是秀泰影城 / 生活常見問答 AI，我可以回答你各項關於秀泰商場 / 影城相關的問題，你可以問我任何問題，我會盡力回答你。(目前資料更新至 2024/08)',
@@ -52,7 +53,7 @@ export function createTextTemplateExample(): ConversationMessage {
 }
 
 export function createHintTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -70,7 +71,7 @@ export function createHintTemplateExample(): ConversationMessage {
 }
 
 export function createButtonTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -114,7 +115,7 @@ export function createButtonTemplateExample(): ConversationMessage {
 }
 
 export function createCarouselTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     messageId,
@@ -310,7 +311,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
 
 export function createChartTemplateExample(): ConversationMessage {
   return createBaseTemplateExample({
-    messageId: crypto.randomUUID(),
+    messageId: nanoid(),
     replyToCustomMessageId: '',
     text: '這是圖表範例',
     payload: null,
@@ -445,7 +446,7 @@ export function createImageTemplateExample(
   height = 400
 ): ConversationMessage {
   return createBaseTemplateExample({
-    messageId: crypto.randomUUID(),
+    messageId: nanoid(),
     replyToCustomMessageId: '',
     text: '這是圖片範例',
     payload: null,
@@ -462,7 +463,7 @@ export function createImageTemplateExample(
 
 export function createMathTemplateExample(): ConversationMessage {
   return createBaseTemplateExample({
-    messageId: crypto.randomUUID(),
+    messageId: nanoid(),
     replyToCustomMessageId: '',
     text: `# Mathematical Expressions Demo
 
@@ -535,7 +536,7 @@ This demonstrates the power of **react-markdown** with **KaTeX** integration! �
 }
 
 export function createTextWithLinksTemplateExample(): ConversationMessage {
-  const messageId = crypto.randomUUID();
+  const messageId = nanoid();
 
   return createBaseTemplateExample({
     text: `# Hyperlink Demo

@@ -354,9 +354,11 @@ it('should maintain performance with math expressions', async () => {
 
 ```typescript
 // In apps/react-demo/src/pages/const.ts
+import { nanoid } from 'nanoid';
+
 export function createMathTemplateExample(): ConversationMessage {
   return createBaseTemplateExample({
-    messageId: crypto.randomUUID(),
+    messageId: nanoid(),
     replyToCustomMessageId: '',
     text: `# Mathematical Expressions Demo
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { Chatbot } from '@asgard-js/react';
+import { nanoid } from 'nanoid';
 
 const CONFIG = {
   botProviderEndpoint:
@@ -10,7 +11,7 @@ const CONFIG = {
 export default function RealPage() {
   return (
     <Chatbot
-      customChannelId={crypto.randomUUID()}
+      customChannelId={nanoid()}
       config={CONFIG}
       fullScreen={true}
       enableUpload={true}

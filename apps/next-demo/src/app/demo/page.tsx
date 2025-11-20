@@ -3,6 +3,7 @@
 import { Chatbot } from '@asgard-js/react';
 import { ConversationMessage } from '@asgard-js/core';
 import { useState } from 'react';
+import { nanoid } from 'nanoid';
 import {
   createTextTemplateExample,
   createMathTemplateExample,
@@ -41,7 +42,7 @@ export default function DemoPage() {
   return (
     <div>
       <Chatbot
-        customChannelId={crypto.randomUUID()}
+        customChannelId={nanoid()}
         config={{
           botProviderEndpoint:
             process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||

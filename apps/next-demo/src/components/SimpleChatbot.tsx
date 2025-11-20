@@ -10,6 +10,7 @@ import {
   SseResponse,
 } from '@asgard-js/core';
 import type { ChatbotRef } from '@asgard-js/react';
+import { nanoid } from 'nanoid';
 import { ChatIcon } from '~/icons';
 import QuickQuestionButtons from './QuickQuestionButtons';
 
@@ -79,7 +80,7 @@ export default function SimpleChatbot() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setCustomChannelId(crypto.randomUUID());
+    setCustomChannelId(nanoid());
 
     // 檢查螢幕寬度
     const checkScreenSize = () => {

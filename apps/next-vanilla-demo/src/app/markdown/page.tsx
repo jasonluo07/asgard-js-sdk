@@ -7,6 +7,7 @@ import {
   MessageTemplateType,
   ConversationMessage,
 } from '@asgard-js/core';
+import { nanoid } from 'nanoid';
 import styles from './page.module.css';
 
 const Chatbot = dynamic(
@@ -118,7 +119,7 @@ export default function MarkdownPage(): JSX.Element {
   const [customChannelId, setCustomChannelId] = useState<string>('');
 
   useEffect(() => {
-    setCustomChannelId(crypto.randomUUID());
+    setCustomChannelId(nanoid());
   }, []);
 
   if (!customChannelId) {
