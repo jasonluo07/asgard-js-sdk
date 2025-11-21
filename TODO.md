@@ -8,23 +8,24 @@
 
 ### 問題重現步驟
 
-1. 在 iOS Safari 或 Android Chrome 上開啟全螢幕 Chatbot
+1. 在 **iOS Chrome** 上開啟全螢幕 Chatbot
 2. 點擊輸入框以喚起虛擬鍵盤
 3. 觀察畫面變化
 
+**測試環境**：
+- 裝置：iPhone 12
+- 系統：iOS 26
+- 瀏覽器：Chrome for iOS
+- 重現率：100%（每次點擊輸入框都會發生）
+
 ### 實際行為（Bug）
 
-**階段 1 - 鍵盤彈出瞬間 (0-100ms)**
-- ⚠️ Chatbot 容器開始被向上推移
-- ⚠️ 視窗高度開始縮小
+**點擊輸入框的瞬間**：
+- ❌ **整個 Chatbot 容器向上跳動**
+- ❌ 容器被推出可視範圍
+- ❌ 頂部內容（標題欄、聊天記錄）瞬間消失
 
-**階段 2 - 鍵盤完全顯示 (100-300ms)**
-- ❌ **整個 Chatbot 被推出可視範圍**
-- ❌ 頂部內容（標題欄、聊天記錄）幾乎完全消失在螢幕上方
-- ❌ 只能看到一小部分或完全看不到聊天內容
-- ❌ 輸入框位置正確，但容器高度計算錯誤
-
-**階段 3 - 延遲修正 (~1000ms 後)**
+**延遲修正（~1000ms 後）**：
 - ✅ Chatbot 自動「掉下來」回到正確位置
 - ✅ 標題欄和內容重新可見
 - ⏱️ **有明顯的 1 秒延遲**，使用者體驗極差
@@ -42,16 +43,29 @@
 
 ### 根本原因
 
-根據 2025 年的網路查證，這是一個已知的**瀏覽器 Viewport 處理時序問題**：
+根據 2025 年的網路查證，這是一個已知的 **iOS `position: fixed` 與虛擬鍵盤衝突問題**：
 
-#### 1. **iOS Safari 的特殊行為**
-- 📱 **Layout Viewport 不變**：Safari 在鍵盤顯示時不會改變 Layout Viewport 的大小
-- 👁️ **Visual Viewport 縮小**：只有 Visual Viewport 會縮小以適應鍵盤
-- 🔕 **不觸發 window resize**：由於 `window.innerHeight` 不變，`window.resize` 事件不會觸發
-- ⏱️ **已知延遲 Bug**：Safari 的 `visualViewport.resize` 事件會延遲約 1 frame
+#### 1. **iOS Chrome/Safari 的 `position: fixed` 問題**
+
+**核心問題**：
+- 📱 iOS 在虛擬鍵盤彈出時會**重新計算 `position: fixed` 元素的位置**
+- 🔄 Safari 不會將 `position: fixed` 元素視為固定，而是**暫時變成類似 `position: static` 的行為**
+- ⚡ 重新計算發生在鍵盤彈出的**瞬間**，導致元素向上跳動
+- ⏱️ 之後需要等待 viewport 穩定後才會修正回來
+
+**iOS Chrome 與 Safari 的共同點**：
+- iOS Chrome 底層使用 WebKit，與 Safari 有相同的 `position: fixed` 問題
+- Chrome 108+ 已將 viewport 行為對齊 Safari（只縮小 Visual Viewport，不改變 Layout Viewport）
+- 兩者在處理虛擬鍵盤時的行為已趨於一致
+
+**為什麼會跳動**：
+- iOS 不改變 Layout Viewport 大小，鍵盤只是覆蓋在頁面上方
+- `position: fixed` 的底部元素實際上還在螢幕底部，但被鍵盤遮擋
+- 當鍵盤彈出時，瀏覽器會**錯誤地重新定位 fixed 元素**，導致整個容器被推出螢幕
 
 參考：
-- [Fixing iOS Safari Viewport Shift Issues (2025)](https://blog.ni18.in/fixing-ios-safari-viewport-shift-issues/)
+- [Is there any fix to iOS, safari and chrome fixed position for when keyboard shows up?](https://stackoverflow.com/questions/77200936/is-there-any-fix-to-ios-safari-and-chrome-fixed-position-for-when-keyboard-show)
+- [Stop the iOS keyboard hiding your sticky or fixed position header](https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix)
 - [iOS 18 beta viewport issues](https://gist.github.com/claus/622a938d21d80f367251dc2eaaa1b2a9)
 
 #### 2. **React 狀態更新時序問題**
@@ -108,62 +122,108 @@ const styles = useMemo(() => {
 
 ## 解決方案探索
 
-根據 2025 年的最佳實踐，有以下幾種方案：
+根據 2025 年的最佳實踐，針對 iOS `position: fixed` 問題有以下方案：
 
-### 選項 1：使用 CSS Dynamic Viewport Height (dvh) ⭐ 推薦
+### 選項 1：iOS 改用 `position: absolute` + 動態高度 ⭐ 最穩定
+
+**核心策略**：在 iOS 上避免使用 `position: fixed`
+
+**實作要點**：
+1. 偵測 iOS 裝置（檢查 `navigator.userAgent`）
+2. 在 iOS 上將 `.full_screen` 從 `position: fixed` 改為 `position: absolute`
+3. 使用 `window.visualViewport.height` 動態計算高度
+4. 監聽 `input` 元素的 `focus/blur` 事件（而非 `resize` 事件）
+5. 在 `focus` 時立即更新高度，避免延遲
+
 **優點：**
-- ✅ 純 CSS 解決方案，無需 JavaScript
-- ✅ 自動適應 Visual Viewport 變化
-- ✅ 無延遲、無閃爍
-- ✅ 瀏覽器原生支援（Chrome 108+, Safari 15.4+）
+- ✅ 徹底避免 iOS `position: fixed` 的跳動問題
+- ✅ `focus` 事件比 `visualViewport.resize` 更即時、更可靠
+- ✅ 無需等待瀏覽器重新計算，立即響應
+- ✅ 解決「向上跳動」的根本原因
 
-**實作：**
+**缺點：**
+- ⚠️ 需要針對 iOS 特殊處理
+- ⚠️ 程式碼複雜度增加
+- ⚠️ 需要維護 iOS 偵測邏輯
+
+**參考：**
+- [Stop the iOS keyboard hiding your sticky or fixed position header](https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix)
+- [iOS fix for position fixed elements on input focus](https://dansajin.com/2012/12/07/fix-position-fixed/)
+
+---
+
+### 選項 2：使用 CSS Dynamic Viewport Height (dvh) + 優化事件監聽
+
+**核心策略**：利用現代 CSS `dvh` 單位自動適應
+
+**實作要點**：
 ```scss
 .full_screen {
-  height: 100dvh; // 取代 calc(var(--vh, 1vh) * 100)
+  height: calc(var(--vh, 1vh) * 100); /* fallback */
+  height: 100dvh; /* 現代瀏覽器會覆蓋上一行 */
 }
 ```
 
-**缺點：**
-- ⚠️ 需要測試舊版瀏覽器相容性
-- ⚠️ 可能需要保留 fallback
+**配合 JavaScript 優化**：
+1. 移除 `setTimeout(updateViewportSize, 1000)` 的 1 秒延遲
+2. 改用 `requestAnimationFrame` 避免重複更新
+3. 只監聽 `visualViewport.resize` 事件
 
-參考：[Fix mobile keyboard overlap with dvh](https://www.franciscomoretti.com/blog/fix-mobile-keyboard-overlap-with-visualviewport)
-
-### 選項 2：優化 visualViewport 監聽機制
 **優點：**
-- ✅ 更精確的時序控制
-- ✅ 可同時處理高度和 padding
+- ✅ 程式碼改動最小
+- ✅ 利用瀏覽器原生支援（Chrome 108+, Safari 15.4+）
+- ✅ 無需平台偵測
+- ✅ 移除延遲後響應速度更快
 
-**實作要點：**
-1. 使用 `requestAnimationFrame` 避免多次重複觸發
-2. 縮短延遲時間從 1000ms 改為 100-200ms（或移除延遲）
-3. 監聽 `visualViewport.resize` 並立即更新 React 狀態
+**缺點：**
+- ⚠️ **無法解決 iOS `position: fixed` 的跳動問題**
+- ⚠️ `dvh` 單位對虛擬鍵盤的支援因瀏覽器而異
+- ⚠️ 可能還是會有輕微閃爍
 
+**重要限制**：
+根據 2025 年文件，`dvh` 單位**預設不考慮虛擬鍵盤**：
+> "The on-screen keyboard (also known as the virtual keyboard) is not considered part of the UA UI. Therefore it does not affect the size of the viewport units."
+
+**參考：**
+- [Fix mobile keyboard overlap with dvh](https://www.franciscomoretti.com/blog/fix-mobile-keyboard-overlap-with-visualviewport)
+- [Understanding dvh: The CSS Dynamic Viewport Height](https://mayank1513.medium.com/understanding-dvh-the-css-dynamic-viewport-height-9ddf70a77c6c)
+
+---
+
+### 選項 3：混合方案（推薦） ⭐⭐
+
+**結合選項 1 和選項 2 的優點**：
+
+1. **CSS 層**：使用 `dvh` + `position: fixed` 作為基礎（適用於大部分瀏覽器）
+2. **JavaScript 層**：偵測到 iOS 時，動態改用 `position: absolute`
+3. **事件監聽**：監聽 `input` 的 `focus/blur` 事件立即調整
+4. **效能優化**：使用 `requestAnimationFrame` 避免重複更新
+
+**實作策略**：
 ```typescript
-useEffect(() => {
-  let rafId: number;
+// 1. 偵測 iOS
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
-  function handleResize(): void {
-    if (rafId) cancelAnimationFrame(rafId);
+// 2. iOS 上改用 absolute + focus/blur 事件
+if (isIOS) {
+  container.style.position = 'absolute';
 
-    rafId = requestAnimationFrame(() => {
-      const height = window.visualViewport?.height ?? window.innerHeight;
-      setViewportSize([window.innerWidth, height]);
-    });
-  }
-
-  window.visualViewport?.addEventListener('resize', handleResize);
-  return () => {
-    window.visualViewport?.removeEventListener('resize', handleResize);
-    if (rafId) cancelAnimationFrame(rafId);
-  };
-}, []);
+  inputElement.addEventListener('focus', () => {
+    // 立即更新高度，無延遲
+    updateHeight(window.visualViewport.height);
+  });
+}
 ```
 
-參考：[Dealing with the Visual Viewport](https://rdavis.io/articles/dealing-with-the-visual-viewport)
+**優點：**
+- ✅ 針對 iOS 特殊處理，徹底解決跳動問題
+- ✅ 其他平台使用標準 CSS，程式碼簡潔
+- ✅ `focus` 事件響應即時，無閃爍
+- ✅ 向下相容，舊瀏覽器有 fallback
 
-### 選項 3：使用 VirtualKeyboard API
+---
+
+### 選項 4：使用 VirtualKeyboard API
 **優點：**
 - ✅ 專門為虛擬鍵盤設計的 API
 - ✅ 提供 `keyboard-inset-*` CSS 環境變數
@@ -188,46 +248,95 @@ if ('virtualKeyboard' in navigator) {
 
 參考：[VirtualKeyboard API](https://developer.mozilla.org/en-US/docs/Web/API/VirtualKeyboard_API)
 
-### 選項 4：viewport meta tag 設定
+### 選項 5：viewport meta tag 設定
+
 **實作：**
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 ```
 
 **缺點：**
-- ❌ **iOS Safari 不支援 `interactive-widget`**（截至 2024-2025）
-- ✅ Chrome 和 Firefox 有效
+- ❌ **iOS Safari/Chrome 不支援 `interactive-widget`**（截至 2024-2025）
+- ✅ 僅 Android Chrome 和 Firefox 有效
 
 ---
 
 ## 建議的修復方案
 
-### 🎯 階段 1：快速修復（最小變動）
-1. **縮短延遲時間**
-   - 將 `use-viewport-size.ts` 的 `setTimeout` 從 1000ms 改為 100-200ms
-   - 或改用 `requestAnimationFrame`
+### 🎯 方案 A：先測試已完成的優化（最小變動）
 
-2. **測試驗證**
-   - iOS Safari (最新版 + iOS 18 beta)
-   - Android Chrome
-   - 各種裝置尺寸
+**已完成的修改**：
+1. ✅ 移除 `setTimeout(updateViewportSize, 1000)` 的 1 秒延遲
+2. ✅ 改用 `requestAnimationFrame` 避免重複更新
+3. ✅ CSS 加入 `height: 100dvh` 並保留 fallback
 
-### 🎯 階段 2：根本解決（推薦）
-1. **採用 dvh 單位**
-   - 在 `chatbot-container.module.scss` 使用 `100dvh`
-   - 保留 fallback 以支援舊瀏覽器
+**測試重點**：
+- 在 iOS 26 + iPhone 12 + Chrome 上測試
+- 觀察點擊輸入框時是否還有向上跳動
+- 觀察修正速度是否改善
 
-2. **優化 viewport 監聽**
-   - 使用 `requestAnimationFrame` 避免重複計算
-   - 只監聽 `visualViewport.resize`（移除 `window.resize`）
+**預期結果**：
+- ⚡ 修正速度應該更快（從 1 秒降到幾十毫秒）
+- ⚠️ 可能還是會有輕微跳動（因為 `position: fixed` 問題未解決）
 
-3. **移除不必要的延遲**
-   - 檢查是否仍需要 `effectTwice` 的雙次更新機制
+---
 
-### 🎯 階段 3：長期優化
-1. **考慮 VirtualKeyboard API**
-   - 為支援的瀏覽器提供更好的體驗
-   - 漸進增強策略
+### 🎯 方案 B：實作混合方案（推薦，徹底解決） ⭐
+
+如果方案 A 還是有明顯跳動，則實作**選項 3：混合方案**
+
+**實作步驟**：
+
+1. **創建 iOS 偵測 hook**
+   ```typescript
+   // packages/react/src/hooks/use-is-ios.ts
+   export function useIsIOS(): boolean {
+     return /iPhone|iPad|iPod/.test(navigator.userAgent);
+   }
+   ```
+
+2. **創建 iOS 專用的容器樣式處理**
+   ```typescript
+   // 在 chatbot-full-screen-container.tsx
+   const isIOS = useIsIOS();
+
+   const containerClassName = useMemo(() => {
+     return clsx(
+       classes.full_screen,
+       isIOS && classes.full_screen_ios  // iOS 專用 class
+     );
+   }, [isIOS]);
+   ```
+
+3. **SCSS 加入 iOS 專用樣式**
+   ```scss
+   .full_screen {
+     position: fixed; // 預設
+     height: 100dvh;
+
+     &.full_screen_ios {
+       position: absolute; // iOS 改用 absolute
+     }
+   }
+   ```
+
+4. **監聽 input focus/blur 事件**
+   - 在 `chatbot-input` 組件加入 `onFocus` handler
+   - focus 時立即觸發 `updateViewportSize()`
+   - 確保即時更新高度
+
+**預期效果**：
+- ✅ 徹底解決 iOS 的 `position: fixed` 跳動問題
+- ✅ 響應速度極快（focus 事件立即觸發）
+- ✅ 其他平台不受影響
+
+---
+
+### 🎯 方案 C：長期優化
+
+未來可考慮：
+1. **VirtualKeyboard API**（等 iOS 支援後）
+2. **添加單元測試**模擬各種裝置和場景
 
 2. **添加單元測試**
    - 模擬 viewport resize 事件
@@ -237,22 +346,41 @@ if ('virtualKeyboard' in navigator) {
 
 ## 影響範圍
 
-**檔案：**
-- ✏️ `packages/react/src/hooks/use-viewport-size.ts` - 需要修改
-- ✏️ `packages/react/src/components/chatbot/chatbot-container/chatbot-container.module.scss` - 可選修改
-- ✏️ `packages/react/src/components/chatbot/chatbot-container/chatbot-full-screen-container.tsx` - 可能需要調整
+### 方案 A（已完成）
+- ✅ `packages/react/src/hooks/use-viewport-size.ts` - 已移除 1 秒延遲，改用 `requestAnimationFrame`
+- ✅ `packages/react/src/components/chatbot/chatbot-container/chatbot-container.module.scss` - 已加入 `100dvh`
 
-**測試重點：**
+### 方案 B（若需要實作）
+- ➕ `packages/react/src/hooks/use-is-ios.ts` - 新增 iOS 偵測 hook
+- ✏️ `packages/react/src/components/chatbot/chatbot-container/chatbot-full-screen-container.tsx` - 加入 iOS 判斷邏輯
+- ✏️ `packages/react/src/components/chatbot/chatbot-container/chatbot-container.module.scss` - 加入 iOS 專用 class
+- ✏️ `packages/react/src/components/chatbot/chatbot-input/...` - 加入 focus 事件處理
+
+---
+
+## 測試重點
+
+**主要測試環境**：
+- 📱 **iOS 26 + iPhone 12 + Chrome** ⭐ 核心問題發生環境
 - 📱 iOS Safari (14+)
-- 📱 iOS Safari iOS 18 beta
 - 📱 Android Chrome (latest)
 - 📱 不同螢幕尺寸 (iPhone SE ~ iPad)
-- ⌨️ 虛擬鍵盤開啟/關閉流暢度
-- ⌨️ 快速連續操作的穩定性
+
+**測試項目**：
+1. ⌨️ 點擊輸入框時是否有向上跳動
+2. ⌨️ 修正速度（應該在幾十毫秒內完成）
+3. ⌨️ 虛擬鍵盤開啟/關閉的流暢度
+4. ⌨️ 快速連續點擊輸入框的穩定性
+5. 📏 容器高度是否正確適應鍵盤
 
 ---
 
 ## 參考資料
+
+### iOS Position Fixed 問題
+- [Is there any fix to iOS, safari and chrome fixed position for when keyboard shows up?](https://stackoverflow.com/questions/77200936/is-there-any-fix-to-ios-safari-and-chrome-fixed-position-for-when-keyboard-show) ⭐ 核心討論
+- [Stop the iOS keyboard hiding your sticky or fixed position header](https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix)
+- [iOS fix for position fixed elements on input focus](https://dansajin.com/2012/12/07/fix-position-fixed/)
 
 ### 官方文檔
 - [Visual Viewport API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)
@@ -260,10 +388,10 @@ if ('virtualKeyboard' in navigator) {
 - [CSS env() - MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/env)
 
 ### 技術文章 (2025)
-- [Fixing iOS Safari Viewport Shift Issues](https://blog.ni18.in/fixing-ios-safari-viewport-shift-issues/)
 - [Fix mobile keyboard overlap with dvh](https://www.franciscomoretti.com/blog/fix-mobile-keyboard-overlap-with-visualviewport)
+- [Understanding dvh: The CSS Dynamic Viewport Height](https://mayank1513.medium.com/understanding-dvh-the-css-dynamic-viewport-height-9ddf70a77c6c)
 - [Dealing with the Visual Viewport](https://rdavis.io/articles/dealing-with-the-visual-viewport)
-- [Safe-area-inset-bottom does not update for keyboard](https://webventures.rejh.nl/blog/2025/safe-area-inset-bottom-does-not-update/)
+- [iOS 18 beta viewport issues](https://gist.github.com/claus/622a938d21d80f367251dc2eaaa1b2a9)
 
 ### GitHub Issues
 - [Difficult to react to changes in visualViewport](https://github.com/WICG/visual-viewport/issues/44)
@@ -274,14 +402,30 @@ if ('virtualKeyboard' in navigator) {
 ## 優先級
 
 - **Priority:** 🔴 Critical
-- **Severity:** High - 嚴重影響行動裝置使用者體驗
-- **Effort:** Medium - 需要仔細測試多種裝置和瀏覽器
-- **Risk:** Low-Medium - 變更核心佈局邏輯，需充分測試
+- **Severity:** High - 嚴重影響 iOS 使用者體驗（100% 重現率）
+- **Effort:**
+  - 方案 A（已完成）：Low - 已完成初步優化
+  - 方案 B（若需要）：Medium - 需要加入 iOS 偵測和特殊處理
+- **Risk:** Low - 變更已經過充分調查，且有 fallback 機制
+
+---
+
+## 當前狀態
+
+- **方案 A**：✅ 已完成（2025-01-21）
+  - 已移除 1 秒延遲
+  - 已改用 `requestAnimationFrame`
+  - 已加入 `100dvh` CSS
+  - **待測試**：需在 iOS 26 + iPhone 12 + Chrome 上驗證效果
+
+- **方案 B**：⏸️ 待定
+  - 如果方案 A 測試後還有明顯跳動，則實作混合方案
+  - 預計工時：4-6 小時
 
 ---
 
 **建立日期：** 2025-01-21
-**最後更新：** 2025-01-21
+**最後更新：** 2025-01-21（重新調查 iOS Chrome 問題）
 **負責人：** TBD
 
 ---
