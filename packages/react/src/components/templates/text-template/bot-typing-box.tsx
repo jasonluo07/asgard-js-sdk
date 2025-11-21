@@ -21,7 +21,28 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
   const ref = useRef<HTMLDivElement>(null);
 
   const onResize = useCallback(() => {
-    messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const bottomElement = messageBoxBottomRef.current;
+    if (!bottomElement) return;
+
+    // 找到滾動容器（chatbot_body）
+    let scrollContainer = bottomElement.parentElement;
+    while (scrollContainer && scrollContainer.scrollHeight <= scrollContainer.clientHeight) {
+      scrollContainer = scrollContainer.parentElement;
+    }
+
+    if (!scrollContainer) {
+      bottomElement.scrollIntoView({ behavior: 'smooth' });
+
+      return;
+    }
+
+    // 檢查是否在底部（threshold = 50px）
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
+
+    if (isAtBottom) {
+      bottomElement.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messageBoxBottomRef]);
 
   useResizeObserver({ ref, onResize });

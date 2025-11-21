@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import {
   useIsOnScreenKeyboardOpen,
   useOnScreenKeyboardScrollFix,
-  usePreventScrollBoundaryChaining,
+  usePreventOverScrolling,
   useViewportSize,
 } from '../../../hooks';
 import classes from './chatbot-container.module.scss';
@@ -18,7 +18,7 @@ export function ChatbotFullScreenContainer(
 
   const theme = useAsgardThemeContext();
 
-  usePreventScrollBoundaryChaining(containerRef);
+  usePreventOverScrolling(containerRef);
 
   const [, height] = useViewportSize() ?? [];
 
