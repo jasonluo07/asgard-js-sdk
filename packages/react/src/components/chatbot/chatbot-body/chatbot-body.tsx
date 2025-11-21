@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useMemo } from 'react';
+import { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
 import { BotTypingPlaceholder } from '../../templates';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { useIsAtBottom } from '../../../hooks';
 import clsx from 'clsx';
 
 export function ChatbotBody(): ReactNode {
@@ -12,9 +13,14 @@ export function ChatbotBody(): ReactNode {
   const { messages, messageBoxBottomRef, botTypingPlaceholder } =
     useAsgardContext();
 
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const isAtBottom = useIsAtBottom(bodyRef);
+
   useEffect(() => {
-    messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, messageBoxBottomRef]);
+    if (isAtBottom) {
+      messageBoxBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, messageBoxBottomRef, isAtBottom]);
 
   const contentStyles = useMemo(
     () => ({
@@ -25,6 +31,7 @@ export function ChatbotBody(): ReactNode {
 
   return (
     <div
+      ref={bodyRef}
       className={clsx('asgard-chatbot-body', styles.chatbot_body)}
       style={chatbot?.body?.style}
     >
