@@ -11,12 +11,11 @@ export function StreamdownClient({ children }: StreamdownClientProps): ReactNode
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadStreamdown = async () => {
+    const loadStreamdown = async (): Promise<void> => {
       try {
         const { Streamdown } = await import('streamdown');
         setStreamdownComponent(() => Streamdown);
-      } catch (err) {
-        console.error('Failed to load Streamdown:', err);
+      } catch {
         setError(true);
       }
     };
@@ -25,7 +24,7 @@ export function StreamdownClient({ children }: StreamdownClientProps): ReactNode
   }, []);
 
   if (error || !StreamdownComponent) {
-    return <>{children}</>;
+    return children;
   }
 
   return <StreamdownComponent>{children}</StreamdownComponent>;

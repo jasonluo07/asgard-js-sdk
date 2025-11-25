@@ -6,14 +6,36 @@ module.exports = [
   ...nx.configs['flat/javascript'],
   {
     ignores: [
-      '.nx',
-      'node_modules/.cache',
-      'node_modules',
-      'vitest.workspace.ts',
-      '**/dist',
+      // Build outputs
+      '**/dist/**',
+      '**/build/**',
+      '**/out/**',
+      '**/.next/**',
+      '**/coverage/**',
+
+      // Dependencies & cache
+      '**/node_modules/**',
+      '**/.nx/**',
+      '**/.cache/**',
+
+      // Config files
       '**/eslint.config.cjs',
-      '**/playwright.config.ts',
+      '**/eslint.config.mjs',
       '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/vitest.workspace.ts',
+      '**/playwright.config.ts',
+      '**/next.config.ts',
+      '**/next.config.js',
+      '**/next.config.mjs',
+      '**/tailwind.config.js',
+      '**/tailwind.config.ts',
+      '**/postcss.config.js',
+      '**/postcss.config.mjs',
+
+      // Generated files
+      '**/*.generated.*',
+      '**/*.d.ts',
     ],
   },
   {

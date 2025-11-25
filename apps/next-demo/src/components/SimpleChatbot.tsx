@@ -132,6 +132,7 @@ export default function SimpleChatbot() {
       } else {
         waitAndSend();
       }
+
       questionToSendRef.current = null;
     }
   };

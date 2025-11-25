@@ -10,7 +10,7 @@ interface StreamdownWrapperProps {
 
 export function StreamdownWrapper({ children }: StreamdownWrapperProps): ReactNode {
   return (
-    <Suspense fallback={<>{children}</>}>
+    <Suspense fallback={children}>
       <StreamdownLazy>{children}</StreamdownLazy>
     </Suspense>
   );

@@ -123,6 +123,7 @@ export default function SimpleChatbot(): JSX.Element {
       } else {
         waitAndSend();
       }
+
       questionToSendRef.current = null;
     }
   };

@@ -176,11 +176,13 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       const result = await response.json();
       
       if (this.debugMode) {
+        // eslint-disable-next-line no-console
         console.log('[AsgardServiceClient] File upload response:', result);
       }
       
       return result as BlobUploadResponse;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('[AsgardServiceClient] File upload error:', error);
       throw error;
     }

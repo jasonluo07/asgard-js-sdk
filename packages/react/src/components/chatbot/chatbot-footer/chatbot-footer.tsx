@@ -223,6 +223,7 @@ export function ChatbotFooter(): ReactNode {
 
       downloadMarkdown(markdown, { botName });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('下載對話紀錄失敗:', error);
       alert('下載失敗，請重試');
     }
