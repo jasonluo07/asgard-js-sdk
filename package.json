@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "serve:react-demo": "nx run react-demo:serve",
     "serve:next-demo": "nx run next-demo:serve",
     "serve:next-vanilla-demo": "nx run next-vanilla-demo:serve",
@@ -63,7 +66,9 @@
     "eslint-plugin-playwright": "^1.6.2",
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "5.0.0",
+    "husky": "^9.1.7",
     "jsdom": "~22.1.0",
+    "lint-staged": "^16.2.7",
     "nx": "21.5.3",
     "object-is": "^1.1.6",
     "prettier": "^2.6.2",
@@ -78,6 +83,15 @@
     "vite-plugin-dts": "~3.8.1",
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^1.3.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css,scss}": [
+      "prettier --write"
+    ]
   },
   "workspaces": [
     "libs/**",
