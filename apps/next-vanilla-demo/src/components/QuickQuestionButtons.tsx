@@ -7,10 +7,7 @@ interface QuickQuestionButtonsProps {
 export default function QuickQuestionButtons({ onQuestionClick }: QuickQuestionButtonsProps): JSX.Element {
   return (
     <div className={styles.container}>
-      <button
-        onClick={() => onQuestionClick('死侍有上映嗎？')}
-        className={`${styles.button} ${styles.buttonBlue}`}
-      >
+      <button onClick={() => onQuestionClick('死侍有上映嗎？')} className={`${styles.button} ${styles.buttonBlue}`}>
         死侍有上映嗎？
       </button>
       <button

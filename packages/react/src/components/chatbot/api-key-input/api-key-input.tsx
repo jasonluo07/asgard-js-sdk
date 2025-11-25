@@ -47,7 +47,7 @@ export function ApiKeyInput({
   };
 
   return (
-    <div 
+    <div
       className={clsx(styles.api_key_input, className)}
       style={{
         backgroundColor: chatbot.backgroundColor,
@@ -56,7 +56,9 @@ export function ApiKeyInput({
     >
       <div className={styles.api_key_input__header}>
         <ProfileIcon avatar={avatar} />
-        <h2 className={styles.api_key_input__title} style={chatbot?.header?.title?.style}>{title}</h2>
+        <h2 className={styles.api_key_input__title} style={chatbot?.header?.title?.style}>
+          {title}
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.api_key_input__form}>

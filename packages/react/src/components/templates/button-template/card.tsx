@@ -1,16 +1,6 @@
-import {
-  MouseEventHandler,
-  ReactNode,
-  useCallback,
-  useMemo,
-  CSSProperties,
-} from 'react';
+import { MouseEventHandler, ReactNode, useCallback, useMemo, CSSProperties } from 'react';
 import styles from './card.module.scss';
-import {
-  ButtonAction,
-  ButtonMessageTemplate,
-  CarouselMessageTemplate,
-} from '@asgard-js/core';
+import { ButtonAction, ButtonMessageTemplate, CarouselMessageTemplate } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
@@ -34,9 +24,7 @@ export function Card(props: CardProps): ReactNode {
 
   const src = useMemo(() => {
     return (
-      template?.thumbnailImageUrl
-        ?.replace(/^http:/, '')
-        .replace(/^https:/, '') ||
+      template?.thumbnailImageUrl?.replace(/^http:/, '').replace(/^https:/, '') ||
       'https://via.assets.so/img.jpg?w=200&h=270&tc=white&bg=#eeeeee'
     );
   }, [template]);
@@ -62,17 +50,14 @@ export function Card(props: CardProps): ReactNode {
             return;
           case 'uri':
           case 'URI':
-            safeWindowOpen(
-              action.uri,
-              action.target || defaultLinkTarget || '_blank'
-            );
+            safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
 
             return;
           case 'emit':
           case 'EMIT':
             onTemplateBtnClick?.(action.payload, {
               sse: {
-                sendMessage: (payload) => {
+                sendMessage: payload => {
                   sendMessage?.(payload);
                 },
               },
@@ -82,14 +67,11 @@ export function Card(props: CardProps): ReactNode {
         }
       };
     },
-    [sendMessage, onTemplateBtnClick, defaultLinkTarget]
+    [sendMessage, onTemplateBtnClick, defaultLinkTarget],
   );
 
   return (
-    <div
-      className={clsx('asgard-card', styles.card_root)}
-      style={customStyle?.style}
-    >
+    <div className={clsx('asgard-card', styles.card_root)} style={customStyle?.style}>
       {template?.thumbnailImageUrl && (
         <img
           alt={template?.title}
@@ -108,11 +90,7 @@ export function Card(props: CardProps): ReactNode {
         <div className={styles.card_description}>{template?.text}</div>
         <div className={styles.card_actions}>
           {template?.buttons?.map((btn: { label: string; action: ButtonAction }, index: number) => (
-            <button
-              key={index}
-              onClick={handleClick(btn.action)}
-              style={customStyle?.button?.style}
-            >
+            <button key={index} onClick={handleClick(btn.action)} style={customStyle?.button?.style}>
               {btn.label}
             </button>
           ))}

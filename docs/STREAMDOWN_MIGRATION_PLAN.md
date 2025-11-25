@@ -7,6 +7,7 @@
 ## 📊 目前 react-markdown 的使用情況
 
 ### 主要檔案
+
 - `packages/react/src/hooks/use-react-markdown-renderer.tsx` - 核心渲染器（282 行）
 - `packages/react/src/components/templates/text-template/text-template.tsx` - 使用渲染器
 - `packages/react/src/components/templates/text-template/bot-typing-box.tsx` - 使用渲染器
@@ -14,6 +15,7 @@
 - `packages/react/src/hooks/index.ts` - 匯出 hook
 
 ### 相關文檔
+
 - `docs/react-markdown-migration.md` - 原本的遷移文檔
 - `docs/react-markdown-migration-phase2.md` - 第二階段遷移文檔
 - `docs/react-markdown-migration-test-cases.md` - 測試案例文檔
@@ -21,27 +23,31 @@
 ## 🗑️ 需要移除的套件和依賴
 
 ### 在 `packages/react/package.json` 中的套件：
+
 ```json
 {
-  "react-markdown": "^10.1.0",     // 主要套件 (~50KB)
-  "remark-gfm": "^4.0.1",          // GitHub Flavored Markdown 支援
-  "remark-math": "^6.0.0",         // 數學表達式解析 (~15KB)
-  "rehype-highlight": "^7.0.2",    // 語法突出顯示
-  "rehype-katex": "^7.0.1",        // LaTeX 數學渲染 (~25KB)
-  "katex": "^0.16.22",             // 數學渲染引擎
-  "highlight.js": "^11.11.1"       // 語法突出顯示引擎
+  "react-markdown": "^10.1.0", // 主要套件 (~50KB)
+  "remark-gfm": "^4.0.1", // GitHub Flavored Markdown 支援
+  "remark-math": "^6.0.0", // 數學表達式解析 (~15KB)
+  "rehype-highlight": "^7.0.2", // 語法突出顯示
+  "rehype-katex": "^7.0.1", // LaTeX 數學渲染 (~25KB)
+  "katex": "^0.16.22", // 數學渲染引擎
+  "highlight.js": "^11.11.1" // 語法突出顯示引擎
 }
 ```
 
 ### CSS 依賴
+
 - `katex/dist/katex.min.css` 的引入（在 use-react-markdown-renderer.tsx:14）
 
 ### 總體移除大小估算
+
 - 約 **90KB+** 的 bundle 大小減少
 
 ## 🔄 Streamdown 替代方案
 
 ### 優勢
+
 - ✅ 專為 AI 流式內容設計的 react-markdown 替代品
 - ✅ **支援所有 react-markdown props** - 遷移更簡單
 - ✅ 內建處理不完整 markdown 區塊的能力
@@ -52,15 +58,18 @@
 - ✅ 更好的流式渲染性能
 
 ### 基本用法
+
 ```tsx
 import { Streamdown } from 'streamdown';
 
 // 替換複雜的 hook
-<Streamdown>{markdownText}</Streamdown>
+<Streamdown>{markdownText}</Streamdown>;
 ```
 
 ### 功能支援檢查
+
 **✅ 已確認支援（基於 context7 驗證）：**
+
 - [x] 基本 markdown 語法
 - [x] GitHub Flavored Markdown (GFM) - 默認包含 remarkGfm
 - [x] 數學表達式渲染 (KaTeX) - 默認包含 remarkMath, rehypeKatex
@@ -72,42 +81,47 @@ import { Streamdown } from 'streamdown';
 - [x] **所有 react-markdown props** - 完全相容
 
 **⚠️ 需要適配的功能：**
+
 - defaultLinkTarget - 需透過 components.a 自訂實作
 - 主題顏色整合 - 需要適配到 shikiTheme
 - 現有 CSS 樣式 - 從 highlight.js 遷移到 Shiki 樣式
 
 ### 完整的 Props API（基於 context7 驗證）
+
 ```tsx
 interface StreamdownProps {
   // 核心 props
-  children: string;                    // markdown 內容
+  children: string; // markdown 內容
 
   // 流式渲染配置
-  parseIncompleteMarkdown?: boolean;   // 預設 true - 處理不完整區塊
+  parseIncompleteMarkdown?: boolean; // 預設 true - 處理不完整區塊
 
   // 插件配置（默認包含 remarkGfm, remarkMath, rehypeKatex）
-  remarkPlugins?: PluggableList;       // remark 插件陣列
-  rehypePlugins?: PluggableList;       // rehype 插件陣列
+  remarkPlugins?: PluggableList; // remark 插件陣列
+  rehypePlugins?: PluggableList; // rehype 插件陣列
 
   // 元件自訂
-  components?: Components;              // 覆寫任何 HTML 元素的渲染
+  components?: Components; // 覆寫任何 HTML 元素的渲染
 
   // 樣式和主題
-  shikiTheme?: string | {              // Shiki 語法突出主題
-    light?: string;                    // 預設: 'github-light'
-    dark?: string;                     // 預設: 'github-dark'
-  };
+  shikiTheme?:
+    | string
+    | {
+        // Shiki 語法突出主題
+        light?: string; // 預設: 'github-light'
+        dark?: string; // 預設: 'github-dark'
+      };
 
   // Mermaid 圖表
-  mermaidConfig?: object;              // Mermaid 圖表配置
+  mermaidConfig?: object; // Mermaid 圖表配置
 
   // 安全性設定
-  allowedImagePrefixes?: string[];     // 允許的圖片 URL 前綴
-  allowedLinkPrefixes?: string[];      // 允許的連結 URL 前綴
-  defaultOrigin?: string;              // 相對 URL 的預設來源
+  allowedImagePrefixes?: string[]; // 允許的圖片 URL 前綴
+  allowedLinkPrefixes?: string[]; // 允許的連結 URL 前綴
+  defaultOrigin?: string; // 相對 URL 的預設來源
 
   // UI 控制
-  controls?: boolean;                  // 顯示複製/下載按鈕
+  controls?: boolean; // 顯示複製/下載按鈕
 
   // 重要：支援所有 react-markdown props
   // 包括 className, skipHtml, linkTarget 等
@@ -117,11 +131,14 @@ interface StreamdownProps {
 ## 📋 執行計畫
 
 ### 階段 1: 準備和移除
+
 1. **備份目前實作**
+
    - 建立分支進行遷移
    - 確保所有測試通過
 
 2. **移除舊套件**
+
    ```bash
    cd packages/react
    npm uninstall react-markdown remark-gfm remark-math rehype-highlight rehype-katex katex highlight.js
@@ -133,7 +150,9 @@ interface StreamdownProps {
    ```
 
 ### 階段 2: 重構核心實作
+
 1. **重寫 use-react-markdown-renderer.tsx**
+
    - 簡化複雜的 token 解析邏輯
    - 移除快取機制（streamdown 內建優化）
    - 保持相同的 API 介面以減少影響
@@ -146,8 +165,10 @@ interface StreamdownProps {
        rehypePlugins={[rehypeKatex]}
        components={{
          a: ({ href, children }) => (
-           <a href={href} target={defaultLinkTarget}>{children}</a>
-         )
+           <a href={href} target={defaultLinkTarget}>
+             {children}
+           </a>
+         ),
        }}
      >
        {markdownText}
@@ -161,7 +182,9 @@ interface StreamdownProps {
    - 更新 CSS 模組：`.hljs` → Shiki 樣式類別
 
 ### 階段 3: 測試和驗證
+
 1. **更新測試檔案**
+
    - 重寫 `use-react-markdown-renderer.spec.tsx`
    - 確保所有功能測試通過
    - 驗證渲染結果一致性
@@ -175,7 +198,9 @@ interface StreamdownProps {
    - 主題整合
 
 ### 階段 4: 清理和文檔
+
 1. **移除舊文檔**
+
    - `docs/react-markdown-migration.md`
    - `docs/react-markdown-migration-phase2.md`
    - `docs/react-markdown-migration-test-cases.md`
@@ -187,13 +212,16 @@ interface StreamdownProps {
 ## ⚠️ 風險和注意事項
 
 ### ✅ **React 版本相容性確認**
+
 1. **Streamdown peerDependencies:**
    - **支援 React ^18.0.0 || ^19.0.0**
    - **目前專案使用 React ^18.0.0 - 完全相容！**
    - **不需要升級 React 版本**
 
 ### 潛在問題
+
 1. **渲染差異**
+
    - 輸出的 HTML 結構可能不同
    - CSS 樣式需要調整
    - **語法突出顯示系統轉換**：
@@ -201,6 +229,7 @@ interface StreamdownProps {
      - Streamdown：Shiki（不同的 CSS 類別和主題系統）
 
 2. **自訂功能移植**
+
    - defaultLinkTarget 功能需透過 components.a 重新實作
    - 主題顏色整合需要適配到 shikiTheme
    - 現有的 CSS 模組（.hljs 類別）需要更新
@@ -210,20 +239,24 @@ interface StreamdownProps {
    - 驗證在不同 React 版本下的相容性（18.x 和 19.x）
 
 ### 回滾計畫
+
 - 保留原本的實作在分支中
 - 如果遇到無法解決的問題，可以快速回滾
 
 ## 🎯 成功指標
 
 1. **功能完整性**
+
    - 所有現有功能都能正常運作
    - 渲染結果視覺上一致
 
 2. **性能改善**
+
    - Bundle 大小減少
    - 渲染性能提升
 
 3. **程式碼簡化**
+
    - 移除複雜的 token 解析邏輯
    - 減少程式碼行數和維護負擔
 
@@ -253,6 +286,7 @@ npm test  # 確保所有測試通過
 基於 context7 的深入分析，此遷移計畫**技術上可行**，但有以下重要考慮：
 
 ### ✅ 正面因素：
+
 - **Streamdown 支援所有 react-markdown props** - 遷移難度大幅降低
 - 支援所有關鍵功能（GFM、數學、語法突出、Mermaid）
 - API 更簡潔，維護成本更低
@@ -261,12 +295,15 @@ npm test  # 確保所有測試通過
 - 默認包含常用插件（remarkGfm, remarkMath, rehypeKatex）
 
 ### ⚠️ 挑戰：
+
 1. 語法突出顯示系統轉換（highlight.js → Shiki）
 2. 少數自訂功能需要調整（如 defaultLinkTarget）
 3. CSS 樣式需要從 .hljs 遷移到 Shiki 系統
 
 ### 🎯 建議：
+
 **遷移複雜度：中低**
+
 - React 18 完全相容，無需版本升級
 - 支援所有 react-markdown props 使遷移更平滑
 - 對 SDK 使用者零影響
@@ -274,4 +311,4 @@ npm test  # 確保所有測試通過
 
 ---
 
-*此文檔更新於 2025-09-25，基於 context7 驗證後的完整 react-markdown 到 streamdown 遷移計畫。*
+_此文檔更新於 2025-09-25，基於 context7 驗證後的完整 react-markdown 到 streamdown 遷移計畫。_

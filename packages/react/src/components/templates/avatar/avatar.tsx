@@ -11,13 +11,7 @@ export const Avatar = memo((props: AvatarProps): ReactNode => {
   const { avatar } = props;
 
   if (avatar) {
-    return (
-      <img
-        src={avatar}
-        alt="Bot Avatar"
-        className={clsx('asgard-avatar', styles.bot_avatar)}
-      />
-    );
+    return <img src={avatar} alt="Bot Avatar" className={clsx('asgard-avatar', styles.bot_avatar)} />;
   }
 
   return (

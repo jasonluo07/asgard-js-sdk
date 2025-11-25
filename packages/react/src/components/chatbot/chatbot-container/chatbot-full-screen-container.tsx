@@ -9,9 +9,7 @@ import {
 import classes from './chatbot-container.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 
-export function ChatbotFullScreenContainer(
-  props: PropsWithChildren
-): ReactNode {
+export function ChatbotFullScreenContainer(props: PropsWithChildren): ReactNode {
   const { children } = props;
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,7 +31,7 @@ export function ChatbotFullScreenContainer(
             backgroundColor: theme.chatbot?.backgroundColor,
           }
         : {},
-      isOnScreenKeyboardOpen ? { height } : {}
+      isOnScreenKeyboardOpen ? { height } : {},
     );
   }, [height, isOnScreenKeyboardOpen, theme]);
 
@@ -41,10 +39,7 @@ export function ChatbotFullScreenContainer(
     <div className={classes.full_screen}>
       <div
         ref={containerRef}
-        className={clsx(
-          classes.chatbot_container,
-          isOnScreenKeyboardOpen && classes.screen_keyboard_open
-        )}
+        className={clsx(classes.chatbot_container, isOnScreenKeyboardOpen && classes.screen_keyboard_open)}
         style={styles}
       >
         {children}

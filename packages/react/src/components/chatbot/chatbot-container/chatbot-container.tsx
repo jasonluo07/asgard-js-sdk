@@ -19,28 +19,15 @@ export function ChatbotContainer(props: ChatbotContainerProps): ReactNode {
   useUpdateVh(rootRef);
 
   const {
-    chatbot: {
-      style: rootStyle,
-      header,
-      body,
-      footer,
-      ...chatbotInnerContainerStyle
-    },
+    chatbot: { style: rootStyle, header, body, footer, ...chatbotInnerContainerStyle },
   } = useAsgardThemeContext();
 
   return (
-    <div
-      ref={rootRef}
-      className={clsx(classes.chatbot_root, className)}
-      style={Object.assign({}, rootStyle, style)}
-    >
+    <div ref={rootRef} className={clsx(classes.chatbot_root, className)} style={Object.assign({}, rootStyle, style)}>
       {fullScreen ? (
         <ChatbotFullScreenContainer>{children}</ChatbotFullScreenContainer>
       ) : (
-        <div
-          className={classes.chatbot_container}
-          style={chatbotInnerContainerStyle}
-        >
+        <div className={classes.chatbot_container} style={chatbotInnerContainerStyle}>
           {children}
         </div>
       )}

@@ -54,12 +54,7 @@ export function isEqual(a: unknown, b: unknown): boolean {
         return false;
       }
 
-      if (
-        !isEqual(
-          (a as Record<string, unknown>)[key],
-          (b as Record<string, unknown>)[key]
-        )
-      ) {
+      if (!isEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])) {
         return false;
       }
     }

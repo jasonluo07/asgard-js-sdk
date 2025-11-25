@@ -3,11 +3,7 @@ import styles from './chatbot-header.module.scss';
 import { ProfileIcon } from '../profile-icon';
 import RefreshSvg from '../../../icons/refresh.svg?react';
 import CloseSvg from '../../../icons/close.svg?react';
-import {
-  useAsgardAppInitializationContext,
-  useAsgardThemeContext,
-  useAsgardContext,
-} from '../../../context/';
+import { useAsgardAppInitializationContext, useAsgardThemeContext, useAsgardContext } from '../../../context/';
 import clsx from 'clsx';
 
 interface ChatbotHeaderProps {
@@ -19,43 +15,36 @@ interface ChatbotHeaderProps {
 }
 
 export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
-  const {
-    title,
-    onReset,
-    onClose,
-    customActions,
-    maintainConnectionWhenClosed,
-  } = props;
+  const { title, onReset, onClose, customActions, maintainConnectionWhenClosed } = props;
 
   const { chatbot } = useAsgardThemeContext();
   const {
     data: { annotations },
   } = useAsgardAppInitializationContext();
 
-  const { avatar, isResetting, resetChannel, closeChannel } =
-    useAsgardContext();
+  const { avatar, isResetting, resetChannel, closeChannel } = useAsgardContext();
 
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
       borderBottomColor: chatbot?.borderColor,
     }),
-    [chatbot]
+    [chatbot],
   );
 
   const _onReset = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (e) => {
+    e => {
       if (!isResetting) {
         e.stopPropagation();
         onReset?.();
         resetChannel?.();
       }
     },
-    [isResetting, onReset, resetChannel]
+    [isResetting, onReset, resetChannel],
   );
 
   const _onClose = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (e) => {
+    e => {
       if (!isResetting) {
         e.stopPropagation();
         onClose?.();
@@ -65,25 +54,17 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
         }
       }
     },
-    [isResetting, onClose, closeChannel, maintainConnectionWhenClosed]
+    [isResetting, onClose, closeChannel, maintainConnectionWhenClosed],
   );
 
   return (
-    <div
-      className={clsx('asgard-chatbot-header', styles.chatbot_header)}
-      style={chatbot?.header?.style}
-    >
+    <div className={clsx('asgard-chatbot-header', styles.chatbot_header)} style={chatbot?.header?.style}>
       <div className={styles.chatbot_header__content} style={contentStyles}>
         <div className={styles.chatbot_header__title}>
           <ProfileIcon avatar={avatar} />
-          <h4 style={chatbot?.header?.title?.style}>
-            {annotations?.embedConfig?.title || title || 'Bot'}
-          </h4>
+          <h4 style={chatbot?.header?.title?.style}>{annotations?.embedConfig?.title || title || 'Bot'}</h4>
         </div>
-        <div
-          className={styles.chatbot_header__extra}
-          style={chatbot?.header?.actionButton?.style}
-        >
+        <div className={styles.chatbot_header__extra} style={chatbot?.header?.actionButton?.style}>
           {customActions}
           <div onClick={_onReset}>
             <RefreshSvg />

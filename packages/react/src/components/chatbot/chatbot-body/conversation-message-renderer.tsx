@@ -15,9 +15,7 @@ interface ConversationMessageRendererProps {
   message: ConversationMessage;
 }
 
-export function ConversationMessageRenderer(
-  props: ConversationMessageRendererProps
-): ReactNode {
+export function ConversationMessageRenderer(props: ConversationMessageRendererProps): ReactNode {
   const { message } = props;
 
   if (message.type === 'user') {
@@ -33,12 +31,7 @@ export function ConversationMessageRenderer(
   }
 
   if (message.isTyping) {
-    return (
-      <BotTypingBox
-        isTyping={message.isTyping}
-        typingText={message.typingText}
-      />
-    );
+    return <BotTypingBox isTyping={message.isTyping} typingText={message.typingText} />;
   }
 
   switch (message.message.template?.type) {

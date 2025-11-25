@@ -25,7 +25,7 @@ const DANGEROUS_PROTOCOLS = [
 
 /**
  * Validates if a URI is safe to open with window.open()
- * 
+ *
  * @param uri - The URI to validate
  * @returns true if the URI is safe to open, false otherwise
  */
@@ -40,14 +40,14 @@ export function isValidUri(uri: string | null | undefined): boolean {
   try {
     // Try to parse as URL to validate structure
     const url = new URL(trimmedUri);
-    
+
     // Check if protocol is in the safe list
     const protocol = url.protocol.toLowerCase();
-    
+
     if (SAFE_PROTOCOLS.includes(protocol as (typeof SAFE_PROTOCOLS)[number])) {
       return true;
     }
-    
+
     // Log blocked dangerous protocols for debugging
     if (DANGEROUS_PROTOCOLS.includes(protocol as (typeof DANGEROUS_PROTOCOLS)[number])) {
       // eslint-disable-next-line no-console
@@ -64,13 +64,13 @@ export function isValidUri(uri: string | null | undefined): boolean {
       // Relative URLs are generally safe
       return true;
     }
-    
+
     // Check for protocol-less URLs (e.g., "example.com")
     if (!trimmedUri.includes(':') && !trimmedUri.startsWith('//')) {
       // Looks like a domain without protocol, relatively safe
       return true;
     }
-    
+
     // Log invalid URIs for debugging
     // eslint-disable-next-line no-console
     console.warn(`Invalid URI format: ${trimmedUri}`, error);
@@ -81,17 +81,13 @@ export function isValidUri(uri: string | null | undefined): boolean {
 
 /**
  * Safely opens a URI after validation
- * 
+ *
  * @param uri - The URI to open
  * @param target - The window target (same as window.open target parameter)
  * @param features - Window features (same as window.open features parameter)
  * @returns The opened window reference or null if URI was blocked
  */
-export function safeWindowOpen(
-  uri: string | null | undefined,
-  target?: string,
-  features?: string
-): Window | null {
+export function safeWindowOpen(uri: string | null | undefined, target?: string, features?: string): Window | null {
   if (!isValidUri(uri)) {
     // eslint-disable-next-line no-console
     console.error(`Blocked attempt to open unsafe URI: ${uri}`);

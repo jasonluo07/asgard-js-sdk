@@ -5,17 +5,16 @@ $prefix: asg-color;
 
 @mixin generate-state-colors($map: variables.$state-colors-map) {
   @each $state, $colors-map in $map {
-    
     $main-color: map.get($colors-map, main);
     $light-color: map.get($colors-map, light);
     $dark-color: map.get($colors-map, dark);
-    
+
     --#{$prefix}-#{$state}: #{$main-color};
     --#{$prefix}-#{$state}-light: #{$light-color};
     --#{$prefix}-#{$state}-dark: #{$dark-color};
     --#{$prefix}-#{$state}-on-#{$state}: #ffffff;
     --#{$prefix}-#{$state}-hover-bg: #{rgba($light-color, 0.15)};
-    --#{$prefix}-#{$state}-selected-bg: #{rgba($main-color, 0.20)};
+    --#{$prefix}-#{$state}-selected-bg: #{rgba($main-color, 0.2)};
   }
 }
 

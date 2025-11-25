@@ -31,9 +31,8 @@ export default function Home(): JSX.Element {
           <section className={styles.hero}>
             <h2 className={styles.heroTitle}>Next.js Vanilla Demo</h2>
             <p className={styles.heroDescription}>
-              A demonstration of the Asgard JS SDK integration with Next.js,
-              using vanilla CSS instead of CSS frameworks for maximum control
-              and minimal dependencies.
+              A demonstration of the Asgard JS SDK integration with Next.js, using vanilla CSS instead of CSS frameworks
+              for maximum control and minimal dependencies.
             </p>
             <div className={styles.buttonGroup}>
               <button className={styles.buttonPrimary}>Get Started</button>
@@ -52,65 +51,49 @@ export default function Home(): JSX.Element {
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      TypeScript support with strict mode
-                    </span>
+                    <span className={styles.featureText}>TypeScript support with strict mode</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      App Router with src directory structure
-                    </span>
+                    <span className={styles.featureText}>App Router with src directory structure</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Vanilla CSS with dark mode support
-                    </span>
+                    <span className={styles.featureText}>Vanilla CSS with dark mode support</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Custom path alias configuration (~/{''})
-                    </span>
+                    <span className={styles.featureText}>Custom path alias configuration (~/{''})</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Standard Webpack (no Turbopack)
-                    </span>
+                    <span className={styles.featureText}>Standard Webpack (no Turbopack)</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Custom port configuration (4301)
-                    </span>
+                    <span className={styles.featureText}>Custom port configuration (4301)</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Asgard Chatbot integration
-                    </span>
+                    <span className={styles.featureText}>Asgard Chatbot integration</span>
                   </div>
                 </div>
                 <div>
                   <div className={styles.featureItem}>
                     <div className={styles.checkIcon}>✓</div>
-                    <span className={styles.featureText}>
-                      Responsive mobile-first design
-                    </span>
+                    <span className={styles.featureText}>Responsive mobile-first design</span>
                   </div>
                 </div>
               </div>

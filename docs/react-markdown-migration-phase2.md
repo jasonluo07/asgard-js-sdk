@@ -7,6 +7,7 @@ This document outlines Phase 2 of the react-markdown migration project, focusing
 ## Phase 1 Completion Status ✅
 
 **Successfully Completed Features:**
+
 - ✅ Core react-markdown integration with streaming/typing effect preservation
 - ✅ GitHub Flavored Markdown (GFM) support via `remark-gfm`
 - ✅ Syntax highlighting compatibility with `rehype-highlight`
@@ -21,6 +22,7 @@ This document outlines Phase 2 of the react-markdown migration project, focusing
 ## Phase 2 Objectives
 
 ### Primary Goals
+
 1. **Math/LaTeX Rendering**: Support for inline (`$x^2$`) and block (`$$equations$$`) mathematical expressions
 2. **KaTeX Integration**: High-quality mathematical typesetting
 3. **Error Handling**: Graceful fallbacks for invalid math syntax
@@ -35,21 +37,21 @@ graph TD
     B --> C[Token Parsing & Streaming Logic]
     C --> D[Complete Markdown Blocks]
     C --> E[Incomplete Text for Typing]
-    
+
     D --> F[ReactMarkdown Component]
-    
+
     subgraph "Plugin Pipeline"
         G[remark-gfm<br/>GFM Support]
-        H[remark-math<br/>Math Parsing] 
+        H[remark-math<br/>Math Parsing]
         I[rehype-katex<br/>LaTeX Rendering]
         J[rehype-highlight<br/>Syntax Highlighting]
     end
-    
+
     F --> G
-    F --> H  
+    F --> H
     F --> I
     F --> J
-    
+
     subgraph "Custom Renderers"
         K[TableRenderer<br/>Custom Styling]
         L[CodeRenderer<br/>Enhanced Highlighting]
@@ -57,13 +59,13 @@ graph TD
         N[BlockMathRenderer<br/>Math Display]
         O[LinkRenderer<br/>Security + Target]
     end
-    
+
     G --> K
     J --> L
     I --> M
     I --> N
     F --> O
-    
+
     K --> P[React Component Tree]
     L --> P
     M --> P
@@ -72,7 +74,7 @@ graph TD
     E --> Q[Typing Effect Display]
     P --> R[Final Rendered Output]
     Q --> R
-    
+
     style A fill:#e1f5fe
     style H fill:#f3e5f5
     style I fill:#f3e5f5
@@ -87,12 +89,13 @@ graph TD
 ```json
 {
   "remark-math": "^6.0.0",
-  "rehype-katex": "^7.0.1", 
+  "rehype-katex": "^7.0.1",
   "katex": "^0.16.9"
 }
 ```
 
 **Dependency Analysis:**
+
 - `remark-math`: Parses math expressions in markdown (~15KB)
 - `rehype-katex`: Renders math using KaTeX (~25KB)
 - `katex`: Mathematical typesetting library (~280KB)
@@ -109,13 +112,9 @@ const remarkPlugins = [remarkGfm, remarkMath];
 const rehypePlugins = [rehypeHighlight, rehypeKatex];
 
 // ReactMarkdown configuration
-<ReactMarkdown
-  remarkPlugins={remarkPlugins}
-  rehypePlugins={rehypePlugins}
-  components={components}
->
+<ReactMarkdown remarkPlugins={remarkPlugins} rehypePlugins={rehypePlugins} components={components}>
   {markdown}
-</ReactMarkdown>
+</ReactMarkdown>;
 ```
 
 ### Custom Math Renderers
@@ -140,11 +139,11 @@ const components = {
   table: TableRenderer,
   code: CodeRenderer,
   a: LinkRenderer,
-  math: InlineMathRenderer,          // Inline math: $expression$
-  div: ({ className, ...props }) =>   // Block math: $$expression$$
-    className?.includes('math-display') ? 
-      <BlockMathRenderer {...props} /> : 
-      <div className={className} {...props} />
+  math: InlineMathRenderer, // Inline math: $expression$
+  div: (
+    { className, ...props }, // Block math: $$expression$$
+  ) =>
+    className?.includes('math-display') ? <BlockMathRenderer {...props} /> : <div className={className} {...props} />,
 };
 ```
 
@@ -177,20 +176,18 @@ const SafeMathRenderer = ({ children, ...props }) => (
 // Enhanced completion detection for math expressions
 function isCompleteParagraph(raw: string): boolean {
   // Existing completion logic
-  const basicCompletion = (
+  const basicCompletion =
     raw.trim().endsWith('\n\n') ||
     raw.trim().endsWith('\n') ||
     raw.trim().endsWith('.') ||
     raw.trim().endsWith('。') ||
-    raw.trim().endsWith('！')
-  );
-  
+    raw.trim().endsWith('！');
+
   // Math-specific completion detection
-  const mathCompletion = (
-    !raw.includes('$') ||                    // No math expressions
-    (raw.match(/\$/g) || []).length % 2 === 0  // Even number of $ signs
-  );
-  
+  const mathCompletion =
+    !raw.includes('$') || // No math expressions
+    (raw.match(/\$/g) || []).length % 2 === 0; // Even number of $ signs
+
   return basicCompletion && mathCompletion;
 }
 ```
@@ -201,13 +198,19 @@ function isCompleteParagraph(raw: string): boolean {
 // Example streaming scenarios
 const streamingExamples = [
   {
-    input: "The quadratic formula is $x = \\frac{-b \\pm",
-    expected: { complete: "", incomplete: "The quadratic formula is $x = \\frac{-b \\pm" }
+    input: 'The quadratic formula is $x = \\frac{-b \\pm',
+    expected: {
+      complete: '',
+      incomplete: 'The quadratic formula is $x = \\frac{-b \\pm',
+    },
   },
   {
-    input: "The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.",
-    expected: { complete: "The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.", incomplete: "" }
-  }
+    input: 'The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.',
+    expected: {
+      complete: 'The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$.',
+      incomplete: '',
+    },
+  },
 ];
 ```
 
@@ -234,13 +237,13 @@ import 'katex/dist/katex.min.css';
     font-size: inherit;
     line-height: inherit;
   }
-  
+
   &.math-display {
     // Block math styling
     margin: 1em 0;
     text-align: center;
     overflow-x: auto;
-    
+
     // Theme integration
     background-color: var(--asgard-bg-color, transparent);
     border-radius: var(--asgard-border-radius, 4px);
@@ -262,6 +265,7 @@ import 'katex/dist/katex.min.css';
 ### Test Categories
 
 #### 1. Basic Math Rendering Tests
+
 ```typescript
 describe('math rendering', () => {
   it('should render inline math expressions', async () => {
@@ -286,6 +290,7 @@ describe('math rendering', () => {
 ```
 
 #### 2. Mixed Content Tests
+
 ```typescript
 it('should handle mixed markdown and math content', async () => {
   const markdown = `# Math Section
@@ -300,37 +305,40 @@ d &= e + f
 
 - List item 1
 - List item 2 with math: $\\alpha + \\beta$`;
-  
+
   // Test complex integration scenarios
 });
 ```
 
 #### 3. Streaming Math Tests
+
 ```typescript
 it('should handle streaming text with math expressions', async () => {
   const markdown = 'Incomplete math: $x = \\frac{1}{2';
   const { result } = renderHook(() => useMarkdownRenderer(markdown, 0));
-  
+
   expect(result.current.htmlBlocks).toEqual(<div className={classes.md_container}></div>);
   expect(result.current.lastTypingText).toBe('Incomplete math: $x = \\frac{1}{2');
 });
 ```
 
 #### 4. Error Handling Tests
+
 ```typescript
 it('should handle invalid math expressions gracefully', async () => {
   const markdown = 'Invalid math: $\\invalid{syntax$ should not crash';
   const { result } = renderHook(() => useMarkdownRenderer(markdown, 0));
-  
+
   // Should not throw errors
   expect(() => render(<div>{result.current.htmlBlocks}</div>)).not.toThrow();
-  
+
   // Should show fallback or error indicator
   expect(document.querySelector('.math-error, .math-fallback')).toBeInTheDocument();
 });
 ```
 
 #### 5. Performance Tests
+
 ```typescript
 it('should maintain performance with math expressions', async () => {
   const complexMath = `$$\\begin{pmatrix}
@@ -343,7 +351,7 @@ it('should maintain performance with math expressions', async () => {
   const startTime = performance.now();
   const { result } = renderHook(() => useMarkdownRenderer(complexMath, 0));
   const endTime = performance.now();
-  
+
   expect(endTime - startTime).toBeLessThan(100); // 100ms threshold
 });
 ```
@@ -406,11 +414,7 @@ Regular text with **bold** and \`code\`, plus math: $\\sum_{i=1}^{n} x_i = S$.
     template: {
       type: MessageTemplateType.TEXT,
       text: '',
-      quickReplies: [
-        { text: 'Show more equations' },
-        { text: 'Physics formulas' },
-        { text: 'Mathematical proofs' }
-      ],
+      quickReplies: [{ text: 'Show more equations' }, { text: 'Physics formulas' }, { text: 'Mathematical proofs' }],
     },
   });
 }
@@ -419,18 +423,21 @@ Regular text with **bold** and \`code\`, plus math: $\\sum_{i=1}^{n} x_i = S$.
 ## Performance Benchmarks
 
 ### Bundle Size Targets
+
 - **Current Bundle**: ~2.1MB (baseline)
 - **Phase 2 Target**: <2.4MB (+300KB acceptable)
 - **KaTeX Impact**: ~280KB (fonts + JS)
 - **Total Math Dependencies**: ~320KB
 
 ### Runtime Performance Targets
+
 - **Math Rendering**: <50ms for complex expressions
 - **Streaming Performance**: No degradation vs Phase 1
 - **Memory Usage**: <10% increase for math-heavy content
 - **Cache Efficiency**: Math expressions cached effectively
 
 ### Cache Management Implementation
+
 - **MAX_CACHE_SIZE**: 100 entries (exported constant)
 - **LRU Eviction**: Oldest entries removed when cache is full
 - **Memory Safety**: Prevents unlimited cache growth
@@ -438,19 +445,20 @@ Regular text with **bold** and \`code\`, plus math: $\\sum_{i=1}^{n} x_i = S$.
 - **Test Coverage**: 6 comprehensive cache management tests
 
 ### Performance Testing Strategy
+
 ```typescript
 // Performance benchmark tests
 describe('performance benchmarks', () => {
   it('should render complex math within time limits', () => {
     const complexMath = generateComplexMathExpression();
     const startTime = performance.now();
-    
+
     renderMath(complexMath);
-    
+
     const endTime = performance.now();
     expect(endTime - startTime).toBeLessThan(50);
   });
-  
+
   it('should maintain streaming performance with math', () => {
     // Compare streaming performance with/without math
   });
@@ -460,23 +468,27 @@ describe('performance benchmarks', () => {
 ## Implementation Timeline
 
 ### Day 1: Documentation & Test Planning
+
 - ✅ Create Phase 2 proposal (this document)
 - ✅ Define comprehensive test specifications
 - ✅ Write all test cases before implementation
 
 ### Day 2: Core Implementation
+
 - Install math dependencies
 - Implement core math plugin integration
 - Add custom math renderers
 - Basic math functionality working
 
 ### Day 3: Integration & Styling
+
 - KaTeX CSS integration
 - Theme compatibility
 - Demo app math examples
 - Visual testing and refinement
 
 ### Day 4: Performance & Finalization
+
 - Performance benchmarking
 - Bundle size analysis
 - Documentation updates
@@ -485,32 +497,38 @@ describe('performance benchmarks', () => {
 ## Risk Assessment & Mitigation
 
 ### High Risk
+
 1. **Bundle Size Impact** - KaTeX adds significant size
-   - *Mitigation*: Code splitting, lazy loading for math-heavy content
-   - *Fallback*: Optional math plugin architecture
+
+   - _Mitigation_: Code splitting, lazy loading for math-heavy content
+   - _Fallback_: Optional math plugin architecture
 
 2. **Math Rendering Performance** - Complex equations may be slow
-   - *Mitigation*: Caching strategy, performance monitoring
-   - *Fallback*: Simplified math rendering mode
+   - _Mitigation_: Caching strategy, performance monitoring
+   - _Fallback_: Simplified math rendering mode
 
 ### Medium Risk
+
 3. **Streaming Integration** - Math expressions may break streaming logic
-   - *Mitigation*: Enhanced completion detection, comprehensive testing
-   - *Fallback*: Disable streaming for math-heavy content
+
+   - _Mitigation_: Enhanced completion detection, comprehensive testing
+   - _Fallback_: Disable streaming for math-heavy content
 
 4. **Error Handling** - Invalid LaTeX syntax crashes
-   - *Mitigation*: Error boundaries, graceful fallbacks
-   - *Fallback*: Text-based math representation
+   - _Mitigation_: Error boundaries, graceful fallbacks
+   - _Fallback_: Text-based math representation
 
 ### Low Risk
+
 5. **Theme Integration** - Math styling conflicts
-   - *Mitigation*: CSS specificity management, theme testing
-   - *Fallback*: Isolated math styling
+   - _Mitigation_: CSS specificity management, theme testing
+   - _Fallback_: Isolated math styling
 
 ## Success Criteria
 
 ### Functional Requirements
-- ✅ Inline math rendering: `$expression$` 
+
+- ✅ Inline math rendering: `$expression$`
 - ✅ Block math rendering: `$$expression$$`
 - ✅ Mixed markdown + math content
 - ✅ Error handling for invalid syntax
@@ -518,6 +536,7 @@ describe('performance benchmarks', () => {
 - ✅ Theme integration working
 
 ### Technical Requirements
+
 - ✅ All existing 23 tests pass
 - ✅ New math test coverage >90%
 - ✅ Bundle size increase <300KB
@@ -525,6 +544,7 @@ describe('performance benchmarks', () => {
 - ✅ No breaking changes to public API
 
 ### Quality Requirements
+
 - ✅ Math expressions visually consistent
 - ✅ Error states gracefully handled
 - ✅ Demo app examples working
@@ -543,7 +563,7 @@ If critical issues arise during implementation:
 
 ## Conclusion
 
-Phase 2 represents the completion of the react-markdown migration with comprehensive math/LaTeX support. The implementation follows best practices with test-first development, proper error handling, and performance optimization. 
+Phase 2 represents the completion of the react-markdown migration with comprehensive math/LaTeX support. The implementation follows best practices with test-first development, proper error handling, and performance optimization.
 
 The phased approach minimizes risk while ensuring thorough validation at each step. Upon completion, the Asgard SDK will provide best-in-class markdown rendering with full mathematical expression support, maintaining the high performance and reliability standards established in Phase 1.
 

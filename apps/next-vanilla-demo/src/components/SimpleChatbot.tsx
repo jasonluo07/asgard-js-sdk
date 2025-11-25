@@ -3,29 +3,21 @@
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { RemoveScroll } from 'react-remove-scroll';
-import {
-  EventType,
-  MessageTemplateType,
-  ConversationMessage,
-  SseResponse,
-} from '@asgard-js/core';
+import { EventType, MessageTemplateType, ConversationMessage, SseResponse } from '@asgard-js/core';
 import type { ChatbotRef } from '@asgard-js/react';
 import { nanoid } from 'nanoid';
 import { ChatIcon } from '~/icons';
 import QuickQuestionButtons from './QuickQuestionButtons';
 import styles from './SimpleChatbot.module.css';
 
-const Chatbot = dynamic(
-  () => import('@asgard-js/react').then((mod) => ({ default: mod.Chatbot })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className={styles.loading}>
-        <div className={styles.loadingText}>載入中...</div>
-      </div>
-    ),
-  }
-);
+const Chatbot = dynamic(() => import('@asgard-js/react').then(mod => ({ default: mod.Chatbot })), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.loading}>
+      <div className={styles.loadingText}>載入中...</div>
+    </div>
+  ),
+});
 
 const theme = {
   chatbot: {
@@ -101,7 +93,7 @@ export default function SimpleChatbot(): JSX.Element {
       setIsOpen(true);
     } else {
       chatbotRef.current?.serviceContext?.sendMessage?.({
-        text: question
+        text: question,
       });
     }
   };
@@ -147,8 +139,7 @@ export default function SimpleChatbot(): JSX.Element {
               ref={chatbotRef}
               config={{
                 botProviderEndpoint:
-                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
-                  'http://localhost:4301/api/mock-sse',
+                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || 'http://localhost:4301/api/mock-sse',
                 apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
               }}
               onSseMessage={handleSseMessage}

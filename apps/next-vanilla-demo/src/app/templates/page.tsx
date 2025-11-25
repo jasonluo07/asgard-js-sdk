@@ -2,26 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import {
-  EventType,
-  MessageTemplateType,
-  ConversationMessage,
-  Message,
-} from '@asgard-js/core';
+import { EventType, MessageTemplateType, ConversationMessage, Message } from '@asgard-js/core';
 import { nanoid } from 'nanoid';
 import styles from './page.module.css';
 
-const Chatbot = dynamic(
-  () => import('@asgard-js/react').then((mod) => ({ default: mod.Chatbot })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className={styles.loading}>
-        <div className={styles.loadingText}>載入中...</div>
-      </div>
-    ),
-  }
-);
+const Chatbot = dynamic(() => import('@asgard-js/react').then(mod => ({ default: mod.Chatbot })), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.loading}>
+      <div className={styles.loadingText}>載入中...</div>
+    </div>
+  ),
+});
 
 const theme = {
   chatbot: {
@@ -126,8 +118,7 @@ function createButtonTemplateExample(): ConversationMessage {
       type: MessageTemplateType.BUTTON,
       title: '死侍與金鋼狼',
       text: '演員: 萊恩·雷諾斯、休·傑克曼\\n導演: 薛恩·李維\\n簡介: 本片是《死侍》系列加入漫威電影宇宙的第一炮，並象徵X戰警正式「回歸」漫威懷抱。',
-      thumbnailImageUrl:
-        'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+      thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
       imageAspectRatio: 'rectangle',
       imageSize: 'cover',
       imageBackgroundColor: '#FFFFFF',
@@ -173,8 +164,7 @@ function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '死侍與金鋼狼',
           text: '演員: 萊恩·雷諾斯、休·傑克曼',
-          thumbnailImageUrl:
-            'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+          thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -195,8 +185,7 @@ function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '腦筋急轉彎2',
           text: '一部溫馨有趣的動畫電影',
-          thumbnailImageUrl:
-            'https://capi.showtimes.com.tw/assets/76/76b16701a7ea36de21e11bc8d85aa95a.jpg',
+          thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/76/76b16701a7ea36de21e11bc8d85aa95a.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -231,10 +220,8 @@ function createImageTemplateExample(): ConversationMessage {
     idx: 0,
     template: {
       type: MessageTemplateType.IMAGE,
-      originalContentUrl:
-        'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
-      previewImageUrl:
-        'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+      originalContentUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+      previewImageUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
       quickReplies: [],
     },
   });
@@ -267,9 +254,7 @@ export default function TemplatesPage(): JSX.Element {
   return (
     <Chatbot
       config={{
-        botProviderEndpoint:
-          process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
-          'http://localhost:4301/api/mock-sse',
+        botProviderEndpoint: process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || 'http://localhost:4301/api/mock-sse',
         apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
       }}
       customChannelId={customChannelId}

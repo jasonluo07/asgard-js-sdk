@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  PropsWithChildren,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, PropsWithChildren, ReactNode } from 'react';
 import { ClientConfig } from '@asgard-js/core';
 import { getBotProviderModels } from '../models/bot-provider';
 import { useDeepCompareMemo } from '../hooks';
@@ -57,12 +50,11 @@ export interface AsgardAppInitializationContextValue {
   error: Error | null;
 }
 
-export const AsgardAppInitializationContext =
-  createContext<AsgardAppInitializationContextValue>({
-    data: {},
-    loading: true,
-    error: null,
-  });
+export const AsgardAppInitializationContext = createContext<AsgardAppInitializationContextValue>({
+  data: {},
+  loading: true,
+  error: null,
+});
 
 export interface AsgardAppInitializationContextProviderProps {
   enabled: boolean;
@@ -72,7 +64,7 @@ export interface AsgardAppInitializationContextProviderProps {
 }
 
 export const AsgardAppInitializationContextProvider = (
-  props: PropsWithChildren<AsgardAppInitializationContextProviderProps>
+  props: PropsWithChildren<AsgardAppInitializationContextProviderProps>,
 ): ReactNode => {
   const {
     enabled,
@@ -81,23 +73,14 @@ export const AsgardAppInitializationContextProvider = (
     loadingComponent = <div>Loading...</div>,
   } = props;
 
-  const botProviderModels = useDeepCompareMemo(
-    () => getBotProviderModels(props.config),
-    [props.config]
-  );
+  const botProviderModels = useDeepCompareMemo(() => getBotProviderModels(props.config), [props.config]);
 
   const asyncInitializers = useDeepCompareMemo(
-    () =>
-      deepMerge(
-        { annotations: botProviderModels.getAnnotations },
-        asyncInitializersFromProp
-      ),
-    [...extractRefs(asyncInitializersFromProp), botProviderModels]
+    () => deepMerge({ annotations: botProviderModels.getAnnotations }, asyncInitializersFromProp),
+    [...extractRefs(asyncInitializersFromProp), botProviderModels],
   );
 
-  const [data, setData] = useState<AsgardAppInitializationContextValue['data']>(
-    {}
-  );
+  const [data, setData] = useState<AsgardAppInitializationContextValue['data']>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -119,12 +102,12 @@ export const AsgardAppInitializationContextProvider = (
         } catch {
           return [key, undefined];
         }
-      })
+      }),
     )
-      .then((results) => {
+      .then(results => {
         if (isMounted) setData(Object.fromEntries(results));
       })
-      .catch((err) => {
+      .catch(err => {
         if (isMounted) setError(err);
       })
       .finally(() => {
@@ -151,6 +134,5 @@ export const AsgardAppInitializationContextProvider = (
   );
 };
 
-export const useAsgardAppInitializationContext =
-  (): AsgardAppInitializationContextValue =>
-    useContext(AsgardAppInitializationContext);
+export const useAsgardAppInitializationContext = (): AsgardAppInitializationContextValue =>
+  useContext(AsgardAppInitializationContext);

@@ -1,10 +1,4 @@
-import {
-  createContext,
-  PropsWithChildren,
-  ReactNode,
-  useContext,
-  useMemo,
-} from 'react';
+import { createContext, PropsWithChildren, ReactNode, useContext, useMemo } from 'react';
 import { ConversationErrorMessage, FetchSsePayload } from '@asgard-js/core';
 
 export interface AsgardTemplateContextValue {
@@ -16,11 +10,9 @@ export interface AsgardTemplateContextValue {
       sse,
     }: {
       sse: {
-        sendMessage: (
-          payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>
-        ) => void;
+        sendMessage: (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
       };
-    }
+    },
   ) => void;
   defaultLinkTarget?: '_blank' | '_self' | '_parent' | '_top';
 }
@@ -41,25 +33,15 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
       sse,
     }: {
       sse: {
-        sendMessage: (
-          payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>
-        ) => void;
+        sendMessage: (payload: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
       };
-    }
+    },
   ) => void;
   defaultLinkTarget?: '_blank' | '_self' | '_parent' | '_top';
 }
 
-export function AsgardTemplateContextProvider(
-  props: AsgardTemplateContextProviderProps
-): ReactNode {
-  const {
-    children,
-    onErrorClick,
-    errorMessageRenderer,
-    onTemplateBtnClick,
-    defaultLinkTarget,
-  } = props;
+export function AsgardTemplateContextProvider(props: AsgardTemplateContextProviderProps): ReactNode {
+  const { children, onErrorClick, errorMessageRenderer, onTemplateBtnClick, defaultLinkTarget } = props;
 
   const contextValue = useMemo(
     () => ({
@@ -68,14 +50,10 @@ export function AsgardTemplateContextProvider(
       onTemplateBtnClick,
       defaultLinkTarget,
     }),
-    [errorMessageRenderer, onErrorClick, onTemplateBtnClick, defaultLinkTarget]
+    [errorMessageRenderer, onErrorClick, onTemplateBtnClick, defaultLinkTarget],
   );
 
-  return (
-    <AsgardTemplateContext.Provider value={contextValue}>
-      {children}
-    </AsgardTemplateContext.Provider>
-  );
+  return <AsgardTemplateContext.Provider value={contextValue}>{children}</AsgardTemplateContext.Provider>;
 }
 
 export function useAsgardTemplateContext(): AsgardTemplateContextValue {

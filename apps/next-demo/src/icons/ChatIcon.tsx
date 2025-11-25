@@ -4,11 +4,7 @@ interface ChatIconProps {
   className?: string;
 }
 
-export default function ChatIcon({
-  width = 24,
-  height = 24,
-  className = '',
-}: ChatIconProps) {
+export default function ChatIcon({ width = 24, height = 24, className = '' }: ChatIconProps) {
   return (
     <svg
       width={width}

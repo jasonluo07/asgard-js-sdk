@@ -14,12 +14,7 @@ export function TemplateBoxContent(props: TemplateBoxContentProps): ReactNode {
   const { quickReplies, time, children } = props;
 
   return (
-    <div
-      className={clsx(
-        'asgard-template-box-content',
-        styles.template_box_content
-      )}
-    >
+    <div className={clsx('asgard-template-box-content', styles.template_box_content)}>
       <div className={styles.content}>
         {children}
         <Time time={time} />

@@ -21,7 +21,7 @@ export interface UseChannelProps {
     response: SseResponse<EventType>,
     context: {
       conversation: Conversation | null;
-    }
+    },
   ) => void;
   onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
 }
@@ -31,7 +31,10 @@ export interface UseChannelReturn {
   isResetting: boolean;
   isConnecting: boolean;
   conversation: Conversation | null;
-  sendMessage?: (payload: Pick<FetchSsePayload, 'text' | 'blobIds'> & Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[] }) => void;
+  sendMessage?: (
+    payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
+      Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[] },
+  ) => void;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
 }
@@ -65,9 +68,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const resetChannel = useCallback(
     async (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => {
       const conversation = new Conversation({
-        messages: new Map(
-          initMessages?.map((message) => [message.messageId, message])
-        ),
+        messages: new Map(initMessages?.map(message => [message.messageId, message])),
       });
 
       setIsResetting(true);
@@ -94,7 +95,13 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             setIsResetting(false);
             // Handle authentication and bot provider errors
             if (error && typeof error === 'object' && ('isAuthError' in error || 'isBotProviderError' in error)) {
-              onAuthError?.(error as { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown });
+              onAuthError?.(
+                error as {
+                  isAuthError: boolean;
+                  isBotProviderError: boolean;
+                  errorDetail?: unknown;
+                },
+              );
             }
           },
           onSseMessage(response: SseResponse<EventType>) {
@@ -102,13 +109,13 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
               conversation,
             });
           },
-        }
+        },
       );
 
       setIsOpen(true);
       setChannel(channel);
     },
-    [client, customChannelId, customMessageId, initMessages, onSseMessage, onAuthError]
+    [client, customChannelId, customMessageId, initMessages, onSseMessage, onAuthError],
   );
 
   const closeChannel = useCallback(() => {
@@ -124,9 +131,13 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (payload: Pick<FetchSsePayload, 'text' | 'blobIds'> & Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[] }) =>
-      channel?.sendMessage({ ...payload, customMessageId }),
-    [channel, customMessageId]
+    (
+      payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
+        Partial<Pick<FetchSsePayload, 'payload'>> & {
+          filePreviewUrls?: string[];
+        },
+    ) => channel?.sendMessage({ ...payload, customMessageId }),
+    [channel, customMessageId],
   );
 
   useEffect(() => {
@@ -147,14 +158,6 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       resetChannel,
       closeChannel,
     }),
-    [
-      isOpen,
-      isResetting,
-      isConnecting,
-      conversation,
-      sendMessage,
-      resetChannel,
-      closeChannel,
-    ]
+    [isOpen, isResetting, isConnecting, conversation, sendMessage, resetChannel, closeChannel],
   );
 }

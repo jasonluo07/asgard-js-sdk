@@ -1,8 +1,4 @@
-import {
-  AsgardServiceClient,
-  ClientConfig,
-  ConversationMessage,
-} from '@asgard-js/core';
+import { AsgardServiceClient, ClientConfig, ConversationMessage } from '@asgard-js/core';
 import {
   createContext,
   ForwardedRef,
@@ -13,12 +9,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import {
-  useAsgardServiceClient,
-  useChannel,
-  UseChannelProps,
-  UseChannelReturn,
-} from '../hooks';
+import { useAsgardServiceClient, useChannel, UseChannelProps, UseChannelReturn } from '../hooks';
 
 export interface AsgardServiceContextValue {
   avatar?: string;
@@ -57,9 +48,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
 
 export interface AsgardServiceContextProviderProps {
   children: ReactNode;
-  parentRef?: ForwardedRef<
-    Partial<{ serviceContext?: AsgardServiceContextValue }>
-  >;
+  parentRef?: ForwardedRef<Partial<{ serviceContext?: AsgardServiceContextValue }>>;
   avatar?: string;
   title?: string;
   config: ClientConfig;
@@ -75,9 +64,7 @@ export interface AsgardServiceContextProviderProps {
   onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
 }
 
-export function AsgardServiceContextProvider(
-  props: AsgardServiceContextProviderProps
-): ReactNode {
+export function AsgardServiceContextProvider(props: AsgardServiceContextProviderProps): ReactNode {
   const {
     avatar,
     title,
@@ -98,15 +85,7 @@ export function AsgardServiceContextProvider(
 
   const client = useAsgardServiceClient({ config });
 
-  const {
-    isOpen,
-    isResetting,
-    isConnecting,
-    conversation,
-    sendMessage,
-    resetChannel,
-    closeChannel,
-  } = useChannel({
+  const { isOpen, isResetting, isConnecting, conversation, sendMessage, resetChannel, closeChannel } = useChannel({
     client,
     customChannelId,
     initMessages,
@@ -149,7 +128,7 @@ export function AsgardServiceContextProvider(
       inputPlaceholder,
       enableUpload,
       enableExport,
-    ]
+    ],
   );
 
   useImperativeHandle(parentRef, () => {
@@ -158,11 +137,7 @@ export function AsgardServiceContextProvider(
     };
   });
 
-  return (
-    <AsgardServiceContext.Provider value={contextValue}>
-      {children}
-    </AsgardServiceContext.Provider>
-  );
+  return <AsgardServiceContext.Provider value={contextValue}>{children}</AsgardServiceContext.Provider>;
 }
 
 export function useAsgardContext(): AsgardServiceContextValue {

@@ -107,11 +107,7 @@ export interface Message<Payload = unknown> {
     | ChartMessageTemplate;
 }
 
-export type IsEqual<A, B, DataType> = A extends B
-  ? B extends A
-    ? DataType
-    : null
-  : null;
+export type IsEqual<A, B, DataType> = A extends B ? (B extends A ? DataType : null) : null;
 
 export interface MessageEventData {
   message: Message;
@@ -154,16 +150,8 @@ export interface Fact<Type extends EventType> {
   messageStart: IsEqual<Type, EventType.MESSAGE_START, MessageEventData>;
   messageDelta: IsEqual<Type, EventType.MESSAGE_DELTA, MessageEventData>;
   messageComplete: IsEqual<Type, EventType.MESSAGE_COMPLETE, MessageEventData>;
-  toolCallStart: IsEqual<
-    Type,
-    EventType.TOOL_CALL_START,
-    ToolCallBaseEventData
-  >;
-  toolCallComplete: IsEqual<
-    Type,
-    EventType.TOOL_CALL_COMPLETE,
-    ToolCallCompleteEventData
-  >;
+  toolCallStart: IsEqual<Type, EventType.TOOL_CALL_START, ToolCallBaseEventData>;
+  toolCallComplete: IsEqual<Type, EventType.TOOL_CALL_COMPLETE, ToolCallCompleteEventData>;
 }
 
 export interface SseResponse<Type extends EventType> {

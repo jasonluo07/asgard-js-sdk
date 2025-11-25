@@ -9,7 +9,7 @@ export function useResizeObserver(props: UseResizeObserverProps): void {
   const { ref, onResize } = props;
 
   useEffect(() => {
-    const resizeObserver = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         onResize(width, height);

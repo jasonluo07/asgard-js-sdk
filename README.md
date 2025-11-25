@@ -37,9 +37,7 @@ const App = () => {
           cursor: 'pointer',
           padding: '0.5rem 1rem',
         }}
-        onClick={() =>
-          chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })
-        }
+        onClick={() => chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })}
       >
         Send a message from outside of chatbot
       </button>
@@ -48,10 +46,9 @@ const App = () => {
         title="Asgard AI Chatbot"
         config={{
           apiKey: 'your-api-key',
-          botProviderEndpoint:
-            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+          botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
           debugMode: true, // Enable to see deprecation warnings
-          transformSsePayload: (payload) => {
+          transformSsePayload: payload => {
             return payload;
           },
         }}
@@ -89,12 +86,11 @@ const App = () => {
 export default App;
 ```
 
-
 ### File Upload Feature
 
 The SDK supports image upload with drag & drop, multiple file selection, and preview functionality.
 
-```javascript
+````javascript
 <Chatbot
   config={{
     apiKey: 'your-api-key',
@@ -118,7 +114,7 @@ const EmbedApp = () => {
 
   const handleApiKeySubmit = async (apiKey: string) => {
     setAuthState('loading');
-    
+
     try {
       // Validate the API key (implement your validation logic)
       const isValid = await validateApiKey(apiKey);
@@ -141,7 +137,7 @@ const EmbedApp = () => {
     />
   );
 };
-```
+````
 
 ## Migration from `endpoint` to `botProviderEndpoint`
 
@@ -536,7 +532,7 @@ describe('Chatbot Component', () => {
           apiKey: 'test',
         }}
         customChannelId="test"
-      />
+      />,
     );
 
     expect(container).toBeInTheDocument();

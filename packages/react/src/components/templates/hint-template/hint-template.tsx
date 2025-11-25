@@ -1,11 +1,7 @@
 import { ReactNode, useCallback } from 'react';
 import classes from './hint-template.module.scss';
 import { formatTime } from '../../../utils';
-import {
-  ConversationErrorMessage,
-  ConversationMessage,
-  MessageTemplateType,
-} from '@asgard-js/core';
+import { ConversationErrorMessage, ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 import { useAsgardTemplateContext, useAsgardThemeContext } from '../../../context';
 import clsx from 'clsx';
 
@@ -27,12 +23,7 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
 
   if (message.type === 'error')
     return (
-      <div
-        className={clsx(
-          'asgard-hint-template asgard-hint-template--error',
-          classes.hint_root
-        )}
-      >
+      <div className={clsx('asgard-hint-template asgard-hint-template--error', classes.hint_root)}>
         {errorMessageRenderer?.(message) ?? (
           <>
             <div className={classes.error_hint_title}>
@@ -40,10 +31,7 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
               <span>Unexpected error</span>
             </div>
             {onErrorClick && (
-              <div
-                className={classes.error_hint_message}
-                onClick={onErrorHintClick}
-              >
+              <div className={classes.error_hint_message} onClick={onErrorHintClick}>
                 Click <span>here</span> to view the report.
               </div>
             )}
@@ -58,17 +46,11 @@ export function HintTemplate(props: HintTemplateProps): ReactNode {
 
   return (
     <div
-      className={clsx(
-        'asgard-hint-template asgard-hint-template--hint',
-        classes.hint_root
-      )}
+      className={clsx('asgard-hint-template asgard-hint-template--hint', classes.hint_root)}
       style={themeTemplate?.HintMessageTemplate?.style}
     >
       <div className={classes.time}>{formatTime(message.time)}</div>
-      <div 
-        className={classes.hint_text}
-        style={themeTemplate?.HintMessageTemplate?.style}
-      >
+      <div className={classes.hint_text} style={themeTemplate?.HintMessageTemplate?.style}>
         {template.text}
       </div>
     </div>

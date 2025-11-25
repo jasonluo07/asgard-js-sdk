@@ -15,7 +15,7 @@ graph TD
     A[markdownText] --> B[useMarkdownRenderer Hook]
     B --> C[Lexer.lex - Parse to Tokens]
     C --> D{isCompleteParagraph Check}
-    D --> E[Complete Tokens] 
+    D --> E[Complete Tokens]
     D --> F[Incomplete Tokens]
     E --> G[Cache Lookup]
     G --> H[marked.parser - Convert to HTML]
@@ -34,7 +34,7 @@ graph TD
 ```json
 {
   "marked": "^15.0.8",
-  "marked-highlight": "^2.2.1", 
+  "marked-highlight": "^2.2.1",
   "highlight.js": "^11.11.1",
   "dompurify": "^3.2.5"
 }
@@ -42,20 +42,24 @@ graph TD
 
 ### Key Features
 
-1. **Streaming/Typing Effect**: 
+1. **Streaming/Typing Effect**:
+
    - Parses markdown into tokens using `Lexer.lex()`
    - Determines complete vs incomplete blocks based on paragraph endings (`.`, `。`, `！`, newlines)
    - Renders complete blocks immediately while showing incomplete text as "typing"
 
 2. **Performance Optimization**:
+
    - Uses `Map` cache (`cacheRef`) to avoid re-parsing completed blocks
    - Debounced rendering with configurable delay (default 100ms)
 
-3. **Security**: 
+3. **Security**:
+
    - Uses `DOMPurify.sanitize()` to prevent XSS attacks
    - Sanitizes all HTML output before rendering
 
 4. **Syntax Highlighting**:
+
    - Integrates `highlight.js` via `marked-highlight`
    - Automatic language detection with fallback to plaintext
    - CSS class prefixes: `hljs language-*`
@@ -72,10 +76,7 @@ interface MarkdownRenderResult {
   lastTypingText: string;
 }
 
-function useMarkdownRenderer(
-  markdownText: string,
-  delay = 100
-): MarkdownRenderResult
+function useMarkdownRenderer(markdownText: string, delay = 100): MarkdownRenderResult;
 ```
 
 ### Current Limitations
@@ -97,31 +98,31 @@ graph TD
     C --> D[Complete Markdown Text]
     C --> E[Incomplete Text for Typing]
     D --> F[react-markdown Component]
-    
+
     subgraph "Plugin Pipeline"
         G[remark-gfm<br/>GFM Support]
-        H[remark-math<br/>Math Parsing] 
+        H[remark-math<br/>Math Parsing]
         I[rehype-katex<br/>LaTeX Rendering]
         J[rehype-highlight<br/>Syntax Highlighting]
     end
-    
+
     F --> G
-    F --> H  
+    F --> H
     F --> I
     F --> J
-    
+
     subgraph "Custom Renderers"
         K[TableRenderer<br/>Custom Styling]
         L[CodeRenderer<br/>Enhanced Highlighting]
         M[MathRenderer<br/>KaTeX Integration]
         N[LinkRenderer<br/>Security Validation]
     end
-    
+
     G --> K
     J --> L
     I --> M
     F --> N
-    
+
     K --> O[React Elements]
     L --> O
     M --> O
@@ -137,7 +138,7 @@ graph TD
 {
   "react-markdown": "^9.0.1",
   "remark-gfm": "^4.0.0",
-  "remark-math": "^6.0.0", 
+  "remark-math": "^6.0.0",
   "rehype-katex": "^7.0.1",
   "rehype-highlight": "^7.0.1",
   "katex": "^0.16.9"
@@ -145,14 +146,16 @@ graph TD
 ```
 
 **Dependencies to Remove:**
+
 - `marked`: `^15.0.8`
-- `marked-highlight`: `^2.2.1` 
+- `marked-highlight`: `^2.2.1`
 - `highlight.js`: `^11.11.1`
 - `dompurify`: `^3.2.5` (no longer needed)
 
 ### Enhanced Features
 
 1. **GitHub Flavored Markdown (GFM)**:
+
    - Tables with alignment support
    - Strikethrough text (`~~text~~`)
    - Task lists (`- [x] completed`, `- [ ] todo`)
@@ -160,12 +163,14 @@ graph TD
    - Extended URL linking
 
 2. **Mathematics & LaTeX**:
+
    - Inline math: `$E = mc^2$`
    - Block math: `$$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$`
    - Full KaTeX feature support
    - Automatic math expression detection
 
 3. **Enhanced Security**:
+
    - Native React component rendering (no `dangerouslySetInnerHTML`)
    - Built-in XSS protection via react-markdown
    - Safe link handling with URI validation integration
@@ -180,17 +185,16 @@ graph TD
 #### Phase 1: Core Migration (1-2 days)
 
 1. **Install Dependencies**
+
    ```bash
    npm install react-markdown remark-gfm remark-math rehype-katex rehype-highlight katex
    ```
 
 2. **Create New Hook Structure**
+
    ```typescript
    // New file: use-react-markdown-renderer.tsx
-   function useReactMarkdownRenderer(
-     markdownText: string,
-     delay = 100
-   ): MarkdownRenderResult {
+   function useReactMarkdownRenderer(markdownText: string, delay = 100): MarkdownRenderResult {
      // Implementation preserving current interface
    }
    ```
@@ -203,11 +207,13 @@ graph TD
 #### Phase 2: Feature Enhancement (2-3 days)
 
 1. **Math/LaTeX Support**
+
    - Configure `remark-math` + `rehype-katex`
    - Add KaTeX CSS imports
    - Create custom math component renderers
 
 2. **Syntax Highlighting**
+
    - Configure `rehype-highlight`
    - Maintain `highlight.js` compatibility
    - Preserve existing CSS classes
@@ -225,6 +231,7 @@ graph TD
 #### Phase 3: Streaming Integration (1-2 days)
 
 1. **Adapt Streaming Logic**
+
    ```typescript
    // Preserve current streaming approach
    const parseCompleteBlocks = (markdown: string) => {
@@ -241,15 +248,17 @@ graph TD
 #### Phase 4: Integration & Testing (1-2 days)
 
 1. **Update TextTemplate Component**
+
    ```typescript
    // In text-template.tsx
    const { reactElements, lastTypingText } = useReactMarkdownRenderer(
      (message as ConversationBotMessage)?.message?.text || '',
-     20
+     20,
    );
    ```
 
 2. **Comprehensive Testing**
+
    - Unit tests for new hook
    - Integration tests with existing components
    - Visual regression tests for styling
@@ -263,11 +272,12 @@ graph TD
 ### Interface Compatibility
 
 **Maintaining Current Interface:**
+
 ```typescript
 // Current interface (preserved)
 interface MarkdownRenderResult {
-  htmlBlocks: ReactNode;      // Now returns React elements instead of HTML
-  lastTypingText: string;     // Unchanged
+  htmlBlocks: ReactNode; // Now returns React elements instead of HTML
+  lastTypingText: string; // Unchanged
 }
 
 // Usage remains identical
@@ -279,6 +289,7 @@ const { htmlBlocks, lastTypingText } = useMarkdownRenderer(text, delay);
 ### Custom Component Renderers
 
 #### Table Renderer
+
 ```typescript
 const CustomTableRenderer = ({ children, ...props }) => (
   <div className={classes.table_container}>
@@ -288,6 +299,7 @@ const CustomTableRenderer = ({ children, ...props }) => (
 ```
 
 #### Code Renderer
+
 ```typescript
 const CustomCodeRenderer = ({ children, className, ...props }) => {
   const language = className?.replace('language-', '') || 'plaintext';
@@ -300,24 +312,31 @@ const CustomCodeRenderer = ({ children, className, ...props }) => {
 ```
 
 #### Safe Link Renderer
+
 ```typescript
 const SafeLinkRenderer = ({ href, children, ...props }) => {
-  const handleClick = (e) => {
+  const handleClick = e => {
     e.preventDefault();
     safeWindowOpen(href, '_blank'); // Use existing URI validation
   };
-  return <a href={href} onClick={handleClick} {...props}>{children}</a>;
+  return (
+    <a href={href} onClick={handleClick} {...props}>
+      {children}
+    </a>
+  );
 };
 ```
 
 ### Performance Considerations
 
 1. **Bundle Size Impact**:
+
    - `katex`: ~280KB (largest addition)
    - `react-markdown`: ~50KB
    - **Net change**: +200KB (math support trade-off)
 
 2. **Runtime Performance**:
+
    - React component rendering vs HTML parsing
    - Caching strategy for processed markdown
    - Lazy loading for KaTeX when math detected
@@ -335,16 +354,16 @@ gantt
     section Phase 1: Core
     Install Dependencies    :2024-01-01, 1d
     Basic Integration      :2024-01-02, 2d
-    
-    section Phase 2: Features  
+
+    section Phase 2: Features
     Math/LaTeX Support     :2024-01-03, 2d
     Syntax Highlighting    :2024-01-04, 1d
     Custom Renderers       :2024-01-05, 1d
-    
+
     section Phase 3: Streaming
     Adapt Logic           :2024-01-06, 1d
     Performance Opt       :2024-01-07, 1d
-    
+
     section Phase 4: Integration
     Update Components     :2024-01-08, 1d
     Testing              :2024-01-09, 2d
@@ -354,36 +373,42 @@ gantt
 ### Risk Assessment & Mitigation
 
 #### High Risk
-1. **Streaming Performance**: React re-renders vs HTML updates
-   - *Mitigation*: Implement React.memo, optimize component structure
-   
-2. **Bundle Size**: KaTeX significantly increases bundle
-   - *Mitigation*: Code splitting, lazy loading math features
 
-#### Medium Risk  
+1. **Streaming Performance**: React re-renders vs HTML updates
+   - _Mitigation_: Implement React.memo, optimize component structure
+2. **Bundle Size**: KaTeX significantly increases bundle
+   - _Mitigation_: Code splitting, lazy loading math features
+
+#### Medium Risk
+
 3. **Styling Consistency**: Component-based rendering changes CSS targeting
-   - *Mitigation*: Thorough visual testing, CSS selector updates
+
+   - _Mitigation_: Thorough visual testing, CSS selector updates
 
 4. **Breaking Changes**: Plugin API changes between versions
-   - *Mitigation*: Pin dependency versions, comprehensive testing
+   - _Mitigation_: Pin dependency versions, comprehensive testing
 
 #### Low Risk
+
 5. **Feature Parity**: Missing current functionality
-   - *Mitigation*: Maintain interface compatibility, feature mapping
+   - _Mitigation_: Maintain interface compatibility, feature mapping
 
 ### Testing Strategy
 
 1. **Unit Tests**:
+
    - Hook functionality testing
    - Custom renderer testing
    - Plugin integration testing
 
 2. **Integration Tests**:
+
    - TextTemplate component integration
    - Streaming behavior validation
    - Performance benchmarking
 
 3. **Visual Tests**:
+
    - Style consistency verification
    - Math rendering accuracy
    - Syntax highlighting comparison
@@ -396,11 +421,13 @@ gantt
 ### Success Criteria
 
 1. **Functional**:
+
    - ✅ All existing markdown features work
    - ✅ Streaming/typing effect preserved
    - ✅ Performance within 10% of current implementation
 
 2. **Enhanced**:
+
    - ✅ GFM features working (tables, task lists, etc.)
    - ✅ Math/LaTeX rendering functional
    - ✅ Improved syntax highlighting
@@ -415,7 +442,7 @@ gantt
 If migration encounters critical issues:
 
 1. **Immediate**: Revert to current implementation
-2. **Preserve**: Keep new dependencies for future attempts  
+2. **Preserve**: Keep new dependencies for future attempts
 3. **Analysis**: Document specific blockers
 4. **Timeline**: Plan resolution and retry timeline
 

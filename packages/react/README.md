@@ -39,9 +39,7 @@ const App = () => {
           cursor: 'pointer',
           padding: '0.5rem 1rem',
         }}
-        onClick={() =>
-          chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })
-        }
+        onClick={() => chatbotRef.current?.serviceContext?.sendMessage?.({ text: 'Hello' })}
       >
         Send a message from outside of chatbot
       </button>
@@ -50,10 +48,9 @@ const App = () => {
         title="Asgard AI Chatbot"
         config={{
           apiKey: 'your-api-key',
-          botProviderEndpoint:
-            'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+          botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
           debugMode: true, // Enable to see deprecation warnings
-          transformSsePayload: (payload) => {
+          transformSsePayload: payload => {
             return payload;
           },
         }}
@@ -105,7 +102,7 @@ The Chatbot component includes built-in file upload capabilities for sending ima
     botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   }}
   customChannelId="your-channel-id"
-  enableUpload={true}  // Explicitly enable file upload
+  enableUpload={true} // Explicitly enable file upload
 />
 ```
 
@@ -126,6 +123,7 @@ When `enableLoadConfigFromService` is enabled, you can also control the upload f
 ```
 
 **Configuration Priority** (highest to lowest):
+
 1. `enableUpload` prop value
 2. `annotations.embedConfig.enableUpload` from bot provider metadata
 3. Default: `false`
@@ -145,7 +143,7 @@ The Chatbot component includes built-in conversation export functionality, allow
     botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   }}
   customChannelId="your-channel-id"
-  enableExport={true}  // Explicitly enable conversation export
+  enableExport={true} // Explicitly enable conversation export
 />
 ```
 
@@ -166,6 +164,7 @@ When `enableLoadConfigFromService` is enabled, you can also control the export f
 ```
 
 **Configuration Priority** (highest to lowest):
+
 1. `enableExport` prop value
 2. `annotations.embedConfig.enableExport` from bot provider metadata
 3. Default: `false`
@@ -182,11 +181,11 @@ import { Chatbot } from '@asgard-js/react';
 import { AuthState } from '@asgard-js/core';
 
 const EmbedApp = () => {
-  const [authState, setAuthState] = useState<AuthState>('needApiKey');
+  const [authState, setAuthState] = useState < AuthState > 'needApiKey';
 
   const handleApiKeySubmit = async (apiKey: string) => {
     setAuthState('loading');
-    
+
     try {
       // Validate the API key (implement your validation logic)
       const isValid = await validateApiKey(apiKey);
@@ -574,13 +573,7 @@ describe('Chatbot Component', () => {
       apiKey: 'test-key',
     };
 
-    const { container } = render(
-      <Chatbot
-        title="Test Chatbot"
-        config={config}
-        customChannelId="test-channel"
-      />
-    );
+    const { container } = render(<Chatbot title="Test Chatbot" config={config} customChannelId="test-channel" />);
 
     expect(container).toBeInTheDocument();
   });

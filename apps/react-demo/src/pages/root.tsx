@@ -16,7 +16,6 @@ import {
 
 const { VITE_API_KEY, VITE_BOT_PROVIDER_ENDPOINT } = import.meta.env;
 
-
 export function Root(): ReactNode {
   const [customChannelId] = useState(nanoid());
   const [isOpen, setIsOpen] = useState(true);
@@ -42,7 +41,7 @@ export function Root(): ReactNode {
     console.log('Demo: API Key submitted:', apiKey);
     // Simulate API key validation
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     if (apiKey === 'wrong-key') {
       setAuthState('invalidApiKey');
     } else {
@@ -65,12 +64,12 @@ export function Root(): ReactNode {
           padding: '0.5rem 1rem',
         }}
         onClick={() => {
-          setIsOpen((prev) => !prev);
+          setIsOpen(prev => !prev);
         }}
       >
         Toggle
       </button>
-      
+
       <div className={styles.root__debug_panel}>
         <button
           className={clsx(styles.root__debug_button, styles['root__debug_button--authenticated'])}
@@ -98,9 +97,7 @@ export function Root(): ReactNode {
         </button>
       </div>
       <div style={{ width: '800px', position: 'relative' }}>
-        <div
-          style={{ position: 'relative', display: isOpen ? 'block' : 'none' }}
-        >
+        <div style={{ position: 'relative', display: isOpen ? 'block' : 'none' }}>
           {authState === 'authenticated' && (
             <button
               style={{
@@ -143,7 +140,6 @@ export function Root(): ReactNode {
             botTypingPlaceholder="typing"
             customChannelId={customChannelId}
             initMessages={authState === 'authenticated' ? initMessages : []}
-            
             // Auth state prop
             authState={authState}
             onApiKeySubmit={handleApiKeySubmit}
@@ -151,21 +147,21 @@ export function Root(): ReactNode {
               setIsOpen(false);
             }}
             theme={{
-              "botMessage": {
-                "backgroundColor": "#8728a6",
-                "carouselButtonBackgroundColor": "#333333",
-                "color": "#FFFFFF"
+              botMessage: {
+                backgroundColor: '#8728a6',
+                carouselButtonBackgroundColor: '#333333',
+                color: '#FFFFFF',
               },
-              "chatbot": {
-                "backgroundColor": "#ea8585",
-                "borderColor": "#434343",
-                "inactiveColor": "#8C8C8C",
-                "primaryComponent": {
-                  "mainColor": "#ebe246",
-                  "secondaryColor": "#FFFFFF"
-                }
+              chatbot: {
+                backgroundColor: '#ea8585',
+                borderColor: '#434343',
+                inactiveColor: '#8C8C8C',
+                primaryComponent: {
+                  mainColor: '#ebe246',
+                  secondaryColor: '#FFFFFF',
+                },
               },
-              "userMessage": { "backgroundColor": "#1f2d67", "color": "#12cc27" }
+              userMessage: { backgroundColor: '#1f2d67', color: '#12cc27' },
             }}
           />
         </div>

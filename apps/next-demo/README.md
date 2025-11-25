@@ -41,6 +41,6 @@ apps/next-demo/
 This project uses `~/*` as a path alias for the `src/` directory:
 
 ```typescript
-import Component from '~/components/Component'
-import { utils } from '~/lib/utils'
+import Component from '~/components/Component';
+import { utils } from '~/lib/utils';
 ```

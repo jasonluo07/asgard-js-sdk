@@ -21,30 +21,29 @@ export type BotProviderMetadataResponse = {
   }>;
 };
 
-const stubGetAsgardBotProviderMetadata =
-  async (): Promise<BotProviderMetadataResponse> => {
-    return {
-      name: '',
-      namespace: '',
-      uid: '',
-      resourceVersion: '0',
-      generation: 0,
-      creationTimestamp: new Date().toISOString(),
-      labels: {},
-      annotations: {
-        'asgard-ai.com/additional-annotation': JSON.stringify({
-          embedConfig: {
-            theme: {
-              chatbot: {},
-              botMessage: {},
-              userMessage: {},
-            },
+const stubGetAsgardBotProviderMetadata = async (): Promise<BotProviderMetadataResponse> => {
+  return {
+    name: '',
+    namespace: '',
+    uid: '',
+    resourceVersion: '0',
+    generation: 0,
+    creationTimestamp: new Date().toISOString(),
+    labels: {},
+    annotations: {
+      'asgard-ai.com/additional-annotation': JSON.stringify({
+        embedConfig: {
+          theme: {
+            chatbot: {},
+            botMessage: {},
+            userMessage: {},
           },
-        }),
-      },
-      managedFields: [],
-    };
+        },
+      }),
+    },
+    managedFields: [],
   };
+};
 
 const stubGetAnnotations = async (): Promise<Record<string, unknown>> => {
   const metadata = await stubGetAsgardBotProviderMetadata();
@@ -53,7 +52,7 @@ const stubGetAnnotations = async (): Promise<Record<string, unknown>> => {
 };
 
 export const getBotProviderModels = (
-  config: ClientConfig
+  config: ClientConfig,
 ): {
   getAsgardBotProviderMetadata: () => Promise<BotProviderMetadataResponse>;
   getAnnotations: () => Promise<Record<string, unknown>>;
@@ -62,7 +61,7 @@ export const getBotProviderModels = (
     // eslint-disable-next-line no-console
     console.warn(
       '[getBotProviderModels] botProviderEndpoint is not defined in config. ' +
-        'Bot provider features will be disabled. Consider providing botProviderEndpoint for full functionality.'
+        'Bot provider features will be disabled. Consider providing botProviderEndpoint for full functionality.',
     );
 
     return {

@@ -5,13 +5,10 @@ interface UseAsgardServiceClientProps {
   config: ClientConfig;
 }
 
-export function useAsgardServiceClient(
-  props: UseAsgardServiceClientProps
-): AsgardServiceClient | null {
+export function useAsgardServiceClient(props: UseAsgardServiceClientProps): AsgardServiceClient | null {
   const { config } = props;
 
-  const { onRunInit, onProcess, onMessage, onToolCall, onRunDone, onRunError } =
-    config;
+  const { onRunInit, onProcess, onMessage, onToolCall, onRunDone, onRunError } = config;
 
   const clientRef = useRef<AsgardServiceClient | null>(null);
 

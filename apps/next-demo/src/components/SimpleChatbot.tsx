@@ -3,29 +3,21 @@
 import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { RemoveScroll } from 'react-remove-scroll';
-import {
-  EventType,
-  MessageTemplateType,
-  ConversationMessage,
-  SseResponse,
-} from '@asgard-js/core';
+import { EventType, MessageTemplateType, ConversationMessage, SseResponse } from '@asgard-js/core';
 import type { ChatbotRef } from '@asgard-js/react';
 import { nanoid } from 'nanoid';
 import { ChatIcon } from '~/icons';
 import QuickQuestionButtons from './QuickQuestionButtons';
 
 // 動態導入 Chatbot 以避免 SSR 問題
-const Chatbot = dynamic(
-  () => import('@asgard-js/react').then((mod) => ({ default: mod.Chatbot })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">載入中...</div>
-      </div>
-    ),
-  }
-);
+const Chatbot = dynamic(() => import('@asgard-js/react').then(mod => ({ default: mod.Chatbot })), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-gray-500">載入中...</div>
+    </div>
+  ),
+});
 
 const theme = {
   chatbot: {
@@ -106,7 +98,7 @@ export default function SimpleChatbot() {
     } else {
       // 如果 Chatbot 已開啟，直接發送
       chatbotRef.current?.serviceContext?.sendMessage?.({
-        text: question
+        text: question,
       });
     }
   };
@@ -169,8 +161,7 @@ export default function SimpleChatbot() {
               ref={chatbotRef}
               config={{
                 botProviderEndpoint:
-                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
-                  'http://localhost:4300/api/mock-sse',
+                  process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || 'http://localhost:4300/api/mock-sse',
                 apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
               }}
               onSseMessage={handleSseMessage}

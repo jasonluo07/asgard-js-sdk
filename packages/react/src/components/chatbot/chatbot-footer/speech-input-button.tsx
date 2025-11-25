@@ -26,8 +26,7 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) return;
 
@@ -39,7 +38,7 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
     recognition.onresult = (event: SpeechRecognitionEvent): void => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          setValue((prev) => prev + event.results[i][0].transcript);
+          setValue(prev => prev + event.results[i][0].transcript);
         }
       }
     };
@@ -78,43 +77,43 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
   }, []);
 
   const onMouseDown = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (event) => {
+    event => {
       if (!listening) {
         event.preventDefault();
         startListening();
       }
     },
-    [listening, startListening]
+    [listening, startListening],
   );
 
   const onMouseUp = useCallback<MouseEventHandler<HTMLDivElement>>(
-    (event) => {
+    event => {
       if (listening) {
         event.preventDefault();
         stopListening();
       }
     },
-    [listening, stopListening]
+    [listening, stopListening],
   );
 
   const onTouchStart = useCallback<TouchEventHandler<HTMLDivElement>>(
-    (event) => {
+    event => {
       if (!listening) {
         event.preventDefault();
         startListening();
       }
     },
-    [listening, startListening]
+    [listening, startListening],
   );
 
   const onTouchEnd = useCallback<TouchEventHandler<HTMLDivElement>>(
-    (event) => {
+    event => {
       if (listening) {
         event.preventDefault();
         stopListening();
       }
     },
-    [listening, stopListening]
+    [listening, stopListening],
   );
 
   return (

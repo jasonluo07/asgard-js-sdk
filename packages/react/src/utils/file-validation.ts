@@ -1,10 +1,4 @@
-export const SUPPORTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
+export const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
@@ -16,9 +10,7 @@ export interface FileValidationResult {
 export function validateImageFile(file: File): FileValidationResult {
   // 檢查檔案類型
   if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-    const supportedFormats = SUPPORTED_IMAGE_TYPES.map(type => 
-      type.split('/')[1].toUpperCase()
-    ).join('、');
+    const supportedFormats = SUPPORTED_IMAGE_TYPES.map(type => type.split('/')[1].toUpperCase()).join('、');
 
     return {
       isValid: false,
@@ -45,9 +37,9 @@ export function validateImageFiles(files: FileList | File[]): {
 } {
   const validFiles: File[] = [];
   const errors: string[] = [];
-  
+
   const fileArray = Array.from(files);
-  
+
   fileArray.forEach(file => {
     const validation = validateImageFile(file);
     if (validation.isValid) {
@@ -56,6 +48,6 @@ export function validateImageFiles(files: FileList | File[]): {
       errors.push(`${file.name}: ${validation.error}`);
     }
   });
-  
+
   return { validFiles, errors };
 }

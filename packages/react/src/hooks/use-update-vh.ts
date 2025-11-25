@@ -1,7 +1,6 @@
 import { RefObject, useCallback, useEffect, useLayoutEffect } from 'react';
 
-const useBrowserLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : null;
+const useBrowserLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : null;
 
 export function useUpdateVh(ref: RefObject<HTMLDivElement>): void {
   const updateVh = useCallback(() => {

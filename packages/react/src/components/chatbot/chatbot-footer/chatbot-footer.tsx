@@ -20,7 +20,17 @@ import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
 export function ChatbotFooter(): ReactNode {
-  const { sendMessage, isConnecting, inputPlaceholder, client, customChannelId, enableUpload: enableUploadProp, enableExport: enableExportProp, messages, title } = useAsgardContext();
+  const {
+    sendMessage,
+    isConnecting,
+    inputPlaceholder,
+    client,
+    customChannelId,
+    enableUpload: enableUploadProp,
+    enableExport: enableExportProp,
+    messages,
+    title,
+  } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
   const { chatbot } = useAsgardThemeContext();
@@ -52,13 +62,16 @@ export function ChatbotFooter(): ReactNode {
   const [isComposing, setIsComposing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
-  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
+  const [previewImage, setPreviewImage] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const disabled = useMemo(
     () => isConnecting || (!value.trim() && selectedFiles.length === 0),
-    [isConnecting, value, selectedFiles.length]
+    [isConnecting, value, selectedFiles.length],
   );
 
   const contentStyles = useMemo(
@@ -66,40 +79,37 @@ export function ChatbotFooter(): ReactNode {
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
       borderTopColor: chatbot?.borderColor,
     }),
-    [chatbot]
+    [chatbot],
   );
 
-  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
-    (event) => {
-      const element = event.target as HTMLTextAreaElement;
-      const value = element.value;
+  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(event => {
+    const element = event.target as HTMLTextAreaElement;
+    const value = element.value;
 
-      element.style.height = '36px';
+    element.style.height = '36px';
 
-      if (value) {
-        element.style.height = `${element.scrollHeight}px`;
-      }
+    if (value) {
+      element.style.height = `${element.scrollHeight}px`;
+    }
 
-      setValue(event.target.value);
-    },
-    []
-  );
+    setValue(event.target.value);
+  }, []);
 
   const onSubmit = useCallback(async () => {
     if (!isComposing && !isConnecting) {
       const hasFiles = selectedFiles.length > 0;
       const messageText = value.trim();
-      
+
       try {
         let blobIds: string[] | undefined;
-        
+
         if (hasFiles && client?.uploadFile && customChannelId) {
           blobIds = [];
-          
+
           for (const file of selectedFiles) {
             try {
               const response = await client.uploadFile(file, customChannelId);
-              
+
               if (response.isSuccess && response.data?.[0]) {
                 const blobData = response.data[0];
                 blobIds.push(blobData.blobId);
@@ -110,26 +120,29 @@ export function ChatbotFooter(): ReactNode {
               alert(`檔案 ${file.name} 上傳失敗`);
             }
           }
-          
+
           if (blobIds.length === 0) {
-            
             return;
           }
         }
-        
+
         if (messageText || blobIds || filePreviewUrls.length > 0) {
-          const payload: { text: string; blobIds?: string[]; filePreviewUrls?: string[] } = { 
-            text: messageText || '' 
+          const payload: {
+            text: string;
+            blobIds?: string[];
+            filePreviewUrls?: string[];
+          } = {
+            text: messageText || '',
           };
-          
+
           if (blobIds && blobIds.length > 0) {
             payload.blobIds = blobIds;
           }
-          
+
           if (filePreviewUrls.length > 0) {
             payload.filePreviewUrls = filePreviewUrls;
           }
-          
+
           sendMessage?.(payload);
         }
 
@@ -147,55 +160,46 @@ export function ChatbotFooter(): ReactNode {
   }, [isComposing, isConnecting, sendMessage, value, selectedFiles, filePreviewUrls, client, customChannelId]);
 
   const onKeyDown = useCallback<KeyboardEventHandler<HTMLTextAreaElement>>(
-    (event) => {
-      if (
-        event.key === 'Enter' &&
-        !isComposing &&
-        !isConnecting &&
-        (value.trim() || selectedFiles.length > 0)
-      ) {
+    event => {
+      if (event.key === 'Enter' && !isComposing && !isConnecting && (value.trim() || selectedFiles.length > 0)) {
         event.preventDefault();
         onSubmit();
       }
     },
-    [isComposing, isConnecting, value, selectedFiles.length, onSubmit]
+    [isComposing, isConnecting, value, selectedFiles.length, onSubmit],
   );
 
-  const handleFileSelect = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (files && files.length > 0) {
-        
-        const { validFiles, errors } = validateImageFiles(files);
-        
-        if (errors.length > 0) {
-          alert('檔案驗證錯誤:\n' + errors.join('\n'));
-        }
-        
-        if (validFiles.length > 0) {
-          setSelectedFiles(prev => [...prev, ...validFiles]);
-          
-          const newPreviewUrls: string[] = [];
-          for (const file of validFiles) {
-            const reader = new FileReader();
-            reader.onload = (e): void => {
-              if (e.target?.result && typeof e.target.result === 'string') {
-                newPreviewUrls.push(e.target.result);
-                if (newPreviewUrls.length === validFiles.length) {
-                  setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
-                }
-              }
-            };
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const { validFiles, errors } = validateImageFiles(files);
 
-            reader.readAsDataURL(file);
-          }
+      if (errors.length > 0) {
+        alert('檔案驗證錯誤:\n' + errors.join('\n'));
+      }
+
+      if (validFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+
+        const newPreviewUrls: string[] = [];
+        for (const file of validFiles) {
+          const reader = new FileReader();
+          reader.onload = (e): void => {
+            if (e.target?.result && typeof e.target.result === 'string') {
+              newPreviewUrls.push(e.target.result);
+              if (newPreviewUrls.length === validFiles.length) {
+                setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+              }
+            }
+          };
+
+          reader.readAsDataURL(file);
         }
       }
-      
-      event.target.value = '';
-    },
-    []
-  );
+    }
+
+    event.target.value = '';
+  }, []);
 
   const handleGalleryClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -233,17 +237,13 @@ export function ChatbotFooter(): ReactNode {
     if (textareaRef.current) {
       textareaRef.current.style.setProperty(
         '--asg-color-text-placeholder',
-        chatbot.footer?.textArea?.['::placeholder']?.color ??
-          'var(--asg-color-text-placeholder)'
+        chatbot.footer?.textArea?.['::placeholder']?.color ?? 'var(--asg-color-text-placeholder)',
       );
     }
   }, [chatbot.footer?.textArea]);
 
   return (
-    <div
-      className={clsx('asgard-chatbot-footer', styles.chatbot_footer)}
-      style={chatbot.footer?.style}
-    >
+    <div className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={chatbot.footer?.style}>
       {enableUpload && selectedFiles.length > 0 && (
         <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
           <div className={styles.file_preview_grid}>
@@ -282,11 +282,7 @@ export function ChatbotFooter(): ReactNode {
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <div className={styles.attachment_buttons}>
           {enableExport && (
-            <button
-              className={styles.attachment_button}
-              onClick={handleDownloadClick}
-              title="下載"
-            >
+            <button className={styles.attachment_button} onClick={handleDownloadClick} title="下載">
               <DownloadSvg />
             </button>
           )}
@@ -300,11 +296,7 @@ export function ChatbotFooter(): ReactNode {
                 onChange={handleFileSelect}
                 className={styles.file_input_hidden}
               />
-              <button
-                className={styles.attachment_button}
-                onClick={handleGalleryClick}
-                title="選擇照片"
-              >
+              <button className={styles.attachment_button} onClick={handleGalleryClick} title="選擇照片">
                 <GallerySvg />
               </button>
             </>
@@ -316,7 +308,7 @@ export function ChatbotFooter(): ReactNode {
           style={chatbot.footer?.textArea?.style}
           cols={40}
           value={value}
-          placeholder={inputPlaceholder || "Enter message"}
+          placeholder={inputPlaceholder || 'Enter message'}
           onChange={onChange}
           onKeyDown={onKeyDown}
           onCompositionStart={() => setIsComposing(true)}
@@ -324,10 +316,7 @@ export function ChatbotFooter(): ReactNode {
         />
         {value || selectedFiles.length > 0 ? (
           <button
-            className={clsx(
-              styles.chatbot_submit_button,
-              disabled && styles.chatbot_submit_button__disabled
-            )}
+            className={clsx(styles.chatbot_submit_button, disabled && styles.chatbot_submit_button__disabled)}
             style={chatbot.footer?.submitButton?.style}
             disabled={disabled}
             onClick={onSubmit}
@@ -337,15 +326,12 @@ export function ChatbotFooter(): ReactNode {
         ) : (
           <SpeechInputButton
             setValue={setValue}
-            className={clsx(
-              styles.chatbot_submit_button,
-              isConnecting && styles.chatbot_submit_button__disabled
-            )}
+            className={clsx(styles.chatbot_submit_button, isConnecting && styles.chatbot_submit_button__disabled)}
             style={chatbot.footer?.speechInputButton?.style}
           />
         )}
       </div>
-      
+
       {previewImage && (
         <div
           className={styles.image_modal}
@@ -362,13 +348,12 @@ export function ChatbotFooter(): ReactNode {
               src={previewImage.url}
               alt={previewImage.name}
               className={styles.image_modal_image}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             />
-            
           </div>
-          
+
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               if (previewImage.url) {
                 URL.revokeObjectURL(previewImage.url);

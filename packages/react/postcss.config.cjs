@@ -12,8 +12,8 @@ const unwrapLayers = () => {
      * Process CSS root and unwrap all @layer directives
      * @type {(root: any) => void}
      */
-    Once: (root) => {
-      root.walkAtRules('layer', (rule) => {
+    Once: root => {
+      root.walkAtRules('layer', rule => {
         // Replace @layer with its contents
         rule.replaceWith(rule.nodes);
       });

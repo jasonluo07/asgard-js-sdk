@@ -56,10 +56,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         direction="horizontal"
         style={rootStyle}
       >
-        <div
-          className={clsx(classes.text, classes['text--user'])}
-          style={styles}
-        >
+        <div className={clsx(classes.text, classes['text--user'])} style={styles}>
           {message.text}
         </div>
         <Time time={message.time} />
@@ -75,14 +72,8 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
       style={rootStyle}
     >
       <Avatar avatar={avatar} />
-      <TemplateBoxContent
-        time={message.time}
-        quickReplies={message.message.template?.quickReplies}
-      >
-        <div
-          className={clsx(classes.text, classes['text--bot'])}
-          style={styles}
-        >
+      <TemplateBoxContent time={message.time} quickReplies={message.message.template?.quickReplies}>
+        <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
           {isBot ? <StreamdownClient>{messageText}</StreamdownClient> : messageText}
         </div>
       </TemplateBoxContent>

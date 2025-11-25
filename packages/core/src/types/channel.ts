@@ -49,7 +49,4 @@ export type ConversationErrorMessage = {
   traceId?: string;
 };
 
-export type ConversationMessage =
-  | ConversationUserMessage
-  | ConversationBotMessage
-  | ConversationErrorMessage;
+export type ConversationMessage = ConversationUserMessage | ConversationBotMessage | ConversationErrorMessage;

@@ -18,16 +18,13 @@ export function Time(props: TimeProps): ReactNode {
     () => ({
       color: template?.time?.style?.color,
     }),
-    [template?.time?.style?.color]
+    [template?.time?.style?.color],
   );
 
   if (!time) return null;
 
   return (
-    <div
-      className={clsx('asgard-time', styles.time, className)}
-      style={timeStyle}
-    >
+    <div className={clsx('asgard-time', styles.time, className)} style={timeStyle}>
       {formatTime(time)}
     </div>
   );

@@ -45,7 +45,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         // eslint-disable-next-line no-console
         console.warn(
           '[AsgardServiceClient] The "endpoint" option is deprecated and will be removed in the next major version. ' +
-          `Please use "botProviderEndpoint" instead. The SSE endpoint will be automatically derived as "\${botProviderEndpoint}/message/sse".`
+            `Please use "botProviderEndpoint" instead. The SSE endpoint will be automatically derived as "\${botProviderEndpoint}/message/sse".`,
         );
       }
     }
@@ -59,49 +59,31 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   handleEvent(response: SseResponse<EventType>): void {
     switch (response.eventType) {
       case EventType.INIT:
-        this.sseEmitter.emit(
-          EventType.INIT,
-          response as SseResponse<EventType.INIT>
-        );
+        this.sseEmitter.emit(EventType.INIT, response as SseResponse<EventType.INIT>);
 
         break;
       case EventType.PROCESS_START:
       case EventType.PROCESS_COMPLETE:
-        this.sseEmitter.emit(
-          EventType.PROCESS,
-          response as Parameters<SseEvents[EventType.PROCESS]>[0]
-        );
+        this.sseEmitter.emit(EventType.PROCESS, response as Parameters<SseEvents[EventType.PROCESS]>[0]);
 
         break;
       case EventType.MESSAGE_START:
       case EventType.MESSAGE_DELTA:
       case EventType.MESSAGE_COMPLETE:
-        this.sseEmitter.emit(
-          EventType.MESSAGE,
-          response as Parameters<SseEvents[EventType.MESSAGE]>[0]
-        );
+        this.sseEmitter.emit(EventType.MESSAGE, response as Parameters<SseEvents[EventType.MESSAGE]>[0]);
 
         break;
       case EventType.TOOL_CALL_START:
       case EventType.TOOL_CALL_COMPLETE:
-        this.sseEmitter.emit(
-          EventType.TOOL_CALL,
-          response as Parameters<SseEvents[EventType.TOOL_CALL]>[0]
-        );
+        this.sseEmitter.emit(EventType.TOOL_CALL, response as Parameters<SseEvents[EventType.TOOL_CALL]>[0]);
 
         break;
       case EventType.DONE:
-        this.sseEmitter.emit(
-          EventType.DONE,
-          response as SseResponse<EventType.DONE>
-        );
+        this.sseEmitter.emit(EventType.DONE, response as SseResponse<EventType.DONE>);
 
         break;
       case EventType.ERROR:
-        this.sseEmitter.emit(
-          EventType.ERROR,
-          response as SseResponse<EventType.ERROR>
-        );
+        this.sseEmitter.emit(EventType.ERROR, response as SseResponse<EventType.ERROR>);
 
         break;
       default:
@@ -119,16 +101,16 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       payload: this.transformSsePayload?.(payload) ?? payload,
     })
       .pipe(
-        concatMap((event) => of(event).pipe(delay(options?.delayTime ?? 50))),
+        concatMap(event => of(event).pipe(delay(options?.delayTime ?? 50))),
         takeUntil(this.destroy$),
-        retry(3)
+        retry(3),
       )
       .subscribe({
-        next: (response) => {
+        next: response => {
           options?.onSseMessage?.(response);
           this.handleEvent(response);
         },
-        error: (error) => {
+        error: error => {
           options?.onSseError?.(error);
         },
         complete: () => {
@@ -148,7 +130,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
    */
   async uploadFile(file: File, customChannelId: string): Promise<BlobUploadResponse> {
     const blobEndpoint = this.deriveBlobEndpoint();
-    
+
     if (!blobEndpoint) {
       throw new Error('Unable to derive blob endpoint. Please provide botProviderEndpoint in config.');
     }
@@ -174,12 +156,12 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       }
 
       const result = await response.json();
-      
+
       if (this.debugMode) {
         // eslint-disable-next-line no-console
         console.log('[AsgardServiceClient] File upload response:', result);
       }
-      
+
       return result as BlobUploadResponse;
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -197,19 +179,19 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     }
 
     let baseEndpoint = this.botProviderEndpoint;
-    
+
     // 如果沒有 botProviderEndpoint，嘗試從 endpoint 反推
     if (!baseEndpoint && this.endpoint) {
       baseEndpoint = this.endpoint.replace('/message/sse', '');
     }
-    
+
     if (!baseEndpoint) {
       return null;
     }
 
     // 移除尾部斜線
     baseEndpoint = baseEndpoint.replace(/\/+$/, '');
-    
+
     // 根據 API 文件，需要加上 /generic 前綴（如果還沒有的話）
     // API 格式：/generic/ns/{namespace}/bot-provider/{bot_provider_name}/blob
     if (!baseEndpoint.includes('/generic/')) {
@@ -221,7 +203,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         baseEndpoint = `${domain}/generic${path}`;
       }
     }
-    
+
     return `${baseEndpoint}/blob`;
   }
 }

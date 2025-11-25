@@ -45,7 +45,7 @@ export default class Channel {
   public static async reset(
     config: ChannelConfig,
     payload?: Pick<FetchSsePayload, 'text' | 'payload'>,
-    options?: FetchSseOptions
+    options?: FetchSseOptions,
   ): Promise<Channel> {
     const channel = new Channel(config);
 
@@ -63,23 +63,17 @@ export default class Channel {
   }
 
   private subscribe(): void {
-    this.statesSubscription = combineLatest([
-      this.isConnecting$,
-      this.conversation$,
-    ])
+    this.statesSubscription = combineLatest([this.isConnecting$, this.conversation$])
       .pipe(
         map(([isConnecting, conversation]) => ({
           isConnecting,
           conversation,
-        }))
+        })),
       )
       .subscribe(this.statesObserver);
   }
 
-  private fetchSse(
-    payload: FetchSsePayload,
-    options?: FetchSseOptions
-  ): Promise<void> {
+  private fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isConnecting$.next(true);
 
@@ -121,10 +115,7 @@ export default class Channel {
     });
   }
 
-  private resetChannel(
-    payload?: Pick<FetchSsePayload, 'text' | 'payload'>,
-    options?: FetchSseOptions
-  ): Promise<void> {
+  private resetChannel(payload?: Pick<FetchSsePayload, 'text' | 'payload'>, options?: FetchSseOptions): Promise<void> {
     return this.fetchSse(
       {
         action: FetchSseAction.RESET_CHANNEL,
@@ -133,13 +124,13 @@ export default class Channel {
         text: payload?.text || '',
         payload: payload?.payload,
       },
-      options
+      options,
     );
   }
 
   public sendMessage(
     payload: Pick<FetchSsePayload, 'customMessageId' | 'text' | 'payload' | 'blobIds'> & { filePreviewUrls?: string[] },
-    options?: FetchSseOptions
+    options?: FetchSseOptions,
   ): Promise<void> {
     const text = payload.text.trim();
     const messageId = payload.customMessageId ?? uuidv4();
@@ -154,7 +145,7 @@ export default class Channel {
         blobIds: payload.blobIds,
         filePreviewUrls: payload.filePreviewUrls,
         time: new Date(),
-      })
+      }),
     );
 
     return this.fetchSse(
@@ -166,7 +157,7 @@ export default class Channel {
         text,
         blobIds: payload?.blobIds,
       },
-      options
+      options,
     );
   }
 

@@ -1,8 +1,5 @@
 import { Observable } from 'rxjs';
-import {
-  EventSourceMessage,
-  fetchEventSource,
-} from '@microsoft/fetch-event-source';
+import { EventSourceMessage, fetchEventSource } from '@microsoft/fetch-event-source';
 import { FetchSsePayload, SseResponse } from '../types';
 import { EventType } from '../constants/enum';
 
@@ -13,12 +10,10 @@ interface CreateSseObservableOptions {
   payload: FetchSsePayload;
 }
 
-export function createSseObservable(
-  options: CreateSseObservableOptions
-): Observable<SseResponse<EventType>> {
+export function createSseObservable(options: CreateSseObservableOptions): Observable<SseResponse<EventType>> {
   const { endpoint, apiKey, payload, debugMode } = options;
 
-  return new Observable<SseResponse<EventType>>((subscriber) => {
+  return new Observable<SseResponse<EventType>>(subscriber => {
     const controller = new AbortController();
     let currentTraceId: string | undefined;
 
@@ -52,7 +47,7 @@ export function createSseObservable(
        * https://github.com/Azure/fetch-event-source/issues/17#issuecomment-1525904929
        */
       openWhenHidden: true,
-      onopen: async (response) => {
+      onopen: async response => {
         if (!response.ok) {
           subscriber.error(response);
           controller.abort();
@@ -77,7 +72,7 @@ export function createSseObservable(
       onclose: () => {
         subscriber.complete();
       },
-      onerror: (err) => {
+      onerror: err => {
         subscriber.error(err);
         controller.abort();
         throw err;

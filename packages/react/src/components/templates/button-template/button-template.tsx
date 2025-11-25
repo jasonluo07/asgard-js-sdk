@@ -27,10 +27,7 @@ export function ButtonTemplate(props: ButtonTemplateProps): ReactNode {
       style={themeTemplate?.ButtonMessageTemplate?.style}
     >
       <Avatar avatar={avatar} />
-      <TemplateBoxContent
-        time={message.time}
-        quickReplies={template?.quickReplies}
-      >
+      <TemplateBoxContent time={message.time} quickReplies={template?.quickReplies}>
         <Card
           template={template}
           customStyle={{

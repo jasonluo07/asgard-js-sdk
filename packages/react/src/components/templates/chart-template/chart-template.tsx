@@ -21,17 +21,16 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
   const { template: themeTemplate, botMessage } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
 
-  const [option, setOption] = useState(
-    template?.defaultChart ?? template?.chartOptions?.[0]?.type
-  );
+  const [option, setOption] = useState(template?.defaultChart ?? template?.chartOptions?.[0]?.type);
 
   const options = useMemo(() => template.chartOptions, [template]);
 
   const spec = useMemo(
     () =>
-      (template?.chartOptions?.find((item: { type: string; title: string; spec: Record<string, unknown> }) => item.type === option)?.spec ??
-        options[0].spec) as VisualizationSpec,
-    [option, template.chartOptions, options]
+      (template?.chartOptions?.find(
+        (item: { type: string; title: string; spec: Record<string, unknown> }) => item.type === option,
+      )?.spec ?? options[0].spec) as VisualizationSpec,
+    [option, template.chartOptions, options],
   );
 
   const styles = useMemo<CSSProperties>(
@@ -39,7 +38,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
       color: botMessage?.color,
       backgroundColor: botMessage?.backgroundColor,
     }),
-    [botMessage]
+    [botMessage],
   );
 
   return (
@@ -57,11 +56,7 @@ export function ChartTemplate(props: ChartTemplateProps): ReactNode {
       {options.length > 1 && (
         <div className={classes.quick_replies_box}>
           {options.map((option: { type: string; title: string; spec: Record<string, unknown> }) => (
-            <button
-              key={option.type}
-              className={classes.quick_reply}
-              onClick={() => setOption(option.type)}
-            >
+            <button key={option.type} className={classes.quick_reply} onClick={() => setOption(option.type)}>
               {option.title}
             </button>
           ))}

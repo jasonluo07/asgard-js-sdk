@@ -7,7 +7,7 @@ const semver = require('semver');
 const newVersion = process.argv[2]; // e.g. 1.2.3, 1.2.3-beta.1
 if (!semver.valid(newVersion)) {
   console.error(
-    'Usage: node scripts/bump-version.js <new-version>\n<new-version> must be a valid semver version, e.g. 1.2.3 or 1.2.3-beta.1'
+    'Usage: node scripts/bump-version.js <new-version>\n<new-version> must be a valid semver version, e.g. 1.2.3 or 1.2.3-beta.1',
   );
   process.exit(1);
 }

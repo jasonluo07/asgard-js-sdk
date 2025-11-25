@@ -1,18 +1,7 @@
-import {
-  createContext,
-  CSSProperties,
-  PropsWithChildren,
-  ReactNode,
-  useContext,
-  useMemo,
-  useCallback,
-} from 'react';
+import { createContext, CSSProperties, PropsWithChildren, ReactNode, useContext, useMemo, useCallback } from 'react';
 import { deepMerge } from '../utils/deep-merge';
 import { darkenColor } from '../utils/color-utils';
-import {
-  useAsgardAppInitializationContext,
-  Annotations,
-} from './asgard-app-initialization-context';
+import { useAsgardAppInitializationContext, Annotations } from './asgard-app-initialization-context';
 
 export interface AsgardThemeContextValue {
   chatbot: Pick<
@@ -235,14 +224,12 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
   },
 };
 
-export const AsgardThemeContext = createContext<AsgardThemeContextValue>(
-  defaultAsgardThemeContextValue
-);
+export const AsgardThemeContext = createContext<AsgardThemeContextValue>(defaultAsgardThemeContextValue);
 
 export function AsgardThemeContextProvider(
   props: PropsWithChildren<{
     theme?: Partial<AsgardThemeContextValue>;
-  }>
+  }>,
 ): ReactNode {
   const { children, theme = {} } = props;
   const {
@@ -258,12 +245,11 @@ export function AsgardThemeContextProvider(
        * 3. Default theme
        */
 
-      const themeFromAnnotations: Annotations['embedConfig']['theme'] =
-        annotations?.embedConfig?.theme ?? {
-          chatbot: {},
-          botMessage: {},
-          userMessage: {},
-        };
+      const themeFromAnnotations: Annotations['embedConfig']['theme'] = annotations?.embedConfig?.theme ?? {
+        chatbot: {},
+        botMessage: {},
+        userMessage: {},
+      };
 
       const tempTheme = deepMerge(defaultAsgardThemeContextValue as unknown as Record<string, unknown>, {
         chatbot: {
@@ -271,16 +257,14 @@ export function AsgardThemeContextProvider(
           borderColor: themeFromAnnotations.chatbot?.borderColor,
           mainColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
           secondaryColor: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
-          
+
           header: {
             style: {
               borderBottomColor: themeFromAnnotations.chatbot?.borderColor,
             },
             title: {
               style: {
-                color:
-                  themeFromAnnotations.chatbot?.primaryComponent
-                    ?.secondaryColor, // Title text color
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor, // Title text color
               },
             },
             actionButton: {
@@ -310,16 +294,12 @@ export function AsgardThemeContextProvider(
             },
             submitButton: {
               style: {
-                color:
-                  themeFromAnnotations.chatbot?.primaryComponent
-                    ?.secondaryColor,
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
               },
             },
             speechInputButton: {
               style: {
-                color:
-                  themeFromAnnotations.chatbot?.primaryComponent
-                    ?.secondaryColor,
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
               },
             },
           },
@@ -327,13 +307,13 @@ export function AsgardThemeContextProvider(
         botMessage: {
           backgroundColor: themeFromAnnotations.botMessage?.backgroundColor, // #585858
           color: themeFromAnnotations.botMessage?.color,
-          linkColor: themeFromAnnotations.botMessage?.backgroundColor 
+          linkColor: themeFromAnnotations.botMessage?.backgroundColor
             ? darkenColor(themeFromAnnotations.botMessage.backgroundColor, 0.2)
             : undefined,
-          unsentBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+          unsentBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor
             ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
             : undefined,
-          quickReplyBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor 
+          quickReplyBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor
             ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
             : undefined,
         },
@@ -345,12 +325,9 @@ export function AsgardThemeContextProvider(
           quickReplies: {
             button: {
               style: {
-                color:
-                  themeFromAnnotations.chatbot?.primaryComponent
-                    ?.secondaryColor, // Button text (#FFFFFF)
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor, // Button text (#FFFFFF)
                 borderColor: themeFromAnnotations.chatbot?.borderColor,
-                backgroundColor: themeFromAnnotations.botMessage
-                  ?.backgroundColor
+                backgroundColor: themeFromAnnotations.botMessage?.backgroundColor
                   ? `${themeFromAnnotations.botMessage.backgroundColor}33`
                   : undefined,
               },
@@ -364,37 +341,28 @@ export function AsgardThemeContextProvider(
           TextMessageTemplate: {
             style: {
               // For unset messages
-              color:
-                themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+              color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
             },
           },
           ButtonMessageTemplate: {
             button: {
               style: {
                 borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                backgroundColor:
-                  themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                color:
-                  themeFromAnnotations.chatbot?.primaryComponent
-                    ?.secondaryColor,
+                backgroundColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
               },
             },
           },
           CarouselMessageTemplate: {
             card: {
               style: {
-                backgroundColor:
-                  themeFromAnnotations.botMessage
-                    ?.carouselButtonBackgroundColor,
+                backgroundColor: themeFromAnnotations.botMessage?.carouselButtonBackgroundColor,
               },
               button: {
                 style: {
                   borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                  backgroundColor:
-                    themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                  color:
-                    themeFromAnnotations.chatbot?.primaryComponent
-                      ?.secondaryColor,
+                  backgroundColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
+                  color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
                 },
               },
             },
@@ -404,16 +372,12 @@ export function AsgardThemeContextProvider(
 
       return deepMerge(tempTheme, theme);
     },
-    [theme, annotations?.embedConfig?.theme]
+    [theme, annotations?.embedConfig?.theme],
   );
 
   const value = useMemo(() => deepMergeTheme(), [deepMergeTheme]);
 
-  return (
-    <AsgardThemeContext.Provider value={value}>
-      {children}
-    </AsgardThemeContext.Provider>
-  );
+  return <AsgardThemeContext.Provider value={value}>{children}</AsgardThemeContext.Provider>;
 }
 
 export function useAsgardThemeContext(): AsgardThemeContextValue {

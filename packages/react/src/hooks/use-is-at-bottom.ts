@@ -1,9 +1,6 @@
 import { useEffect, useState, RefObject } from 'react';
 
-export function useIsAtBottom(
-  ref: RefObject<HTMLElement>,
-  threshold = 50
-): boolean {
+export function useIsAtBottom(ref: RefObject<HTMLElement>, threshold = 50): boolean {
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   useEffect(() => {

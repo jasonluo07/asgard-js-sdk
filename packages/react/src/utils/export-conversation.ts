@@ -7,13 +7,11 @@ interface ExportOptions {
 
 export function exportConversationToMarkdown(
   messages: Map<string, ConversationMessage>,
-  options?: ExportOptions
+  options?: ExportOptions,
 ): string {
   const { customChannelId, botName = 'AI 助理' } = options ?? {};
 
-  const sortedMessages = Array.from(messages.values()).sort(
-    (a, b) => a.time.getTime() - b.time.getTime()
-  );
+  const sortedMessages = Array.from(messages.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
 
   const exportTime = new Date().toLocaleString('zh-TW', {
     year: 'numeric',
@@ -97,16 +95,20 @@ export function downloadMarkdown(content: string, options?: { filename?: string;
   const link = document.createElement('a');
 
   const now = new Date();
-  const dateStr = now.toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).replace(/\//g, '-');
-  const timeStr = now.toLocaleTimeString('zh-TW', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).replace(/:/g, '-');
+  const dateStr = now
+    .toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+    .replace(/\//g, '-');
+  const timeStr = now
+    .toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+    .replace(/:/g, '-');
 
   const botName = options?.botName || 'Bot';
   const defaultFilename = `${botName}_對話紀錄_${dateStr}_${timeStr}.md`;

@@ -12,14 +12,13 @@
   border-radius: 8px;
   white-space: pre-wrap;
   word-break: break-word;
-  
+
   &--user {
     background: #4767eb;
     color: white;
     border-top-right-radius: 0;
   }
 }
-
 
 .images_container {
   display: flex;
@@ -46,7 +45,7 @@
   display: block;
   cursor: pointer;
   transition: opacity 0.2s ease;
-  
+
   &:hover {
     opacity: 0.95;
   }
@@ -65,7 +64,7 @@
   z-index: 10000;
   cursor: pointer;
   padding: 20px;
-  
+
   .modal_image {
     max-width: 90vw;
     max-height: 90vh;
@@ -74,4 +73,3 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   }
 }
-

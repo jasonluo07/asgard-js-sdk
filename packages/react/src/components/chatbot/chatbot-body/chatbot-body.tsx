@@ -10,8 +10,7 @@ import clsx from 'clsx';
 export function ChatbotBody(): ReactNode {
   const { chatbot } = useAsgardThemeContext();
 
-  const { messages, messageBoxBottomRef, botTypingPlaceholder } =
-    useAsgardContext();
+  const { messages, messageBoxBottomRef, botTypingPlaceholder } = useAsgardContext();
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const isAtBottom = useIsAtBottom(bodyRef);
@@ -45,15 +44,11 @@ export function ChatbotBody(): ReactNode {
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
     }),
-    [chatbot]
+    [chatbot],
   );
 
   return (
-    <div
-      ref={bodyRef}
-      className={clsx('asgard-chatbot-body', styles.chatbot_body)}
-      style={chatbot?.body?.style}
-    >
+    <div ref={bodyRef} className={clsx('asgard-chatbot-body', styles.chatbot_body)} style={chatbot?.body?.style}>
       <div className={styles.chatbot_body__content} style={contentStyles}>
         {Array.from(messages?.values() ?? []).map((message, index) => (
           <ConversationMessageRenderer
@@ -61,9 +56,7 @@ export function ChatbotBody(): ReactNode {
             message={message}
           />
         ))}
-        <BotTypingPlaceholder
-          placeholder={botTypingPlaceholder ?? '正在輸入訊息'}
-        />
+        <BotTypingPlaceholder placeholder={botTypingPlaceholder ?? '正在輸入訊息'} />
         <div ref={messageBoxBottomRef} />
       </div>
     </div>

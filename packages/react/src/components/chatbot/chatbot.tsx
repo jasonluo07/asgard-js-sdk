@@ -1,14 +1,6 @@
-import {
-  forwardRef,
-  ForwardedRef,
-  ReactNode,
-  CSSProperties,
-} from 'react';
+import { forwardRef, ForwardedRef, ReactNode, CSSProperties } from 'react';
 import { ClientConfig, ConversationMessage } from '@asgard-js/core';
-import {
-  AsgardThemeContextProvider,
-  AsgardThemeContextValue,
-} from '../../context/asgard-theme-context';
+import { AsgardThemeContextProvider, AsgardThemeContextValue } from '../../context/asgard-theme-context';
 import {
   AsgardServiceContextProvider,
   AsgardServiceContextValue,
@@ -60,10 +52,7 @@ export interface ChatbotRef {
   serviceContext?: AsgardServiceContextValue;
 }
 
-export const Chatbot = forwardRef(function Chatbot(
-  props: ChatbotProps,
-  ref: ForwardedRef<ChatbotRef>
-): ReactNode {
+export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: ForwardedRef<ChatbotRef>): ReactNode {
   const {
     title,
     customActions,
@@ -99,12 +88,8 @@ export const Chatbot = forwardRef(function Chatbot(
   const renderContent = (): React.ReactElement => {
     switch (authState) {
       case 'loading':
-        return (
-          <div className={styles.chatbot__auth_state_container}>
-            {loadingComponent || <div>Loading...</div>}
-          </div>
-        );
-      
+        return <div className={styles.chatbot__auth_state_container}>{loadingComponent || <div>Loading...</div>}</div>;
+
       case 'needApiKey':
         return (
           <div className={styles.chatbot__auth_state_container}>
@@ -115,7 +100,7 @@ export const Chatbot = forwardRef(function Chatbot(
             />
           </div>
         );
-      
+
       case 'invalidApiKey':
         return (
           <div className={styles.chatbot__auth_state_container}>
@@ -127,17 +112,21 @@ export const Chatbot = forwardRef(function Chatbot(
             />
           </div>
         );
-      
+
       case 'error':
         return (
           <div className={clsx(styles.chatbot__auth_state_container, styles.chatbot__error_state)}>
             <div className={styles.chatbot__error_state__content}>
-              <div className={styles.chatbot__error_state__icon}><span role="img" aria-label="warning">⚠️</span></div>
+              <div className={styles.chatbot__error_state__icon}>
+                <span role="img" aria-label="warning">
+                  ⚠️
+                </span>
+              </div>
               <div className={styles.chatbot__error_state__message}>Something went wrong. Please try again later.</div>
             </div>
           </div>
         );
-      
+
       case 'authenticated':
       default:
         return (
@@ -180,11 +169,7 @@ export const Chatbot = forwardRef(function Chatbot(
             enableUpload={enableUpload}
             enableExport={enableExport}
           >
-            <ChatbotContainer
-              fullScreen={fullScreen}
-              className={className}
-              style={style}
-            >
+            <ChatbotContainer fullScreen={fullScreen} className={className} style={style}>
               <ChatbotHeader
                 title={title}
                 onReset={onReset}
@@ -217,11 +202,7 @@ export const Chatbot = forwardRef(function Chatbot(
         enableUpload={enableUpload}
         enableExport={enableExport}
       >
-        <ChatbotContainer
-          fullScreen={fullScreen}
-          className={className}
-          style={style}
-        >
+        <ChatbotContainer fullScreen={fullScreen} className={className} style={style}>
           <ChatbotHeader
             title={title}
             onReset={onReset}

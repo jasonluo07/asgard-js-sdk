@@ -4,11 +4,7 @@ interface ChatIconProps {
   className?: string;
 }
 
-export default function ChatIcon({
-  width = 24,
-  height = 24,
-  className = '',
-}: ChatIconProps): JSX.Element {
+export default function ChatIcon({ width = 24, height = 24, className = '' }: ChatIconProps): JSX.Element {
   return (
     <svg
       width={width}

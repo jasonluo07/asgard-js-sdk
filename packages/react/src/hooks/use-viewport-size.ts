@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState, useLayoutEffect } from 'react';
 
-const useBrowserLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : null;
+const useBrowserLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : null;
 
 type Width = number;
 type Height = number;
@@ -19,12 +18,10 @@ export function useViewportSize(): Size | undefined {
   const updateViewportSize = useCallback(() => {
     const viewportSize = getViewportSize();
 
-    setViewportSize((oldViewportSize) =>
-      oldViewportSize &&
-      oldViewportSize[0] === viewportSize[0] &&
-      oldViewportSize[1] === viewportSize[1]
+    setViewportSize(oldViewportSize =>
+      oldViewportSize && oldViewportSize[0] === viewportSize[0] && oldViewportSize[1] === viewportSize[1]
         ? oldViewportSize
-        : viewportSize
+        : viewportSize,
     );
   }, []);
 

@@ -44,9 +44,7 @@ export default function DemoPage() {
       <Chatbot
         customChannelId={nanoid()}
         config={{
-          botProviderEndpoint:
-            process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
-            'http://localhost:4300/api/mock-sse',
+          botProviderEndpoint: process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || 'http://localhost:4300/api/mock-sse',
           apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
         }}
         initMessages={initMessages}

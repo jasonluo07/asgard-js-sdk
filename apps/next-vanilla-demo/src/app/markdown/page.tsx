@@ -2,25 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import {
-  EventType,
-  MessageTemplateType,
-  ConversationMessage,
-} from '@asgard-js/core';
+import { EventType, MessageTemplateType, ConversationMessage } from '@asgard-js/core';
 import { nanoid } from 'nanoid';
 import styles from './page.module.css';
 
-const Chatbot = dynamic(
-  () => import('@asgard-js/react').then((mod) => ({ default: mod.Chatbot })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className={styles.loading}>
-        <div className={styles.loadingText}>載入中...</div>
-      </div>
-    ),
-  }
-);
+const Chatbot = dynamic(() => import('@asgard-js/react').then(mod => ({ default: mod.Chatbot })), {
+  ssr: false,
+  loading: () => (
+    <div className={styles.loading}>
+      <div className={styles.loadingText}>載入中...</div>
+    </div>
+  ),
+});
 
 const theme = {
   chatbot: {
@@ -105,10 +98,7 @@ const initMessages: ConversationMessage[] = [
       template: {
         type: MessageTemplateType.TEXT,
         text: markdownContent,
-        quickReplies: [
-          { text: '顯示更多範例' },
-          { text: '返回首頁' },
-        ],
+        quickReplies: [{ text: '顯示更多範例' }, { text: '返回首頁' }],
       },
     },
     time: new Date(),
@@ -133,9 +123,7 @@ export default function MarkdownPage(): JSX.Element {
   return (
     <Chatbot
       config={{
-        botProviderEndpoint:
-          process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT ||
-          'http://localhost:4301/api/mock-sse',
+        botProviderEndpoint: process.env.NEXT_PUBLIC_BOT_PROVIDER_ENDPOINT || 'http://localhost:4301/api/mock-sse',
         apiKey: process.env.NEXT_PUBLIC_API_KEY || 'mock-api-key',
       }}
       customChannelId={customChannelId}

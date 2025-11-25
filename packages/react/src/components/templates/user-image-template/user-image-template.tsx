@@ -16,11 +16,14 @@ interface UserImageTemplateProps {
 export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNode {
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const theme = useAsgardThemeContext();
-  
-  const textStyles = useMemo<CSSProperties>(() => ({
-    color: theme?.userMessage?.color,
-    backgroundColor: theme?.userMessage?.backgroundColor,
-  }), [theme]);
+
+  const textStyles = useMemo<CSSProperties>(
+    () => ({
+      color: theme?.userMessage?.color,
+      backgroundColor: theme?.userMessage?.backgroundColor,
+    }),
+    [theme],
+  );
 
   const rootStyle = theme?.template?.TextMessageTemplate?.style;
 
@@ -33,11 +36,11 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
         style={rootStyle}
       >
         <div className={styles.message_wrapper}>
-                    {message.message.filePreviewUrls && message.message.filePreviewUrls.length > 0 && (
+          {message.message.filePreviewUrls && message.message.filePreviewUrls.length > 0 && (
             <div className={styles.images_container}>
               {message.message.filePreviewUrls.map((url, index) => (
                 <div key={index} className={styles.image_wrapper}>
-                  <img 
+                  <img
                     src={url}
                     alt={`上傳的圖片 ${index + 1}`}
                     className={styles.uploaded_image}
@@ -59,15 +62,8 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
       </TemplateBox>
 
       {expandedImage && (
-        <div 
-          className={styles.image_modal}
-          onClick={() => setExpandedImage(null)}
-        >
-          <img 
-            src={expandedImage}
-            alt="展開的圖片"
-            className={styles.modal_image}
-          />
+        <div className={styles.image_modal} onClick={() => setExpandedImage(null)}>
+          <img src={expandedImage} alt="展開的圖片" className={styles.modal_image} />
         </div>
       )}
     </>

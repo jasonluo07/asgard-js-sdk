@@ -4,7 +4,7 @@ export function isObject(item: unknown): item is Record<string, unknown> {
 
 export function deepMerge<T extends Record<string, unknown>, U extends Record<string, unknown>>(
   target: T,
-  source: U
+  source: U,
 ): T & U {
   const output = { ...target } as T & U;
 
@@ -17,8 +17,10 @@ export function deepMerge<T extends Record<string, unknown>, U extends Record<st
     }
 
     (output as Record<string, unknown>)[key] = deepMerge(
-      isObject((output as Record<string, unknown>)[key]) ? (output as Record<string, unknown>)[key] as Record<string, unknown> : {}, 
-      value as Record<string, unknown>
+      isObject((output as Record<string, unknown>)[key])
+        ? ((output as Record<string, unknown>)[key] as Record<string, unknown>)
+        : {},
+      value as Record<string, unknown>,
     );
   }
 

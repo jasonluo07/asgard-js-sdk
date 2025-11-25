@@ -23,17 +23,11 @@ export default class Conversation implements IConversation {
   onMessage(response: SseResponse<EventType>): Conversation {
     switch (response.eventType) {
       case EventType.MESSAGE_START:
-        return this.onMessageStart(
-          response as SseResponse<EventType.MESSAGE_START>
-        );
+        return this.onMessageStart(response as SseResponse<EventType.MESSAGE_START>);
       case EventType.MESSAGE_DELTA:
-        return this.onMessageDelta(
-          response as SseResponse<EventType.MESSAGE_DELTA>
-        );
+        return this.onMessageDelta(response as SseResponse<EventType.MESSAGE_DELTA>);
       case EventType.MESSAGE_COMPLETE:
-        return this.onMessageComplete(
-          response as SseResponse<EventType.MESSAGE_COMPLETE>
-        );
+        return this.onMessageComplete(response as SseResponse<EventType.MESSAGE_COMPLETE>);
       case EventType.ERROR:
         return this.onMessageError(response as SseResponse<EventType.ERROR>);
       default:
@@ -84,9 +78,7 @@ export default class Conversation implements IConversation {
     return new Conversation({ messages });
   }
 
-  onMessageComplete(
-    response: SseResponse<EventType.MESSAGE_COMPLETE>
-  ): Conversation {
+  onMessageComplete(response: SseResponse<EventType.MESSAGE_COMPLETE>): Conversation {
     const message = response.fact.messageComplete.message;
 
     const messages = new Map(this.messages);

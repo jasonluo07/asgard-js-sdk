@@ -27,9 +27,9 @@ const viteConfig = defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler'
-      }
-    }
+        api: 'modern-compiler',
+      },
+    },
   },
   // Uncomment this if you are using workers.
   // worker: {
@@ -58,7 +58,7 @@ const viteConfig = defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime', '@asgard-js/core', 'streamdown'],
       output: {
         format: 'es',
-      }
+      },
     },
   },
 });

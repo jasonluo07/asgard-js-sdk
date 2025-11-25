@@ -4,13 +4,13 @@ import { join } from 'path';
 
 export async function POST(request: NextRequest) {
   // 延遲模擬處理時間
-  await new Promise((resolve) => setTimeout(resolve, 1200));
+  await new Promise(resolve => setTimeout(resolve, 1200));
 
   // 設定 SSE headers
   const headers = new Headers({
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
+    Connection: 'keep-alive',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -96,7 +96,6 @@ export async function POST(request: NextRequest) {
         setTimeout(() => {
           controller.close();
         }, delay);
-
       } catch (error) {
         console.error('Error reading sse.txt:', error);
         controller.error(error);

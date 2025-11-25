@@ -22,17 +22,11 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
   const [isFullScreen, setIsFullScreen] = useState(false);
   if (isFullScreen) {
     return (
-      <div
-        className={styles.full_screen}
-        onClick={() => setIsFullScreen(false)}
-      >
+      <div className={styles.full_screen} onClick={() => setIsFullScreen(false)}>
         <div className={styles.full_screen_close}>
           <CloseSvg />
         </div>
-        <div
-          className={styles.imageOrigin}
-          style={{ backgroundImage: `url(${originalContentUrl})` }}
-        />
+        <div className={styles.imageOrigin} style={{ backgroundImage: `url(${originalContentUrl})` }} />
       </div>
     );
   }
@@ -45,10 +39,7 @@ export function ImageTemplate(props: ImageTemplateProps): ReactNode {
       style={themeTemplate?.ImageMessageTemplate?.style}
     >
       <Avatar avatar={avatar} />
-      <TemplateBoxContent
-        quickReplies={template.quickReplies}
-        time={message.time}
-      >
+      <TemplateBoxContent quickReplies={template.quickReplies} time={message.time}>
         <div className={styles.image_box} onClick={() => setIsFullScreen(true)}>
           <img src={previewImageUrl} alt="Conversation content" />
         </div>

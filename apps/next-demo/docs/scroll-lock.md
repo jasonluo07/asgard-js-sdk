@@ -20,6 +20,7 @@ useEffect(() => {
 ```
 
 **問題**：
+
 - 頁面會跳動（scrollbar 突然消失）
 - position:fixed 元素位置錯誤
 - 觸控事件仍可能觸發滾動
@@ -36,19 +37,22 @@ npm install react-remove-scroll
 import { RemoveScroll } from 'react-remove-scroll';
 
 // ✅ 正確的做法
-{isOpen && customChannelId && (
-  <RemoveScroll enabled={isMobile && isOpen}>
-    <div className={isMobile ? "" : "absolute bottom-16 right-0"}>
-      <Chatbot
-        fullScreen={isMobile}
-        // ... 其他 props
-      />
-    </div>
-  </RemoveScroll>
-)}
+{
+  isOpen && customChannelId && (
+    <RemoveScroll enabled={isMobile && isOpen}>
+      <div className={isMobile ? '' : 'absolute bottom-16 right-0'}>
+        <Chatbot
+          fullScreen={isMobile}
+          // ... 其他 props
+        />
+      </div>
+    </RemoveScroll>
+  );
+}
 ```
 
 **優勢**：
+
 - 自動補償 scrollbar 寬度
 - 正確處理 position:fixed 元素
 - 支援觸控裝置

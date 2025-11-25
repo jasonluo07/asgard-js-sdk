@@ -1,9 +1,4 @@
-import {
-  ConversationMessage,
-  EventType,
-  Message,
-  MessageTemplateType,
-} from '@asgard-js/core';
+import { ConversationMessage, EventType, Message, MessageTemplateType } from '@asgard-js/core';
 import { nanoid } from 'nanoid';
 
 const quickReplies = [
@@ -14,9 +9,7 @@ const quickReplies = [
   { text: '台中文心秀泰充電樁是新款還是舊款?' },
 ];
 
-export function createBaseTemplateExample(
-  message: Message
-): ConversationMessage {
+export function createBaseTemplateExample(message: Message): ConversationMessage {
   return {
     type: 'bot',
     messageId: message.messageId,
@@ -84,8 +77,7 @@ export function createButtonTemplateExample(): ConversationMessage {
       type: MessageTemplateType.BUTTON,
       title: '死侍與金鋼狼',
       text: '演員: 萊恩·雷諾斯;休·傑克曼;艾瑪·可林;莫蓮娜·芭卡琳;羅伯·德萊尼;萊斯莉·奧加姆斯;卡蘭·索尼;馬修·麥特費狄恩n導演: 薛恩·李維n簡介: 本片是《死侍》系列加入漫威電影宇宙的第一炮，並象徵X戰警正式「回歸」漫威懷抱，死侍與金鋼狼再續睽別15年兄弟情，也被《洛基》影集中的時間變異管理局抓入，一如以往惡搞，他依然嘴賤嗆說漫威救世主非他莫屬，勢在改寫漫威電影宇宙。nn史上最另類超級英雄、語不驚人死不休的死侍睽違六年終於萬眾矚目重返大銀幕，更首度加入漫威電影宇宙！除了與老搭檔鋼人、青少女彈頭和雪緒再度聚首，更將與睽別15年的金鋼狼二度並肩作戰再續兄弟情，時間變異管理局找上門帶走他也老神在在，並自認只有自己能當漫威救世主，改寫漫威電影宇宙。',
-      thumbnailImageUrl:
-        'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+      thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
       imageAspectRatio: 'rectangle',
       imageSize: 'cover',
       imageBackgroundColor: '#FFFFFF',
@@ -131,8 +123,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '死侍與金鋼狼',
           text: '演員: 萊恩·雷諾斯;休·傑克曼;艾瑪·可林;莫蓮娜·芭卡琳;羅伯·德萊尼;萊斯莉·奧加姆斯;卡蘭·索尼;馬修·麥特費狄恩n導演: 薛恩·李維n簡介: 本片是《死侍》系列加入漫威電影宇宙的第一炮，並象徵X戰警正式「回歸」漫威懷抱，死侍與金鋼狼再續睽別15年兄弟情，也被《洛基》影集中的時間變異管理局抓入，一如以往惡搞，他依然嘴賤嗆說漫威救世主非他莫屬，勢在改寫漫威電影宇宙。nn史上最另類超級英雄、語不驚人死不休的死侍睽違六年終於萬眾矚目重返大銀幕，更首度加入漫威電影宇宙！除了與老搭檔鋼人、青少女彈頭和雪緒再度聚首，更將與睽別15年的金鋼狼二度並肩作戰再續兄弟情，時間變異管理局找上門帶走他也老神在在，並自認只有自己能當漫威救世主，改寫漫威電影宇宙。',
-          thumbnailImageUrl:
-            'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
+          thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/57/576ed12bedb3ae6e548c6bfa50e9cbb5.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -160,8 +151,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '找死兇宅',
           text: '演員: 李星民;李熙峻;孔升妍;朴智煥;李奎炯;張東周;禹賢;金度勳n導演: 南東協n簡介: 自認為帥哥二人組的宰弼（李星民 飾）和塽邱（李熙峻 飾）搬到某小鎮的第一天，就被崔所長（朴智煥 飾）、南巡警（李奎炯 飾）列為特別監視對象，但宰弼和塽邱光是因為能住在夢想中的歐風建築就感到很幸福。然而，當他們救了掉進水裡的美娜（孔升妍 飾）時，卻被誤認為綁匪。後來，以來尋找美娜的不速之客們為開端，被封印在地下室的惡靈覺醒，黑暗氣息開始籠罩整個家……',
-          thumbnailImageUrl:
-            'https://upload.wikimedia.org/wikipedia/zh/8/81/HandsomeGuys2024.jpg',
+          thumbnailImageUrl: 'https://upload.wikimedia.org/wikipedia/zh/8/81/HandsomeGuys2024.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -191,8 +181,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '鬼才之道',
           text: '演員: 陳柏霖;張榕容;王淨;百白;曾威豪n導演: 徐漢強n簡介: 全新概念的陰間喜劇，《返校》徐漢強執導，由陳柏霖、張榕容、王淨、百白、瘦瘦、姚以緹主演。故事劇情從一間沒落的都市傳說「旺來大飯店」414號房開始，過氣女鬼天后凱薩琳與鬼經紀人Makoto為了在鬼界不被時代淘汰，得找尋出路，力爭上游的厲鬼們，要如何繼續成名陽間，創造新的都市傳說呢？「一個人的才華，有時候要變成鬼才知道。」',
-          thumbnailImageUrl:
-            'https://capi.showtimes.com.tw/assets/49/49cca24c8625483c83ae8d3016d7a910.jpg',
+          thumbnailImageUrl: 'https://capi.showtimes.com.tw/assets/49/49cca24c8625483c83ae8d3016d7a910.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -249,8 +238,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
         {
           title: 'DDDD惡魔的破壞 前章',
           text: '演員: 幾田莉拉;ano;入野自由;諏訪部順一;津田健次郎n導演: 黒川智之n簡介: 三年前的8月31日，「侵略者」巨大的母艦突如其來地降臨在東京，地球似乎即將迎來末日 ——。隨著時間流逝，絕望漸漸地融入了日常生活，大大的母艦今天也依然盤旋在天空中。而在還沒有來到世界末日的此刻，小山門出、中川凰蘭這兩個高中女生的青春時代才正要展開。',
-          thumbnailImageUrl:
-            'https://mediafiles.cinema.com.hk/broadway/cmsimg/cinweb/movie/movie_1718690584.jpg',
+          thumbnailImageUrl: 'https://mediafiles.cinema.com.hk/broadway/cmsimg/cinweb/movie/movie_1718690584.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -278,8 +266,7 @@ export function createCarouselTemplateExample(): ConversationMessage {
         {
           title: '愛的噩夢',
           text: '演員: 林柏宏;謝欣穎;項婕如n導演: 廖明毅n簡介: 黑澤由里是一個擁有八十萬人追蹤的IG網紅，照片透露著她獨特的生活風格，是女人稱羨男人崇拜的女神級網紅，男子也是追蹤她的八十萬人之一。n男子的女朋友叫白佳琪，他們是在臉書二手書交換社團認識的。白佳琪也很漂亮，對環保又有獨特的愛好，但白佳琪吃全素，又是基督徒，奉行婚前不能性行為的教規，白佳琪的生活可說是規矩很多，她不像一般女生喜歡逛名牌買包包，反而更願意把時間花在她在意的事，比如說⋯去發環保傳單。n如此樸素又純淨的個性讓男子非常喜愛，他們交往一年多之後，白佳琪就建議兩人可以同居，原因是白佳琪有房子，同居可以幫男子省一點房租。n同居第一天，白佳琪卻悶悶不樂，原來白佳琪有自己一套生活習慣，叫做「白佳琪法則」。比如每天回家，白佳琪會檢查男子手機，看他每一則訊息、檢查發票，檢查行蹤是否和定位吻合。或許是熱戀期，男子對白佳琪所有的規定沒有一絲怨言，甚至默默說服自己，為對方付出也是很正常的吧。n直到某天，公司來了客戶拜訪，這名客戶居然是他高中暗戀的女生林艾璇。當天結束後，他倆常常傳訊息，訊息中充滿曖昧語氣。不久之後，艾璇約了男子出去，男子終究不敵內心的渴望，瞞著白佳琪和艾璇出去了。n和白佳琪比起來，跟艾璇的相處自由許多，沒有那麼多規定，想吃什麼就吃什麼，任何小事都很快樂，好像這才是愛情該有的模樣。終於，坦誠的那一天到來。n男子向白佳琪坦白自己有了第三者，吃素的白佳琪在這天晚上煮了牛肉，像是在表示她願意退讓，但對男子來說，這一切已經太晚了。白佳琪哭著說「我可以改呀⋯你不喜歡的我都可以改⋯。」讓男子不忍心傷害白佳琪。n那天夜裡男子做了一個夢，夢裡有個兔子人說可以給男一個願望。男子醒來之後，發現身旁的人變成黑澤由里！他夢寐以求的女神！n願望成真了嗎？還是他還在夢裡？n到底，這會是另一個幸福的開始？還是另一段災難？n還有什麼比控制狂更恐怖的呢？n',
-          thumbnailImageUrl:
-            'https://taiwancinema.bamid.gov.tw/ImageData/60/2024/92400/t_92400.jpg',
+          thumbnailImageUrl: 'https://taiwancinema.bamid.gov.tw/ImageData/60/2024/92400/t_92400.jpg',
           imageAspectRatio: 'rectangle',
           imageSize: 'cover',
           imageBackgroundColor: '#FFFFFF',
@@ -441,10 +428,7 @@ export function createChartTemplateExample(): ConversationMessage {
   });
 }
 
-export function createImageTemplateExample(
-  width = 400,
-  height = 400
-): ConversationMessage {
+export function createImageTemplateExample(width = 400, height = 400): ConversationMessage {
   return createBaseTemplateExample({
     messageId: nanoid(),
     replyToCustomMessageId: '',
@@ -551,10 +535,7 @@ export function createTextWithLinksTemplateExample(): ConversationMessage {
     template: {
       type: MessageTemplateType.TEXT,
       text: '',
-      quickReplies: [
-        { text: '測試連結' },
-        { text: '顏色測試' },
-      ],
+      quickReplies: [{ text: '測試連結' }, { text: '顏色測試' }],
     },
     messageId,
     replyToCustomMessageId: '',

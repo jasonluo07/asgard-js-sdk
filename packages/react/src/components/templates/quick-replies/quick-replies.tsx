@@ -14,27 +14,22 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { template, botMessage } = useAsgardThemeContext();
   const { sendMessage, isConnecting } = useAsgardContext();
 
-  const onClick = useCallback(
-    (text: string) => sendMessage?.({ text }),
-    [sendMessage]
-  );
+  const onClick = useCallback((text: string) => sendMessage?.({ text }), [sendMessage]);
 
   if (!quickReplies?.length) {
     return null;
   }
 
   return (
-    <div
-      className={clsx('asgard-quick-replies', styles.quick_replies_box)}
-      style={template?.quickReplies?.style}
-    >
-      {quickReplies.map((quickReply) => (
+    <div className={clsx('asgard-quick-replies', styles.quick_replies_box)} style={template?.quickReplies?.style}>
+      {quickReplies.map(quickReply => (
         <button
           key={quickReply.text}
           className={styles.quick_reply}
           style={{
             ...template?.quickReplies?.button?.style,
-            backgroundColor: botMessage?.quickReplyBackgroundColor || template?.quickReplies?.button?.style?.backgroundColor,
+            backgroundColor:
+              botMessage?.quickReplyBackgroundColor || template?.quickReplies?.button?.style?.backgroundColor,
           }}
           disabled={isConnecting}
           onClick={() => onClick(quickReply.text)}

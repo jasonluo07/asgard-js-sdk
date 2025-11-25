@@ -20,9 +20,9 @@ const viteConfig = defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler'
-      }
-    }
+        api: 'modern-compiler',
+      },
+    },
   },
   // Uncomment this if you are using workers.
   // worker: {

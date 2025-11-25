@@ -1,8 +1,6 @@
 import { RefObject, useEffect } from 'react';
 
-function findNearestScrollContainer(
-  elem: HTMLElement
-): HTMLElement | undefined {
+function findNearestScrollContainer(elem: HTMLElement): HTMLElement | undefined {
   if (elem.scrollHeight > elem.offsetHeight) {
     return elem;
   }
@@ -55,9 +53,7 @@ export function usePreventOverScrolling(ref: RefObject<HTMLDivElement>): void {
       }
 
       const isAtBottom =
-        nearestScrollContainer.scrollTop ===
-        nearestScrollContainer.scrollHeight -
-          nearestScrollContainer.clientHeight;
+        nearestScrollContainer.scrollTop === nearestScrollContainer.scrollHeight - nearestScrollContainer.clientHeight;
 
       if (!isScrollingUp && isAtBottom) {
         e.preventDefault();

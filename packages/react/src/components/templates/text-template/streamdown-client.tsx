@@ -7,7 +7,9 @@ interface StreamdownClientProps {
 }
 
 export function StreamdownClient({ children }: StreamdownClientProps): ReactNode {
-  const [StreamdownComponent, setStreamdownComponent] = useState<React.ComponentType<{ children: string }> | null>(null);
+  const [StreamdownComponent, setStreamdownComponent] = useState<React.ComponentType<{ children: string }> | null>(
+    null,
+  );
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {

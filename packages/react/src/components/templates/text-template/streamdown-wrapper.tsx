@@ -1,8 +1,6 @@
 import { ReactNode, lazy, Suspense } from 'react';
 
-const StreamdownLazy = lazy(() =>
-  import('streamdown').then((mod) => ({ default: mod.Streamdown }))
-);
+const StreamdownLazy = lazy(() => import('streamdown').then(mod => ({ default: mod.Streamdown })));
 
 interface StreamdownWrapperProps {
   children: string;

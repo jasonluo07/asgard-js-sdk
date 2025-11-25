@@ -10,20 +10,12 @@ export interface IAsgardServiceClient {
 
 export type InitEventHandler = EventHandler<SseResponse<EventType.INIT>>;
 export type MessageEventHandler = EventHandler<
-  SseResponse<
-    | EventType.MESSAGE_START
-    | EventType.MESSAGE_DELTA
-    | EventType.MESSAGE_COMPLETE
-  >
+  SseResponse<EventType.MESSAGE_START | EventType.MESSAGE_DELTA | EventType.MESSAGE_COMPLETE>
 >;
-export type ProcessEventHandler = EventHandler<
-  SseResponse<EventType.PROCESS_START | EventType.PROCESS_COMPLETE>
->;
+export type ProcessEventHandler = EventHandler<SseResponse<EventType.PROCESS_START | EventType.PROCESS_COMPLETE>>;
 export type DoneEventHandler = EventHandler<SseResponse<EventType.DONE>>;
 export type ErrorEventHandler = EventHandler<SseResponse<EventType.ERROR>>;
-export type ToolCallEventHandler = EventHandler<
-  SseResponse<EventType.TOOL_CALL_START | EventType.TOOL_CALL_COMPLETE>
->;
+export type ToolCallEventHandler = EventHandler<SseResponse<EventType.TOOL_CALL_START | EventType.TOOL_CALL_COMPLETE>>;
 
 export interface SseHandlers {
   onRunInit?: InitEventHandler;
@@ -39,31 +31,31 @@ export type ClientConfig = SseHandlers & {
   debugMode?: boolean;
   transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
 } & (
-  | { 
-      /**
-       * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
-       * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
-       */
-      endpoint: string; 
-      /**
-       * Base URL for the bot provider service.
-       * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
-       */
-      botProviderEndpoint?: string; 
-    }
-  | { 
-      /**
-       * Base URL for the bot provider service.
-       * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
-       */
-      botProviderEndpoint: string; 
-      /**
-       * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
-       * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
-       */
-      endpoint?: string; 
-    }
-);
+    | {
+        /**
+         * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
+         * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
+         */
+        endpoint: string;
+        /**
+         * Base URL for the bot provider service.
+         * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
+         */
+        botProviderEndpoint?: string;
+      }
+    | {
+        /**
+         * Base URL for the bot provider service.
+         * The SSE endpoint will be automatically derived as `${botProviderEndpoint}/message/sse`
+         */
+        botProviderEndpoint: string;
+        /**
+         * @deprecated Use `botProviderEndpoint` instead. This will be removed in the next major version.
+         * If provided, it will be used. Otherwise, it will be automatically derived as `${botProviderEndpoint}/message/sse`
+         */
+        endpoint?: string;
+      }
+  );
 
 export interface FetchSsePayload {
   customChannelId: string;
@@ -85,7 +77,7 @@ export interface FetchSseOptions {
 export type SseEvents = {
   [EventType.INIT]: InitEventHandler;
   [EventType.PROCESS]: ProcessEventHandler;
-  [EventType.MESSAGE]: MessageEventHandler;  
+  [EventType.MESSAGE]: MessageEventHandler;
   [EventType.TOOL_CALL]: ToolCallEventHandler;
   [EventType.DONE]: DoneEventHandler;
   [EventType.ERROR]: ErrorEventHandler;

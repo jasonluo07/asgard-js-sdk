@@ -9,11 +9,7 @@ interface ChatbotButtonProps {
 
 export default function ChatbotButton({ onClick }: ChatbotButtonProps): JSX.Element {
   return (
-    <button
-      onClick={onClick}
-      className={styles.button}
-      aria-label="開啟 AI 助手"
-    >
+    <button onClick={onClick} className={styles.button} aria-label="開啟 AI 助手">
       <ChatIcon />
     </button>
   );

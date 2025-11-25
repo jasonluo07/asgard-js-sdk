@@ -30,18 +30,13 @@ export function TemplateBox(props: TemplateBoxProps): ReactNode {
         return clsx(
           styles.template_box,
           styles['template_box--bot'],
-          direction === 'horizontal'
-            ? styles['template_box--horizontal']
-            : styles['template_box--vertical']
+          direction === 'horizontal' ? styles['template_box--horizontal'] : styles['template_box--vertical'],
         );
     }
   }, [direction, type]);
 
   return (
-    <div
-      className={clsx('asgard-template-box', boxClassName, className)}
-      style={style}
-    >
+    <div className={clsx('asgard-template-box', boxClassName, className)} style={style}>
       {children}
     </div>
   );

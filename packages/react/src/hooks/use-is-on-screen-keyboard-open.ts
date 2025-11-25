@@ -3,9 +3,7 @@ import { useEffect, useState } from 'react';
 function isKeyboardInput(elem: HTMLElement): boolean {
   return (
     (['INPUT', 'TEXTAREA'].includes(elem.tagName) &&
-      !['button', 'submit', 'checkbox', 'file', 'image'].includes(
-        (elem as HTMLInputElement).type
-      )) ||
+      !['button', 'submit', 'checkbox', 'file', 'image'].includes((elem as HTMLInputElement).type)) ||
     elem.hasAttribute('contenteditable')
   );
 }

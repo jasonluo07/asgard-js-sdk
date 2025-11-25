@@ -19,8 +19,7 @@ import { AsgardServiceClient } from '@asgard-js/core';
 
 const client = new AsgardServiceClient({
   apiKey: 'your-api-key',
-  botProviderEndpoint:
-    'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   debugMode: true, // Enable to see deprecation warnings
 });
 
@@ -35,19 +34,19 @@ client.fetchSse({
 if (client.uploadFile) {
   const fileInput = document.querySelector('input[type="file"]');
   const file = fileInput.files[0];
-  
+
   try {
     const uploadResponse = await client.uploadFile(file, 'your-channel-id');
-    
+
     if (uploadResponse.isSuccess && uploadResponse.data[0]) {
       const blobId = uploadResponse.data[0].blobId;
-      
+
       // Send message with uploaded file
       client.fetchSse({
         customChannelId: 'your-channel-id',
         text: 'Here is my image:',
         action: 'message',
-        blobIds: [blobId]
+        blobIds: [blobId],
       });
     }
   } catch (error) {
@@ -56,15 +55,15 @@ if (client.uploadFile) {
 }
 
 // Listen to events
-client.on('MESSAGE', (response) => {
+client.on('MESSAGE', response => {
   console.log('Received message:', response);
 });
 
-client.on('DONE', (response) => {
+client.on('DONE', response => {
   console.log('Conversation completed:', response);
 });
 
-client.on('ERROR', (error) => {
+client.on('ERROR', error => {
   console.error('Error occurred:', error);
 });
 ```
@@ -78,10 +77,8 @@ client.on('ERROR', (error) => {
 ```javascript
 const client = new AsgardServiceClient({
   apiKey: 'your-api-key',
-  endpoint:
-    'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
-  botProviderEndpoint:
-    'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  endpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}/message/sse',
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
 });
 ```
 
@@ -90,8 +87,7 @@ const client = new AsgardServiceClient({
 ```javascript
 const client = new AsgardServiceClient({
   apiKey: 'your-api-key',
-  botProviderEndpoint:
-    'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
   // SSE endpoint is automatically derived as: botProviderEndpoint + '/message/sse'
 });
 ```
@@ -184,7 +180,7 @@ const channel = await Channel.reset({
   client,
   customChannelId: 'channel-123',
   conversation,
-  statesObserver: (states) => {
+  statesObserver: states => {
     console.log('Connection status:', states.isConnecting);
     console.log('Messages:', Array.from(states.conversation.messages.values()));
   },
@@ -237,7 +233,6 @@ const updatedConversation = conversation.pushMessage(userMessage);
 console.log('Messages:', Array.from(updatedConversation.messages.values()));
 ```
 
-
 ### File Upload API
 
 The core package includes file upload capabilities for sending images through the chatbot.
@@ -248,12 +243,12 @@ const uploadResponse = await client.uploadFile(file, customChannelId);
 
 if (uploadResponse.isSuccess && uploadResponse.data[0]) {
   const blobId = uploadResponse.data[0].blobId;
-  
+
   client.fetchSse({
     customChannelId: 'your-channel-id',
     text: 'Here is my image',
     action: 'message',
-    blobIds: [blobId]
+    blobIds: [blobId],
   });
 }
 ```
@@ -273,6 +268,7 @@ type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalid
 ```
 
 **States:**
+
 - **`loading`**: Authentication in progress
 - **`needApiKey`**: User needs to provide API key
 - **`authenticated`**: Successfully authenticated
@@ -280,6 +276,7 @@ type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalid
 - **`invalidApiKey`**: API key is invalid
 
 **Usage:**
+
 ```typescript
 import { AuthState } from '@asgard-js/core';
 

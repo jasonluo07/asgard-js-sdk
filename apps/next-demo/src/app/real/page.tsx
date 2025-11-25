@@ -9,12 +9,5 @@ const CONFIG = {
 };
 
 export default function RealPage() {
-  return (
-    <Chatbot
-      customChannelId={nanoid()}
-      config={CONFIG}
-      fullScreen={true}
-      enableUpload={true}
-    />
-  );
+  return <Chatbot customChannelId={nanoid()} config={CONFIG} fullScreen={true} enableUpload={true} />;
 }

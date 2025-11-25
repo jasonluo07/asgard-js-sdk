@@ -49,37 +49,28 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
 
   const _isTyping = useDebounce(isTyping, 500);
 
-
   const styles = useMemo<CSSProperties>(
     () => ({
       color: theme?.botMessage?.color,
       backgroundColor: theme?.botMessage?.backgroundColor,
     }),
-    [theme]
+    [theme],
   );
 
   const dotStyles = useMemo<CSSProperties>(
     () => ({
       backgroundColor: theme?.botMessage?.color,
     }),
-    [theme]
+    [theme],
   );
 
   if (!_isTyping) return null;
 
   return (
-    <TemplateBox
-      className="asgard-text-template asgard-text-template--bot"
-      type="bot"
-      direction="horizontal"
-    >
+    <TemplateBox className="asgard-text-template asgard-text-template--bot" type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
       <TemplateBoxContent time={new Date()}>
-        <div
-          ref={ref}
-          className={clsx(classes.text, classes['text--bot'])}
-          style={styles}
-        >
+        <div ref={ref} className={clsx(classes.text, classes['text--bot'])} style={styles}>
           <span>
             {typingText ? <StreamdownClient>{typingText}</StreamdownClient> : null}
             {_isTyping && (
