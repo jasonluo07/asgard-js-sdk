@@ -20,6 +20,8 @@ import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { validateImageFiles } from '../../../utils/file-validation';
 
+const MAX_IMAGE_COUNT = 5;
+
 export function ChatbotFooter(): ReactNode {
   const {
     sendMessage,
@@ -234,41 +236,59 @@ export function ChatbotFooter(): ReactNode {
     [isComposing, isConnecting, value, selectedFiles.length, selectedDocuments.length, onSubmit],
   );
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      const { validFiles, errors } = validateImageFiles(files);
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (files && files.length > 0) {
+        const { validFiles, errors } = validateImageFiles(files);
 
-      if (errors.length > 0) {
-        alert('檔案驗證錯誤:\n' + errors.join('\n'));
-      }
+        if (errors.length > 0) {
+          alert('檔案驗證錯誤:\n' + errors.join('\n'));
+        }
 
-      if (validFiles.length > 0) {
-        setSelectedFiles(prev => [...prev, ...validFiles]);
+        if (validFiles.length > 0) {
+          const remainingSlots = MAX_IMAGE_COUNT - selectedFiles.length;
+          const filesToAdd = validFiles.slice(0, remainingSlots);
 
-        const newPreviewUrls: string[] = [];
-        for (const file of validFiles) {
-          const reader = new FileReader();
-          reader.onload = (e): void => {
-            if (e.target?.result && typeof e.target.result === 'string') {
-              newPreviewUrls.push(e.target.result);
-              if (newPreviewUrls.length === validFiles.length) {
-                setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
-              }
+          if (validFiles.length > remainingSlots) {
+            alert(`最多只能上傳 ${MAX_IMAGE_COUNT} 張圖片，已選擇前 ${remainingSlots} 張`);
+          }
+
+          if (filesToAdd.length > 0) {
+            setSelectedFiles(prev => [...prev, ...filesToAdd]);
+
+            const newPreviewUrls: string[] = [];
+            for (const file of filesToAdd) {
+              const reader = new FileReader();
+              reader.onload = (e): void => {
+                if (e.target?.result && typeof e.target.result === 'string') {
+                  newPreviewUrls.push(e.target.result);
+                  if (newPreviewUrls.length === filesToAdd.length) {
+                    setFilePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+                  }
+                }
+              };
+
+              reader.readAsDataURL(file);
             }
-          };
-
-          reader.readAsDataURL(file);
+          }
         }
       }
-    }
 
-    event.target.value = '';
-  }, []);
+      event.target.value = '';
+    },
+    [selectedFiles.length],
+  );
 
   const handleGalleryClick = useCallback(() => {
+    if (selectedFiles.length >= MAX_IMAGE_COUNT) {
+      alert(`最多只能上傳 ${MAX_IMAGE_COUNT} 張圖片`);
+
+      return;
+    }
+
     fileInputRef.current?.click();
-  }, []);
+  }, [selectedFiles.length]);
 
   const handleRemoveFile = useCallback((index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
