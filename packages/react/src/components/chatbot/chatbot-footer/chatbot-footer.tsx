@@ -103,6 +103,21 @@ export function ChatbotFooter(): ReactNode {
     [chatbot],
   );
 
+  const documentPreviewStyles = useMemo(
+    () => ({
+      backgroundColor: chatbot?.backgroundColor,
+      borderColor: chatbot?.borderColor,
+    }),
+    [chatbot],
+  );
+
+  const documentPreviewTextStyles = useMemo(
+    () => ({
+      color: chatbot?.primaryComponent?.secondaryColor,
+    }),
+    [chatbot],
+  );
+
   const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(event => {
     const element = event.target as HTMLTextAreaElement;
     const value = element.value;
@@ -370,7 +385,7 @@ export function ChatbotFooter(): ReactNode {
         <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
           <div className={styles.document_preview_grid}>
             {selectedDocuments.map((file, index) => (
-              <div key={index} className={styles.document_preview_item}>
+              <div key={index} className={styles.document_preview_item} style={documentPreviewStyles}>
                 <div className={styles.document_preview_icon_wrapper}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -383,6 +398,7 @@ export function ChatbotFooter(): ReactNode {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     className={styles.document_preview_icon}
+                    style={documentPreviewTextStyles}
                   >
                     <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
                     <path d="M14 2v4a2 2 0 0 0 2 2h4" />
@@ -391,7 +407,7 @@ export function ChatbotFooter(): ReactNode {
                     <path d="M16 17H8" />
                   </svg>
                 </div>
-                <span className={styles.document_preview_name} title={file.name}>
+                <span className={styles.document_preview_name} style={documentPreviewTextStyles} title={file.name}>
                   {file.name}
                 </span>
                 <button
