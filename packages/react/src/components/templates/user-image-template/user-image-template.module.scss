@@ -51,6 +51,34 @@
   }
 }
 
+.documents_container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-items: flex-end;
+}
+
+.document_card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  max-width: 300px;
+}
+
+.document_icon {
+  flex-shrink: 0;
+}
+
+.document_name {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .image_modal {
   position: fixed;
   top: 0;

@@ -25,6 +25,7 @@ export type ConversationUserMessage = {
   text: string;
   blobIds?: string[];
   filePreviewUrls?: string[];
+  documentNames?: string[];
   time: Date;
   traceId?: string;
 };

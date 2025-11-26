@@ -170,11 +170,12 @@ export function ChatbotFooter(): ReactNode {
           return;
         }
 
-        if (messageText || blobIds || filePreviewUrls.length > 0) {
+        if (messageText || blobIds || filePreviewUrls.length > 0 || selectedDocuments.length > 0) {
           const payload: {
             text: string;
             blobIds?: string[];
             filePreviewUrls?: string[];
+            documentNames?: string[];
           } = {
             text: messageText || '',
           };
@@ -185,6 +186,10 @@ export function ChatbotFooter(): ReactNode {
 
           if (filePreviewUrls.length > 0) {
             payload.filePreviewUrls = filePreviewUrls;
+          }
+
+          if (selectedDocuments.length > 0) {
+            payload.documentNames = selectedDocuments.map(file => file.name);
           }
 
           sendMessage?.(payload);

@@ -33,7 +33,7 @@ export interface UseChannelReturn {
   conversation: Conversation | null;
   sendMessage?: (
     payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
-      Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[] },
+      Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[]; documentNames?: string[] },
   ) => void;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
@@ -135,6 +135,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
         Partial<Pick<FetchSsePayload, 'payload'>> & {
           filePreviewUrls?: string[];
+          documentNames?: string[];
         },
     ) => channel?.sendMessage({ ...payload, customMessageId }),
     [channel, customMessageId],
