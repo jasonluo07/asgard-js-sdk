@@ -77,6 +77,13 @@ export function ChatbotFooter(): ReactNode {
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+    }),
+    [chatbot],
+  );
+
+  const footerStyles = useMemo(
+    () => ({
+      ...chatbot?.footer?.style,
       borderTopColor: chatbot?.borderColor,
     }),
     [chatbot],
@@ -243,7 +250,7 @@ export function ChatbotFooter(): ReactNode {
   }, [chatbot.footer?.textArea]);
 
   return (
-    <div className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={chatbot.footer?.style}>
+    <div className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
       {enableUpload && selectedFiles.length > 0 && (
         <div className={styles.file_preview_container} style={{ maxWidth: contentStyles.maxWidth }}>
           <div className={styles.file_preview_grid}>
@@ -282,7 +289,12 @@ export function ChatbotFooter(): ReactNode {
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         <div className={styles.attachment_buttons}>
           {enableExport && (
-            <button className={styles.attachment_button} onClick={handleDownloadClick} title="下載">
+            <button
+              className={styles.attachment_button}
+              style={chatbot.footer?.attachmentButton?.style}
+              onClick={handleDownloadClick}
+              title="下載"
+            >
               <DownloadSvg />
             </button>
           )}
@@ -296,7 +308,12 @@ export function ChatbotFooter(): ReactNode {
                 onChange={handleFileSelect}
                 className={styles.file_input_hidden}
               />
-              <button className={styles.attachment_button} onClick={handleGalleryClick} title="選擇照片">
+              <button
+                className={styles.attachment_button}
+                style={chatbot.footer?.attachmentButton?.style}
+                onClick={handleGalleryClick}
+                title="選擇照片"
+              >
                 <GallerySvg />
               </button>
             </>

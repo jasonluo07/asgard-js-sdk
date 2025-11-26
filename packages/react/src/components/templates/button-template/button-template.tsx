@@ -20,17 +20,19 @@ export function ButtonTemplate(props: ButtonTemplateProps): ReactNode {
   const template = message.message.template as ButtonMessageTemplate;
 
   return (
-    <TemplateBox
-      className="asgard-button-template"
-      type="bot"
-      direction="horizontal"
-      style={themeTemplate?.ButtonMessageTemplate?.style}
-    >
+    <TemplateBox className="asgard-button-template" type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
       <TemplateBoxContent time={message.time} quickReplies={template?.quickReplies}>
         <Card
           template={template}
           customStyle={{
+            style: themeTemplate?.ButtonMessageTemplate?.style,
+            title: {
+              style: themeTemplate?.ButtonMessageTemplate?.title?.style ?? {},
+            },
+            description: {
+              style: themeTemplate?.ButtonMessageTemplate?.description?.style ?? {},
+            },
             button: {
               style: themeTemplate?.ButtonMessageTemplate?.button?.style ?? {},
             },
