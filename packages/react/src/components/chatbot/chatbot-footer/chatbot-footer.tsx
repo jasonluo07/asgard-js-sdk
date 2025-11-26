@@ -14,6 +14,7 @@ import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
 import DownloadSvg from '../../../icons/download.svg?react';
+import DocumentSvg from '../../../icons/document.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
@@ -28,6 +29,7 @@ export function ChatbotFooter(): ReactNode {
     customChannelId,
     enableUpload: enableUploadProp,
     enableExport: enableExportProp,
+    enableDocumentUpload: enableDocumentUploadProp,
     messages,
     title,
   } = useAsgardContext();
@@ -52,6 +54,15 @@ export function ChatbotFooter(): ReactNode {
 
     return data.annotations?.embedConfig?.enableExport ?? false;
   }, [enableExportProp, data.annotations?.embedConfig?.enableExport]);
+
+  // Determine enableDocumentUpload: prioritize prop, then annotations
+  const enableDocumentUpload = useMemo(() => {
+    if (enableDocumentUploadProp !== undefined) {
+      return enableDocumentUploadProp;
+    }
+
+    return data.annotations?.embedConfig?.enableDocumentUpload ?? false;
+  }, [enableDocumentUploadProp, data.annotations?.embedConfig?.enableDocumentUpload]);
 
   // Determine bot name: prioritize annotations, then prop, then default
   const botName = useMemo(() => {
@@ -317,6 +328,15 @@ export function ChatbotFooter(): ReactNode {
                 <GallerySvg />
               </button>
             </>
+          )}
+          {enableDocumentUpload && (
+            <button
+              className={styles.attachment_button}
+              style={chatbot.footer?.attachmentButton?.style}
+              title="上傳文件"
+            >
+              <DocumentSvg />
+            </button>
           )}
         </div>
         <textarea
