@@ -255,6 +255,8 @@ export function ChatbotFooter(): ReactNode {
           }
 
           if (filesToAdd.length > 0) {
+            // 清除已選的文件（圖片和文件只能擇一）
+            setSelectedDocuments([]);
             setSelectedFiles(prev => [...prev, ...filesToAdd]);
 
             const newPreviewUrls: string[] = [];
@@ -440,7 +442,12 @@ export function ChatbotFooter(): ReactNode {
           {enableDocumentUpload && (
             <DocumentUploadButton
               currentCount={selectedDocuments.length}
-              onDocumentsChange={files => setSelectedDocuments(prev => [...prev, ...files])}
+              onDocumentsChange={files => {
+                // 清除已選的圖片（圖片和文件只能擇一）
+                setSelectedFiles([]);
+                setFilePreviewUrls([]);
+                setSelectedDocuments(prev => [...prev, ...files]);
+              }}
               className={styles.attachment_button}
               style={chatbot.footer?.attachmentButton?.style}
             />
