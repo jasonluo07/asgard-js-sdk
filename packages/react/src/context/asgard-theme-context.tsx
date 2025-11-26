@@ -45,6 +45,9 @@ export interface AsgardThemeContextValue {
         style: CSSProperties;
         '::placeholder': CSSProperties;
       };
+      attachmentButton: {
+        style: CSSProperties;
+      };
       submitButton: {
         style: CSSProperties;
       };
@@ -107,6 +110,12 @@ export interface AsgardThemeContextValue {
      */
     ButtonMessageTemplate: Partial<{
       style: CSSProperties;
+      title?: {
+        style: CSSProperties;
+      };
+      description?: {
+        style: CSSProperties;
+      };
       button?: {
         style: CSSProperties;
       };
@@ -118,6 +127,12 @@ export interface AsgardThemeContextValue {
       style: CSSProperties;
       card: {
         style: CSSProperties;
+        title?: {
+          style: CSSProperties;
+        };
+        description?: {
+          style: CSSProperties;
+        };
         button?: {
           style: CSSProperties;
         };
@@ -154,6 +169,9 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
         '::placeholder': {
           color: 'var(--asg-color-text-placeholder)',
         },
+      },
+      attachmentButton: {
+        style: {},
       },
       submitButton: {
         style: {},
@@ -204,6 +222,12 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     },
     ButtonMessageTemplate: {
       style: {},
+      title: {
+        style: {},
+      },
+      description: {
+        style: {},
+      },
       button: {
         style: {
           border: '1px solid var(--asg-color-border)',
@@ -214,6 +238,12 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
       style: {},
       card: {
         style: {},
+        title: {
+          style: {},
+        },
+        description: {
+          style: {},
+        },
         button: {
           style: {
             border: '1px solid var(--asg-color-border)',
@@ -285,11 +315,17 @@ export function AsgardThemeContextProvider(
             },
             textArea: {
               style: {
-                color: themeFromAnnotations.chatbot?.inactiveColor,
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
                 backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
+                borderColor: themeFromAnnotations.chatbot?.borderColor,
               },
               '::placeholder': {
                 color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
+            attachmentButton: {
+              style: {
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
               },
             },
             submitButton: {
@@ -344,7 +380,25 @@ export function AsgardThemeContextProvider(
               color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
             },
           },
+          HintMessageTemplate: {
+            style: {
+              color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+            },
+          },
           ButtonMessageTemplate: {
+            style: {
+              backgroundColor: themeFromAnnotations.botMessage?.carouselButtonBackgroundColor,
+            },
+            title: {
+              style: {
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+              },
+            },
+            description: {
+              style: {
+                color: themeFromAnnotations.chatbot?.inactiveColor,
+              },
+            },
             button: {
               style: {
                 borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
@@ -358,6 +412,16 @@ export function AsgardThemeContextProvider(
               style: {
                 backgroundColor: themeFromAnnotations.botMessage?.carouselButtonBackgroundColor,
               },
+              title: {
+                style: {
+                  color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+                },
+              },
+              description: {
+                style: {
+                  color: themeFromAnnotations.chatbot?.inactiveColor,
+                },
+              },
               button: {
                 style: {
                   borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
@@ -370,7 +434,190 @@ export function AsgardThemeContextProvider(
         },
       });
 
-      return deepMerge(tempTheme, theme);
+      const mergedTheme = deepMerge(tempTheme, theme) as AsgardThemeContextValue;
+
+      // Ensure prop-level chatbot.borderColor is also applied to nested styles
+      if (theme?.chatbot?.borderColor) {
+        const borderColor = theme.chatbot.borderColor;
+
+        // Apply to header
+        if (mergedTheme.chatbot.header?.style) {
+          mergedTheme.chatbot.header.style.borderBottomColor = borderColor;
+        }
+
+        // Apply to footer
+        if (mergedTheme.chatbot.footer?.style) {
+          mergedTheme.chatbot.footer.style.borderTopColor = borderColor;
+        }
+
+        // Apply to textarea
+        if (mergedTheme.chatbot.footer?.textArea?.style) {
+          mergedTheme.chatbot.footer.textArea.style.borderColor = borderColor;
+        }
+
+        // Apply to quick reply buttons
+        if (mergedTheme.template?.quickReplies?.button?.style) {
+          mergedTheme.template.quickReplies.button.style.borderColor = borderColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.primaryComponent.secondaryColor is also applied to textarea text color and footer buttons
+      if (theme?.chatbot?.primaryComponent?.secondaryColor) {
+        const textColor = theme.chatbot.primaryComponent.secondaryColor;
+
+        // Apply to textarea text color
+        if (mergedTheme.chatbot.footer?.textArea?.style) {
+          mergedTheme.chatbot.footer.textArea.style.color = textColor;
+        }
+
+        // Apply to attachment button color
+        if (mergedTheme.chatbot.footer?.attachmentButton?.style) {
+          mergedTheme.chatbot.footer.attachmentButton.style.color = textColor;
+        }
+
+        // Apply to submit button color
+        if (mergedTheme.chatbot.footer?.submitButton?.style) {
+          mergedTheme.chatbot.footer.submitButton.style.color = textColor;
+        }
+
+        // Apply to speech input button color
+        if (mergedTheme.chatbot.footer?.speechInputButton?.style) {
+          mergedTheme.chatbot.footer.speechInputButton.style.color = textColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.inactiveColor is also applied to placeholder color
+      if (theme?.chatbot?.inactiveColor) {
+        const placeholderColor = theme.chatbot.inactiveColor;
+
+        // Apply to textarea placeholder color
+        if (mergedTheme.chatbot.footer?.textArea?.['::placeholder']) {
+          mergedTheme.chatbot.footer.textArea['::placeholder'].color = placeholderColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.backgroundColor is also applied to textarea background
+      if (theme?.chatbot?.backgroundColor) {
+        const bgColor = theme.chatbot.backgroundColor;
+
+        // Apply to textarea background color
+        if (mergedTheme.chatbot.footer?.textArea?.style) {
+          mergedTheme.chatbot.footer.textArea.style.backgroundColor = bgColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.inactiveColor is also applied to time color
+      if (theme?.chatbot?.inactiveColor) {
+        if (mergedTheme.template?.time?.style) {
+          mergedTheme.template.time.style.color = theme.chatbot.inactiveColor;
+        }
+
+        // Apply to header action buttons (refresh, close)
+        if (mergedTheme.chatbot.header?.actionButton?.style) {
+          mergedTheme.chatbot.header.actionButton.style.color = theme.chatbot.inactiveColor;
+        }
+      }
+
+      // Ensure prop-level botMessage.carouselButtonBackgroundColor is also applied to card backgrounds
+      if (theme?.botMessage?.carouselButtonBackgroundColor) {
+        const cardBgColor = theme.botMessage.carouselButtonBackgroundColor;
+
+        // Apply to button template card background color
+        if (mergedTheme.template?.ButtonMessageTemplate?.style) {
+          mergedTheme.template.ButtonMessageTemplate.style.backgroundColor = cardBgColor;
+        }
+
+        // Apply to carousel card background color
+        if (mergedTheme.template?.CarouselMessageTemplate?.card?.style) {
+          mergedTheme.template.CarouselMessageTemplate.card.style.backgroundColor = cardBgColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.primaryComponent.secondaryColor is also applied to titles and text
+      if (theme?.chatbot?.primaryComponent?.secondaryColor) {
+        const titleColor = theme.chatbot.primaryComponent.secondaryColor;
+
+        // Apply to chatbot header title color
+        if (mergedTheme.chatbot.header?.title?.style) {
+          mergedTheme.chatbot.header.title.style.color = titleColor;
+        }
+
+        // Apply to hint template text color
+        if (mergedTheme.template?.HintMessageTemplate?.style) {
+          mergedTheme.template.HintMessageTemplate.style.color = titleColor;
+        }
+
+        // Apply to button template card title color
+        if (mergedTheme.template?.ButtonMessageTemplate?.title?.style) {
+          mergedTheme.template.ButtonMessageTemplate.title.style.color = titleColor;
+        }
+
+        // Apply to carousel card title color
+        if (mergedTheme.template?.CarouselMessageTemplate?.card?.title?.style) {
+          mergedTheme.template.CarouselMessageTemplate.card.title.style.color = titleColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.inactiveColor is also applied to card descriptions
+      if (theme?.chatbot?.inactiveColor) {
+        // Apply to button template card description color
+        if (mergedTheme.template?.ButtonMessageTemplate?.description?.style) {
+          mergedTheme.template.ButtonMessageTemplate.description.style.color = theme.chatbot.inactiveColor;
+        }
+
+        // Apply to carousel card description color
+        if (mergedTheme.template?.CarouselMessageTemplate?.card?.description?.style) {
+          mergedTheme.template.CarouselMessageTemplate.card.description.style.color = theme.chatbot.inactiveColor;
+        }
+      }
+
+      // Ensure prop-level chatbot.primaryComponent colors are also applied to card buttons
+      if (theme?.chatbot?.primaryComponent?.mainColor) {
+        const buttonBgColor = theme.chatbot.primaryComponent.mainColor;
+
+        // Apply to button template button background
+        if (mergedTheme.template?.ButtonMessageTemplate?.button?.style) {
+          mergedTheme.template.ButtonMessageTemplate.button.style.backgroundColor = buttonBgColor;
+          mergedTheme.template.ButtonMessageTemplate.button.style.borderColor = buttonBgColor;
+        }
+
+        // Apply to carousel card button background
+        if (mergedTheme.template?.CarouselMessageTemplate?.card?.button?.style) {
+          mergedTheme.template.CarouselMessageTemplate.card.button.style.backgroundColor = buttonBgColor;
+          mergedTheme.template.CarouselMessageTemplate.card.button.style.borderColor = buttonBgColor;
+        }
+      }
+
+      if (theme?.chatbot?.primaryComponent?.secondaryColor) {
+        const buttonTextColor = theme.chatbot.primaryComponent.secondaryColor;
+
+        // Apply to button template button text color
+        if (mergedTheme.template?.ButtonMessageTemplate?.button?.style) {
+          mergedTheme.template.ButtonMessageTemplate.button.style.color = buttonTextColor;
+        }
+
+        // Apply to carousel card button text color
+        if (mergedTheme.template?.CarouselMessageTemplate?.card?.button?.style) {
+          mergedTheme.template.CarouselMessageTemplate.card.button.style.color = buttonTextColor;
+        }
+
+        // Apply to quick reply button text color
+        if (mergedTheme.template?.quickReplies?.button?.style) {
+          mergedTheme.template.quickReplies.button.style.color = buttonTextColor;
+        }
+      }
+
+      // Ensure prop-level botMessage.backgroundColor is also applied to quick reply button background
+      if (theme?.botMessage?.backgroundColor) {
+        const quickReplyBgColor = `${theme.botMessage.backgroundColor}33`;
+
+        // Apply to quick reply button background color
+        if (mergedTheme.template?.quickReplies?.button?.style) {
+          mergedTheme.template.quickReplies.button.style.backgroundColor = quickReplyBgColor;
+        }
+      }
+
+      return mergedTheme;
     },
     [theme, annotations?.embedConfig?.theme],
   );

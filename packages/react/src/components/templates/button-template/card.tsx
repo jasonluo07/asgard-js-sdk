@@ -10,6 +10,12 @@ interface CardProps {
   template: ButtonMessageTemplate | CarouselMessageTemplate['columns'][number];
   customStyle?: {
     style?: CSSProperties;
+    title?: {
+      style?: CSSProperties;
+    };
+    description?: {
+      style?: CSSProperties;
+    };
     button?: {
       style?: CSSProperties;
     };
@@ -86,8 +92,12 @@ export function Card(props: CardProps): ReactNode {
         />
       )}
       <div className={styles.card_content}>
-        <h5 className={styles.card_title}>{template?.title}</h5>
-        <div className={styles.card_description}>{template?.text}</div>
+        <h5 className={styles.card_title} style={customStyle?.title?.style}>
+          {template?.title}
+        </h5>
+        <div className={styles.card_description} style={customStyle?.description?.style}>
+          {template?.text}
+        </div>
         <div className={styles.card_actions}>
           {template?.buttons?.map((btn: { label: string; action: ButtonAction }, index: number) => (
             <button key={index} onClick={handleClick(btn.action)} style={customStyle?.button?.style}>

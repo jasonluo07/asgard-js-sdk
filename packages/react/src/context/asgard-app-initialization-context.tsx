@@ -16,11 +16,15 @@ export interface Annotations {
     debugMode?: boolean;
     enableUpload?: boolean;
     enableExport?: boolean;
+    enableDocumentUpload?: boolean;
     fullScreen?: boolean;
     inputPlaceholder?: string;
     theme: {
       chatbot: {
+        width?: string;
+        height?: string;
         backgroundColor?: string;
+        borderRadius?: string;
         borderColor?: string;
         inactiveColor?: string;
         primaryComponent?: {

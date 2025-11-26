@@ -27,6 +27,13 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+    }),
+    [chatbot],
+  );
+
+  const headerStyles = useMemo(
+    () => ({
+      ...chatbot?.header?.style,
       borderBottomColor: chatbot?.borderColor,
     }),
     [chatbot],
@@ -58,7 +65,7 @@ export function ChatbotHeader(props: ChatbotHeaderProps): ReactNode {
   );
 
   return (
-    <div className={clsx('asgard-chatbot-header', styles.chatbot_header)} style={chatbot?.header?.style}>
+    <div className={clsx('asgard-chatbot-header', styles.chatbot_header)} style={headerStyles}>
       <div className={styles.chatbot_header__content} style={contentStyles}>
         <div className={styles.chatbot_header__title}>
           <ProfileIcon avatar={avatar} />
