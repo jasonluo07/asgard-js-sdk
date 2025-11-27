@@ -134,8 +134,11 @@ export function Root(): ReactNode {
               apiKey: VITE_API_KEY,
             }}
             avatar="./showtime.webp"
-            enableLoadConfigFromService={true}
-            maintainConnectionWhenClosed={true}
+            enableLoadConfigFromService={false}
+            maintainConnectionWhenClosed={false}
+            enableExport={true}
+            enableUpload={true}
+            enableDocumentUpload={true}
             loadingComponent={<div>Custom Loading...</div>}
             botTypingPlaceholder="typing"
             customChannelId={customChannelId}
@@ -147,21 +150,27 @@ export function Root(): ReactNode {
               setIsOpen(false);
             }}
             theme={{
-              botMessage: {
-                backgroundColor: '#8728a6',
-                carouselButtonBackgroundColor: '#333333',
-                color: '#FFFFFF',
-              },
               chatbot: {
-                backgroundColor: '#ea8585',
-                borderColor: '#434343',
-                inactiveColor: '#8C8C8C',
+                width: '',
+                height: '',
+                backgroundColor: '#3c1d3b',
+                borderRadius: '',
+                borderColor: '#92ff8c',
+                inactiveColor: '#ff00e6',
                 primaryComponent: {
-                  mainColor: '#ebe246',
-                  secondaryColor: '#FFFFFF',
+                  mainColor: '#ff0000',
+                  secondaryColor: '#aba400',
                 },
               },
-              userMessage: { backgroundColor: '#1f2d67', color: '#12cc27' },
+              botMessage: {
+                color: '#00f0ff',
+                backgroundColor: '#ff7a00',
+                carouselButtonBackgroundColor: '#00622a',
+              },
+              userMessage: {
+                color: '#522801',
+                backgroundColor: '#060081',
+              },
             }}
           />
         </div>

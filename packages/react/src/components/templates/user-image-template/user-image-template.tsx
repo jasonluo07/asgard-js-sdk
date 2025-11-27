@@ -25,6 +25,14 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
     [theme],
   );
 
+  const documentCardStyles = useMemo<CSSProperties>(
+    () => ({
+      backgroundColor: theme?.userMessage?.backgroundColor,
+      color: theme?.userMessage?.color,
+    }),
+    [theme],
+  );
+
   const rootStyle = theme?.template?.TextMessageTemplate?.style;
 
   return (
@@ -47,6 +55,36 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
                     loading="lazy"
                     onClick={() => setExpandedImage(url)}
                   />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {message.message.documentNames && message.message.documentNames.length > 0 && (
+            <div className={styles.documents_container}>
+              {message.message.documentNames.map((name, index) => (
+                <div key={index} className={styles.document_card} style={documentCardStyles}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={styles.document_icon}
+                  >
+                    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                    <path d="M10 9H8" />
+                    <path d="M16 13H8" />
+                    <path d="M16 17H8" />
+                  </svg>
+                  <span className={styles.document_name} title={name}>
+                    {name}
+                  </span>
                 </div>
               ))}
             </div>

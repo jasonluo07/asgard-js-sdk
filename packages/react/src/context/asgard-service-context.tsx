@@ -28,6 +28,7 @@ export interface AsgardServiceContextValue {
   inputPlaceholder?: string;
   enableUpload?: boolean;
   enableExport?: boolean;
+  enableDocumentUpload?: boolean;
 }
 
 export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
@@ -44,6 +45,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   inputPlaceholder: undefined,
   enableUpload: undefined,
   enableExport: undefined,
+  enableDocumentUpload: undefined,
 });
 
 export interface AsgardServiceContextProviderProps {
@@ -56,6 +58,7 @@ export interface AsgardServiceContextProviderProps {
   inputPlaceholder?: string;
   enableUpload?: boolean;
   enableExport?: boolean;
+  enableDocumentUpload?: boolean;
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
@@ -75,6 +78,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     inputPlaceholder,
     enableUpload,
     enableExport,
+    enableDocumentUpload,
     customChannelId,
     initMessages,
     onSseMessage,
@@ -110,6 +114,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       inputPlaceholder,
       enableUpload,
       enableExport,
+      enableDocumentUpload,
       messageBoxBottomRef,
     }),
     [
@@ -128,6 +133,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       inputPlaceholder,
       enableUpload,
       enableExport,
+      enableDocumentUpload,
     ],
   );
 
