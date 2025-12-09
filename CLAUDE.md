@@ -14,8 +14,10 @@ Asgard JS SDK is a TypeScript monorepo that provides React components and core s
 ### Development
 
 ```bash
-# Start demo application
-npm run serve:react-demo
+# Start demo applications
+npm run serve:react-demo         # React demo
+npm run serve:next-demo          # Next.js demo
+npm run serve:next-vanilla-demo  # Next.js vanilla demo
 
 # Run tests
 npm test                  # All tests
@@ -27,8 +29,10 @@ npm run test:coverage     # With coverage report
 npm run build:core        # Build core package (required before building React)
 npm run build:react       # Build React package
 
-# Lint code
+# Lint and format code
 npm run lint:packages     # Lint both core and React packages
+npm run format            # Format code with Prettier
+npm run format:check      # Check code formatting
 
 # Watch mode for development
 npm run watch:core        # Watch core package changes
@@ -60,9 +64,10 @@ npm run release:react     # Publish React package to npm
 ### React Package (`packages/react`)
 
 - **Chatbot Component**: Main component with full theming support
-- **Message Templates**: Pre-built components for text, images, carousels, buttons, charts
+- **Message Templates**: Pre-built components for text, images, carousels, buttons, charts, audio, video, location, hints, quick replies
 - **Context Providers**: Service context and theme context for state management
-- **Markdown Support**: React-markdown with syntax highlighting and math rendering
+- **Markdown Support**: Streamdown library for streaming markdown rendering
+- **Charts**: Vega ecosystem (react-vega, vega, vega-lite, vega-embed) for data visualization
 - **Voice Input**: Browser speech recognition API integration
 
 ## Important Conventions
@@ -112,10 +117,11 @@ The project uses Nx for monorepo management with these key configurations:
 ### Adding a New Message Template
 
 1. Define types in `packages/core/src/types/sse-response.ts`
-2. Implement component in `packages/react/src/components/templates/`
-3. Register in template registry
-4. Add theme configuration support
-5. Write tests for both rendering and interaction
+2. Add new type to `MessageTemplateType` enum in `packages/core/src/constants/enum.ts`
+3. Implement component in `packages/react/src/components/templates/`
+4. Export from `packages/react/src/components/templates/index.ts`
+5. Add theme configuration support
+6. Write tests for both rendering and interaction
 
 ### Updating API Client
 
