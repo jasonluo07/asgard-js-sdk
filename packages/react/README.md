@@ -254,7 +254,7 @@ config: {
   - `debugMode?`: `boolean` - Enable debug mode, defaults to `false`
   - `onRunInit?`: `InitEventHandler` - Handler for run initialization events
   - `onMessage?`: `MessageEventHandler` - Handler for message events
-  - `onToolCall?`: `ToolCallEventHandler` - Handler for tool call events
+  - `onToolCall?`: `ToolCallEventHandler` - Handler for tool call events. See [Tool Call Handler](#tool-call-handler) section for details.
   - `onProcess?`: `ProcessEventHandler` - Handler for process events
   - `onRunDone?`: `DoneEventHandler` - Handler for run completion events
   - `onRunError?`: `ErrorEventHandler` - Error handler for execution errors
@@ -518,6 +518,114 @@ const App = () => {
 ```
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
+
+### Tool Call Handler
+
+The `onToolCall` callback allows you to handle tool call events from the bot. This handler is triggered when the bot starts or completes executing a tool call. See the [Tool Call Start documentation](https://www.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-start) and [Tool Call Complete documentation](https://www.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-complete) for details.
+
+The callback receives a `SseResponse` object with one of the following event types:
+
+- `EventType.TOOL_CALL_START`: Fired when a tool call begins execution
+- `EventType.TOOL_CALL_COMPLETE`: Fired when a tool call completes execution
+
+The response object contains the following data:
+
+For `TOOL_CALL_START`:
+
+- `processId`: `string` - Process identifier
+- `callSeq`: `number` - Call sequence number
+- `toolCall`: Object containing:
+  - `toolsetName`: `string` - Name of the toolset
+  - `toolName`: `string` - Name of the tool
+  - `parameter`: `Record<string, unknown>` - Tool call parameters
+
+For `TOOL_CALL_COMPLETE`:
+
+- All fields from `TOOL_CALL_START` plus:
+- `toolCallResult`: Object containing:
+  - `data`: `unknown` - Result data returned from the tool execution
+  - `error`: `unknown` - Error information if the tool call failed
+  - `errorCode`: `string | null` - Error code if the tool call failed
+  - `isSuccess`: `boolean` - Whether the tool call succeeded
+  - `paging`: `unknown` - Paging information if applicable
+
+Example SSE response for `TOOL_CALL_COMPLETE`:
+
+```json
+{
+  "eventType": "asgard.tool_call.complete",
+  "requestId": "295fcef49f270b06e6d53f6fb3656b0c",
+  "eventId": "1947548755242782720",
+  "namespace": "proj-4b2b31bb-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "botProviderName": "bp-reviewbot-f96def0f-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "customChannelId": "syDHHkS6cQMdAWTu3T2N2X",
+  "fact": {
+    "runInit": null,
+    "runDone": null,
+    "runError": null,
+    "processStart": null,
+    "processComplete": null,
+    "messageStart": null,
+    "messageDelta": null,
+    "messageComplete": null,
+    "toolCallStart": null,
+    "toolCallComplete": {
+      "processId": "f627cac52c576dc4",
+      "callSeq": 0,
+      "toolCall": {
+        "toolsetName": "ts-callool-4b2b31bb-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "toolName": "movie_search",
+        "parameter": {}
+      },
+      "toolCallResult": {
+        "data": null,
+        "error": null,
+        "errorCode": null,
+        "isSuccess": true,
+        "paging": null
+      }
+    }
+  }
+}
+```
+
+#### Usage Example
+
+```typescript
+import { useCallback } from 'react';
+import { EventType, SseResponse } from '@asgard-js/core';
+
+const handleToolCall = useCallback(
+  (response: SseResponse<EventType.TOOL_CALL_START | EventType.TOOL_CALL_COMPLETE>): void => {
+    if (response.eventType === EventType.TOOL_CALL_COMPLETE) {
+      const { processId, callSeq, toolCall, toolCallResult } = response.fact.toolCallComplete;
+      console.log(`Tool call completed: ${toolCall.toolsetName}.${toolCall.toolName}`);
+
+      if (toolCallResult.isSuccess) {
+        console.log('Tool call succeeded. Data:', toolCallResult.data);
+        // Process successful results
+      } else {
+        console.error('Tool call failed:', toolCallResult.error);
+        console.error('Error code:', toolCallResult.errorCode);
+        // Handle errors
+      }
+
+      // You can process results, update UI, or trigger follow-up actions
+    }
+  },
+  [],
+);
+
+// Pass the handler to Chatbot config
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+    onToolCall: handleToolCall,
+  }}
+  customChannelId="your-channel-id"
+/>;
+```
 
 ### EMIT Action
 
