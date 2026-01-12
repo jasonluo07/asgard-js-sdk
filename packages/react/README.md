@@ -2,6 +2,9 @@
 
 This package provides React components and hooks for integrating with the Asgard AI platform, allowing you to build interactive chat interfaces.
 
+<a id="installation"></a>
+<br/>
+
 ## Installation
 
 To install the React package, use the following command:
@@ -10,7 +13,13 @@ To install the React package, use the following command:
 npm install @asgard-js/core @asgard-js/react
 ```
 
+<a id="usage"></a>
+<br/>
+
 ## Usage
+
+<a id="basic-usage"></a>
+<br/>
 
 ### Basic Usage
 
@@ -89,6 +98,9 @@ const App = () => {
 export default App;
 ```
 
+<a id="file-upload-support"></a>
+<br/>
+
 ### File Upload Support
 
 The Chatbot component includes built-in file upload capabilities for sending images. You can control this feature using the `enableUpload` prop.
@@ -130,6 +142,9 @@ When `enableLoadConfigFromService` is enabled, you can also control the upload f
 
 **Features**: Multiple file selection, image preview with modal view, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file, maximum 10 files at once.
 
+<a id="conversation-export"></a>
+<br/>
+
 ### Conversation Export
 
 The Chatbot component includes built-in conversation export functionality, allowing users to download chat history as Markdown files. You can control this feature using the `enableExport` prop.
@@ -170,6 +185,9 @@ When `enableLoadConfigFromService` is enabled, you can also control the export f
 3. Default: `false`
 
 **Features**: Download button in chatbot footer, exports conversation history with timestamps and trace IDs, human-readable filename format (`{BotName}_對話紀錄_{Date}_{Time}.md`).
+
+<a id="api-key-authentication"></a>
+<br/>
 
 ### API Key Authentication
 
@@ -243,7 +261,18 @@ config: {
 
 **Backward Compatibility:** Existing code using `endpoint` will continue to work but may show deprecation warnings when `debugMode` is enabled.
 
+<a id="migration-from-endpoint-to-botproviderendpoint"></a>
+<br/>
+
+## Migration from endpoint to botProviderEndpoint
+
+<a id="api-reference"></a>
+<br/>
+
 ## API Reference
+
+<a id="chatbot-component-props"></a>
+<br/>
 
 ### Chatbot Component Props
 
@@ -282,6 +311,9 @@ config: {
 - **onTemplateBtnClick?**: `(payload: Record<string, unknown>, eventName: string, raw: string) => void` - Callback for EMIT button actions. See [EMIT Action](#emit-action) section for details.
 - **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
 - **ref**: `ForwardedRef<ChatbotRef>` - Forwarded ref to access the chatbot instance. It can be used to access the chatbot instance and do some actions like sending messages to the bot. ChatbotRef extends the ref of the chatbot instance and provides some additional methods like `serviceContext.sendMessage` to interact with the chatbot instance.
+
+<a id="theme-configuration"></a>
+<br/>
 
 ### Theme Configuration
 
@@ -523,7 +555,13 @@ const App = () => {
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
 
+<a id="event-handlers"></a>
+<br/>
+
 ## Event Handlers
+
+<a id="tool-call-handler"></a>
+<br/>
 
 ### Tool Call Handler
 
@@ -633,6 +671,9 @@ const handleToolCall = useCallback(
 />;
 ```
 
+<a id="emit-action"></a>
+<br/>
+
 ### EMIT Action
 
 EMIT buttons allow you to handle custom actions in your application. Implement the `onTemplateBtnClick` callback to process these events. See the [EMIT Action documentation](https://www.asgard-ai.com/docs/developer-reference/asgard-builtin/message-template-action-object-emit) for details.
@@ -697,6 +738,9 @@ const handleTemplateBtnClick = useCallback((payload: Record<string, unknown>, ev
 <Chatbot config={config} customChannelId={nanoid()} onTemplateBtnClick={handleTemplateBtnClick} />;
 ```
 
+<a id="testing"></a>
+<br/>
+
 ## Testing
 
 The React package includes comprehensive tests using Vitest and React Testing Library.
@@ -758,6 +802,9 @@ describe('Chatbot Component', () => {
   });
 });
 ```
+
+<a id="development"></a>
+<br/>
 
 ## Development
 
