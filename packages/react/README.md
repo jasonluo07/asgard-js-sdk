@@ -211,7 +211,7 @@ const EmbedApp = () => {
 };
 ```
 
-## Migration from `endpoint` to `botProviderEndpoint`
+## Migration from `endpoint` to `botProviderEndpoint` {#migration-from-endpoint-to-botproviderendpoint}
 
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
 
