@@ -243,6 +243,8 @@ config: {
 
 **Backward Compatibility:** Existing code using `endpoint` will continue to work but may show deprecation warnings when `debugMode` is enabled.
 
+## API Reference
+
 ### Chatbot Component Props
 
 - **title?**: `string` - The title of the chatbot (optional). If not provided, will use the value from the API if available.
@@ -290,6 +292,8 @@ The priority of themes is as follows (high to low):
 1. Theme from props
 2. Theme from annotations from bot provider metadata
 3. Default theme
+
+### Theme Interface
 
 ```typescript
 export interface AsgardThemeContextValue {
@@ -518,6 +522,8 @@ const App = () => {
 ```
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
+
+## Event Handlers
 
 ### Tool Call Handler
 

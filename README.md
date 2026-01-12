@@ -2,6 +2,43 @@
 
 SDK for integrating AI chatbots with the [Asgard AI](https://www.asgard-ai.com) platform.
 
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Choose Your Package](#choose-your-package)
+- [React Package (@asgard-js/react)](./packages/react/README.md)
+  - [Installation](./packages/react/README.md#installation)
+  - [Usage](./packages/react/README.md#usage)
+    - [Basic Usage](./packages/react/README.md#basic-usage)
+    - [File Upload Support](./packages/react/README.md#file-upload-support)
+    - [Conversation Export](./packages/react/README.md#conversation-export)
+    - [API Key Authentication](./packages/react/README.md#api-key-authentication)
+  - [Migration Guide](./packages/react/README.md#migration-from-endpoint-to-botproviderendpoint)
+  - [API Reference](./packages/react/README.md#api-reference)
+    - [Chatbot Component Props](./packages/react/README.md#chatbot-component-props)
+    - [Theme Configuration](./packages/react/README.md#theme-configuration)
+  - [Event Handlers](./packages/react/README.md#event-handlers)
+    - [Tool Call Handler](./packages/react/README.md#tool-call-handler)
+    - [EMIT Action](./packages/react/README.md#emit-action)
+  - [Testing](./packages/react/README.md#testing)
+  - [Development](./packages/react/README.md#development)
+- [Core Package (@asgard-js/core)](./packages/core/README.md)
+  - [Installation](./packages/core/README.md#installation)
+  - [Usage](./packages/core/README.md#usage)
+  - [Migration Guide](./packages/core/README.md#migration-from-endpoint-to-botproviderendpoint)
+  - [API Reference](./packages/core/README.md#api-reference)
+    - [AsgardServiceClient](./packages/core/README.md#asgardserviceclient)
+    - [Channel](./packages/core/README.md#channel)
+    - [Conversation](./packages/core/README.md#conversation)
+    - [File Upload API](./packages/core/README.md#file-upload-api)
+    - [Authentication Types](./packages/core/README.md#authentication-types)
+  - [Testing](./packages/core/README.md#testing)
+  - [Development](./packages/core/README.md#development)
+- [Demo](#demo)
+- [Links](#links)
+
 ## Features
 
 - **Real-time Streaming** - SSE (Server-Sent Events) for instant message delivery
