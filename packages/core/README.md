@@ -68,7 +68,7 @@ client.on('ERROR', error => {
 });
 ```
 
-## Migration from `endpoint` to `botProviderEndpoint` {#migration-from-endpoint-to-botproviderendpoint}
+## Migration from endpoint to botProviderEndpoint
 
 **Important**: The `endpoint` configuration option is deprecated. Use `botProviderEndpoint` instead for simplified configuration.
 
