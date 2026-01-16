@@ -392,6 +392,15 @@ export interface AsgardThemeContextValue {
         style: CSSProperties;
       };
     }>;
+    references?: Partial<{
+      style: CSSProperties;
+      title?: {
+        style: CSSProperties;
+      };
+      item?: {
+        style: CSSProperties;
+      };
+    }>;
     time?: Partial<{
       style: CSSProperties;
     }>;
@@ -477,6 +486,15 @@ const defaultTheme = {
     quickReplies: {
       style: {},
       button: {
+        style: {},
+      },
+    },
+    references: {
+      style: {},
+      title: {
+        style: {},
+      },
+      item: {
         style: {},
       },
     },

@@ -101,11 +101,7 @@ interface TableMessageTemplate {
   "title": "每月銷售額統計",
   "table": {
     "rowType": "ARRAY",
-    "columns": [
-      { "header": "姓名" },
-      { "header": "年齡" },
-      { "header": "建立時間", "format": "DATE_TIME" }
-    ],
+    "columns": [{ "header": "姓名" }, { "header": "年齡" }, { "header": "建立時間", "format": "DATE_TIME" }],
     "pagination": null,
     "data": [
       ["XXX", "30", "2002-10-02T10:00:00-05:00"],
@@ -149,14 +145,14 @@ type VisualizationType = 'DOM_TABLE' | 'VEGA';
 
 ## 結構對照表
 
-| SDK（後端提供）       | Data Insight Web      | 說明                          |
-| --------------------- | --------------------- | ----------------------------- |
-| `columns.key`         | `columns.name`        | 資料存取鍵                    |
-| `columns.header`      | `columns.display_name`| 表頭顯示名稱                  |
-| `columns.format`      | ❌ 無                 | 格式化：DATE/DATE_TIME/CURRENCY |
-| `rowType`             | ❌ 僅 OBJECT          | 支援 OBJECT 和 ARRAY 兩種格式 |
-| `pagination.size`     | 硬編碼 20             | 可配置每頁筆數                |
-| `title`               | 從外部傳入            | 表格標題                      |
+| SDK（後端提供）   | Data Insight Web       | 說明                            |
+| ----------------- | ---------------------- | ------------------------------- |
+| `columns.key`     | `columns.name`         | 資料存取鍵                      |
+| `columns.header`  | `columns.display_name` | 表頭顯示名稱                    |
+| `columns.format`  | ❌ 無                  | 格式化：DATE/DATE_TIME/CURRENCY |
+| `rowType`         | ❌ 僅 OBJECT           | 支援 OBJECT 和 ARRAY 兩種格式   |
+| `pagination.size` | 硬編碼 20              | 可配置每頁筆數                  |
+| `title`           | 從外部傳入             | 表格標題                        |
 
 ---
 
@@ -274,7 +270,7 @@ function formatCellValue(value: unknown, format?: ColumnFormat): string {
     case 'CURRENCY':
       return new Intl.NumberFormat('zh-TW', {
         style: 'currency',
-        currency: 'TWD'
+        currency: 'TWD',
       }).format(value as number);
     default:
       return String(value);
@@ -289,7 +285,7 @@ function getCellValue(
   row: Record<string, unknown> | unknown[],
   column: TableColumn,
   columnIndex: number,
-  rowType: 'OBJECT' | 'ARRAY'
+  rowType: 'OBJECT' | 'ARRAY',
 ): unknown {
   if (rowType === 'ARRAY') {
     return (row as unknown[])[columnIndex];

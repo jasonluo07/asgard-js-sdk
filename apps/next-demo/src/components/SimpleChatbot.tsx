@@ -67,6 +67,7 @@ const initMessages: ConversationMessage[] = [
       },
     },
     time: new Date(),
+    raw: '',
   },
 ];
 
