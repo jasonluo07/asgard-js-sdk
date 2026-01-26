@@ -53,14 +53,18 @@
   gap: 8px;
 }
 
+%reference_item_base {
+  font-size: 0.75em;
+  word-break: break-all;
+  color: inherit;
+}
+
 .reference_item {
+  @extend %reference_item_base;
   border: none;
   background: transparent;
-  color: inherit;
   cursor: pointer;
   text-align: left;
-  word-break: break-all;
-  font-size: 0.75em;
   padding: 0;
   transition: opacity 0.2s;
 
@@ -79,4 +83,8 @@
 
 .reference_link {
   text-decoration: underline;
+}
+
+.reference_item_text {
+  @extend %reference_item_base;
 }
