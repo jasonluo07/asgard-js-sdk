@@ -22,7 +22,6 @@ SDK for integrating AI chatbots with the [Asgard AI](https://www.asgard-ai.com) 
   - [Event Handlers](./packages/react/README.md#event-handlers)
     - [Tool Call Handler](./packages/react/README.md#tool-call-handler)
     - [EMIT Action](./packages/react/README.md#emit-action)
-  - [Testing](./packages/react/README.md#testing)
   - [Development](./packages/react/README.md#development)
 - [Core Package (@asgard-js/core)](./packages/core/README.md)
   - [Installation](./packages/core/README.md#installation)
@@ -34,9 +33,7 @@ SDK for integrating AI chatbots with the [Asgard AI](https://www.asgard-ai.com) 
     - [Conversation](./packages/core/README.md#conversation)
     - [File Upload API](./packages/core/README.md#file-upload-api)
     - [Authentication Types](./packages/core/README.md#authentication-types)
-  - [Testing](./packages/core/README.md#testing)
   - [Development](./packages/core/README.md#development)
-- [Demo](#demo)
 - [Links](#links)
 
 ## Features
@@ -58,15 +55,6 @@ SDK for integrating AI chatbots with the [Asgard AI](https://www.asgard-ai.com) 
 
 - **React** → [@asgard-js/react](./packages/react/README.md)
 - **Other frameworks (Vue, vanilla JS, etc.)** → [@asgard-js/core](./packages/core/README.md)
-
-## Demo
-
-This is an [Nx](https://nx.dev) monorepo. To run demos locally:
-
-```bash
-npm install
-npm run serve:react-demo  # React demo
-```
 
 ## Links
 

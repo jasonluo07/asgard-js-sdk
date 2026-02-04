@@ -825,71 +825,6 @@ messageActions={(message) => {
 }}
 ```
 
-<a id="testing"></a>
-<br/>
-
-## Testing
-
-The React package includes comprehensive tests using Vitest and React Testing Library.
-
-### Running Tests
-
-```sh
-# Run tests once
-npm run test:react
-
-# Run tests in watch mode
-npm run test:react:watch
-
-# Run tests with UI
-npm run test:react:ui
-
-# Run tests with coverage
-npm run test:react:coverage
-```
-
-### Test Structure
-
-Tests are located alongside source files with `.spec.tsx` extensions:
-
-- `src/components/chatbot/chatbot.spec.tsx` - React component tests
-- Test environment: jsdom with React Testing Library
-- Setup file: `src/test-setup.ts` (includes jest-dom)
-- Coverage reports available in `test-output/vitest/coverage/`
-
-### Writing Tests
-
-The package uses Vitest for testing with the following setup:
-
-- TypeScript support
-- jsdom environment for DOM APIs
-- React Testing Library for component testing
-- jest-dom matchers for enhanced assertions
-- ESLint integration
-- Coverage reporting with v8 provider
-
-Example test structure:
-
-```javascript
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { Chatbot } from './chatbot';
-
-describe('Chatbot Component', () => {
-  it('should render without crashing', () => {
-    const config = {
-      botProviderEndpoint: 'https://api.example.com/bot-provider/bp-123',
-      apiKey: 'test-key',
-    };
-
-    const { container } = render(<Chatbot title="Test Chatbot" config={config} customChannelId="test-channel" />);
-
-    expect(container).toBeInTheDocument();
-  });
-});
-```
-
 <a id="development"></a>
 <br/>
 
@@ -913,17 +848,11 @@ You can use the following commands to work with the React package:
 # Lint the React package
 npm run lint:react
 
-# Run tests
-npm run test:react
-
 # Build the package
 npm run build:react
 
 # Watch mode for development
 npm run watch:react
-
-# Run the demo application
-npm run serve:react-demo
 ```
 
 Setup your npm registry token for npm publishing:
