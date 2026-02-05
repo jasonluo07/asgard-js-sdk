@@ -73,6 +73,25 @@ export default class Channel {
       .subscribe(this.statesObserver);
   }
 
+  /**
+   * Resolves payload by executing it if it's a function, otherwise returns as-is.
+   */
+  private resolvePayload(
+    payload: Record<string, unknown> | (() => Record<string, unknown>) | undefined,
+  ): Record<string, unknown> | undefined {
+    if (typeof payload === 'function') {
+      try {
+        return payload();
+      } catch (error) {
+        throw new Error(
+          `Failed to resolve payload function: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    return payload;
+  }
+
   private fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isConnecting$.next(true);
@@ -122,7 +141,7 @@ export default class Channel {
         customChannelId: this.customChannelId,
         customMessageId: this.customMessageId,
         text: payload?.text || '',
-        payload: payload?.payload,
+        payload: this.resolvePayload(payload?.payload),
       },
       options,
     );
@@ -157,7 +176,7 @@ export default class Channel {
         action: FetchSseAction.NONE,
         customChannelId: this.customChannelId,
         customMessageId: messageId,
-        payload: payload?.payload,
+        payload: this.resolvePayload(payload?.payload),
         text,
         blobIds: payload?.blobIds,
       },

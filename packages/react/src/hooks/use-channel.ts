@@ -34,7 +34,7 @@ export interface UseChannelReturn {
   sendMessage?: (
     payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
       Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[]; documentNames?: string[] },
-  ) => void;
+  ) => Promise<void>;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
 }
@@ -134,13 +134,15 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   }, []);
 
   const sendMessage = useCallback(
-    (
+    async (
       payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
         Partial<Pick<FetchSsePayload, 'payload'>> & {
           filePreviewUrls?: string[];
           documentNames?: string[];
         },
-    ) => channel?.sendMessage({ ...payload, customMessageId }),
+    ): Promise<void> => {
+      await channel?.sendMessage({ ...payload, customMessageId });
+    },
     [channel, customMessageId],
   );
 
