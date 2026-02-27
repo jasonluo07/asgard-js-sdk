@@ -305,6 +305,7 @@ config: {
 - **inputPlaceholder**: `string` - Custom placeholder text for the message input field
 - **defaultLinkTarget?**: `'_blank' | '_self' | '_parent' | '_top'` - Default target for opening URIs when not specified by the API. Defaults to `'_blank'` (opens in new tab).
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
+- **onMessageSent?**: `() => void` - Callback fired after a message is successfully sent. Useful for tracking message count or triggering side effects.
 - **onReset**: `() => void` - Callback function when chat is reset
 - **onClose**: `() => void` - Callback function when chat is closed
 - **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`
@@ -312,6 +313,7 @@ config: {
 - **onTemplateBtnClick?**: `(payload: Record<string, unknown>, eventName: string, raw: string) => void` - Callback for EMIT button actions. See [EMIT Action](#emit-action) section for details.
 - **messageActions?**: `(message: ConversationBotMessage) => MessageActionConfig[]` - Function to define which action buttons to display for each bot message. Returns an array of `{ id: string, label: string }` objects. See [Message Actions](#message-actions) section for details.
 - **onMessageAction?**: `(actionId: string, message: ConversationBotMessage) => void` - Callback when a message action button is clicked. Receives the action ID and the associated bot message.
+- **renderHeader?**: `() => ReactNode` - Custom header renderer. When provided, completely replaces the default header. Use `useAsgardContext()` inside the render function to access `resetChannel`, `isResetting`, and other internal state.
 - **renderMessageContent?**: `(props: MessageContentRendererProps) => ReactNode` - Custom renderer for message content. Allows customizing how messages are rendered based on message properties. See [Custom Message Renderer](#custom-message-renderer) section for details.
 - **onBeforeSendMessage?**: `(params: SendMessageParams) => SendMessageParams` - Callback to modify message params before sending. Allows injecting contextual data (payload, metadata) from parent components. See [Before Send Message Hook](#before-send-message-hook) section for details.
 - **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
@@ -1079,6 +1081,62 @@ The injected payload will be included in the SSE request body, allowing your bac
     "currentPage": "topics/create"
   }
 }
+```
+
+<a id="custom-header"></a>
+<br/>
+
+### Custom Header
+
+The `renderHeader` prop allows you to completely replace the default chatbot header with your own implementation. Combined with `onMessageSent` and `onReset`, you can build features like a session message counter.
+
+Use `useAsgardContext()` inside your custom header to access internal state such as `resetChannel` and `isResetting`.
+
+#### Usage Example
+
+```typescript
+import { useState } from 'react';
+import { Chatbot, useAsgardContext } from '@asgard-js/react';
+
+function CustomHeader({ count, onClose }: { count: number; onClose: () => void }) {
+  const { resetChannel, isResetting } = useAsgardContext();
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontWeight: 600 }}>My Chatbot</span>
+        <span style={{ fontSize: '12px' }}>Messages: {count}</span>
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => {
+            if (!isResetting) resetChannel?.();
+          }}
+        >
+          Reset
+        </button>
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+const App = () => {
+  const [count, setCount] = useState(0);
+
+  return (
+    <Chatbot
+      config={{
+        apiKey: 'your-api-key',
+        botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+      }}
+      customChannelId="your-channel-id"
+      onMessageSent={() => setCount(c => c + 1)}
+      onReset={() => setCount(0)}
+      renderHeader={() => <CustomHeader count={count} onClose={() => console.log('closed')} />}
+    />
+  );
+};
 ```
 
 <a id="development"></a>
