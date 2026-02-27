@@ -52,6 +52,12 @@ interface ChatbotProps extends AsgardTemplateContextValue {
 
   /** Callback to modify message params before sending */
   onBeforeSendMessage?: (params: SendMessageParams) => SendMessageParams;
+
+  /** Callback fired after a message has been sent */
+  onMessageSent?: () => void;
+
+  /** Custom header renderer. When provided, replaces the default header entirely. */
+  renderHeader?: () => ReactNode;
 }
 
 export interface ChatbotRef {
@@ -93,6 +99,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     onApiKeySubmit,
     onAuthError,
     onBeforeSendMessage,
+    onMessageSent,
+    renderHeader,
   } = props;
 
   // Render different content based on authState
@@ -205,6 +213,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             onSseMessage={onSseMessage}
             onAuthError={onAuthError}
             onBeforeSendMessage={onBeforeSendMessage}
+            onMessageSent={onMessageSent}
             botTypingPlaceholder={botTypingPlaceholder}
             inputPlaceholder={inputPlaceholder}
             enableUpload={enableUpload}
@@ -212,13 +221,17 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             enableDocumentUpload={enableDocumentUpload}
           >
             <ChatbotContainer fullScreen={fullScreen} className={className} style={style}>
-              <ChatbotHeader
-                title={title}
-                onReset={onReset}
-                onClose={onClose}
-                customActions={customActions}
-                maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-              />
+              {renderHeader ? (
+                renderHeader()
+              ) : (
+                <ChatbotHeader
+                  title={title}
+                  onReset={onReset}
+                  onClose={onClose}
+                  customActions={customActions}
+                  maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+                />
+              )}
               {renderContent()}
             </ChatbotContainer>
           </AsgardServiceContextProvider>
@@ -231,13 +244,17 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
   return (
     <AsgardThemeContextProvider theme={theme}>
       <ChatbotContainer fullScreen={fullScreen} className={className} style={style}>
-        <ChatbotHeader
-          title={title}
-          onReset={onReset}
-          onClose={onClose}
-          customActions={customActions}
-          maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-        />
+        {renderHeader ? (
+          renderHeader()
+        ) : (
+          <ChatbotHeader
+            title={title}
+            onReset={onReset}
+            onClose={onClose}
+            customActions={customActions}
+            maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+          />
+        )}
         {renderContent()}
       </ChatbotContainer>
     </AsgardThemeContextProvider>
