@@ -71,12 +71,16 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   /** Custom header renderer. When provided, replaces the default header entirely. */
   renderHeader?: () => ReactNode;
 
+  /** Custom menu renderer. When provided, renders between chat body and footer. */
+  renderMenu?: () => ReactNode;
+
   /** Whether to automatically reset channel on mount. Defaults to true. When false, the channel is created without sending RESET_CHANNEL, allowing history messages to be preserved via initMessages. */
   autoResetChannel?: boolean;
 }
 
 export interface ChatbotRef {
   serviceContext?: AsgardServiceContextValue;
+  setInputValue?: (value: string) => void;
 }
 
 export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: ForwardedRef<ChatbotRef>): ReactNode {
@@ -116,6 +120,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     onBeforeSendMessage,
     onMessageSent,
     renderHeader,
+    renderMenu,
     autoResetChannel,
   } = props;
 
@@ -251,6 +256,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             >
               <ChatbotBody />
             </AsgardTemplateContextProvider>
+            {renderMenu?.()}
             <ChatbotFooter />
           </>
         );
