@@ -592,7 +592,7 @@ Note: When `fullScreen` prop is set to `true`, the chatbot's width and height wi
 
 ### Tool Call Handler
 
-The `onToolCall` callback allows you to handle tool call events from the bot. This handler is triggered when the bot starts or completes executing a tool call. See the [Tool Call Start documentation](https://www.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-start) and [Tool Call Complete documentation](https://www.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-complete) for details.
+The `onToolCall` callback allows you to handle tool call events from the bot. This handler is triggered when the bot starts or completes executing a tool call. See the [Tool Call Start documentation](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-start) and [Tool Call Complete documentation](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/asgard-tool-call-complete) for details.
 
 The callback receives a `SseResponse` object with one of the following event types:
 
@@ -699,13 +699,13 @@ const handleToolCall = (response: SseResponse<EventType.TOOL_CALL_START | EventT
 
 ### EMIT Action
 
-EMIT buttons allow you to handle custom actions in your application. Implement the `onTemplateBtnClick` callback to process these events. See the [EMIT Action documentation](https://www.asgard-ai.com/docs/developer-reference/asgard-builtin/message-template-action-object-emit) for details.
+EMIT buttons allow you to handle custom actions in your application. Implement the `onTemplateBtnClick` callback to process these events. See the [EMIT Action documentation](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/message-template-action-object-emit) for details.
 
 The callback receives the following parameters:
 
 1. `payload` (optional): Custom data from the button action
 2. `eventName` (required): Event name specified in the button action
-3. `raw` (required): Complete SSE response data as JSON string. Use this when you need information beyond `payload` and `eventName`. Parse it to access additional fields from the original SSE response. See [SSE Response documentation](https://www.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/message-complete) for the complete response structure.
+3. `raw` (required): Complete SSE response data as JSON string. Use this when you need information beyond `payload` and `eventName`. Parse it to access additional fields from the original SSE response. See [SSE Response documentation](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/message-complete) for the complete response structure.
 
 Configure EMIT buttons in your backend SSE response:
 
