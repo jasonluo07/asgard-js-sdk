@@ -54,5 +54,6 @@ test-output
 tasks/
 
 # claude code
+.claude
 .mcp.json
 .playwright-mcp
