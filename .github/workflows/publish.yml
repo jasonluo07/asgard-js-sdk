@@ -9,14 +9,14 @@ on:
 jobs:
   publish:
     if: false # Temporarily disabled
-    runs-on: ubuntu-latest
+    runs-on: action-runner-scale-set
     permissions:
       id-token: write
       contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # for tags
           ref: ci/NO-TICKET-upgrade-nx-to-20.4
@@ -31,7 +31,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org/'
