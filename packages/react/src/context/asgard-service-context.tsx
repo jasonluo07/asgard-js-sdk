@@ -106,7 +106,13 @@ export interface AsgardServiceContextProviderProps {
   onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
   /** Callback fired when SSE connection encounters an error */
   onSseError?: (error: unknown) => void;
-  /** Callback to modify message params before sending */
+  /**
+   * Callback to modify outbound params before they hit the wire. Fires for
+   * both regular `sendMessage` and tool-call consent reply (Allow / Deny on
+   * the consent modal). For consent reply, `params.text` is always `''` and
+   * `params.blobIds` is `undefined` — only the resulting `payload` is
+   * forwarded; `text` / `blobIds` from the return are dropped on that path.
+   */
   onBeforeSendMessage?: (params: SendMessageParams) => SendMessageParams;
   /** Callback fired after a message has been sent */
   onMessageSent?: () => void;
@@ -226,6 +232,31 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     };
   }, [sendMessage, onBeforeSendMessage, onMessageSent]);
 
+  // Consent reply runs through onBeforeSendMessage too, so consumers can use a
+  // single hook to attach session-level payload (e.g. interaction_mode) on
+  // every outbound. The callback is invoked with `text: ''` and the
+  // caller-supplied payload (if any) — only the resulting `payload` is
+  // forwarded; `text`/`blobIds` from the return are ignored on this path.
+  // Side effects inside the callback fire on this path too — branch on
+  // intent (e.g. inspect `params.text === ''`) if they should not.
+  //
+  // Differences from `wrappedSendMessage`:
+  //   - No `onMessageSent` fire: consent reply isn't a user message, so the
+  //     sent-message lifecycle hook should not fire here.
+  //   - No try/catch swallow: the inner `replyToolCallConsents` does not yet
+  //     propagate `onSseError`/`onAuthError` (pre-existing gap), so the
+  //     promise rejection is the only error signal callers get — swallowing
+  //     it would drop errors entirely.
+  const wrappedReplyToolCallConsents: UseChannelReturn['replyToolCallConsents'] = useMemo(() => {
+    if (!replyToolCallConsents) return undefined;
+
+    return async (answers, payload) => {
+      const resolved = onBeforeSendMessage ? onBeforeSendMessage({ text: '', payload }) : { text: '', payload };
+
+      return replyToolCallConsents(answers, resolved.payload);
+    };
+  }, [replyToolCallConsents, onBeforeSendMessage]);
+
   const contextValue = useMemo(
     () => ({
       avatar,
@@ -239,7 +270,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
-      replyToolCallConsents,
+      replyToolCallConsents: wrappedReplyToolCallConsents,
       pendingConsent: conversation?.pendingConsent ?? null,
       botTypingPlaceholder,
       inputPlaceholder,
@@ -268,7 +299,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       wrappedSendMessage,
       resetChannel,
       closeChannel,
-      replyToolCallConsents,
+      wrappedReplyToolCallConsents,
       botTypingPlaceholder,
       inputPlaceholder,
       enableUpload,
