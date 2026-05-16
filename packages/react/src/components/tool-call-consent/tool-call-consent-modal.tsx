@@ -1,6 +1,7 @@
-import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { CSSProperties, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { ToolCallConsentPendingCall } from '@asgard-js/core';
+import { useAsgardThemeContext } from '../../context/asgard-theme-context';
 import { CloseIcon, JsonViewer } from '../templates/tool-call-group/tool-call-group';
 import styles from './tool-call-consent-modal.module.scss';
 
@@ -35,6 +36,37 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
   const [isInputExpanded, setIsInputExpanded] = useState(false);
   const [isDenyMode, setIsDenyMode] = useState(false);
   const [denyReason, setDenyReason] = useState('');
+
+  const { chatbot } = useAsgardThemeContext();
+  const mainColor = chatbot?.primaryComponent?.mainColor ?? chatbot?.mainColor;
+  const secondaryColor = chatbot?.primaryComponent?.secondaryColor ?? chatbot?.secondaryColor;
+  const inactiveColor = chatbot?.inactiveColor;
+  const backgroundColor = chatbot?.backgroundColor;
+  const borderColor = chatbot?.borderColor;
+
+  const themeVars = useMemo<CSSProperties>(
+    () =>
+      ({
+        ...(mainColor && {
+          '--asgard-consent-modal-accent': mainColor,
+          // Darken accent ~15% on hover so the primary button keeps visual feedback
+          '--asgard-consent-modal-accent-hover': `color-mix(in srgb, ${mainColor} 85%, black)`,
+        }),
+        ...(backgroundColor && {
+          '--asgard-consent-modal-bg': backgroundColor,
+          '--asgard-consent-modal-input-bg': backgroundColor,
+        }),
+        ...(borderColor && { '--asgard-consent-modal-border': borderColor }),
+        ...(secondaryColor && { '--asgard-consent-modal-title': secondaryColor }),
+        ...(inactiveColor && { '--asgard-consent-modal-muted': inactiveColor }),
+      } as CSSProperties),
+    [mainColor, backgroundColor, borderColor, secondaryColor, inactiveColor],
+  );
+
+  const primaryButtonStyle = useMemo<CSSProperties>(
+    () => (secondaryColor ? { color: secondaryColor } : {}),
+    [secondaryColor],
+  );
 
   // Reset local state when the active pending call changes
   useEffect(() => {
@@ -75,14 +107,14 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
   );
 
   return (
-    <div className={styles.backdrop} onClick={handleBackdropClick}>
+    <div className={styles.backdrop} onClick={handleBackdropClick} style={themeVars}>
       <div className={styles.modal} role="dialog" aria-modal="true">
         <div className={styles.header}>
           <div className={styles.title}>
-            Allow tool use <span className={styles.title_tool}>&quot;{pendingCall.toolName}&quot;</span>?
+            允許使用工具 <span className={styles.title_tool}>「{pendingCall.toolName}」</span>？
           </div>
           {onDismiss && (
-            <button type="button" className={styles.close_btn} onClick={onDismiss} aria-label="Close">
+            <button type="button" className={styles.close_btn} onClick={onDismiss} aria-label="關閉">
               <CloseIcon />
             </button>
           )}
@@ -91,10 +123,10 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
         <div className={styles.content}>
           <div className={styles.meta_row}>
             <span>
-              Toolset: <strong>{pendingCall.toolsetName}</strong>
+              工具集：<strong>{pendingCall.toolsetName}</strong>
             </span>
             <span>
-              Tool: <strong>{pendingCall.toolName}</strong>
+              工具：<strong>{pendingCall.toolName}</strong>
             </span>
           </div>
 
@@ -105,7 +137,7 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
               onClick={(): void => setIsInputExpanded(prev => !prev)}
             >
               <ChevronRightIcon />
-              <span>Input</span>
+              <span>輸入內容</span>
             </button>
             {isInputExpanded && (
               <div className={styles.input_viewer}>
@@ -116,12 +148,12 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
 
           {isDenyMode && (
             <div className={styles.deny_reason}>
-              <label htmlFor="asgard-consent-deny-reason">Deny reason (optional)</label>
+              <label htmlFor="asgard-consent-deny-reason">拒絕原因（選填）</label>
               <textarea
                 id="asgard-consent-deny-reason"
                 value={denyReason}
                 onChange={(e): void => setDenyReason(e.target.value)}
-                placeholder="Let the assistant know why you are denying this tool call."
+                placeholder="告訴 AI 你為什麼拒絕此次工具呼叫。"
               />
             </div>
           )}
@@ -129,19 +161,24 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
 
         {totalCount > 1 && (
           <div className={styles.pending_indicator}>
-            {currentIndex} / {totalCount} pending tool call{totalCount > 1 ? 's' : ''}
+            {currentIndex} / {totalCount} 個待處理工具呼叫
           </div>
         )}
 
         <div className={styles.actions}>
-          <button type="button" className={clsx(styles.action_btn, styles.action_primary)} onClick={handleAllowAlways}>
-            Allow for This Chat
+          <button
+            type="button"
+            className={clsx(styles.action_btn, styles.action_primary)}
+            style={primaryButtonStyle}
+            onClick={handleAllowAlways}
+          >
+            本次對話皆允許
           </button>
           <button type="button" className={clsx(styles.action_btn, styles.action_secondary)} onClick={handleAllowOnce}>
-            Allow Once
+            僅此次允許
           </button>
           <button type="button" className={clsx(styles.action_btn, styles.action_danger)} onClick={handleDenyClick}>
-            {isDenyMode ? 'Send Deny' : 'Deny'}
+            {isDenyMode ? '送出拒絕' : '拒絕'}
           </button>
         </div>
       </div>
