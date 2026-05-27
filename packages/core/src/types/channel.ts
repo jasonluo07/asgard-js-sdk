@@ -58,6 +58,7 @@ export type ConversationToolCallMessage = {
   processId: string;
   callSeq: number;
   toolName: string;
+  reason?: string;
   toolsetName: string;
   parameter: Record<string, unknown>;
   result?: Record<string, unknown>;
