@@ -103,7 +103,7 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
       <div className={styles.modal} role="dialog" aria-modal="true">
         <div className={styles.header}>
           <div className={styles.title}>
-            允許使用工具 <span className={styles.title_tool}>「{pendingCall.toolName}」</span>？
+            允許使用工具 <span className={styles.title_tool}>「{pendingCall.reason || pendingCall.toolName}」</span>？
           </div>
           {onDismiss && (
             <button type="button" className={styles.close_btn} onClick={onDismiss} aria-label="關閉">
