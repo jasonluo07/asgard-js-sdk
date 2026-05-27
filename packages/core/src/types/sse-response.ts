@@ -196,6 +196,7 @@ export interface ToolCallConsentPendingCall {
   toolName: string;
   parameter: Record<string, unknown>;
   alreadyAllowed: boolean;
+  reason?: string;
 }
 
 export interface ToolCallConsentEventData {
