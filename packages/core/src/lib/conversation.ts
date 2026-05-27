@@ -147,6 +147,7 @@ export default class Conversation implements IConversation {
       processId: toolCallStart.processId,
       callSeq: toolCallStart.callSeq,
       toolName: toolCallStart.toolCall.toolName,
+      reason: toolCallStart.toolCall.reason,
       toolsetName: toolCallStart.toolCall.toolsetName,
       parameter: toolCallStart.toolCall.parameter,
       isComplete: false,

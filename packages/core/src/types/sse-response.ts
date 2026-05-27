@@ -182,6 +182,7 @@ export interface ToolCallBaseEventData {
     toolsetName: string;
     toolName: string;
     parameter: Record<string, unknown>;
+    reason?: string;
   };
 }
 

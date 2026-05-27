@@ -50,7 +50,7 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage): ToolCallItem
 
   return {
     id: toolCall.messageId,
-    label: toolCall.toolName,
+    label: toolCall.reason || toolCall.toolName,
     status,
     initial: {
       toolsetName: toolCall.toolsetName,
