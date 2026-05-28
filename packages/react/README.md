@@ -66,7 +66,6 @@ const App = () => {
         enableLoadConfigFromService={true}
         customChannelId="your-channel-id"
         initMessages={[]}
-        debugMode={false}
         fullScreen={false}
         avatar="https://example.com/avatar.png"
         botTypingPlaceholder="Bot is typing..."
@@ -331,7 +330,7 @@ config: {
 - **renderMessageContent?**: `(props: MessageContentRendererProps) => ReactNode` - Custom renderer for message content. Allows customizing how messages are rendered based on message properties. See [Custom Message Renderer](#custom-message-renderer) section for details.
 - **renderToolCallGroup?**: `(props: ToolCallGroupRendererProps) => ReactNode` - Custom renderer for tool call group. Return `null` to hide, return JSX to fully customize, or call `renderDefaultContent()` to use the default UI with optional overrides (e.g., `renderDefaultContent({ title: 'AI is thinking...' })`). See [Tool Call Group Renderer](#tool-call-group-renderer) section for details.
 - **onBeforeSendMessage?**: `(params: SendMessageParams) => SendMessageParams` - Callback to modify message params before sending. Allows injecting contextual data (payload, metadata) from parent components. See [Before Send Message Hook](#before-send-message-hook) section for details.
-- **onSseMessage**: `(response: SseResponse, ctx: AsgardServiceContextValue) => void` - Callback function when SSE message is received. It would be helpful if using with the ref to provide some context and conversation data and do some proactively actions like sending messages to the bot.
+- **onSseMessage**: `(response: SseResponse, ctx: { conversation: Conversation | null }) => void` - Callback fired on every SSE message. `ctx.conversation` is the conversation state at the time the event fires. Combine with `ref.current.serviceContext.sendMessage` to trigger follow-up messages programmatically.
 - **ref**: `ForwardedRef<ChatbotRef>` - Forwarded ref to access the chatbot instance. It can be used to access the chatbot instance and do some actions like sending messages to the bot. `ChatbotRef` provides `serviceContext` for interacting with the chatbot, and `setInputValue(value: string)` for programmatically setting the textarea text from outside the component.
 
 <a id="theme-configuration"></a>

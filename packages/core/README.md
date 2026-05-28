@@ -246,10 +246,10 @@ const conversation = new Conversation({ messages: new Map() });
 
 // Add a user message
 const userMessage = {
-  id: 'msg-1',
+  messageId: 'msg-1',
   type: 'user',
   text: 'Hello',
-  time: Date.now(),
+  time: new Date(),
 };
 
 const updatedConversation = conversation.pushMessage(userMessage);
