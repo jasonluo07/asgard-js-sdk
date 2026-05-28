@@ -599,6 +599,59 @@ const App = () => {
 
 Note: When `fullScreen` prop is set to `true`, the chatbot's width and height will be set to `100vw` and `100vh` respectively, and `borderRadius` will be set to zero, regardless of theme settings.
 
+<a id="hooks"></a>
+<br/>
+
+## Hooks
+
+<a id="use-asgard-context"></a>
+<br/>
+
+### useAsgardContext()
+
+Returns the internal service context. Use this inside `renderHeader`, `renderFooter`, `renderMenu`, or any component rendered within the Chatbot tree to access runtime state and actions.
+
+```typescript
+import { useAsgardContext } from '@asgard-js/react';
+
+function MyCustomFooter() {
+  const { sendMessage, isConnecting, pendingInputValue, setPendingInputValue } = useAsgardContext();
+  // ...
+}
+```
+
+#### Return Value
+
+**State**
+
+| Property               | Type                                       | Description                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `avatar`               | `string \| undefined`                      | Avatar URL passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                   |
+| `title`                | `string \| undefined`                      | Chatbot title passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                |
+| `isOpen`               | `boolean`                                  | Whether the chatbot is currently open/visible.                                                                                                                                |
+| `isResetting`          | `boolean`                                  | Whether a channel reset is in progress. Use to disable reset buttons during reset.                                                                                            |
+| `isConnecting`         | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button.                                                                                    |
+| `messages`             | `Map<string, ConversationMessage> \| null` | All messages in the current conversation. `null` before the channel is initialized.                                                                                           |
+| `botTypingPlaceholder` | `string \| undefined`                      | Typing indicator text (from props or bot provider metadata).                                                                                                                  |
+| `inputPlaceholder`     | `string \| undefined`                      | Textarea placeholder text (from props or bot provider metadata).                                                                                                              |
+| `enableUpload`         | `boolean \| undefined`                     | Whether image upload is enabled (resolved from props / bot provider metadata).                                                                                                |
+| `enableExport`         | `boolean \| undefined`                     | Whether conversation export is enabled.                                                                                                                                       |
+| `enableDocumentUpload` | `boolean \| undefined`                     | Whether document upload is enabled.                                                                                                                                           |
+| `isFollowingLatest`    | `boolean`                                  | Whether auto-scroll to the latest message is active. Becomes `false` when the user scrolls up.                                                                                |
+| `pendingInputValue`    | `string \| null`                           | Text waiting to be filled into the textarea. Set by `ChatbotRef.setInputValue()` or by `renderMenu`. Read and clear this in `renderFooter` to receive externally pushed text. |
+
+**Actions**
+
+| Property                     | Type                                                          | Description                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined` | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`. |
+| `resetChannel`               | `(() => void) \| undefined`                                   | Reset the channel (triggers a new welcome message from the bot).                                                                  |
+| `closeChannel`               | `(() => void) \| undefined`                                   | Close the SSE connection without resetting.                                                                                       |
+| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                         | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                     |
+| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                         | Scroll to bottom without affecting `isFollowingLatest`.                                                                           |
+| `setFollowingLatest`         | `(value: boolean) => void`                                    | Manually set auto-scroll state.                                                                                                   |
+| `setPendingInputValue`       | `(value: string \| null) => void`                             | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                      |
+
 <a id="event-handlers"></a>
 <br/>
 
