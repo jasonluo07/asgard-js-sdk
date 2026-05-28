@@ -295,6 +295,7 @@ config: {
 - **enableLoadConfigFromService?**: `boolean` - Enable loading configuration from service
 - **enableUpload?**: `boolean` - Enable file upload functionality. When set, it takes priority over the `embedConfig.enableUpload` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Supports image files (JPEG, PNG, GIF, WebP) up to 20MB per file, maximum 10 files at once.
 - **enableExport?**: `boolean` - Enable conversation export functionality. When set, it takes priority over the `embedConfig.enableExport` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Adds a download button to the chatbot footer that exports the conversation history as a Markdown file with timestamps and trace IDs.
+- **enableDocumentUpload?**: `boolean` - Enable document file upload functionality. When enabled, users can attach document files to messages. The container-level drag-and-drop overlay is also activated. Defaults to `false`.
 - **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
 - **asyncInitializers?**: `Record<string, () => Promise<unknown>>` - Asynchronous initializers for app initialization before rendering any component. Good for loading data or other async operations as the initial state. It only works when `enableLoadConfigFromService` is set to `true`.
@@ -305,6 +306,8 @@ config: {
 - **botTypingPlaceholder**: `string` - Text to display while the bot is typing
 - **inputPlaceholder**: `string` - Custom placeholder text for the message input field
 - **defaultLinkTarget?**: `'_blank' | '_self' | '_parent' | '_top'` - Default target for opening URIs when not specified by the API. Defaults to `'_blank'` (opens in new tab).
+- **className?**: `string` - Custom CSS class name applied to the chatbot container element.
+- **style?**: `CSSProperties` - Custom inline styles applied to the chatbot container element.
 - **theme**: `Partial<AsgardThemeContextValue>` - Custom theme configuration
 - **autoResetChannel?**: `boolean` - Whether to automatically reset channel on mount. Defaults to `true`. When set to `false`, the channel is created without sending `RESET_CHANNEL`, preserving history messages loaded via `initMessages`. See [Auto Reset Channel](#auto-reset-channel) section for details.
 - **userIdentityHint?**: `string` - Optional user identity hint. When provided, all requests (SSE and file upload) will include the `X-ASGARD-USER-IDENTITY-HINT` header with this value.
@@ -314,6 +317,10 @@ config: {
 - **onClose**: `() => void` - Callback function when chat is closed
 - **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`
 - **onApiKeySubmit?**: `(apiKey: string) => Promise<void>` - Callback function when user submits API key for authentication
+- **onAuthError?**: `(error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void` - Callback fired when authentication or bot provider initialization fails. Useful for logging or showing a custom error UI.
+- **onSseError?**: `(error: unknown) => void` - Callback fired when the SSE connection encounters an error.
+- **onErrorClick?**: `(message: ConversationErrorMessage) => void` - Callback fired when the user clicks on an error message bubble. Useful for retry or diagnostic flows.
+- **errorMessageRenderer?**: `(message: ConversationErrorMessage) => ReactNode` - Custom renderer for error message bubbles. When provided, completely replaces the default error UI.
 - **onTemplateBtnClick?**: `(payload: Record<string, unknown>, eventName: string, raw: string) => void` - Callback for EMIT button actions. See [EMIT Action](#emit-action) section for details.
 - **messageActions?**: `(message: ConversationBotMessage) => MessageActionConfig[]` - Function to define which action buttons to display for each bot message. Returns an array of `{ id: string, label: string }` objects. See [Message Actions](#message-actions) section for details.
 - **onMessageAction?**: `(actionId: string, message: ConversationBotMessage) => void` - Callback when a message action button is clicked. Receives the action ID and the associated bot message.
@@ -435,6 +442,7 @@ export interface AsgardThemeContextValue {
         };
       };
     }>;
+    AttachmentMessageTemplate: Partial<{ style: CSSProperties }>;
 
     // Didn't implement yet
     VideoMessageTemplate: Partial<{ style: CSSProperties }>;
@@ -517,6 +525,9 @@ const defaultTheme = {
       style: {},
     },
     HintMessageTemplate: {
+      style: {},
+    },
+    AttachmentMessageTemplate: {
       style: {},
     },
     ImageMessageTemplate: {
