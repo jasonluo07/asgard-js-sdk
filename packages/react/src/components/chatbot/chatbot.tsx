@@ -142,6 +142,18 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   /** Whether to automatically reset channel on mount. Defaults to true. When false, the channel is created without sending RESET_CHANNEL, allowing history messages to be preserved via initMessages. */
   autoResetChannel?: boolean;
 
+  /**
+   * When true, the in-flight SSE run is kept alive when the chatbot unmounts
+   * (e.g. the user navigates to another in-app page) instead of being aborted,
+   * so that round can finish on the backend. The detached connection cleans
+   * itself up once the run completes, or after a safety timeout if the run
+   * never finishes. Defaults to false — other SDK consumers are unaffected.
+   *
+   * Note: this only covers in-app unmounts. A full page reload / tab close /
+   * network loss still tears the connection down, since the page itself is gone.
+   */
+  keepConnectionOnUnmount?: boolean;
+
   /** Optional user identity hint. When provided, all requests will include the `X-ASGARD-USER-IDENTITY-HINT` header. */
   userIdentityHint?: string;
 }
@@ -195,6 +207,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     renderFooter,
     renderToolCallGroup,
     autoResetChannel,
+    keepConnectionOnUnmount = false,
     userIdentityHint,
   } = props;
 
@@ -376,6 +389,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             enableExport={enableExport}
             enableDocumentUpload={enableDocumentUpload}
             autoResetChannel={autoResetChannel}
+            keepConnectionOnUnmount={keepConnectionOnUnmount}
           >
             <FileDropContextProvider>
               <FileDropRefConnector fileDropRef={fileDropRef} />

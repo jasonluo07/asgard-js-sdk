@@ -119,6 +119,11 @@ export interface AsgardServiceContextProviderProps {
   /** Whether to automatically reset channel on mount. Defaults to true. */
   autoResetChannel?: boolean;
   /**
+   * When true, the in-flight SSE run is kept alive on unmount instead of being
+   * aborted, so it can finish on the backend. Defaults to false.
+   */
+  keepConnectionOnUnmount?: boolean;
+  /**
    * Fired once the chat channel is ready to accept messages. Re-fires after
    * channel reset.
    */
@@ -145,6 +150,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     onBeforeSendMessage,
     onMessageSent,
     autoResetChannel,
+    keepConnectionOnUnmount,
     onChannelReady,
   } = props;
 
@@ -188,7 +194,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     [scrollContainerToBottom],
   );
 
-  const client = useAsgardServiceClient({ config });
+  const client = useAsgardServiceClient({ config, keepConnectionOnUnmount });
 
   const {
     isOpen,
