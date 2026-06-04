@@ -6,6 +6,7 @@ import {
   SseResponse,
   SseEvents,
   BlobUploadResponse,
+  CwdDownloadResult,
 } from '../types';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
@@ -246,13 +247,68 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   }
 
   /**
+   * 下載 channel sandbox 工作目錄裡的檔案（cwd:// URI action）。
+   * 呼叫 Edge Server GET <base>/cwd/download?custom_channel_id=xxx&relative_path=xxx 取回 binary。
+   */
+  async downloadCwdFile(relativePath: string, customChannelId: string): Promise<CwdDownloadResult> {
+    const baseEndpoint = this.getBaseEndpoint();
+
+    if (!baseEndpoint) {
+      throw new Error('Unable to derive cwd download endpoint. Please provide botProviderEndpoint in config.');
+    }
+
+    const query =
+      `custom_channel_id=${encodeURIComponent(customChannelId)}` + `&relative_path=${encodeURIComponent(relativePath)}`;
+    const url = `${baseEndpoint}/cwd/download?${query}`;
+
+    const headers: HeadersInit = {
+      ...this.customHeaders,
+    };
+    if (this.apiKey) {
+      headers['X-API-KEY'] = this.apiKey;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(`CWD download failed: ${response.status} ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      // 後端送的 relative_path 是未編碼的原字串，basename 即下載檔名（不做 decode）。
+      const filename = relativePath.split('/').pop() || 'download';
+
+      if (this.debugMode) {
+        // eslint-disable-next-line no-console
+        console.log('[AsgardServiceClient] CWD download response:', { filename, size: blob.size });
+      }
+
+      return { blob, filename };
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[AsgardServiceClient] CWD download error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 從 botProviderEndpoint 衍生 Blob API endpoint
    */
   private deriveBlobEndpoint(): string | null {
-    if (!this.botProviderEndpoint && !this.endpoint) {
-      return null;
-    }
+    const baseEndpoint = this.getBaseEndpoint();
 
+    return baseEndpoint ? `${baseEndpoint}/blob` : null;
+  }
+
+  /**
+   * 衍生 bot provider 的 base endpoint（不含子路徑）。
+   * 優先用 botProviderEndpoint；若只有 deprecated 的 endpoint 則反推（移除 /message/sse）。已去除尾部斜線。
+   */
+  private getBaseEndpoint(): string | null {
     let baseEndpoint = this.botProviderEndpoint;
 
     // 如果沒有 botProviderEndpoint，嘗試從 endpoint 反推
@@ -265,8 +321,6 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     }
 
     // 移除尾部斜線
-    baseEndpoint = baseEndpoint.replace(/\/+$/, '');
-
-    return `${baseEndpoint}/blob`;
+    return baseEndpoint.replace(/\/+$/, '');
   }
 }
