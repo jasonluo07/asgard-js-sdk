@@ -1,0 +1,76 @@
+.keepConnection {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 16px 0;
+  }
+
+  p {
+    font-size: 16px;
+    color: #666;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: #4a9eff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+
+  &:hover {
+    background: #3a8eef;
+  }
+}
+
+.steps {
+  max-width: 640px;
+  margin: 0 auto;
+  color: #666;
+  line-height: 1.9;
+
+  code {
+    background: #eef1f5;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 13px;
+  }
+}
+
+.chatbotContainer {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}

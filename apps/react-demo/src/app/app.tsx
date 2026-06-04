@@ -9,6 +9,7 @@ import { Auth } from './routes/auth';
 import { Events } from './routes/events';
 import { Fullscreen } from './routes/fullscreen';
 import { Markdown } from './routes/markdown';
+import { KeepConnection } from './routes/keep-connection';
 import { Private } from './routes/private';
 import { CustomRenderer } from './routes/custom-renderer';
 import { BeforeSendMessage } from './routes/before-send-message';
@@ -39,6 +40,7 @@ export function App(): React.ReactElement {
         <Route path="/events" element={<Events />} />
         <Route path="/fullscreen" element={<Fullscreen />} />
         <Route path="/markdown" element={<Markdown />} />
+        <Route path="/keep-connection" element={<KeepConnection />} />
         <Route path="/private" element={<Private />} />
         <Route path="/custom-renderer" element={<CustomRenderer />} />
         <Route path="/before-send-message" element={<BeforeSendMessage />} />
