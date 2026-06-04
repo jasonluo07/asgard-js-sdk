@@ -3,9 +3,15 @@ import { SseResponse, ToolCallConsentAnswer } from './sse-response';
 import { EventHandler } from './event-emitter';
 import { BlobUploadResponse } from './blob';
 
+export interface CwdDownloadResult {
+  blob: Blob;
+  filename: string;
+}
+
 export interface IAsgardServiceClient {
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
   uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
+  downloadCwdFile?(relativePath: string, customChannelId: string): Promise<CwdDownloadResult>;
 }
 
 export type InitEventHandler = EventHandler<SseResponse<EventType.INIT>>;

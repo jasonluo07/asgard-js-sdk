@@ -4,6 +4,7 @@ import { ButtonAction, ButtonMessageTemplate, CarouselMessageTemplate } from '@a
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
+import { isCwdUri, downloadCwdUri } from '../../../utils/cwd-download';
 import clsx from 'clsx';
 
 interface CardProps {
@@ -26,7 +27,7 @@ interface CardProps {
 export function Card(props: CardProps): ReactNode {
   const { template, raw, customStyle } = props;
 
-  const { sendMessage } = useAsgardContext();
+  const { sendMessage, client, customChannelId } = useAsgardContext();
   const { onTemplateBtnClick, defaultLinkTarget } = useAsgardTemplateContext();
 
   const [imageError, setImageError] = useState(false);
@@ -60,6 +61,14 @@ export function Card(props: CardProps): ReactNode {
 
           case 'uri':
           case 'URI':
+            if (isCwdUri(action.uri)) {
+              if (client && customChannelId) {
+                void downloadCwdUri(client, customChannelId, action.uri);
+              }
+
+              return;
+            }
+
             safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
 
             return;
@@ -73,7 +82,7 @@ export function Card(props: CardProps): ReactNode {
         }
       };
     },
-    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw],
+    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw, client, customChannelId],
   );
 
   return (

@@ -5,6 +5,7 @@ import DownloadSvg from '../../../icons/download.svg?react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
+import { isCwdUri, downloadCwdUri } from '../../../utils/cwd-download';
 import styles from './attachment-template.module.scss';
 
 interface AttachmentChipProps {
@@ -25,7 +26,7 @@ interface AttachmentChipProps {
 export function AttachmentChip(props: AttachmentChipProps): ReactNode {
   const { title, text, defaultAction, downloadAction, raw, customStyle } = props;
 
-  const { sendMessage } = useAsgardContext();
+  const { sendMessage, client, customChannelId } = useAsgardContext();
   const { onTemplateBtnClick, defaultLinkTarget } = useAsgardTemplateContext();
 
   const dispatchAction = useCallback(
@@ -38,6 +39,14 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
           return;
         case 'uri':
         case 'URI':
+          if (isCwdUri(action.uri)) {
+            if (client && customChannelId) {
+              void downloadCwdUri(client, customChannelId, action.uri);
+            }
+
+            return;
+          }
+
           safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
 
           return;
@@ -50,7 +59,7 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
           return;
       }
     },
-    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw],
+    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw, client, customChannelId],
   );
 
   const handleChipClick = useCallback(() => {
@@ -80,9 +89,12 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
     [dispatchAction, downloadAction],
   );
 
-  const showDownloadIcon =
+  const isDownloadEmit =
     (downloadAction?.type === 'emit' || downloadAction?.type === 'EMIT') &&
     downloadAction.eventName === 'download_file';
+  const isDownloadCwd =
+    (downloadAction?.type === 'uri' || downloadAction?.type === 'URI') && isCwdUri(downloadAction.uri);
+  const showDownloadIcon = isDownloadEmit || isDownloadCwd;
 
   return (
     <div
