@@ -18,6 +18,10 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   private botProviderEndpoint?: string;
   private debugMode?: boolean;
   private destroy$ = new Subject<void>();
+  private closed = false;
+  private detached = false;
+  private detachTimer?: ReturnType<typeof setTimeout>;
+  private inFlight = 0;
   private sseEmitter = new EventEmitter<SseEvents>();
   private transformSsePayload?: (payload: FetchSsePayload) => FetchSsePayload;
   private customHeaders?: Record<string, string>;
@@ -105,6 +109,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
     options?.onSseStart?.();
+    this.inFlight += 1;
 
     createSseObservable({
       apiKey: this.apiKey,
@@ -120,19 +125,74 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       )
       .subscribe({
         next: response => {
+          // Once detached the connection is kept open only so the backend can
+          // finish the run; the owning component is gone, so stop notifying it.
+          if (this.detached) return;
+
           options?.onSseMessage?.(response);
           this.handleEvent(response);
         },
         error: error => {
-          options?.onSseError?.(error);
+          if (!this.detached) options?.onSseError?.(error);
+
+          this.onRunSettled();
         },
         complete: () => {
-          options?.onSseCompleted?.();
+          if (!this.detached) options?.onSseCompleted?.();
+
+          this.onRunSettled();
         },
       });
   }
 
+  /**
+   * Detach the client from its owning component without aborting in-flight SSE
+   * runs. Used when a chatbot unmounts (e.g. the user navigates to another
+   * in-app page) but the current run should be allowed to finish on the
+   * backend instead of being cut off. After detaching, the stream is still
+   * drained to keep the connection open but consumer callbacks no longer fire.
+   *
+   * The connection cleans itself up in all cases:
+   * - No run in flight → close immediately (nothing to keep alive).
+   * - Runs in flight → close once they all settle (`onRunSettled`), so the
+   *   client never lingers past the work it is keeping alive.
+   * - A run gets stuck (stream stays open, no `run.done`/error) → the safety
+   *   timeout force-closes it so the orphaned connection cannot leak.
+   */
+  detach(options: { timeoutMs: number }): void {
+    if (this.detached || this.closed) return;
+
+    this.detached = true;
+
+    if (this.inFlight === 0) {
+      this.close();
+
+      return;
+    }
+
+    this.detachTimer = setTimeout(() => this.close(), options.timeoutMs);
+  }
+
+  private onRunSettled(): void {
+    this.inFlight = Math.max(0, this.inFlight - 1);
+
+    // Close only once every kept run has finished, so one run settling never
+    // tears down another that is still streaming on the same client.
+    if (this.detached && this.inFlight === 0) {
+      this.close();
+    }
+  }
+
   close(): void {
+    if (this.closed) return;
+
+    this.closed = true;
+
+    if (this.detachTimer) {
+      clearTimeout(this.detachTimer);
+      this.detachTimer = undefined;
+    }
+
     this.destroy$.next();
     this.destroy$.complete();
   }
