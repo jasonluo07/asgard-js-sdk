@@ -201,7 +201,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     const element = event.target as HTMLTextAreaElement;
     const value = element.value;
 
-    element.style.height = '36px';
+    element.style.height = '40px';
 
     if (value) {
       element.style.height = `${element.scrollHeight}px`;
@@ -283,7 +283,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
       setUploadableDocuments([]);
 
       if (textareaRef.current) {
-        textareaRef.current.style.height = '36px';
+        textareaRef.current.style.height = '40px';
       }
     }
   }, [isComposing, isConnecting, sendMessage, value, uploadableImages, uploadableDocuments]);
@@ -554,7 +554,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     setPendingInputValue(null);
 
     if (textareaRef.current) {
-      textareaRef.current.style.height = '36px';
+      textareaRef.current.style.height = '40px';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
       textareaRef.current.focus();
     }
