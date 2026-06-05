@@ -101,6 +101,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   // 檢查是否有圖片正在上傳
   const isImageUploading = useMemo(
@@ -197,18 +198,41 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     };
   }, [isMenuOpen]);
 
-  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(event => {
-    const element = event.target as HTMLTextAreaElement;
-    const value = element.value;
+  // 依 chatbot 容器高度動態計算 textarea 高度上限（容器高度的 40%，下限 96px），
+  // 超過上限時改用捲軸而非裁切。
+  const adjustTextareaHeight = useCallback((element: HTMLTextAreaElement): void => {
+    const containerHeight = footerRef.current?.parentElement?.clientHeight ?? 0;
+    const maxHeight = containerHeight > 0 ? Math.max(96, Math.round(containerHeight * 0.4)) : 240;
 
-    element.style.height = '36px';
-
-    if (value) {
-      element.style.height = `${element.scrollHeight}px`;
-    }
-
-    setValue(event.target.value);
+    element.style.height = '40px';
+    element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`;
+    element.style.overflowY = element.scrollHeight > maxHeight ? 'auto' : 'hidden';
   }, []);
+
+  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
+    event => {
+      const element = event.target as HTMLTextAreaElement;
+
+      adjustTextareaHeight(element);
+      setValue(element.value);
+    },
+    [adjustTextareaHeight],
+  );
+
+  // chatbot 容器高度變動（全螢幕切換、視窗縮放等）時，重新套用動態上限。
+  useEffect(() => {
+    const container = footerRef.current?.parentElement;
+
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      if (textareaRef.current) adjustTextareaHeight(textareaRef.current);
+    });
+
+    observer.observe(container);
+
+    return (): void => observer.disconnect();
+  }, [adjustTextareaHeight]);
 
   // 控制 textarea 的 focused 狀態，用於觸發 CSS 動畫防止 iOS scroll chaining
   const [isTextareaFocused, setIsTextareaFocused] = useState(false);
@@ -283,7 +307,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
       setUploadableDocuments([]);
 
       if (textareaRef.current) {
-        textareaRef.current.style.height = '36px';
+        textareaRef.current.style.height = '40px';
+        textareaRef.current.style.overflowY = 'hidden';
       }
     }
   }, [isComposing, isConnecting, sendMessage, value, uploadableImages, uploadableDocuments]);
@@ -292,6 +317,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     event => {
       if (
         event.key === 'Enter' &&
+        !event.shiftKey &&
         !isComposing &&
         !isConnecting &&
         (value.trim() || uploadableImages.length > 0 || uploadableDocuments.length > 0)
@@ -553,11 +579,10 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     setPendingInputValue(null);
 
     if (textareaRef.current) {
-      textareaRef.current.style.height = '36px';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      adjustTextareaHeight(textareaRef.current);
       textareaRef.current.focus();
     }
-  }, [pendingInputValue, setPendingInputValue]);
+  }, [pendingInputValue, setPendingInputValue, adjustTextareaHeight]);
 
   const handleDownloadClick = useCallback(async () => {
     if (!messages) {
@@ -592,7 +617,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   }, [chatbot.footer?.textArea]);
 
   return (
-    <div className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
+    <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
       {enableUpload && uploadableImages.length > 0 && (
         <div
           className={styles.file_preview_container}
