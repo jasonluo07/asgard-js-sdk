@@ -292,6 +292,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     event => {
       if (
         event.key === 'Enter' &&
+        !event.shiftKey &&
         !isComposing &&
         !isConnecting &&
         (value.trim() || uploadableImages.length > 0 || uploadableDocuments.length > 0)
