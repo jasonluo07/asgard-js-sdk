@@ -29,31 +29,53 @@ interface StreamdownClientProps {
   children: string;
 }
 
+interface LoadedStreamdown {
+  Component: React.ComponentType<StreamdownProps>;
+  remarkPlugins: unknown[];
+}
+
 export function StreamdownClient({ children }: StreamdownClientProps): ReactNode {
-  const [StreamdownComponent, setStreamdownComponent] = useState<React.ComponentType<StreamdownProps> | null>(null);
+  const [loaded, setLoaded] = useState<LoadedStreamdown | null>(null);
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
     loadKatexCss();
 
+    let cancelled = false;
+
     const loadStreamdown = async (): Promise<void> => {
       try {
-        const { Streamdown } = await import('streamdown');
-        setStreamdownComponent(() => Streamdown as unknown as React.ComponentType<StreamdownProps>);
+        const { Streamdown, defaultRemarkPlugins } = await import('streamdown');
+
+        if (cancelled) return;
+
+        // Streamdown 的 remarkPlugins prop 會整組覆蓋掉預設外掛，所以必須把預設
+        // 外掛（remark-gfm 表格、remark-math、remark-cjk-friendly…）spread 回來，
+        // 再把 remark-breaks 接在最後。
+        setLoaded({
+          Component: Streamdown as unknown as React.ComponentType<StreamdownProps>,
+          remarkPlugins: [...Object.values(defaultRemarkPlugins), remarkBreaks],
+        });
       } catch {
-        setError(true);
+        if (!cancelled) setError(true);
       }
     };
 
     loadStreamdown();
+
+    return (): void => {
+      cancelled = true;
+    };
   }, []);
 
-  if (error || !StreamdownComponent) {
+  if (error || !loaded) {
     return children;
   }
 
+  const { Component: StreamdownComponent, remarkPlugins } = loaded;
+
   return (
-    <StreamdownComponent components={streamdownComponents} remarkPlugins={[remarkBreaks]}>
+    <StreamdownComponent components={streamdownComponents} remarkPlugins={remarkPlugins}>
       {children}
     </StreamdownComponent>
   );
