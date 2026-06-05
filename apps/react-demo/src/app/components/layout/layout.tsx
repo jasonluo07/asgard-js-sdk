@@ -16,6 +16,7 @@ const navItems = [
   { to: '/events', label: 'Events' },
   { to: '/fullscreen', label: 'Fullscreen' },
   { to: '/markdown', label: 'Markdown' },
+  { to: '/markdown-table', label: 'Markdown Table' },
   { to: '/keep-connection', label: 'Keep Connection' },
   { to: '/custom-renderer', label: 'Custom Renderer' },
   { to: '/before-send-message', label: 'Before Send Message' },

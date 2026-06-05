@@ -9,6 +9,7 @@ import { Auth } from './routes/auth';
 import { Events } from './routes/events';
 import { Fullscreen } from './routes/fullscreen';
 import { Markdown } from './routes/markdown';
+import { MarkdownTable } from './routes/markdown-table';
 import { KeepConnection } from './routes/keep-connection';
 import { Private } from './routes/private';
 import { CustomRenderer } from './routes/custom-renderer';
@@ -41,6 +42,7 @@ export function App(): React.ReactElement {
         <Route path="/events" element={<Events />} />
         <Route path="/fullscreen" element={<Fullscreen />} />
         <Route path="/markdown" element={<Markdown />} />
+        <Route path="/markdown-table" element={<MarkdownTable />} />
         <Route path="/keep-connection" element={<KeepConnection />} />
         <Route path="/private" element={<Private />} />
         <Route path="/custom-renderer" element={<CustomRenderer />} />
