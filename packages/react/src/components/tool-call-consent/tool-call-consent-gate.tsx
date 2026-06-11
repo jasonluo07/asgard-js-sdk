@@ -26,7 +26,7 @@ function toolKey(toolsetName: string, toolName: string): string {
  *      ALLOW_ALWAYS across batches, so this set is scoped per batch only.
  */
 export function ToolCallConsentGate(): ReactNode {
-  const { pendingConsent, replyToolCallConsents } = useAsgardContext();
+  const { pendingConsent, replyToolCallConsents, client } = useAsgardContext();
 
   const [queue, setQueue] = useState<QueueState | null>(null);
   const allowAlwaysSetRef = useRef<Set<string>>(new Set());
@@ -61,6 +61,14 @@ export function ToolCallConsentGate(): ReactNode {
 
       submittingProcessIdRef.current = submittedProcessId;
       try {
+        if (client?.debugMode) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `[consent] 送出 RESPONSE_TOOL_CALL_CONSENT · pid=${submittedProcessId} · ${answers.length} 筆 →`,
+            answers.map(a => `${a.toolCallId}:${a.result}`),
+          );
+        }
+
         await replyToolCallConsents?.(answers);
       } finally {
         // Release the in-flight marker so future batches (including a re-emitted
@@ -82,7 +90,7 @@ export function ToolCallConsentGate(): ReactNode {
         });
       }
     },
-    [replyToolCallConsents],
+    [replyToolCallConsents, client],
   );
 
   // Auto-advance through calls that do not require user interaction
@@ -123,48 +131,56 @@ export function ToolCallConsentGate(): ReactNode {
     }
   }, [queue, submit]);
 
-  const handleDecide = useCallback((decision: ToolCallConsentDecision) => {
-    setQueue(prev => {
-      if (!prev) return prev;
-
-      const head = prev.remaining[0];
-      if (!head) return prev;
-
-      let answer: ToolCallConsentAnswer;
-      switch (decision.result) {
-        case 'ALLOW_ALWAYS':
-          allowAlwaysSetRef.current.add(toolKey(head.toolsetName, head.toolName));
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.ALLOW_ALWAYS,
-            denyReason: '',
-          };
-
-          break;
-        case 'DENY_ONCE':
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.DENY_ONCE,
-            denyReason: decision.denyReason,
-          };
-
-          break;
-        case 'ALLOW_ONCE':
-        default:
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.ALLOW_ONCE,
-            denyReason: '',
-          };
+  const handleDecide = useCallback(
+    (decision: ToolCallConsentDecision) => {
+      if (client?.debugMode) {
+        // eslint-disable-next-line no-console
+        console.log(`[consent] 按下按鈕 → ${decision.result}`);
       }
 
-      return {
-        ...prev,
-        remaining: prev.remaining.slice(1),
-        answers: [...prev.answers, answer],
-      };
-    });
-  }, []);
+      setQueue(prev => {
+        if (!prev) return prev;
+
+        const head = prev.remaining[0];
+        if (!head) return prev;
+
+        let answer: ToolCallConsentAnswer;
+        switch (decision.result) {
+          case 'ALLOW_ALWAYS':
+            allowAlwaysSetRef.current.add(toolKey(head.toolsetName, head.toolName));
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.ALLOW_ALWAYS,
+              denyReason: '',
+            };
+
+            break;
+          case 'DENY_ONCE':
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.DENY_ONCE,
+              denyReason: decision.denyReason,
+            };
+
+            break;
+          case 'ALLOW_ONCE':
+          default:
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.ALLOW_ONCE,
+              denyReason: '',
+            };
+        }
+
+        return {
+          ...prev,
+          remaining: prev.remaining.slice(1),
+          answers: [...prev.answers, answer],
+        };
+      });
+    },
+    [client],
+  );
 
   if (!queue) return null;
 

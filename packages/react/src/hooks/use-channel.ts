@@ -241,6 +241,13 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   const replyToolCallConsents = useCallback(
     async (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']): Promise<void> => {
+      if (client?.debugMode) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[consent] use-channel.replyToolCallConsents · channel=${channel ? 'SET' : 'NULL ← reply 會被丟掉!'}`,
+        );
+      }
+
       await channel?.replyToolCallConsents(
         answers,
         {
@@ -253,7 +260,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         payload,
       );
     },
-    [channel, onSseMessage, conversation],
+    [channel, client, onSseMessage, conversation],
   );
 
   useEffect(() => {

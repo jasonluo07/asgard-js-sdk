@@ -58,6 +58,8 @@ export function ToolCallConsentDemo(): ReactNode {
     () => ({
       botProviderEndpoint: endpoint,
       apiKey,
+      // Surface the SDK's debugMode-gated consent logs in the demo console.
+      debugMode: true,
     }),
     [endpoint, apiKey],
   );
