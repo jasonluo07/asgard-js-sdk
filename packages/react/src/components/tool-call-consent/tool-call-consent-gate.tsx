@@ -30,7 +30,11 @@ export function ToolCallConsentGate(): ReactNode {
 
   const [queue, setQueue] = useState<QueueState | null>(null);
   const allowAlwaysSetRef = useRef<Set<string>>(new Set());
-  const submittingRef = useRef(false);
+  // The processId currently being submitted, or null when idle. Used to stop the
+  // auto-advance effect (which re-runs on every streaming update) from firing
+  // duplicate replies for the same batch — without latching forever: it is
+  // cleared once the submit settles, so later batches can always be replied to.
+  const submittingProcessIdRef = useRef<string | null>(null);
 
   // Initialize queue when a new consent batch arrives
   useEffect(() => {
@@ -40,7 +44,6 @@ export function ToolCallConsentGate(): ReactNode {
       if (prev?.processId === pendingConsent.processId) return prev;
 
       allowAlwaysSetRef.current = new Set();
-      submittingRef.current = false;
 
       return {
         processId: pendingConsent.processId,
@@ -52,12 +55,21 @@ export function ToolCallConsentGate(): ReactNode {
 
   const submit = useCallback(
     async (answers: ToolCallConsentAnswer[], submittedProcessId: string) => {
-      if (submittingRef.current) return;
+      // Already submitting this exact batch — the effect re-fires on every
+      // streaming update, so guard against sending the reply twice.
+      if (submittingProcessIdRef.current === submittedProcessId) return;
 
-      submittingRef.current = true;
+      submittingProcessIdRef.current = submittedProcessId;
       try {
         await replyToolCallConsents?.(answers);
       } finally {
+        // Release the in-flight marker so future batches (including a re-emitted
+        // consent) can be replied to. Only clear it if it still points at this
+        // batch — a newer batch may have started submitting in the meantime.
+        if (submittingProcessIdRef.current === submittedProcessId) {
+          submittingProcessIdRef.current = null;
+        }
+
         // A new batch may arrive mid-submit (backend can emit the next
         // consent event in the same SSE stream). Only clear state if the
         // queue still belongs to the batch we just submitted.

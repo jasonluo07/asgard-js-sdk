@@ -122,6 +122,11 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           },
           onSseError(error) {
             setIsResetting(false);
+            // The channel was adopted early (see onChannelCreated below). Reset
+            // failed and Channel.reset will close it, so drop it from state —
+            // otherwise later sends no-op against a dead channel and the
+            // `!channel && isOpen` reset-retry effect can never re-fire.
+            setChannel(null);
             // Handle authentication and bot provider errors
             if (error && typeof error === 'object' && ('isAuthError' in error || 'isBotProviderError' in error)) {
               onAuthError?.(
@@ -141,6 +146,10 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             });
           },
         },
+        // Adopt the channel as soon as it exists — before the RESET_CHANNEL run
+        // completes — so a tool_call.consent emitted during reset can be replied
+        // to (otherwise `channel` is still null and the reply is dropped).
+        setChannel,
       );
 
       setIsOpen(true);

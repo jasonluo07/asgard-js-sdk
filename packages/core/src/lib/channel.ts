@@ -59,11 +59,18 @@ export default class Channel {
     config: ChannelConfig,
     payload?: Pick<FetchSsePayload, 'text' | 'payload'>,
     options?: FetchSseOptions,
+    onChannelCreated?: (channel: Channel) => void,
   ): Promise<Channel> {
     const channel = new Channel(config);
 
     try {
       channel.subscribe();
+
+      // Expose the channel before the RESET_CHANNEL run finishes. The backend
+      // can emit a tool_call.consent *during* this run (before run.done), so a
+      // reply submitted while the modal is up must reach a non-null channel —
+      // otherwise the consent answer is silently dropped.
+      onChannelCreated?.(channel);
 
       await channel.resetChannel(payload, options);
 
