@@ -122,6 +122,11 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           },
           onSseError(error) {
             setIsResetting(false);
+            // The channel was adopted early (see onChannelCreated below). Reset
+            // failed and Channel.reset will close it, so drop it from state —
+            // otherwise later sends no-op against a dead channel and the
+            // `!channel && isOpen` reset-retry effect can never re-fire.
+            setChannel(null);
             // Handle authentication and bot provider errors
             if (error && typeof error === 'object' && ('isAuthError' in error || 'isBotProviderError' in error)) {
               onAuthError?.(
@@ -141,6 +146,10 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             });
           },
         },
+        // Adopt the channel as soon as it exists — before the RESET_CHANNEL run
+        // completes — so a tool_call.consent emitted during reset can be replied
+        // to (otherwise `channel` is still null and the reply is dropped).
+        setChannel,
       );
 
       setIsOpen(true);
@@ -232,6 +241,13 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
   const replyToolCallConsents = useCallback(
     async (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']): Promise<void> => {
+      if (client?.debugMode) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[consent] use-channel.replyToolCallConsents · channel=${channel ? 'SET' : 'NULL ← reply 會被丟掉!'}`,
+        );
+      }
+
       await channel?.replyToolCallConsents(
         answers,
         {
@@ -244,7 +260,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         payload,
       );
     },
-    [channel, onSseMessage, conversation],
+    [channel, client, onSseMessage, conversation],
   );
 
   useEffect(() => {

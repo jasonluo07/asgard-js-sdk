@@ -26,11 +26,15 @@ function toolKey(toolsetName: string, toolName: string): string {
  *      ALLOW_ALWAYS across batches, so this set is scoped per batch only.
  */
 export function ToolCallConsentGate(): ReactNode {
-  const { pendingConsent, replyToolCallConsents } = useAsgardContext();
+  const { pendingConsent, replyToolCallConsents, client } = useAsgardContext();
 
   const [queue, setQueue] = useState<QueueState | null>(null);
   const allowAlwaysSetRef = useRef<Set<string>>(new Set());
-  const submittingRef = useRef(false);
+  // The processId currently being submitted, or null when idle. Used to stop the
+  // auto-advance effect (which re-runs on every streaming update) from firing
+  // duplicate replies for the same batch — without latching forever: it is
+  // cleared once the submit settles, so later batches can always be replied to.
+  const submittingProcessIdRef = useRef<string | null>(null);
 
   // Initialize queue when a new consent batch arrives
   useEffect(() => {
@@ -40,7 +44,6 @@ export function ToolCallConsentGate(): ReactNode {
       if (prev?.processId === pendingConsent.processId) return prev;
 
       allowAlwaysSetRef.current = new Set();
-      submittingRef.current = false;
 
       return {
         processId: pendingConsent.processId,
@@ -52,12 +55,29 @@ export function ToolCallConsentGate(): ReactNode {
 
   const submit = useCallback(
     async (answers: ToolCallConsentAnswer[], submittedProcessId: string) => {
-      if (submittingRef.current) return;
+      // Already submitting this exact batch — the effect re-fires on every
+      // streaming update, so guard against sending the reply twice.
+      if (submittingProcessIdRef.current === submittedProcessId) return;
 
-      submittingRef.current = true;
+      submittingProcessIdRef.current = submittedProcessId;
       try {
+        if (client?.debugMode) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `[consent] 送出 RESPONSE_TOOL_CALL_CONSENT · pid=${submittedProcessId} · ${answers.length} 筆 →`,
+            answers.map(a => `${a.toolCallId}:${a.result}`),
+          );
+        }
+
         await replyToolCallConsents?.(answers);
       } finally {
+        // Release the in-flight marker so future batches (including a re-emitted
+        // consent) can be replied to. Only clear it if it still points at this
+        // batch — a newer batch may have started submitting in the meantime.
+        if (submittingProcessIdRef.current === submittedProcessId) {
+          submittingProcessIdRef.current = null;
+        }
+
         // A new batch may arrive mid-submit (backend can emit the next
         // consent event in the same SSE stream). Only clear state if the
         // queue still belongs to the batch we just submitted.
@@ -70,7 +90,7 @@ export function ToolCallConsentGate(): ReactNode {
         });
       }
     },
-    [replyToolCallConsents],
+    [replyToolCallConsents, client],
   );
 
   // Auto-advance through calls that do not require user interaction
@@ -111,48 +131,56 @@ export function ToolCallConsentGate(): ReactNode {
     }
   }, [queue, submit]);
 
-  const handleDecide = useCallback((decision: ToolCallConsentDecision) => {
-    setQueue(prev => {
-      if (!prev) return prev;
-
-      const head = prev.remaining[0];
-      if (!head) return prev;
-
-      let answer: ToolCallConsentAnswer;
-      switch (decision.result) {
-        case 'ALLOW_ALWAYS':
-          allowAlwaysSetRef.current.add(toolKey(head.toolsetName, head.toolName));
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.ALLOW_ALWAYS,
-            denyReason: '',
-          };
-
-          break;
-        case 'DENY_ONCE':
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.DENY_ONCE,
-            denyReason: decision.denyReason,
-          };
-
-          break;
-        case 'ALLOW_ONCE':
-        default:
-          answer = {
-            toolCallId: head.toolCallId,
-            result: ToolCallConsentResult.ALLOW_ONCE,
-            denyReason: '',
-          };
+  const handleDecide = useCallback(
+    (decision: ToolCallConsentDecision) => {
+      if (client?.debugMode) {
+        // eslint-disable-next-line no-console
+        console.log(`[consent] 按下按鈕 → ${decision.result}`);
       }
 
-      return {
-        ...prev,
-        remaining: prev.remaining.slice(1),
-        answers: [...prev.answers, answer],
-      };
-    });
-  }, []);
+      setQueue(prev => {
+        if (!prev) return prev;
+
+        const head = prev.remaining[0];
+        if (!head) return prev;
+
+        let answer: ToolCallConsentAnswer;
+        switch (decision.result) {
+          case 'ALLOW_ALWAYS':
+            allowAlwaysSetRef.current.add(toolKey(head.toolsetName, head.toolName));
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.ALLOW_ALWAYS,
+              denyReason: '',
+            };
+
+            break;
+          case 'DENY_ONCE':
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.DENY_ONCE,
+              denyReason: decision.denyReason,
+            };
+
+            break;
+          case 'ALLOW_ONCE':
+          default:
+            answer = {
+              toolCallId: head.toolCallId,
+              result: ToolCallConsentResult.ALLOW_ONCE,
+              denyReason: '',
+            };
+        }
+
+        return {
+          ...prev,
+          remaining: prev.remaining.slice(1),
+          answers: [...prev.answers, answer],
+        };
+      });
+    },
+    [client],
+  );
 
   if (!queue) return null;
 

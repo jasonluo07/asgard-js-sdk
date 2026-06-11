@@ -17,7 +17,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   private apiKey?: string;
   private endpoint!: string;
   private botProviderEndpoint?: string;
-  private debugMode?: boolean;
+  readonly debugMode?: boolean;
   private destroy$ = new Subject<void>();
   private closed = false;
   private detached = false;
