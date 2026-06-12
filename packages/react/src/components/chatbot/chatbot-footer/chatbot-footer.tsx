@@ -55,7 +55,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
 
-  const { chatbot } = useAsgardThemeContext();
+  const theme = useAsgardThemeContext();
+  const { chatbot } = theme;
 
   // Determine enableUpload: prioritize prop, then annotations
   const enableUpload = useMemo(() => {
@@ -613,8 +614,17 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
         '--asg-color-text-placeholder',
         chatbot.footer?.textArea?.['::placeholder']?.color ?? 'var(--asg-color-text-placeholder)',
       );
+
+      // Drive the textarea focus ring (see chatbot-footer.module.scss :focus) from
+      // the theme. A :focus pseudo class can't be set inline, so expose the color
+      // as a CSS variable. Priority: primaryComponent.mainColor, then the user-message
+      // color so consumers that only theme userMessage still get a matching accent.
+      const focusColor = chatbot.primaryComponent?.mainColor ?? theme.userMessage?.backgroundColor;
+      if (focusColor) {
+        textareaRef.current.style.setProperty('--asg-textarea-focus-color', String(focusColor));
+      }
     }
-  }, [chatbot.footer?.textArea]);
+  }, [chatbot.footer?.textArea, chatbot.primaryComponent?.mainColor, theme.userMessage?.backgroundColor]);
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
