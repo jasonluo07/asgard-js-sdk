@@ -42,6 +42,14 @@
     color: var(--asg-color-text-placeholder);
   }
 
+  // Replace the browser's default (blue) focus ring with a theme-driven one.
+  // --asg-textarea-focus-color is set inline from the theme (see chatbot-footer.tsx),
+  // falling back to the SDK primary color when no theme value is provided.
+  &:focus {
+    outline: 2px solid var(--asg-textarea-focus-color, var(--asg-color-primary));
+    outline-offset: -1px;
+  }
+
   &.chatbot_textarea--focused {
     animation: prevent_ios_focus_scroll 0.01s;
   }
