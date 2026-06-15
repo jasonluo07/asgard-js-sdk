@@ -37,7 +37,13 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
   const [isDenyMode, setIsDenyMode] = useState(false);
   const [denyReason, setDenyReason] = useState('');
 
-  const { chatbot } = useAsgardThemeContext();
+  const theme = useAsgardThemeContext();
+  const { chatbot } = theme;
+  // Resolve the brand/theme color the same way the footer's focus ring does
+  // (see chatbot-footer.tsx): primaryComponent.mainColor first, then fall back to the
+  // user-message color so consumers that only theme userMessage (e.g. Odin) still get a
+  // matching accent. secondaryColor is the text painted on top of that accent.
+  const mainColor = chatbot?.primaryComponent?.mainColor ?? chatbot?.mainColor ?? theme.userMessage?.backgroundColor;
   const secondaryColor = chatbot?.primaryComponent?.secondaryColor ?? chatbot?.secondaryColor;
   const inactiveColor = chatbot?.inactiveColor;
   const backgroundColor = chatbot?.backgroundColor;
@@ -46,10 +52,11 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
   const themeVars = useMemo<CSSProperties>(
     () =>
       ({
-        ...(secondaryColor && {
-          '--asgard-consent-modal-accent': secondaryColor,
-          '--asgard-consent-modal-accent-hover': `color-mix(in srgb, ${secondaryColor} 85%, black)`,
+        ...(mainColor && {
+          '--asgard-consent-modal-accent': mainColor,
+          '--asgard-consent-modal-accent-hover': `color-mix(in srgb, ${mainColor} 85%, black)`,
         }),
+        ...(secondaryColor && { '--asgard-consent-modal-primary-fg': secondaryColor }),
         ...(backgroundColor && {
           '--asgard-consent-modal-bg': backgroundColor,
           '--asgard-consent-modal-input-bg': backgroundColor,
@@ -57,7 +64,7 @@ export function ToolCallConsentModal(props: ToolCallConsentModalProps): ReactNod
         ...(borderColor && { '--asgard-consent-modal-border': borderColor }),
         ...(inactiveColor && { '--asgard-consent-modal-muted': inactiveColor }),
       } as CSSProperties),
-    [secondaryColor, backgroundColor, borderColor, inactiveColor],
+    [mainColor, secondaryColor, backgroundColor, borderColor, inactiveColor],
   );
 
   // Reset local state when the active pending call changes
