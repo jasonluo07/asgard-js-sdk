@@ -1,6 +1,10 @@
 import { CSSProperties, ReactNode, useCallback, useRef } from 'react';
 import DocumentSvg from '../../../icons/document.svg?react';
-import { validateDocumentFiles, SUPPORTED_DOCUMENT_EXTENSIONS } from '../../../utils/file-validation';
+import {
+  validateDocumentFiles,
+  resolveDocumentMimeTypes,
+  SUPPORTED_DOCUMENT_EXTENSIONS,
+} from '../../../utils/file-validation';
 import styles from './chatbot-footer.module.scss';
 
 const MAX_DOCUMENT_COUNT = 10;
@@ -8,12 +12,15 @@ const MAX_DOCUMENT_COUNT = 10;
 interface DocumentUploadButtonProps {
   currentCount: number;
   onDocumentsChange: (files: File[]) => void;
+  allowedDocumentMimeTypes?: string[];
   className?: string;
   style?: CSSProperties;
 }
 
 export function DocumentUploadButton(props: DocumentUploadButtonProps): ReactNode {
-  const { currentCount, onDocumentsChange, className, style } = props;
+  const { currentCount, onDocumentsChange, allowedDocumentMimeTypes, className, style } = props;
+
+  const constrainedDocTypes = resolveDocumentMimeTypes(allowedDocumentMimeTypes);
 
   const documentInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +38,7 @@ export function DocumentUploadButton(props: DocumentUploadButtonProps): ReactNod
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
       if (files && files.length > 0) {
-        const { validFiles, errors } = validateDocumentFiles(files);
+        const { validFiles, errors } = validateDocumentFiles(files, allowedDocumentMimeTypes);
 
         if (errors.length > 0) {
           alert('檔案驗證錯誤:\n' + errors.join('\n'));
@@ -51,7 +58,7 @@ export function DocumentUploadButton(props: DocumentUploadButtonProps): ReactNod
 
       event.target.value = '';
     },
-    [currentCount, onDocumentsChange],
+    [currentCount, onDocumentsChange, allowedDocumentMimeTypes],
   );
 
   return (
@@ -60,7 +67,7 @@ export function DocumentUploadButton(props: DocumentUploadButtonProps): ReactNod
         ref={documentInputRef}
         type="file"
         multiple
-        accept={SUPPORTED_DOCUMENT_EXTENSIONS.join(',')}
+        accept={constrainedDocTypes ? constrainedDocTypes.join(',') : SUPPORTED_DOCUMENT_EXTENSIONS.join(',')}
         onChange={handleDocumentSelect}
         className={styles.file_input_hidden}
       />

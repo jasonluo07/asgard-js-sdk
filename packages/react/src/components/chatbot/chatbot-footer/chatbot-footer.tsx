@@ -24,6 +24,8 @@ import { useFileDropContext } from '../../../context/file-drop-context';
 import {
   validateImageFiles,
   validateDocumentFiles,
+  resolveImageMimeTypes,
+  resolveDocumentMimeTypes,
   SUPPORTED_DOCUMENT_EXTENSIONS,
   SUPPORTED_DOCUMENT_TYPES,
   UploadableImage,
@@ -47,6 +49,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     enableUpload: enableUploadProp,
     enableExport: enableExportProp,
     enableDocumentUpload: enableDocumentUploadProp,
+    allowedImageMimeTypes,
+    allowedDocumentMimeTypes,
     messages,
     title,
     programmaticScrollToBottom,
@@ -369,7 +373,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
 
   const processImageFiles = useCallback(
     (files: File[]) => {
-      const { validFiles, errors } = validateImageFiles(files);
+      const { validFiles, errors } = validateImageFiles(files, allowedImageMimeTypes);
 
       if (errors.length > 0) {
         alert('檔案驗證錯誤:\n' + errors.join('\n'));
@@ -412,7 +416,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
         }
       }
     },
-    [uploadableImages.length, uploadImage],
+    [uploadableImages.length, uploadImage, allowedImageMimeTypes],
   );
 
   const handleFileSelect = useCallback(
@@ -481,7 +485,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   // 處理文件選擇（共用邏輯）
   const handleDocumentSelect = useCallback(
     (files: FileList | File[]) => {
-      const { validFiles, errors } = validateDocumentFiles(files);
+      const { validFiles, errors } = validateDocumentFiles(files, allowedDocumentMimeTypes);
 
       if (errors.length > 0) {
         alert('檔案驗證錯誤:\n' + errors.join('\n'));
@@ -515,7 +519,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
         }
       }
     },
-    [uploadableDocuments.length, uploadDocument],
+    [uploadableDocuments.length, uploadDocument, allowedDocumentMimeTypes],
   );
 
   // Handle dropped files from drag & drop
@@ -782,7 +786,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            accept={resolveImageMimeTypes(allowedImageMimeTypes).join(',')}
             onChange={handleFileSelect}
             className={styles.file_input_hidden}
           />
@@ -812,7 +816,10 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
                         const input = document.createElement('input');
                         input.type = 'file';
                         input.multiple = true;
-                        input.accept = [...SUPPORTED_DOCUMENT_TYPES, ...SUPPORTED_DOCUMENT_EXTENSIONS].join(',');
+                        const constrainedDocTypes = resolveDocumentMimeTypes(allowedDocumentMimeTypes);
+                        input.accept = constrainedDocTypes
+                          ? constrainedDocTypes.join(',')
+                          : [...SUPPORTED_DOCUMENT_TYPES, ...SUPPORTED_DOCUMENT_EXTENSIONS].join(',');
                         input.onchange = (e): void => {
                           const files = (e.target as HTMLInputElement).files;
 
@@ -884,6 +891,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
                 <DocumentUploadButton
                   currentCount={uploadableDocuments.length}
                   onDocumentsChange={files => handleDocumentSelect(files)}
+                  allowedDocumentMimeTypes={allowedDocumentMimeTypes}
                   className={styles.attachment_button}
                   style={chatbot.footer?.attachmentButton?.style}
                 />
