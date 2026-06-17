@@ -31,6 +31,7 @@ const navItems = [
   { to: '/tool-call-consent', label: 'Tool Call Consent' },
   { to: '/user-identity-hint', label: 'User Identity Hint' },
   { to: '/on-channel-ready', label: 'On Channel Ready' },
+  { to: '/upload-mime-constraint', label: 'Upload MIME Constraint' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

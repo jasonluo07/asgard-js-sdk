@@ -51,6 +51,22 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   enableUpload?: boolean;
   enableExport?: boolean;
   enableDocumentUpload?: boolean;
+  /**
+   * Restrict which image MIME types can be uploaded when `enableUpload` is on.
+   * When provided, it overrides the default list entirely — the values are used
+   * as-is for both the file picker `accept` and validation (you may include
+   * types outside the SDK's default list). When omitted, all default image
+   * types are accepted.
+   */
+  allowedImageMimeTypes?: string[];
+  /**
+   * Restrict which document MIME types can be uploaded when
+   * `enableDocumentUpload` is on. When provided, it overrides the default list
+   * entirely — the values are used as-is for both the file picker `accept` and
+   * validation (you may include types outside the SDK's default list). When
+   * omitted, all default document types are accepted.
+   */
+  allowedDocumentMimeTypes?: string[];
   maintainConnectionWhenClosed?: boolean;
   asyncInitializers?: Record<string, () => Promise<unknown>>;
   onReset?: () => void;
@@ -180,6 +196,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     enableUpload,
     enableExport,
     enableDocumentUpload,
+    allowedImageMimeTypes,
+    allowedDocumentMimeTypes,
     maintainConnectionWhenClosed = false,
     asyncInitializers = {},
     loadingComponent,
@@ -388,6 +406,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             enableUpload={enableUpload}
             enableExport={enableExport}
             enableDocumentUpload={enableDocumentUpload}
+            allowedImageMimeTypes={allowedImageMimeTypes}
+            allowedDocumentMimeTypes={allowedDocumentMimeTypes}
             autoResetChannel={autoResetChannel}
             keepConnectionOnUnmount={keepConnectionOnUnmount}
           >

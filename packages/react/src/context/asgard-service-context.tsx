@@ -42,6 +42,8 @@ export interface AsgardServiceContextValue {
   enableUpload?: boolean;
   enableExport?: boolean;
   enableDocumentUpload?: boolean;
+  allowedImageMimeTypes?: string[];
+  allowedDocumentMimeTypes?: string[];
   /** 用戶是否正在跟隨最新內容（用於自動滾動判斷） */
   isFollowingLatest: boolean;
   /** 設定跟隨狀態 */
@@ -77,6 +79,8 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   enableUpload: undefined,
   enableExport: undefined,
   enableDocumentUpload: undefined,
+  allowedImageMimeTypes: undefined,
+  allowedDocumentMimeTypes: undefined,
   isFollowingLatest: true,
   setFollowingLatest: noop,
   scrollToBottom: noop,
@@ -98,6 +102,8 @@ export interface AsgardServiceContextProviderProps {
   enableUpload?: boolean;
   enableExport?: boolean;
   enableDocumentUpload?: boolean;
+  allowedImageMimeTypes?: string[];
+  allowedDocumentMimeTypes?: string[];
   customChannelId: string;
   customMessageId?: string;
   delayTime?: number;
@@ -142,6 +148,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     enableUpload,
     enableExport,
     enableDocumentUpload,
+    allowedImageMimeTypes,
+    allowedDocumentMimeTypes,
     customChannelId,
     initMessages,
     onSseMessage,
@@ -283,6 +291,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       enableUpload,
       enableExport,
       enableDocumentUpload,
+      allowedImageMimeTypes,
+      allowedDocumentMimeTypes,
       messageBoxBottomRef,
       scrollContainerRef,
       isFollowingLatest,
@@ -311,6 +321,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       enableUpload,
       enableExport,
       enableDocumentUpload,
+      allowedImageMimeTypes,
+      allowedDocumentMimeTypes,
       isFollowingLatest,
       setFollowingLatest,
       scrollToBottom,

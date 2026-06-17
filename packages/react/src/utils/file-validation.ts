@@ -88,10 +88,32 @@ export interface FileValidationResult {
   error?: string;
 }
 
-export function validateImageFile(file: File): FileValidationResult {
+/**
+ * 計算實際允許的圖片 MIME 類型。未指定（或空陣列）時回傳完整預設清單；
+ * 指定時直接覆蓋為傳入的清單（原樣使用，可包含預設清單以外的類型）。
+ */
+export function resolveImageMimeTypes(allowedTypes?: string[]): string[] {
+  if (!allowedTypes || allowedTypes.length === 0) return SUPPORTED_IMAGE_TYPES;
+
+  return allowedTypes;
+}
+
+/**
+ * 計算文件的 MIME 類型限制。未指定（或空陣列）時回傳 null 代表不限制（沿用
+ * 預設清單與副檔名 fallback）；指定時直接覆蓋為傳入的清單（原樣使用）。
+ */
+export function resolveDocumentMimeTypes(allowedTypes?: string[]): string[] | null {
+  if (!allowedTypes || allowedTypes.length === 0) return null;
+
+  return allowedTypes;
+}
+
+export function validateImageFile(file: File, allowedTypes?: string[]): FileValidationResult {
+  const supportedTypes = resolveImageMimeTypes(allowedTypes);
+
   // 檢查檔案類型
-  if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-    const supportedFormats = SUPPORTED_IMAGE_TYPES.map(type => type.split('/')[1].toUpperCase()).join('、');
+  if (!supportedTypes.includes(file.type)) {
+    const supportedFormats = supportedTypes.map(type => type.split('/')[1].toUpperCase()).join('、');
 
     return {
       isValid: false,
@@ -112,7 +134,10 @@ export function validateImageFile(file: File): FileValidationResult {
   return { isValid: true };
 }
 
-export function validateImageFiles(files: FileList | File[]): {
+export function validateImageFiles(
+  files: FileList | File[],
+  allowedTypes?: string[],
+): {
   validFiles: File[];
   errors: string[];
 } {
@@ -122,7 +147,7 @@ export function validateImageFiles(files: FileList | File[]): {
   const fileArray = Array.from(files);
 
   fileArray.forEach(file => {
-    const validation = validateImageFile(file);
+    const validation = validateImageFile(file, allowedTypes);
     if (validation.isValid) {
       validFiles.push(file);
     } else {
@@ -146,18 +171,29 @@ function getFileExtension(filename: string): string {
 /**
  * 驗證單一文件檔案
  */
-export function validateDocumentFile(file: File): FileValidationResult {
-  const extension = getFileExtension(file.name);
+export function validateDocumentFile(file: File, allowedTypes?: string[]): FileValidationResult {
+  const allowedMimeTypes = resolveDocumentMimeTypes(allowedTypes);
 
-  // 檢查 MIME type 或副檔名（某些瀏覽器可能回傳空的 MIME type）
-  const isValidType = SUPPORTED_DOCUMENT_TYPES.includes(file.type);
-  const isValidExtension = SUPPORTED_DOCUMENT_EXTENSIONS.includes(extension);
+  if (allowedMimeTypes) {
+    // 有指定限制時只比對 MIME（純 mime 模式，不做副檔名 fallback）
+    if (!allowedMimeTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        error: `不支援的檔案格式。`,
+      };
+    }
+  } else {
+    // 未限制時沿用預設行為：檢查 MIME type 或副檔名（某些瀏覽器可能回傳空的 MIME type）
+    const extension = getFileExtension(file.name);
+    const isValidType = SUPPORTED_DOCUMENT_TYPES.includes(file.type);
+    const isValidExtension = SUPPORTED_DOCUMENT_EXTENSIONS.includes(extension);
 
-  if (!isValidType && !isValidExtension) {
-    return {
-      isValid: false,
-      error: `不支援的檔案格式。請選擇 PDF、Office 文件、音訊、影片或文字檔案。`,
-    };
+    if (!isValidType && !isValidExtension) {
+      return {
+        isValid: false,
+        error: `不支援的檔案格式。請選擇 PDF、Office 文件、音訊、影片或文字檔案。`,
+      };
+    }
   }
 
   // 檢查檔案大小
@@ -176,7 +212,10 @@ export function validateDocumentFile(file: File): FileValidationResult {
 /**
  * 驗證多個文件檔案
  */
-export function validateDocumentFiles(files: FileList | File[]): {
+export function validateDocumentFiles(
+  files: FileList | File[],
+  allowedTypes?: string[],
+): {
   validFiles: File[];
   errors: string[];
 } {
@@ -186,7 +225,7 @@ export function validateDocumentFiles(files: FileList | File[]): {
   const fileArray = Array.from(files);
 
   fileArray.forEach(file => {
-    const validation = validateDocumentFile(file);
+    const validation = validateDocumentFile(file, allowedTypes);
     if (validation.isValid) {
       validFiles.push(file);
     } else {
