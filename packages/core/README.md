@@ -21,7 +21,7 @@ npm install @asgard-js/core
 Here's a basic example of how to use the core package:
 
 ```javascript
-import { AsgardServiceClient } from '@asgard-js/core';
+import { AsgardServiceClient, FetchSseAction, EventType } from '@asgard-js/core';
 
 const client = new AsgardServiceClient({
   apiKey: 'your-api-key',
@@ -33,7 +33,7 @@ const client = new AsgardServiceClient({
 client.fetchSse({
   customChannelId: 'your-channel-id',
   text: 'Hello, Asgard!',
-  action: 'message',
+  action: FetchSseAction.NONE,
 });
 
 // Upload files (optional, requires uploadFile method)
@@ -51,7 +51,7 @@ if (client.uploadFile) {
       client.fetchSse({
         customChannelId: 'your-channel-id',
         text: 'Here is my image:',
-        action: 'message',
+        action: FetchSseAction.NONE,
         blobIds: [blobId],
       });
     }
@@ -61,15 +61,15 @@ if (client.uploadFile) {
 }
 
 // Listen to events
-client.on('MESSAGE', response => {
+client.on(EventType.MESSAGE, response => {
   console.log('Received message:', response);
 });
 
-client.on('DONE', response => {
+client.on(EventType.DONE, response => {
   console.log('Conversation completed:', response);
 });
 
-client.on('ERROR', error => {
+client.on(EventType.ERROR, error => {
   console.error('Error occurred:', error);
 });
 ```
@@ -114,7 +114,7 @@ const client = new AsgardServiceClient({
 
 ## API Reference
 
-The core package exports three main classes for different levels of abstraction and includes authentication types for dynamic API key management:
+The core package exports three main classes for different levels of abstraction (`AsgardServiceClient`, `Channel`, `Conversation`), an `HttpError` class with an `isHttpError` type guard for HTTP failure handling, and authentication types for dynamic API key management:
 
 <a id="asgardserviceclient"></a>
 <br/>
@@ -141,19 +141,24 @@ The main client class for interacting with the Asgard AI platform.
 
 #### Methods
 
-- **fetchSse(payload, options?)**: Send a message via Server-Sent Events
+- **fetchSse(payload, options?)**: Send a message via Server-Sent Events. `payload.action` is a `FetchSseAction` value — `NONE` for a normal message, `RESET_CHANNEL` to (re)initialize the channel, `RESPONSE_TOOL_CALL_CONSENT` to answer a consent prompt
 - **uploadFile(file, customChannelId)**: Upload file to Blob API and return BlobUploadResponse
-- **on(event, handler)**: Listen to specific SSE events
-- **close()**: Close the SSE connection and cleanup resources
+- **downloadCwdFile(relativePath, customChannelId)**: `Promise<CwdDownloadResult>` - Download a file from the channel sandbox working directory (backs `cwd://` URI actions); resolves to `{ blob, filename }`
+- **on(event, handler)**: Listen to a specific SSE event. `event` must be an `EventType` value (e.g. `EventType.MESSAGE`), not a plain string; registering a listener for an event replaces any previous one
+- **detach({ timeoutMs })**: Detach from the owning component without aborting in-flight runs — the connection stays open so the backend can finish the current run, then auto-closes once all runs settle (or after `timeoutMs` as a safety net). Backs the React `keepConnectionOnUnmount` prop
+- **close()**: Close the SSE connection and clean up resources (idempotent)
 
 #### Event Types
 
-- **INIT**: Run initialization events
-- **MESSAGE**: Message events (start, delta, complete)
-- **TOOL_CALL**: Tool call events (start, complete)
-- **PROCESS**: Process events (start, complete)
-- **DONE**: Run completion events
-- **ERROR**: Error events
+Pass these `EventType` members (imported from `@asgard-js/core`) as the first argument to `on()`:
+
+- **`EventType.INIT`** (`asgard.run.init`): Run initialization events
+- **`EventType.MESSAGE`** (`asgard.message`): Message events (start, delta, complete)
+- **`EventType.TOOL_CALL`** (`asgard.tool_call`): Tool call events (start, complete)
+- **`EventType.TOOL_CALL_CONSENT`** (`asgard.tool_call.consent`): Tool call consent prompts awaiting a user decision
+- **`EventType.PROCESS`** (`asgard.process`): Process events (start, complete)
+- **`EventType.DONE`** (`asgard.run.done`): Run completion events
+- **`EventType.ERROR`** (`asgard.run.error`): Error events
 
 <a id="channel"></a>
 <br/>
@@ -169,6 +174,7 @@ Higher-level abstraction for managing a conversation channel with reactive state
 #### Instance Methods
 
 - **sendMessage(payload, options?)**: `Promise<void>` - Send a message through the channel
+- **replyToolCallConsents(answers, options?, payload?)**: `Promise<void>` - Reply to a pending tool-call consent prompt. `answers` is an array of `ToolCallConsentAnswer` (each `{ toolCallId, result, denyReason }`, where `result` is a `ToolCallConsentResult` value)
 - **close()**: `void` - Close the channel and cleanup subscriptions
 
 #### Configuration (ChannelConfig)
@@ -219,21 +225,24 @@ Immutable conversation state manager that handles message updates and SSE event 
 
 #### Constructor
 
-- **constructor(options)**: Initialize conversation with `{messages: Map<string, ConversationMessage> | null}`
+- **constructor(options)**: Initialize conversation with `{ messages: Map<string, ConversationMessage> | null, pendingConsent?: ToolCallConsentEventData | null }`
 
 #### Methods
 
 - **pushMessage(message)**: `Conversation` - Add a new message (returns new instance)
-- **onMessage(response)**: `Conversation` - Process SSE response and update conversation
+- **onMessage(response)**: `Conversation` - Process an SSE response and update the conversation (returns new instance)
+- **clearPendingConsent()**: `Conversation` - Clear the pending tool-call consent (returns new instance)
 
 #### Properties
 
 - **messages**: `Map<string, ConversationMessage> | null` - Map of all messages in the conversation
+- **pendingConsent**: `ToolCallConsentEventData | null` - The tool-call consent prompt currently awaiting a user decision, or `null`
 
 #### Message Types
 
 - **ConversationUserMessage**: User-sent messages with `text` and `time`
 - **ConversationBotMessage**: Bot responses with `message`, `isTyping`, `typingText`, `eventType`
+- **ConversationToolCallMessage**: Tool-call entries with `toolName`, `reason`, `parameter`, `result`, `isComplete`
 - **ConversationErrorMessage**: Error messages with `error` details
 
 #### Example Usage
@@ -273,7 +282,7 @@ if (uploadResponse.isSuccess && uploadResponse.data[0]) {
   client.fetchSse({
     customChannelId: 'your-channel-id',
     text: 'Here is my image',
-    action: 'message',
+    action: FetchSseAction.NONE,
     blobIds: [blobId],
   });
 }
@@ -293,7 +302,14 @@ The core package includes authentication-related types for dynamic API key manag
 Authentication state management for applications requiring dynamic API key input:
 
 ```typescript
-type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalidApiKey';
+type AuthState =
+  | 'loading'
+  | 'needApiKey'
+  | 'authenticated'
+  | 'error'
+  | 'invalidApiKey'
+  | 'subscriptionExpired'
+  | 'botNotFound';
 ```
 
 **States:**
@@ -303,6 +319,8 @@ type AuthState = 'loading' | 'needApiKey' | 'authenticated' | 'error' | 'invalid
 - **`authenticated`**: Successfully authenticated
 - **`error`**: General authentication error
 - **`invalidApiKey`**: API key is invalid
+- **`subscriptionExpired`**: The workspace subscription has expired
+- **`botNotFound`**: The configured bot provider could not be found
 
 **Usage:**
 
@@ -319,6 +337,63 @@ function handleAuthState(state: AuthState) {
       break;
     // Handle other states...
   }
+}
+```
+
+<a id="error-handling"></a>
+<br/>
+
+### Error Handling (HttpError)
+
+HTTP failures (for example a non-2xx response while authenticating) are surfaced as an `HttpError` instance. Both `HttpError` and the `isHttpError` type guard are re-exported from the package root:
+
+```typescript
+import { isHttpError } from '@asgard-js/core';
+
+try {
+  // ... a call that may reject with an HttpError
+} catch (error) {
+  if (isHttpError(error)) {
+    console.error(error.status, error.statusText, error.body);
+  }
+}
+```
+
+`HttpError` extends `Error` with readonly `status: number`, `statusText: string`, and `body: unknown` (its `name` is `'HttpError'`).
+
+<a id="tool-call-consent"></a>
+<br/>
+
+### Tool Call Consent
+
+When a bot is configured to ask before running a tool, the backend emits an `EventType.TOOL_CALL_CONSENT` event. The pending request is exposed on `Conversation.pendingConsent`; reply to it with `Channel.replyToolCallConsents()`:
+
+```typescript
+import { ToolCallConsentResult } from '@asgard-js/core';
+
+await channel.replyToolCallConsents([
+  { toolCallId: 'call-1', result: ToolCallConsentResult.ALLOW_ONCE, denyReason: '' },
+]);
+```
+
+**Related types:**
+
+- **`ToolCallConsentResult`** (enum): `ALLOW_ONCE` | `ALLOW_ALWAYS` | `DENY_ONCE`
+- **`ToolCallConsentPendingCall`**: `{ toolCallId, toolsetName, toolName, parameter, alreadyAllowed, reason? }`
+- **`ToolCallConsentEventData`**: `{ processId, pendingCalls: ToolCallConsentPendingCall[] }`
+- **`ToolCallConsentAnswer`**: `{ toolCallId, result, denyReason }`
+
+<a id="cwd-download-result"></a>
+<br/>
+
+### CwdDownloadResult
+
+Returned by `client.downloadCwdFile()`:
+
+```typescript
+interface CwdDownloadResult {
+  blob: Blob;
+  filename: string;
 }
 ```
 
