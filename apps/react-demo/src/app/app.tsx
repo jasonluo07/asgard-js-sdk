@@ -28,6 +28,7 @@ import { RenderFooter } from './routes/render-footer';
 import { TextNewlines } from './routes/text-newlines';
 import { HistoryScrollBug } from './routes/history-scroll-bug';
 import { CwdDownload } from './routes/cwd-download';
+import { UploadMimeConstraint } from './routes/upload-mime-constraint';
 
 export function App(): React.ReactElement {
   return (
@@ -61,6 +62,7 @@ export function App(): React.ReactElement {
         <Route path="/text-newlines" element={<TextNewlines />} />
         <Route path="/history-scroll-bug" element={<HistoryScrollBug />} />
         <Route path="/cwd-download" element={<CwdDownload />} />
+        <Route path="/upload-mime-constraint" element={<UploadMimeConstraint />} />
       </Routes>
     </Layout>
   );
