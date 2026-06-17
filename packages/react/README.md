@@ -141,6 +141,26 @@ When `enableLoadConfigFromService` is enabled, you can also control the upload f
 
 **Features**: Multiple file selection, image preview with modal view, and responsive design. Supports JPEG, PNG, GIF, WebP up to 20MB per file, maximum 10 files at once.
 
+#### Restricting Allowed MIME Types
+
+By default, image upload accepts `image/jpeg`, `image/jpg`, `image/png`, `image/gif`, and `image/webp`, while document upload accepts a built-in list of document types (with an extension-based fallback). To narrow — or extend — what users may attach, pass `allowedImageMimeTypes` / `allowedDocumentMimeTypes`:
+
+```javascript
+<Chatbot
+  config={{
+    apiKey: 'your-api-key',
+    botProviderEndpoint: 'https://api.asgard-ai.com/ns/{namespace}/bot-provider/{botProviderId}',
+  }}
+  customChannelId="your-channel-id"
+  enableUpload
+  enableDocumentUpload
+  allowedImageMimeTypes={['image/png', 'image/webp']}
+  allowedDocumentMimeTypes={['application/pdf']}
+/>
+```
+
+Both props **override** their respective default list entirely (they do not merge) and only take effect when the matching `enableUpload` / `enableDocumentUpload` flag is on. The provided values drive both the file picker `accept` attribute and validation. For documents, supplying the prop also switches validation to MIME-only matching (the extension fallback no longer applies). Passing an empty array is treated the same as omitting the prop.
+
 <a id="conversation-export"></a>
 <br/>
 
@@ -295,6 +315,8 @@ config: {
 - **enableUpload?**: `boolean` - Enable file upload functionality. When set, it takes priority over the `embedConfig.enableUpload` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Supports image files (JPEG, PNG, GIF, WebP) up to 20MB per file, maximum 10 files at once.
 - **enableExport?**: `boolean` - Enable conversation export functionality. When set, it takes priority over the `embedConfig.enableExport` setting from the bot provider metadata. Defaults to `false` if not specified in either location. Adds a download button to the chatbot footer that exports the conversation history as a Markdown file with timestamps and trace IDs.
 - **enableDocumentUpload?**: `boolean` - Enable document file upload functionality. When enabled, users can attach document files to messages. The container-level drag-and-drop overlay is also activated. Defaults to `false`.
+- **allowedImageMimeTypes?**: `string[]` - Restrict which image MIME types can be uploaded when `enableUpload` is on. When provided, it **overrides** the default image list entirely (values are used as-is for both the file picker `accept` and validation, and may include types outside the SDK defaults). When omitted or empty, all default image types are accepted (`image/jpeg`, `image/jpg`, `image/png`, `image/gif`, `image/webp`).
+- **allowedDocumentMimeTypes?**: `string[]` - Restrict which document MIME types can be uploaded when `enableDocumentUpload` is on. When provided, it **overrides** the default document list entirely and validation switches to MIME-only matching (the extension-based fallback is dropped). When omitted or empty, the default document list with extension fallback is used.
 - **maintainConnectionWhenClosed?**: `boolean` - Maintain connection when chat is closed, defaults to `false`
 - **keepConnectionOnUnmount?**: `boolean` - Keep the in-flight SSE run alive when the chatbot unmounts (e.g. the user navigates to another in-app page) instead of aborting it, so that round can finish on the backend. The detached connection cleans itself up once the run completes, or after a safety timeout if it never finishes. Only covers in-app unmounts — a full page reload / tab close / network loss still tears the connection down. Defaults to `false`
 - **loadingComponent?**: `ReactNode` - Custom loading component
@@ -315,7 +337,7 @@ config: {
 - **onChannelReady?**: `() => void` - Callback fired once the chat channel is ready to accept messages. Use this instead of polling for `sendMessage` availability when you need to send an initial message right after the chatbot mounts. Re-fires after channel reset. See [On Channel Ready](#on-channel-ready) section for details.
 - **onReset**: `() => void` - Callback function when chat is reset
 - **onClose**: `() => void` - Callback function when chat is closed
-- **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`
+- **authState?**: `AuthState` - Authentication state for dynamic API key management. Available states: `'loading'`, `'needApiKey'`, `'authenticated'`, `'error'`, `'invalidApiKey'`, `'subscriptionExpired'`, `'botNotFound'`
 - **onApiKeySubmit?**: `(apiKey: string) => Promise<void>` - Callback function when user submits API key for authentication
 - **onAuthError?**: `(error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void` - Callback fired when authentication or bot provider initialization fails. Useful for logging or showing a custom error UI.
 - **onSseError?**: `(error: unknown) => void` - Callback fired when the SSE connection encounters an error.
@@ -624,33 +646,41 @@ function MyCustomFooter() {
 
 **State**
 
-| Property               | Type                                       | Description                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `avatar`               | `string \| undefined`                      | Avatar URL passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                   |
-| `title`                | `string \| undefined`                      | Chatbot title passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                |
-| `isOpen`               | `boolean`                                  | Whether the chatbot is currently open/visible.                                                                                                                                |
-| `isResetting`          | `boolean`                                  | Whether a channel reset is in progress. Use to disable reset buttons during reset.                                                                                            |
-| `isConnecting`         | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button.                                                                                    |
-| `messages`             | `Map<string, ConversationMessage> \| null` | All messages in the current conversation. `null` before the channel is initialized.                                                                                           |
-| `botTypingPlaceholder` | `string \| undefined`                      | Typing indicator text (from props or bot provider metadata).                                                                                                                  |
-| `inputPlaceholder`     | `string \| undefined`                      | Textarea placeholder text (from props or bot provider metadata).                                                                                                              |
-| `enableUpload`         | `boolean \| undefined`                     | Whether image upload is enabled (resolved from props / bot provider metadata).                                                                                                |
-| `enableExport`         | `boolean \| undefined`                     | Whether conversation export is enabled.                                                                                                                                       |
-| `enableDocumentUpload` | `boolean \| undefined`                     | Whether document upload is enabled.                                                                                                                                           |
-| `isFollowingLatest`    | `boolean`                                  | Whether auto-scroll to the latest message is active. Becomes `false` when the user scrolls up.                                                                                |
-| `pendingInputValue`    | `string \| null`                           | Text waiting to be filled into the textarea. Set by `ChatbotRef.setInputValue()` or by `renderMenu`. Read and clear this in `renderFooter` to receive externally pushed text. |
+| Property                   | Type                                       | Description                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `avatar`                   | `string \| undefined`                      | Avatar URL passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                   |
+| `title`                    | `string \| undefined`                      | Chatbot title passed to the Chatbot, or loaded from the bot provider metadata.                                                                                                |
+| `client`                   | `AsgardServiceClient \| null`              | The underlying core client instance, or `null` before the channel is initialized.                                                                                             |
+| `customChannelId`          | `string \| undefined`                      | The active channel identifier.                                                                                                                                                |
+| `isOpen`                   | `boolean`                                  | Whether the chatbot is currently open/visible.                                                                                                                                |
+| `isResetting`              | `boolean`                                  | Whether a channel reset is in progress. Use to disable reset buttons during reset.                                                                                            |
+| `isConnecting`             | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button.                                                                                    |
+| `messages`                 | `Map<string, ConversationMessage> \| null` | All messages in the current conversation. `null` before the channel is initialized.                                                                                           |
+| `botTypingPlaceholder`     | `string \| undefined`                      | Typing indicator text (from props or bot provider metadata).                                                                                                                  |
+| `inputPlaceholder`         | `string \| undefined`                      | Textarea placeholder text (from props or bot provider metadata).                                                                                                              |
+| `enableUpload`             | `boolean \| undefined`                     | Whether image upload is enabled (resolved from props / bot provider metadata).                                                                                                |
+| `enableExport`             | `boolean \| undefined`                     | Whether conversation export is enabled.                                                                                                                                       |
+| `enableDocumentUpload`     | `boolean \| undefined`                     | Whether document upload is enabled.                                                                                                                                           |
+| `allowedImageMimeTypes`    | `string[] \| undefined`                    | Resolved image MIME allow-list (from the `allowedImageMimeTypes` prop). `undefined` means all defaults are accepted.                                                          |
+| `allowedDocumentMimeTypes` | `string[] \| undefined`                    | Resolved document MIME allow-list (from the `allowedDocumentMimeTypes` prop). `undefined` means the default list with extension fallback is used.                             |
+| `pendingConsent`           | `ToolCallConsentEventData \| null`         | The pending tool-call consent prompt awaiting a user decision, or `null`. Read this to build a custom consent UI.                                                             |
+| `messageBoxBottomRef`      | `RefObject<HTMLDivElement \| null>`        | Ref to the sentinel element at the bottom of the message list.                                                                                                                |
+| `scrollContainerRef`       | `RefObject<HTMLDivElement \| null>`        | Ref to the scrollable message container.                                                                                                                                      |
+| `isFollowingLatest`        | `boolean`                                  | Whether auto-scroll to the latest message is active. Becomes `false` when the user scrolls up.                                                                                |
+| `pendingInputValue`        | `string \| null`                           | Text waiting to be filled into the textarea. Set by `ChatbotRef.setInputValue()` or by `renderMenu`. Read and clear this in `renderFooter` to receive externally pushed text. |
 
 **Actions**
 
-| Property                     | Type                                                          | Description                                                                                                                       |
-| ---------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined` | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`. |
-| `resetChannel`               | `(() => void) \| undefined`                                   | Reset the channel (triggers a new welcome message from the bot).                                                                  |
-| `closeChannel`               | `(() => void) \| undefined`                                   | Close the SSE connection without resetting.                                                                                       |
-| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                         | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                     |
-| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                         | Scroll to bottom without affecting `isFollowingLatest`.                                                                           |
-| `setFollowingLatest`         | `(value: boolean) => void`                                    | Manually set auto-scroll state.                                                                                                   |
-| `setPendingInputValue`       | `(value: string \| null) => void`                             | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                      |
+| Property                     | Type                                                            | Description                                                                                                                                       |
+| ---------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined`   | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`.                 |
+| `resetChannel`               | `(() => void) \| undefined`                                     | Reset the channel (triggers a new welcome message from the bot).                                                                                  |
+| `closeChannel`               | `(() => void) \| undefined`                                     | Close the SSE connection without resetting.                                                                                                       |
+| `replyToolCallConsents`      | `((answers, options?, payload?) => Promise<void>) \| undefined` | Reply to the pending tool-call consent prompt (see `pendingConsent`). Used to build a custom consent UI. `undefined` before the channel is ready. |
+| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                           | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                                     |
+| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                           | Scroll to bottom without affecting `isFollowingLatest`.                                                                                           |
+| `setFollowingLatest`         | `(value: boolean) => void`                                      | Manually set auto-scroll state.                                                                                                                   |
+| `setPendingInputValue`       | `(value: string \| null) => void`                               | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                                      |
 
 <a id="event-handlers"></a>
 <br/>
