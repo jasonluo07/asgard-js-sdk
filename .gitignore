@@ -51,9 +51,10 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 test-output
 .aider*
-tasks/
+/tasks/
 
 # claude code
-.claude
+.claude/*
+!.claude/skills/
 .mcp.json
 .playwright-mcp

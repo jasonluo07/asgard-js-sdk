@@ -1,0 +1,6 @@
+[submodule "references/asgard-chat-kit-prototype"]
+	path = references/asgard-chat-kit-prototype
+	url = git@github.com:asgard-ai-platform/asgard-chat-kit-prototype.git
+[submodule "references/asgard-sdk-pm"]
+	path = references/asgard-sdk-pm
+	url = git@github.com:asgard-ai-platform/asgard-sdk-pm.git
