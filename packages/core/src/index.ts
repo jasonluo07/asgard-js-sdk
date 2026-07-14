@@ -16,3 +16,13 @@ export type { TaskToolEvent } from './lib/task-reducer';
 
 export { isAgentTool, isSubagentChildTool, reduceSubagents } from './lib/subagent-reducer';
 export type { SubagentEvent } from './lib/subagent-reducer';
+
+export {
+  conversationToSubagentEvents,
+  createDerivedStores,
+  deriveSubagents,
+  deriveTasks,
+  subagentsEqual,
+  tasksEqual,
+} from './lib/derived-stores';
+export type { DerivedStores } from './lib/derived-stores';

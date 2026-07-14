@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ConversationToolCallMessage, isTaskTool, reduceSubagents, reduceTaskEvents } from '@asgard-js/core';
+import { deriveSubagents, deriveTasks } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
@@ -22,7 +22,7 @@ import { SpeechInputButton } from './speech-input-button';
 import { DocumentUploadButton } from './document-upload-button';
 import { RunningIndicator } from '../running-indicator';
 import { TaskList } from '../task-list';
-import { SubagentList, conversationToSubagentEvents } from '../subagent-list';
+import { SubagentList } from '../subagent-list';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useFileDropContext } from '../../../context/file-drop-context';
@@ -57,6 +57,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     allowedImageMimeTypes,
     allowedDocumentMimeTypes,
     messages,
+    conversation,
     title,
     programmaticScrollToBottom,
     pendingInputValue,
@@ -65,25 +66,10 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   const { data } = useAsgardAppInitializationContext();
   const { locale = 'en-US' } = useAsgardTemplateContext();
 
-  // F-010 — Task Check List: fold the completed TaskCreate / TaskUpdate tool-calls (routed out of the
-  // tool-call group) into the current list, docked above the seam. Empty → TaskList renders nothing.
-  const tasks = useMemo(
-    () =>
-      reduceTaskEvents(
-        Array.from(messages?.values() ?? []).filter(
-          (message): message is ConversationToolCallMessage =>
-            message.type === 'tool-call' && message.isComplete && isTaskTool(message),
-        ),
-      ),
-    [messages],
-  );
-
-  // F-012 — Subagent list: fold the Agent tool-call + subagent.* + child tool-calls (routed out of the
-  // tool-call group) into the current subagent list, docked above the Task List.
-  const subagents = useMemo(
-    () => reduceSubagents(conversationToSubagentEvents(Array.from(messages?.values() ?? []))),
-    [messages],
-  );
+  // F-010 / F-012 — the docked Task Check List and Subagent list, both derived from the conversation via
+  // the shared core helpers (F-013 single source of truth). Empty lists → the panels render nothing.
+  const tasks = useMemo(() => (conversation ? deriveTasks(conversation) : []), [conversation]);
+  const subagents = useMemo(() => (conversation ? deriveSubagents(conversation) : []), [conversation]);
 
   const theme = useAsgardThemeContext();
   const { chatbot } = theme;

@@ -1,4 +1,4 @@
-import { BehaviorSubject, combineLatest, map, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, Observable, Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChannelConfig,
@@ -7,11 +7,14 @@ import {
   FetchSsePayload,
   IAsgardServiceClient,
   ObserverOrNext,
+  Subagent,
   SseResponse,
+  Task,
   ToolCallConsentAnswer,
 } from '../types';
 import { FetchSseAction, EventType } from '../constants/enum';
 import Conversation from './conversation';
+import { createDerivedStores, DerivedStores } from './derived-stores';
 
 export default class Channel {
   private client: IAsgardServiceClient;
@@ -21,8 +24,14 @@ export default class Channel {
 
   private isConnecting$: BehaviorSubject<boolean>;
   private conversation$: BehaviorSubject<Conversation>;
+  private derivedStores: DerivedStores;
   private statesObserver?: ObserverOrNext<ChannelStates>;
   private statesSubscription?: Subscription;
+
+  /** Reactive Task Check List store (F-013): emits only when the list changes; replays the snapshot. */
+  public readonly tasks$: Observable<Task[]>;
+  /** Reactive Subagent list store (F-013): emits only when the list changes; replays the snapshot. */
+  public readonly subagents$: Observable<Subagent[]>;
   private currentUserMessageId?: string;
   // The most-recently-sent user message id. Unlike currentUserMessageId (which
   // is cleared once a traceId is attached), this is kept across the SSE
@@ -45,7 +54,20 @@ export default class Channel {
 
     this.isConnecting$ = new BehaviorSubject(false);
     this.conversation$ = new BehaviorSubject(config.conversation);
+    this.derivedStores = createDerivedStores(this.conversation$);
+    this.tasks$ = this.derivedStores.tasks$;
+    this.subagents$ = this.derivedStores.subagents$;
     this.statesObserver = config.statesObserver;
+  }
+
+  /** Current Task Check List snapshot (F-013) — for framework-agnostic `getSnapshot()` bridging. */
+  public getTasks(): Task[] {
+    return this.derivedStores.getTasks();
+  }
+
+  /** Current Subagent list snapshot (F-013) — for framework-agnostic `getSnapshot()` bridging. */
+  public getSubagents(): Subagent[] {
+    return this.derivedStores.getSubagents();
   }
 
   public static create(config: ChannelConfig): Channel {
@@ -83,11 +105,18 @@ export default class Channel {
   }
 
   private subscribe(): void {
-    this.statesSubscription = combineLatest([this.isConnecting$, this.conversation$])
+    this.statesSubscription = combineLatest([
+      this.isConnecting$,
+      this.conversation$,
+      this.derivedStores.tasks$,
+      this.derivedStores.subagents$,
+    ])
       .pipe(
-        map(([isConnecting, conversation]) => ({
+        map(([isConnecting, conversation, tasks, subagents]) => ({
           isConnecting,
           conversation,
+          tasks,
+          subagents,
         })),
       )
       .subscribe(this.statesObserver);
@@ -228,6 +257,7 @@ export default class Channel {
   public close(): void {
     this.isConnecting$.complete();
     this.conversation$.complete();
+    this.derivedStores.teardown();
     this.statesSubscription?.unsubscribe();
   }
 }

@@ -1,4 +1,10 @@
-import { AsgardServiceClient, ClientConfig, ConversationMessage, ToolCallConsentEventData } from '@asgard-js/core';
+import {
+  AsgardServiceClient,
+  ClientConfig,
+  Conversation,
+  ConversationMessage,
+  ToolCallConsentEventData,
+} from '@asgard-js/core';
 import {
   createContext,
   ForwardedRef,
@@ -31,6 +37,8 @@ export interface AsgardServiceContextValue {
   isResetting: boolean;
   isConnecting: boolean;
   messages: Map<string, ConversationMessage> | null;
+  /** The current Conversation (F-013) — the derivation source for the docked Task / Subagent panels. */
+  conversation: Conversation | null;
   messageBoxBottomRef: RefObject<HTMLDivElement | null>;
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
@@ -73,6 +81,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   isResetting: false,
   isConnecting: false,
   messages: null,
+  conversation: null,
   messageBoxBottomRef: { current: null },
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
@@ -281,6 +290,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isResetting,
       isConnecting,
       messages: conversation?.messages ?? null,
+      conversation: conversation ?? null,
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
@@ -310,8 +320,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isOpen,
       isResetting,
       isConnecting,
-      conversation?.messages,
-      conversation?.pendingConsent,
+      conversation,
       wrappedSendMessage,
       resetChannel,
       closeChannel,
