@@ -133,6 +133,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // F-001 thinking demo — scoped channel. Streams an extended-thinking sequence
+  // (thinking.start → delta×N → complete) then the visible answer, so the ThinkingBlock's
+  // streaming (auto-scroll window) and completed ("Thought for a moment" + show more) states show.
+  if (customChannelId === 'thinking-demo') {
+    await handleThinkingMock(res, payload);
+
+    return;
+  }
+
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
   const fullText = REPLY_CHUNKS.join('');
@@ -315,6 +324,106 @@ async function handleStreamRobustnessMock(res: ServerResponse, payload: ParsedPa
     const only = '只有 complete（無 start / delta）也能直接呈現完成訊息，不經 typing 泡泡。';
     await emit('asgard.message.complete', only, TEXT_TEMPLATE(only));
   }
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-001 — extended-thinking demo. Streams a reasoning sequence (thinking.start → delta×N → complete)
+// long enough to overflow the streaming window (shows the bottom-anchored auto-scroll + top mask) and
+// to exceed the completed-state preview cap (shows "顯示更多"), then the visible answer below it.
+// ---------------------------------------------------------------------------------------------------
+
+const THINKING_CHUNKS = [
+  '先拆解使用者的問題：',
+  '他想知道各通路上週的成長狀況與排名。',
+  '\n我需要幾個步驟：',
+  '\n1. 取出上週與前一週各通路的訂單數，',
+  '\n2. 按通路分組、算出成長率，',
+  '\n3. 由高到低排序，',
+  '\n4. 挑出前幾名並簡述原因。',
+  '\n\n先確認資料範圍是否足夠，',
+  '再決定要不要呼叫分析工具。',
+  '看起來 orders 表已涵蓋所需欄位，可以直接彙總計算。',
+  '\n\n另外要注意幾個邊界情況：',
+  '\n- 上週有跨月，帳務結算日可能落在不同區間；',
+  '\n- 部分通路上週才開通，成長率的分母會偏小、要標注；',
+  '\n- 退貨與取消的訂單要不要計入，會影響排名。',
+  '\n\n綜合以上，先用含退貨淨額、且排除未滿一週的通路來排，最穩健。',
+];
+
+const THINKING_ANSWER =
+  '根據上週資料，成長最快的是行動 App（+38%），其次是 LINE 官方帳號（+21%）、官網（+9%）。行動 App 的成長主要來自推播導流的回購。';
+
+function thinkingFrame(
+  header: CommonHeader,
+  eventType: 'asgard.message.thinking.start' | 'asgard.message.thinking.delta' | 'asgard.message.thinking.complete',
+  messageId: string,
+  replyToCustomMessageId: string,
+  text: string,
+): object {
+  const factKey =
+    eventType === 'asgard.message.thinking.start'
+      ? 'messageThinkingStart'
+      : eventType === 'asgard.message.thinking.delta'
+      ? 'messageThinkingDelta'
+      : 'messageThinkingComplete';
+
+  return {
+    ...header,
+    eventType,
+    fact: {
+      ...emptyFact(),
+      [factKey]: {
+        message: { messageId, replyToCustomMessageId, text, payload: null, isDebug: false, idx: null, template: null },
+      },
+    },
+  };
+}
+
+async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'thinking-demo',
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const thinkingId = randomUUID();
+  const answerId = randomUUID();
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  // Extended-thinking: start (empty) → delta×N (streams into the auto-scroll window) → complete (full).
+  writeEvent(res, thinkingFrame(header, 'asgard.message.thinking.start', thinkingId, replyTo, ''));
+  await sleep(80);
+
+  for (const chunk of THINKING_CHUNKS) {
+    await sleep(90);
+    writeEvent(res, thinkingFrame(header, 'asgard.message.thinking.delta', thinkingId, replyTo, chunk));
+  }
+
+  await sleep(80);
+  writeEvent(
+    res,
+    thinkingFrame(header, 'asgard.message.thinking.complete', thinkingId, replyTo, THINKING_CHUNKS.join('')),
+  );
+
+  // The visible answer follows the thinking block.
+  await sleep(160);
+  writeEvent(res, messageFrame(header, 'asgard.message.start', answerId, replyTo, '', TEXT_TEMPLATE('')));
+  await sleep(120);
+  writeEvent(
+    res,
+    messageFrame(header, 'asgard.message.complete', answerId, replyTo, THINKING_ANSWER, TEXT_TEMPLATE(THINKING_ANSWER)),
+  );
 
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();

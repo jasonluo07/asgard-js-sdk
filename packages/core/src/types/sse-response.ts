@@ -232,6 +232,10 @@ export interface Fact<Type extends EventType> {
   messageDelta: IsEqual<Type, EventType.MESSAGE_DELTA, MessageEventData>;
   messageComplete: IsEqual<Type, EventType.MESSAGE_COMPLETE, MessageEventData>;
   messageUser: IsEqual<Type, EventType.MESSAGE_USER, MessageUserEventData>;
+  // Extended-thinking stream reuses the message shape (reasoning text in `message.text`) — F-001.
+  messageThinkingStart: IsEqual<Type, EventType.MESSAGE_THINKING_START, MessageEventData>;
+  messageThinkingDelta: IsEqual<Type, EventType.MESSAGE_THINKING_DELTA, MessageEventData>;
+  messageThinkingComplete: IsEqual<Type, EventType.MESSAGE_THINKING_COMPLETE, MessageEventData>;
   toolCallStart: IsEqual<Type, EventType.TOOL_CALL_START, ToolCallBaseEventData>;
   toolCallComplete: IsEqual<Type, EventType.TOOL_CALL_COMPLETE, ToolCallCompleteEventData>;
   toolCallConsent: IsEqual<Type, EventType.TOOL_CALL_CONSENT, ToolCallConsentEventData>;

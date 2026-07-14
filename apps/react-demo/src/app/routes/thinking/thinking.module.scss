@@ -1,0 +1,27 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.button {
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--asg-color-primary);
+  }
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}

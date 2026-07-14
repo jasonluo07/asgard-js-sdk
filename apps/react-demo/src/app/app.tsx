@@ -32,6 +32,7 @@ import { UploadMimeConstraint } from './routes/upload-mime-constraint';
 import { StreamRobustness } from './routes/stream-robustness';
 import { StreamResume } from './routes/stream-resume';
 import { TranscriptReplay } from './routes/transcript-replay';
+import { Thinking } from './routes/thinking';
 
 export function App(): React.ReactElement {
   return (
@@ -69,6 +70,7 @@ export function App(): React.ReactElement {
         <Route path="/stream-robustness" element={<StreamRobustness />} />
         <Route path="/stream-resume" element={<StreamResume />} />
         <Route path="/transcript-replay" element={<TranscriptReplay />} />
+        <Route path="/thinking" element={<Thinking />} />
       </Routes>
     </Layout>
   );

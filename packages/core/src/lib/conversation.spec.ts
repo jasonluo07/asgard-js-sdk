@@ -8,12 +8,21 @@ import type { ConversationBotMessage, SseResponse } from '../types';
 // blanking a completed message, or crashing. The reducer only reads message.messageId + message.text,
 // so fixtures stay minimal and are cast for the SseResponse generic.
 
-type MessageEventType = EventType.MESSAGE_START | EventType.MESSAGE_DELTA | EventType.MESSAGE_COMPLETE;
+type MessageEventType =
+  | EventType.MESSAGE_START
+  | EventType.MESSAGE_DELTA
+  | EventType.MESSAGE_COMPLETE
+  | EventType.MESSAGE_THINKING_START
+  | EventType.MESSAGE_THINKING_DELTA
+  | EventType.MESSAGE_THINKING_COMPLETE;
 
-const FACT_KEY: Record<MessageEventType, 'messageStart' | 'messageDelta' | 'messageComplete'> = {
+const FACT_KEY: Record<MessageEventType, string> = {
   [EventType.MESSAGE_START]: 'messageStart',
   [EventType.MESSAGE_DELTA]: 'messageDelta',
   [EventType.MESSAGE_COMPLETE]: 'messageComplete',
+  [EventType.MESSAGE_THINKING_START]: 'messageThinkingStart',
+  [EventType.MESSAGE_THINKING_DELTA]: 'messageThinkingDelta',
+  [EventType.MESSAGE_THINKING_COMPLETE]: 'messageThinkingComplete',
 };
 
 function messageEvent(eventType: MessageEventType, messageId: string, text: string): SseResponse<EventType> {
@@ -143,6 +152,66 @@ describe('Conversation — transcript replay: message.user (F-014)', () => {
       .onMessage(messageEvent(EventType.MESSAGE_COMPLETE, 'a-1', '回答'));
     expect(getUser(conv, 'u-1')?.text).toBe('問題');
     expect(getBot(conv, 'a-1')).toMatchObject({ isTyping: false, message: { text: '回答' } });
+    expect(conv.messages?.size).toBe(2);
+  });
+});
+
+// F-001 — extended-thinking assembly: a separate `thinking` variant, mirroring F-011 robustness.
+
+function getThinking(
+  conv: Conversation,
+  messageId: string,
+): { type: 'thinking'; text: string; isThinking: boolean } | undefined {
+  const message = conv.messages?.get(messageId);
+
+  return message?.type === 'thinking' ? message : undefined;
+}
+
+describe('Conversation — extended-thinking assembly (F-001)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('UC-001/002: start → delta×N → complete streams then settles the block', () => {
+    const streaming = empty()
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_START, 't1', ''))
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_DELTA, 't1', 'Let me '))
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_DELTA, 't1', 'think.'));
+    expect(getThinking(streaming, 't1')).toMatchObject({ isThinking: true, text: 'Let me think.' });
+
+    const done = streaming.onMessage(messageEvent(EventType.MESSAGE_THINKING_COMPLETE, 't1', 'Let me think.'));
+    expect(getThinking(done, 't1')).toMatchObject({ isThinking: false, text: 'Let me think.' });
+    expect(done.messages?.size).toBe(1);
+  });
+
+  it('UC-002: complete-only materializes the block from its own frame (self-sufficient, no start/delta)', () => {
+    const conv = empty().onMessage(messageEvent(EventType.MESSAGE_THINKING_COMPLETE, 't2', 'final reasoning'));
+    expect(getThinking(conv, 't2')).toMatchObject({ isThinking: false, text: 'final reasoning' });
+    expect(conv.messages?.size).toBe(1);
+  });
+
+  it('UC-001: delta before start lazy-creates the block and accumulates (never dropped)', () => {
+    const conv = empty()
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_DELTA, 't3', 'a'))
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_DELTA, 't3', 'b'));
+    expect(getThinking(conv, 't3')).toMatchObject({ isThinking: true, text: 'ab' });
+  });
+
+  it('terminal guard: late start / delta after complete are ignored (no regression to streaming)', () => {
+    const completed = empty().onMessage(messageEvent(EventType.MESSAGE_THINKING_COMPLETE, 't4', 'done'));
+
+    const afterLateStart = completed.onMessage(messageEvent(EventType.MESSAGE_THINKING_START, 't4', ''));
+    expect(getThinking(afterLateStart, 't4')).toMatchObject({ isThinking: false, text: 'done' });
+
+    const afterLateDelta = afterLateStart.onMessage(messageEvent(EventType.MESSAGE_THINKING_DELTA, 't4', 'late'));
+    expect(getThinking(afterLateDelta, 't4')).toMatchObject({ isThinking: false, text: 'done' });
+    expect(afterLateDelta.messages?.size).toBe(1);
+  });
+
+  it('thinking and the bot answer coexist as separate messages', () => {
+    const conv = empty()
+      .onMessage(messageEvent(EventType.MESSAGE_THINKING_COMPLETE, 't5', 'reasoning'))
+      .onMessage(messageEvent(EventType.MESSAGE_COMPLETE, 'a5', 'answer'));
+    expect(getThinking(conv, 't5')).toMatchObject({ isThinking: false, text: 'reasoning' });
+    expect(getBot(conv, 'a5')).toMatchObject({ isTyping: false, message: { text: 'answer' } });
     expect(conv.messages?.size).toBe(2);
   });
 });
