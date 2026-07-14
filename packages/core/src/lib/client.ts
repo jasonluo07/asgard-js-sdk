@@ -9,7 +9,7 @@ import {
   CwdDownloadResult,
 } from '../types';
 import { createSseObservable } from './create-sse-observable';
-import { concatMap, delay, of, retry, Subject, takeUntil } from 'rxjs';
+import { concatMap, delay, of, Subject, takeUntil } from 'rxjs';
 import { EventType } from '../constants/enum';
 import { EventEmitter } from './event-emitter';
 
@@ -120,9 +120,11 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       customHeaders: this.customHeaders,
     })
       .pipe(
+        // No RxJS-level retry: re-subscribing here would re-POST the whole request and the backend would
+        // re-dispatch it as a duplicate run. Mid-stream resume is the library's job now (native
+        // Last-Event-ID reconnect in create-sse-observable); a no-cursor failure surfaces via `error` below.
         concatMap(event => of(event).pipe(delay(options?.delayTime ?? 50))),
         takeUntil(this.destroy$),
-        retry(3),
       )
       .subscribe({
         next: response => {

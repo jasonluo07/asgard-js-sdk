@@ -25,11 +25,12 @@
 
 ## Covered Specs
 
-- `F-011` message 與 thinking 串流組裝健壯性 (UC-017 缺前綴直達 complete, UC-018 終態防回退) → BUILD-001 / REVIEW-001. Scope: message assembly only; thinking delegated to F-001.
+- `F-011` message 與 thinking 串流組裝健壯性 (UC-017, UC-018) → BUILD-001 / REVIEW-001 (done, **merged to main** via PR #291). Scope: message assembly only; thinking delegated to F-001.
+- `F-002` Last-Event-ID 斷線續傳 (UC-003 透明續傳, UC-004 無 cursor 不重送) → BUILD-002 / REVIEW-002. Scope: resume + no-dup guard; R4 (openWhenHidden) / R5 (detach rejoin) deferred (dev backend).
 
 ## ▶ Next Task
 
-None — BUILD-001 cycle complete (awaiting user authorization to close + open PR). Next PM feature per the roadmap: F-002 (Last-Event-ID resume) or F-014 (transcript replay kernel).
+None — BUILD-002 cycle complete (awaiting authorization to commit + PR). Next per roadmap ①: F-014 (transcript replay kernel + message.user).
 
 ## Task Queue
 
@@ -37,3 +38,5 @@ None — BUILD-001 cycle complete (awaiting user authorization to close + open P
 | ------------ | ------------------------------------------ | -------- | ------ | -------------------------------------------------------------------------------------- |
 | `BUILD-001`  | Message Stream Assembly Robustness         | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
 | `REVIEW-001` | Review: Message Stream Assembly Robustness | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
+| `BUILD-002`  | Last-Event-ID Resume                       | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
+| `REVIEW-002` | Review: Last-Event-ID Resume               | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
