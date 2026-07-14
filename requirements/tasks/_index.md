@@ -28,11 +28,12 @@
 - `F-011` message 與 thinking 串流組裝健壯性 (UC-017, UC-018) → BUILD-001 / REVIEW-001 (done, **merged to main** via PR #291). Scope: message assembly only; thinking delegated to F-001.
 - `F-002` Last-Event-ID 斷線續傳 (UC-003 透明續傳, UC-004 無 cursor 不重送) → BUILD-002 / REVIEW-002 (done, **merged** via PR #292). R4/R5 deferred (dev backend).
 - `F-014` transcript 冷啟動重播內核 + message.user (UC-023) → BUILD-003 / REVIEW-003 (done, **merged to main** via PR #293). Phase 0 prerequisite for F-015/F-016. Depends F-002 (GET transport) + F-011 (complete assembly).
-- `F-001` thinking message 顯示 (UC-001 串流、UC-002 完成) → BUILD-004 / REVIEW-004 (done, awaiting merge). roadmap ② 顯示層第一張。Depends F-011 (assembly robustness). 完成態固定「Thought for a moment」不計耗時（EXT-001 已取消）。
+- `F-001` thinking message 顯示 (UC-001 串流、UC-002 完成) → BUILD-004 / REVIEW-004 (done, **merged to main** via PR #294). roadmap ② 顯示層第一張。Depends F-011 (assembly robustness). 完成態固定「Thought for a moment」不計耗時（EXT-001 已取消）。
+- `F-003` run 進行中指示改綁連線並移至輸入交界 (UC-005 呈現、UC-006 移除舊 typing) → BUILD-005 / REVIEW-005 (done, awaiting merge). roadmap ② 顯示層第二張。React-only（綁既有 `isConnecting`，不動 core）。清掉 BotTypingPlaceholder + 三點 + 500ms debounce，保留 `typingText` 串流文字。
 
 ## ▶ Next Task
 
-`F-003` (run indicator) — roadmap ② 第二張，待 F-001 (BUILD-004) 合併後、使用者指示才開工。BUILD-004/REVIEW-004 done、待合併。
+roadmap ② 顯示層完成（F-001 + F-003）。BUILD-005/REVIEW-005 done、待合併。下一步：roadmap ③ tool-call 一叢（F-004/005/006 → F-007/008/009）—— 待使用者指示。
 
 ## Task Queue
 
@@ -46,3 +47,5 @@
 | `REVIEW-003` | Review: Transcript Replay Kernel           | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
 | `BUILD-004`  | Thinking Message Display                   | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
 | `REVIEW-004` | Review: Thinking Message Display           | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |
+| `BUILD-005`  | Run Indicator Bound to Connection at Seam  | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)             |
+| `REVIEW-005` | Review: Run Indicator at Seam              | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)           |
