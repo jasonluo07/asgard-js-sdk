@@ -19,6 +19,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.steps': '{n} steps',
     'summary.skills': ' · Used {s} skills',
     'summary.files': ' · Processed {f} files',
+    'expand.initial': 'Initial',
+    'expand.result': 'Result',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -30,6 +32,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.steps': '{n} ステップ',
     'summary.skills': ' · スキル {s} 件',
     'summary.files': ' · ファイル {f} 件',
+    'expand.initial': '入力',
+    'expand.result': '結果',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -41,6 +45,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.steps': '{n} 個步驟',
     'summary.skills': ' · 使用 {s} 個 skill',
     'summary.files': ' · 處理 {f} 個檔案',
+    'expand.initial': '輸入',
+    'expand.result': '結果',
   },
 };
 
