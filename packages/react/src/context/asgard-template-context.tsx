@@ -1,6 +1,7 @@
 import { createContext, FC, PropsWithChildren, ReactNode, useContext, useMemo } from 'react';
 import { ConversationBotMessage, ConversationErrorMessage, ConversationMessage } from '@asgard-js/core';
 import { ToolCallItemData } from '../components/templates';
+import { Locale } from '../i18n';
 
 /**
  * Configuration for a message action button
@@ -44,6 +45,8 @@ export interface ToolCallGroupRendererProps {
 }
 
 export interface AsgardTemplateContextValue {
+  /** UI language for synthesized text (tool-call labels, …). Defaults to `en-US` (F-005). */
+  locale?: Locale;
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
   onTemplateBtnClick?: (payload: Record<string, unknown>, eventName: string, raw: string) => void;
@@ -59,6 +62,7 @@ export interface AsgardTemplateContextValue {
 }
 
 export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
+  locale: 'en-US',
   onErrorClick: undefined,
   errorMessageRenderer: undefined,
   onTemplateBtnClick: undefined,
@@ -70,6 +74,7 @@ export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
 });
 
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
+  locale?: Locale;
   onErrorClick?: (message: ConversationErrorMessage) => void;
   errorMessageRenderer?: (message: ConversationErrorMessage) => ReactNode;
   onTemplateBtnClick?: (payload: Record<string, unknown>, eventName: string, raw: string) => void;
@@ -83,6 +88,7 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
 export function AsgardTemplateContextProvider(props: AsgardTemplateContextProviderProps): ReactNode {
   const {
     children,
+    locale = 'en-US',
     onErrorClick,
     errorMessageRenderer,
     onTemplateBtnClick,
@@ -95,6 +101,7 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
 
   const contextValue = useMemo(
     () => ({
+      locale,
       onErrorClick,
       errorMessageRenderer,
       onTemplateBtnClick,
@@ -105,6 +112,7 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
       renderToolCallGroup,
     }),
     [
+      locale,
       errorMessageRenderer,
       onErrorClick,
       onTemplateBtnClick,

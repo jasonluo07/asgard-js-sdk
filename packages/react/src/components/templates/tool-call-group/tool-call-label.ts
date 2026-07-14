@@ -1,10 +1,11 @@
 import { ConversationToolCallMessage } from '@asgard-js/core';
+import { Locale, t } from '../../../i18n';
 
 // F-004 — tool-call label priority + native built-in detection + label synthesis.
 // The seven Claude-native built-ins (toolsetName === "" and toolName ∈ NATIVE) carry an empty `reason`,
 // so their label is synthesized here; general tools and Asgard-platform built-ins have a non-empty
-// `reason` and use it directly. i18n (locale switching) is F-005 — the en-US strings live in EN_LABEL
-// so F-005 can lift them into the locale catalog.
+// `reason` and use it directly. F-005 — the synthesized text is localized through the i18n catalog
+// (`t(locale, 'tool.…', vars)`); Bash's `description` is agent-written NL and is shown as-is, never i18n'd.
 
 const NATIVE_TOOLS = new Set(['Bash', 'Read', 'Write', 'Edit', 'Skill', 'WebFetch', 'WebSearch']);
 
@@ -43,23 +44,13 @@ const hostOf = (url: string): string => {
   }
 };
 
-// en-US synthesis strings, grouped so F-005 can lift them into the i18n catalog (keyed as tool.read etc.).
-const EN_LABEL = {
-  read: (file: string): string => `Read ${file}`,
-  write: (file: string): string => `Wrote ${file}`,
-  edit: (file: string): string => `Edited ${file}`,
-  skill: (skill: string): string => `Ran skill ${skill}`,
-  webfetch: (host: string): string => `Fetched ${host}`,
-  websearch: (query: string): string => `Searched “${query}”`,
-};
-
 /**
  * Single tool-call display label (pinned spec §1 priority):
  * 1. `reason !== ""` → use `reason` (general tools + Asgard-platform built-ins)
- * 2. `reason === ""` and native seven → synthesize (§3)
+ * 2. `reason === ""` and native seven → synthesize (§3), localized via `t(locale, …)`
  * 3. otherwise → `toolName` fallback
  */
-export function synthesizeToolCallLabel(call: ToolCallInput): string {
+export function synthesizeToolCallLabel(call: ToolCallInput, locale: Locale): string {
   if (call.reason) return call.reason;
 
   if (isNativeBuiltin(call)) {
@@ -70,17 +61,17 @@ export function synthesizeToolCallLabel(call: ToolCallInput): string {
         // `description` is natural language written in the agent's own language — shown as-is, not i18n'd.
         return str(p.description) || str(p.command) || 'Bash';
       case 'Read':
-        return EN_LABEL.read(basename(str(p.file_path)));
+        return t(locale, 'tool.read', { file: basename(str(p.file_path)) });
       case 'Write':
-        return EN_LABEL.write(basename(str(p.file_path)));
+        return t(locale, 'tool.write', { file: basename(str(p.file_path)) });
       case 'Edit':
-        return EN_LABEL.edit(basename(str(p.file_path)));
+        return t(locale, 'tool.edit', { file: basename(str(p.file_path)) });
       case 'Skill':
-        return EN_LABEL.skill(str(p.skill));
+        return t(locale, 'tool.skill', { skill: str(p.skill) });
       case 'WebFetch':
-        return EN_LABEL.webfetch(hostOf(str(p.url)));
+        return t(locale, 'tool.webfetch', { host: hostOf(str(p.url)) });
       case 'WebSearch':
-        return EN_LABEL.websearch(str(p.query));
+        return t(locale, 'tool.websearch', { query: str(p.query) });
     }
   }
 
