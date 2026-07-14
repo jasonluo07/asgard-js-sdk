@@ -9,7 +9,7 @@ import {
   CwdDownloadResult,
 } from '../types';
 import { createSseObservable } from './create-sse-observable';
-import { concatMap, delay, of, Subject, takeUntil } from 'rxjs';
+import { concatMap, delay, Observable, of, Subject, takeUntil } from 'rxjs';
 import { EventType } from '../constants/enum';
 import { EventEmitter } from './event-emitter';
 
@@ -112,17 +112,48 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     options?.onSseStart?.();
     this.inFlight += 1;
 
-    createSseObservable({
-      apiKey: this.apiKey,
-      endpoint: this.endpoint,
-      debugMode: this.debugMode,
-      payload: this.transformSsePayload?.(payload) ?? payload,
-      customHeaders: this.customHeaders,
-    })
+    this.runSse(
+      createSseObservable({
+        apiKey: this.apiKey,
+        endpoint: this.endpoint,
+        debugMode: this.debugMode,
+        payload: this.transformSsePayload?.(payload) ?? payload,
+        customHeaders: this.customHeaders,
+      }),
+      options,
+    );
+  }
+
+  /**
+   * Cold-start transcript rejoin (F-014): a `GET /message/sse?custom_channel_id=…` with an empty
+   * `Last-Event-ID` replays the collapsed history (`message.user` + self-sufficient `*.complete`),
+   * assembled through the same reducer. Reuses the F-002 native Last-Event-ID transport (no re-POST).
+   */
+  rejoinSse(customChannelId: string, options?: FetchSseOptions): void {
+    options?.onSseStart?.();
+    this.inFlight += 1;
+
+    const url = new URL(this.endpoint);
+    url.searchParams.set('custom_channel_id', customChannelId);
+
+    this.runSse(
+      createSseObservable({
+        apiKey: this.apiKey,
+        endpoint: url.toString(),
+        debugMode: this.debugMode,
+        method: 'GET',
+        customHeaders: this.customHeaders,
+      }),
+      options,
+    );
+  }
+
+  private runSse(observable: Observable<SseResponse<EventType>>, options?: FetchSseOptions): void {
+    observable
       .pipe(
-        // No RxJS-level retry: re-subscribing here would re-POST the whole request and the backend would
-        // re-dispatch it as a duplicate run. Mid-stream resume is the library's job now (native
-        // Last-Event-ID reconnect in create-sse-observable); a no-cursor failure surfaces via `error` below.
+        // No RxJS-level retry: re-subscribing would re-POST and the backend would re-dispatch a duplicate
+        // run. Mid-stream resume is the library's job (native Last-Event-ID reconnect in
+        // create-sse-observable); a no-cursor failure surfaces via `error` below.
         concatMap(event => of(event).pipe(delay(options?.delayTime ?? 50))),
         takeUntil(this.destroy$),
       )

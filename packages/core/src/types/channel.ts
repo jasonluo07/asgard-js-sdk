@@ -26,6 +26,10 @@ export type ConversationUserMessage = {
   blobIds?: string[];
   filePreviewUrls?: string[];
   documentNames?: string[];
+  /** The client-sent id echoed back on GET rejoin — the dedup key vs the optimistic bubble (F-014). */
+  customMessageId?: string;
+  /** Identity hint carried by a replayed `message.user` (F-014). */
+  identityHint?: string;
   time: Date;
   traceId?: string;
 };

@@ -161,6 +161,18 @@ export interface MessageEventData {
   message: Message;
 }
 
+/**
+ * Persist-only user turn, replayed on GET rejoin (F-014). Not echoed on a live POST, so the optimistic
+ * user bubble and this replayed event must be de-duplicated by `messageId` / `customMessageId`.
+ */
+export interface MessageUserEventData {
+  messageId: string;
+  text: string;
+  blobIds?: string[];
+  customMessageId?: string;
+  identityHint?: string;
+}
+
 export interface ErrorMessage {
   message: string;
   code: string;
@@ -219,6 +231,7 @@ export interface Fact<Type extends EventType> {
   messageStart: IsEqual<Type, EventType.MESSAGE_START, MessageEventData>;
   messageDelta: IsEqual<Type, EventType.MESSAGE_DELTA, MessageEventData>;
   messageComplete: IsEqual<Type, EventType.MESSAGE_COMPLETE, MessageEventData>;
+  messageUser: IsEqual<Type, EventType.MESSAGE_USER, MessageUserEventData>;
   toolCallStart: IsEqual<Type, EventType.TOOL_CALL_START, ToolCallBaseEventData>;
   toolCallComplete: IsEqual<Type, EventType.TOOL_CALL_COMPLETE, ToolCallCompleteEventData>;
   toolCallConsent: IsEqual<Type, EventType.TOOL_CALL_CONSENT, ToolCallConsentEventData>;
