@@ -38,6 +38,7 @@ const navItems = [
   { to: '/thinking', label: 'Thinking (F-001)' },
   { to: '/run-indicator', label: 'Run Indicator (F-003)' },
   { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
+  { to: '/tool-call-i18n', label: 'Tool-Call i18n (F-005)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

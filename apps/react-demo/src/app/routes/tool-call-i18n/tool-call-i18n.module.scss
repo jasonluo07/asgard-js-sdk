@@ -1,0 +1,44 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.controls__title {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.button {
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--asg-color-primary);
+  }
+}
+
+.button--active {
+  border-color: var(--asg-color-primary);
+  background: var(--asg-color-primary);
+  color: #fff;
+}
+
+.controls__hint {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}

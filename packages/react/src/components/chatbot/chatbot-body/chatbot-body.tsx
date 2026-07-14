@@ -12,6 +12,7 @@ import {
 } from '../../templates';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { Locale } from '../../../i18n';
 import clsx from 'clsx';
 import { useResizeObserver } from '../../../hooks';
 
@@ -48,7 +49,7 @@ function groupMessages(messages: ConversationMessage[]): MessageGroup[] {
 }
 
 // Convert tool-call message to ToolCallItemData
-function toolCallToItemData(toolCall: ConversationToolCallMessage): ToolCallItemData {
+function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Locale): ToolCallItemData {
   let status: ToolCallStatus = 'pending';
   if (toolCall.isComplete) {
     status = toolCall.result?.error ? 'error' : 'completed';
@@ -56,8 +57,8 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage): ToolCallItem
 
   return {
     id: toolCall.messageId,
-    // F-004 — priority reason → synthesize (native) → toolName, plus the left identity variant icon.
-    label: synthesizeToolCallLabel(toolCall),
+    // F-004 — priority reason → synthesize (native) → toolName; F-005 — synthesis localized by `locale`.
+    label: synthesizeToolCallLabel(toolCall, locale),
     variant: getToolCallVariant(toolCall),
     status,
     initial: {
@@ -74,7 +75,7 @@ const BOTTOM_THRESHOLD = 50;
 
 export function ChatbotBody(): ReactNode {
   const { chatbot } = useAsgardThemeContext();
-  const { renderToolCallGroup } = useAsgardTemplateContext();
+  const { renderToolCallGroup, locale = 'en-US' } = useAsgardTemplateContext();
 
   const {
     messages,
@@ -179,7 +180,7 @@ export function ChatbotBody(): ReactNode {
         <div ref={contentRef} className={styles.chatbot_body__content} style={contentStyles}>
           {groupMessages(Array.from(messages?.values() ?? [])).map((group, index) => {
             if (group.type === 'tool-call-group') {
-              const items = group.toolCalls.map(toolCallToItemData);
+              const items = group.toolCalls.map(tc => toolCallToItemData(tc, locale));
               const firstToolCall = group.toolCalls[0];
               const key = `tool-call-group-${firstToolCall?.processId || index}`;
 

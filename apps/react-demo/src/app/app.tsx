@@ -35,6 +35,7 @@ import { TranscriptReplay } from './routes/transcript-replay';
 import { Thinking } from './routes/thinking';
 import { RunIndicator } from './routes/run-indicator';
 import { ToolCallVariants } from './routes/tool-call-variants';
+import { ToolCallI18n } from './routes/tool-call-i18n';
 
 export function App(): React.ReactElement {
   return (
@@ -75,6 +76,7 @@ export function App(): React.ReactElement {
         <Route path="/thinking" element={<Thinking />} />
         <Route path="/run-indicator" element={<RunIndicator />} />
         <Route path="/tool-call-variants" element={<ToolCallVariants />} />
+        <Route path="/tool-call-i18n" element={<ToolCallI18n />} />
       </Routes>
     </Layout>
   );
