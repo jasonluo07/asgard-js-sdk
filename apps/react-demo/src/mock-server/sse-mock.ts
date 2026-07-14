@@ -97,6 +97,14 @@ function emptyFact(): Record<string, unknown> {
 }
 
 export async function handleMockSse(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  // F-014 — GET /message/sse is the transcript cold-start rejoin: replay the collapsed history
+  // (message.user + self-sufficient *.complete), each frame carrying an `id:` cursor.
+  if (req.method === 'GET') {
+    await handleMockTranscriptRejoin(req, res);
+
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.statusCode = 405;
     res.end();
@@ -470,4 +478,69 @@ async function handleStreamResumeMock(
 
   await sleep(40);
   complete();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-014 — transcript cold-start rejoin. `GET /message/sse?custom_channel_id=…` replays the collapsed
+// history: user turns as `message.user` (persist-only, echoing the client's customMessageId for dedup)
+// interleaved with self-sufficient assistant `message.complete` frames. Each carries an `id:` cursor.
+// ---------------------------------------------------------------------------------------------------
+
+async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url ?? '', 'http://localhost');
+  const customChannelId = url.searchParams.get('custom_channel_id') ?? 'mock-channel';
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+
+  const userFrame = (messageId: string, text: string, customMessageId: string): object => ({
+    ...header,
+    eventType: 'asgard.message.user',
+    fact: { ...emptyFact(), messageUser: { messageId, text, customMessageId, blobIds: [] } },
+  });
+  const botComplete = (messageId: string, text: string): object => ({
+    ...header,
+    eventType: 'asgard.message.complete',
+    fact: {
+      ...emptyFact(),
+      messageComplete: {
+        message: {
+          messageId,
+          replyToCustomMessageId: '',
+          text,
+          payload: null,
+          isDebug: false,
+          idx: null,
+          template: { type: 'TEXT', text },
+        },
+      },
+    },
+  });
+
+  // Collapsed history: two turns. The first user turn echoes customMessageId `c-opt-1` so it de-dups
+  // against the demo's optimistic bubble; the second (`c-2`) has no optimistic match.
+  const transcript: { event: object; id: string }[] = [
+    { event: userFrame('u-backend-1', '（後端歷史）我剛剛問的問題', 'c-opt-1'), id: 'seq:1' },
+    { event: botComplete('a-backend-1', '（後端歷史）這是助理對第一題的回答。'), id: 'seq:2' },
+    { event: userFrame('u-backend-2', '（後端歷史）第二個問題', 'c-2'), id: 'seq:3' },
+    { event: botComplete('a-backend-2', '（後端歷史）這是助理對第二題的回答。'), id: 'seq:4' },
+  ];
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  for (const frame of transcript) {
+    await sleep(120);
+    writeCursorEvent(res, frame.event, frame.id);
+  }
+
+  await sleep(40);
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
 }

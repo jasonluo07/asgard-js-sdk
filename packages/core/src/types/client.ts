@@ -10,6 +10,8 @@ export interface CwdDownloadResult {
 
 export interface IAsgardServiceClient {
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
+  /** Cold-start transcript rejoin via GET /message/sse (F-014). Optional for backward compatibility. */
+  rejoinSse?(customChannelId: string, options?: FetchSseOptions): void;
   uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
   downloadCwdFile?(relativePath: string, customChannelId: string): Promise<CwdDownloadResult>;
 }

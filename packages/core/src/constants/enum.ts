@@ -13,10 +13,14 @@ export enum EventType {
   MESSAGE_START = 'asgard.message.start',
   MESSAGE_DELTA = 'asgard.message.delta',
   MESSAGE_COMPLETE = 'asgard.message.complete',
+  // Persist-only user turn — never on the live plane; only replayed on GET rejoin (F-014).
+  MESSAGE_USER = 'asgard.message.user',
   TOOL_CALL = 'asgard.tool_call',
   TOOL_CALL_START = 'asgard.tool_call.start',
   TOOL_CALL_COMPLETE = 'asgard.tool_call.complete',
   TOOL_CALL_CONSENT = 'asgard.tool_call.consent',
+  // Channel title push — reserved for F-016 to consume; enum aligned with asgard-core here (F-014).
+  CHANNEL_TITLE_UPDATE = 'asgard.channel.title.update',
   DONE = 'asgard.run.done',
   ERROR = 'asgard.run.error',
 }

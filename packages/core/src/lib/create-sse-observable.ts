@@ -8,12 +8,16 @@ interface CreateSseObservableOptions {
   endpoint: string;
   apiKey?: string;
   debugMode?: boolean;
-  payload: FetchSsePayload;
+  /** POST dispatches a run; GET is the transcript cold-start rejoin (F-014). Defaults to POST. */
+  method?: 'GET' | 'POST';
+  /** Only sent for POST; a GET rejoin carries its params in the URL. */
+  payload?: FetchSsePayload;
   customHeaders?: Record<string, string>;
 }
 
 export function createSseObservable(options: CreateSseObservableOptions): Observable<SseResponse<EventType>> {
   const { endpoint, apiKey, payload, debugMode, customHeaders } = options;
+  const method = options.method ?? 'POST';
 
   return new Observable<SseResponse<EventType>>(subscriber => {
     const controller = new AbortController();
@@ -31,22 +35,18 @@ export function createSseObservable(options: CreateSseObservableOptions): Observ
       headers['X-API-KEY'] = apiKey;
     }
 
-    const searchParams = new URLSearchParams();
-
-    if (debugMode) {
-      searchParams.set('is_debug', 'true');
-    }
-
+    // Preserve any query already on the endpoint (e.g. the GET rejoin's `custom_channel_id`) and add
+    // `is_debug` on top, rather than overwriting the search string.
     const url = new URL(endpoint);
 
-    if (searchParams.toString()) {
-      url.search = searchParams.toString();
+    if (debugMode) {
+      url.searchParams.set('is_debug', 'true');
     }
 
     fetchEventSource(url.toString(), {
-      method: 'POST',
+      method,
       headers,
-      body: payload ? JSON.stringify(payload) : undefined,
+      body: method === 'POST' && payload ? JSON.stringify(payload) : undefined,
       signal: controller.signal,
       /**
        * Allow SSE to work when the page is hidden.

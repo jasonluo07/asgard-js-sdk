@@ -1,6 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { EventType } from '../constants/enum';
-import { ConversationMessage, ConversationToolCallMessage, SseResponse, ToolCallConsentEventData } from '../types';
+import {
+  ConversationMessage,
+  ConversationToolCallMessage,
+  ConversationUserMessage,
+  SseResponse,
+  ToolCallConsentEventData,
+} from '../types';
 
 interface IConversation {
   messages: Map<string, ConversationMessage> | null;
@@ -37,6 +43,8 @@ export default class Conversation implements IConversation {
         return this.onMessageDelta(response as SseResponse<EventType.MESSAGE_DELTA>);
       case EventType.MESSAGE_COMPLETE:
         return this.onMessageComplete(response as SseResponse<EventType.MESSAGE_COMPLETE>);
+      case EventType.MESSAGE_USER:
+        return this.onMessageUser(response as SseResponse<EventType.MESSAGE_USER>);
       case EventType.TOOL_CALL_START:
         return this.onToolCallStart(response as SseResponse<EventType.TOOL_CALL_START>);
       case EventType.TOOL_CALL_COMPLETE:
@@ -127,6 +135,34 @@ export default class Conversation implements IConversation {
       traceId: response.traceId ?? (currentMessage?.type === 'bot' ? currentMessage.traceId : undefined),
       raw: JSON.stringify(response),
     });
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onMessageUser(response: SseResponse<EventType.MESSAGE_USER>): Conversation {
+    const data = response.fact.messageUser;
+
+    // Dedup: the optimistic bubble sent live is keyed by the customMessageId the client generated, which
+    // the backend echoes back here as `customMessageId`. If that (or the backend messageId) already maps
+    // to a user message, this replayed turn is a duplicate — keep the existing one (F-014 invariant).
+    const existing =
+      this.messages?.get(data.messageId) ??
+      (data.customMessageId ? this.messages?.get(data.customMessageId) : undefined);
+
+    if (existing?.type === 'user') return this;
+
+    const messages = new Map(this.messages);
+    const userMessage: ConversationUserMessage = {
+      type: 'user',
+      messageId: data.messageId,
+      text: data.text,
+      blobIds: data.blobIds,
+      customMessageId: data.customMessageId,
+      identityHint: data.identityHint,
+      time: new Date(),
+      traceId: response.traceId,
+    };
+    messages.set(data.messageId, userMessage);
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
   }

@@ -34,6 +34,7 @@ const navItems = [
   { to: '/upload-mime-constraint', label: 'Upload MIME Constraint' },
   { to: '/stream-robustness', label: 'Stream Robustness (F-011)' },
   { to: '/stream-resume', label: 'Stream Resume (F-002)' },
+  { to: '/transcript-replay', label: 'Transcript Replay (F-014)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

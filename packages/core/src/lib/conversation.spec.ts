@@ -16,7 +16,7 @@ const FACT_KEY: Record<MessageEventType, 'messageStart' | 'messageDelta' | 'mess
   [EventType.MESSAGE_COMPLETE]: 'messageComplete',
 };
 
-function messageEvent(eventType: MessageEventType, messageId: string, text: string): SseResponse<MessageEventType> {
+function messageEvent(eventType: MessageEventType, messageId: string, text: string): SseResponse<EventType> {
   return {
     eventType,
     requestId: 'req-1',
@@ -25,7 +25,7 @@ function messageEvent(eventType: MessageEventType, messageId: string, text: stri
     botProviderName: 'bp',
     customChannelId: 'ch',
     fact: { [FACT_KEY[eventType]]: { message: { messageId, text } } },
-  } as unknown as SseResponse<MessageEventType>;
+  } as unknown as SseResponse<EventType>;
 }
 
 function getBot(conv: Conversation, messageId: string): ConversationBotMessage | undefined {
@@ -78,5 +78,71 @@ describe('Conversation — message assembly robustness (F-011)', () => {
 
     const done = conv.onMessage(messageEvent(EventType.MESSAGE_COMPLETE, 'm5', 'ab'));
     expect(getBot(done, 'm5')).toMatchObject({ isTyping: false, message: { text: 'ab' } });
+  });
+});
+
+// F-014 — transcript cold-start replay: the new `message.user` event + dedup vs the optimistic bubble.
+
+function userEvent(
+  messageId: string,
+  text: string,
+  extra?: { customMessageId?: string; identityHint?: string; blobIds?: string[] },
+): SseResponse<EventType> {
+  return {
+    eventType: EventType.MESSAGE_USER,
+    requestId: 'req-1',
+    traceId: 'trace-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { messageUser: { messageId, text, ...extra } },
+  } as unknown as SseResponse<EventType>;
+}
+
+function getUser(conv: Conversation, messageId: string): { type: 'user'; text: string } | undefined {
+  const message = conv.messages?.get(messageId);
+
+  return message?.type === 'user' ? message : undefined;
+}
+
+describe('Conversation — transcript replay: message.user (F-014)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('assembles message.user into a user message with all fields', () => {
+    const conv = empty().onMessage(
+      userEvent('u-backend-1', 'hi', { customMessageId: 'c1', identityHint: 'user-a', blobIds: ['b1'] }),
+    );
+    expect(getUser(conv, 'u-backend-1')).toMatchObject({
+      type: 'user',
+      text: 'hi',
+      customMessageId: 'c1',
+      identityHint: 'user-a',
+      blobIds: ['b1'],
+    });
+  });
+
+  it('cold rejoin: a message.user with no optimistic match is added', () => {
+    const conv = empty().onMessage(userEvent('u-1', 'hello'));
+    expect(getUser(conv, 'u-1')?.text).toBe('hello');
+    expect(conv.messages?.size).toBe(1);
+  });
+
+  it('dedup: a replay matching the optimistic bubble (by customMessageId) is skipped', () => {
+    // The optimistic bubble is keyed by the customMessageId the client generated (channel.sendMessage).
+    const optimistic = empty().pushMessage({ type: 'user', messageId: 'c1', text: 'hi', time: new Date() });
+    // The rejoin replays that turn with a backend messageId + the same customMessageId.
+    const after = optimistic.onMessage(userEvent('u-backend-1', 'hi', { customMessageId: 'c1' }));
+    expect(after.messages?.size).toBe(1);
+    expect(getUser(after, 'c1')?.text).toBe('hi');
+    expect(getUser(after, 'u-backend-1')).toBeUndefined();
+  });
+
+  it('replay of message.user + a self-sufficient message.complete (no start/delta) assembles both', () => {
+    const conv = empty()
+      .onMessage(userEvent('u-1', '問題'))
+      .onMessage(messageEvent(EventType.MESSAGE_COMPLETE, 'a-1', '回答'));
+    expect(getUser(conv, 'u-1')?.text).toBe('問題');
+    expect(getBot(conv, 'a-1')).toMatchObject({ isTyping: false, message: { text: '回答' } });
+    expect(conv.messages?.size).toBe(2);
   });
 });

@@ -31,6 +31,7 @@ import { CwdDownload } from './routes/cwd-download';
 import { UploadMimeConstraint } from './routes/upload-mime-constraint';
 import { StreamRobustness } from './routes/stream-robustness';
 import { StreamResume } from './routes/stream-resume';
+import { TranscriptReplay } from './routes/transcript-replay';
 
 export function App(): React.ReactElement {
   return (
@@ -67,6 +68,7 @@ export function App(): React.ReactElement {
         <Route path="/upload-mime-constraint" element={<UploadMimeConstraint />} />
         <Route path="/stream-robustness" element={<StreamRobustness />} />
         <Route path="/stream-resume" element={<StreamResume />} />
+        <Route path="/transcript-replay" element={<TranscriptReplay />} />
       </Routes>
     </Layout>
   );

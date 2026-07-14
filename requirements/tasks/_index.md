@@ -26,11 +26,12 @@
 ## Covered Specs
 
 - `F-011` message 與 thinking 串流組裝健壯性 (UC-017, UC-018) → BUILD-001 / REVIEW-001 (done, **merged to main** via PR #291). Scope: message assembly only; thinking delegated to F-001.
-- `F-002` Last-Event-ID 斷線續傳 (UC-003 透明續傳, UC-004 無 cursor 不重送) → BUILD-002 / REVIEW-002. Scope: resume + no-dup guard; R4 (openWhenHidden) / R5 (detach rejoin) deferred (dev backend).
+- `F-002` Last-Event-ID 斷線續傳 (UC-003 透明續傳, UC-004 無 cursor 不重送) → BUILD-002 / REVIEW-002 (done, **merged** via PR #292). R4/R5 deferred (dev backend).
+- `F-014` transcript 冷啟動重播內核 + message.user (UC-023) → BUILD-003 / REVIEW-003 (done, awaiting merge). Phase 0 prerequisite for F-015/F-016. Depends F-002 (GET transport) + F-011 (complete assembly).
 
 ## ▶ Next Task
 
-None — BUILD-002 cycle complete (awaiting authorization to commit + PR). Next per roadmap ①: F-014 (transcript replay kernel + message.user).
+None — F-014 (BUILD-003 / REVIEW-003) done. Roadmap ① complete (F-011 → F-002 → F-014); next is roadmap ② (F-001 thinking display, F-003 run indicator) — awaiting task selection.
 
 ## Task Queue
 
@@ -40,3 +41,5 @@ None — BUILD-002 cycle complete (awaiting authorization to commit + PR). Next 
 | `REVIEW-001` | Review: Message Stream Assembly Robustness | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
 | `BUILD-002`  | Last-Event-ID Resume                       | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
 | `REVIEW-002` | Review: Last-Event-ID Resume               | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
+| `BUILD-003`  | Transcript Replay Kernel + message.user    | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
+| `REVIEW-003` | Review: Transcript Replay Kernel           | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
