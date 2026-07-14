@@ -1,7 +1,7 @@
 import { ReactNode, useState, useCallback, useEffect } from 'react';
 import clsx from 'clsx';
 import styles from './tool-call-group.module.scss';
-import { ToolCallVariant } from './tool-call-label';
+import { ToolCallVariant, ToolCallDiff } from './tool-call-label';
 
 // Icons
 function ChevronRightIcon({ className }: { className?: string }): ReactNode {
@@ -12,39 +12,38 @@ function ChevronRightIcon({ className }: { className?: string }): ReactNode {
   );
 }
 
-function CheckCircleIcon({ className }: { className?: string }): ReactNode {
+// Status icons (F-007 / §3.5) — inlined lucide 0.487.0. `completed` shows no icon; `running` = the
+// LoaderCircle spinner (amber, spun via CSS); `error` = CircleAlert (red).
+function LoaderCircleIcon({ className }: { className?: string }): ReactNode {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
     </svg>
   );
 }
 
-function ErrorCircleIcon({ className }: { className?: string }): ReactNode {
+function CircleAlertIcon({ className }: { className?: string }): ReactNode {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-    </svg>
-  );
-}
-
-function LoadingIcon({ className }: { className?: string }): ReactNode {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeDasharray="32"
-        strokeDashoffset="32"
-        strokeLinecap="round"
-      >
-        <animate attributeName="stroke-dashoffset" values="32;0" dur="1s" repeatCount="indefinite" />
-      </circle>
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="8" y2="12" />
+      <line x1="12" x2="12.01" y1="16" y2="16" />
     </svg>
   );
 }
@@ -191,6 +190,8 @@ export interface ToolCallItemData {
   status: ToolCallStatus;
   /** Left identity icon (F-004): native built-ins get their own icon; others get `generic`. */
   variant: ToolCallVariant;
+  /** Right-side `+/-` line diff for Write / Edit (F-007); `null` for tools without a diff. */
+  diff?: ToolCallDiff | null;
   initial?: Record<string, unknown>;
   result?: Record<string, unknown>;
 }
@@ -417,17 +418,27 @@ export function JsonViewer({ title, data }: JsonViewerProps): ReactNode {
 }
 
 // StatusIcon Component
+// §3.5 — status is expressed minimally: `completed` adds no mark (the left variant icon already carries
+// identity); `running` = an amber spinner; `error` = a red alert.
 function StatusIcon({ status }: { status: ToolCallStatus }): ReactNode {
   const iconClass = styles.tool_call_item__status_icon;
 
   switch (status) {
     case 'completed':
-      return <CheckCircleIcon className={clsx(iconClass, styles['tool_call_item__status_icon--completed'])} />;
+      return null;
     case 'error':
-      return <ErrorCircleIcon className={clsx(iconClass, styles['tool_call_item__status_icon--error'])} />;
+      return <CircleAlertIcon className={clsx(iconClass, styles['tool_call_item__status_icon--error'])} />;
     case 'pending':
     default:
-      return <LoadingIcon className={clsx(iconClass, styles['tool_call_item__status_icon--pending'])} />;
+      return (
+        <LoaderCircleIcon
+          className={clsx(
+            iconClass,
+            styles['tool_call_item__status_icon--running'],
+            styles.tool_call_item__status_icon_spin,
+          )}
+        />
+      );
   }
 }
 
@@ -462,6 +473,14 @@ function ToolCallItem({ item }: ToolCallItemProps): ReactNode {
           <span className={styles.tool_call_item__label}>{item.label}</span>
         </div>
         <div className={styles.tool_call_item__status}>
+          {item.diff && (
+            <span className={styles.tool_call_item__diff}>
+              <span className={styles['tool_call_item__diff--added']}>+{item.diff.added}</span>
+              {item.diff.removed > 0 && (
+                <span className={styles['tool_call_item__diff--removed']}>-{item.diff.removed}</span>
+              )}
+            </span>
+          )}
           <StatusIcon status={item.status} />
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   synthesizeToolCallLabel,
   getToolCallVariant,
   groupSummary,
+  toolDiff,
 } from '../../templates';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
@@ -61,6 +62,8 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Local
     // F-004 — priority reason → synthesize (native) → toolName; F-005 — synthesis localized by `locale`.
     label: synthesizeToolCallLabel(toolCall, locale),
     variant: getToolCallVariant(toolCall),
+    // F-007 — right-side `+/-` line diff for Write / Edit.
+    diff: toolDiff(toolCall),
     status,
     initial: {
       toolsetName: toolCall.toolsetName,

@@ -95,37 +95,56 @@
 .tool_call_item__status {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 24px;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 24px;
   height: 24px;
   flex-shrink: 0;
 }
 
-.tool_call_item__status_icon {
-  width: 20px;
-  height: 20px;
+// F-007 — Write/Edit `+/-` line diff (green added / red removed), on the right (former duration slot).
+.tool_call_item__diff {
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
-.tool_call_item__status_icon--completed {
+.tool_call_item__diff--added {
   color: #52c41a;
 }
 
+.tool_call_item__diff--removed {
+  margin-left: 4px;
+  color: #ff4d4f;
+}
+
+.tool_call_item__status_icon {
+  width: 16px;
+  height: 16px;
+}
+
+// §3.5 — running = amber spinner; error = red alert. (completed shows no icon.)
 .tool_call_item__status_icon--error {
   color: #ff4d4f;
 }
 
-.tool_call_item__status_icon--pending {
+.tool_call_item__status_icon--running {
   color: #faad14;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
+.tool_call_item__status_icon_spin {
+  animation: tool_call_spin 1s linear infinite;
+}
+
+@keyframes tool_call_spin {
+  to {
+    transform: rotate(360deg);
   }
-  50% {
-    opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool_call_item__status_icon_spin {
+    animation: none;
   }
 }
 

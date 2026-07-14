@@ -40,6 +40,7 @@ const navItems = [
   { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
   { to: '/tool-call-i18n', label: 'Tool-Call i18n (F-005)' },
   { to: '/tool-call-grouping', label: 'Tool-Call Grouping (F-006)' },
+  { to: '/tool-call-diff', label: 'Tool-Call Diff (F-007)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {
