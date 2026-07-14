@@ -31,11 +31,12 @@
 - `F-001` thinking message 顯示 (UC-001 串流、UC-002 完成) → BUILD-004 / REVIEW-004 (done, **merged to main** via PR #294). roadmap ② 顯示層第一張。Depends F-011 (assembly robustness). 完成態固定「Thought for a moment」不計耗時（EXT-001 已取消）。
 - `F-003` run 進行中指示改綁連線並移至輸入交界 (UC-005 呈現、UC-006 移除舊 typing) → BUILD-005 / REVIEW-005 (done, **merged to main** via PR #295). roadmap ② 顯示層第二張。React-only（綁既有 `isConnecting`，不動 core）。清掉 BotTypingPlaceholder + 三點 + 500ms debounce，保留 `typingText` 串流文字。
 - `F-004` 內建工具 tool-call variants 顯示與 label 合成 (UC-007; pinned spec §1–§3) → BUILD-006 / REVIEW-006 (done, **merged to main** via PR #296). roadmap ③ tool-call 一叢第一張。React-only。顯示序 `reason → 合成 → toolName`；native 七工具 variant icon（對齊 lucide 0.487.0）+ 合成（en-US；i18n locale 歸 F-005）；不動 core。
-- `F-005` tool-call i18n locale prop (UC-008; pinned spec §3) → BUILD-007 / REVIEW-007. roadmap ③ 第二張。React-only。`<Chatbot>` 加 `locale` prop（default en-US）→ AsgardTemplateContext → 把 F-004 的 `EN_LABEL` 換成 catalog + `t()`（en/ja/zh）；Bash description 不翻；不動 core。
+- `F-005` tool-call i18n locale prop (UC-008; pinned spec §3) → BUILD-007 / REVIEW-007 (done, **merged to main** via PR #297). roadmap ③ 第二張。React-only。`<Chatbot>` 加 `locale` prop（default en-US）→ AsgardTemplateContext → 把 F-004 的 `EN_LABEL` 換成 catalog + `t()`（en/ja/zh）；Bash description 不翻；不動 core。**自製 catalog、零外部套件**（未用 Tolgee/i18next）。
+- `F-006` tool-call 分組與 group summary (UC-009/UC-010; pinned spec §4/§5) → BUILD-008 / REVIEW-008. roadmap ③ 第三張。React-only。動態 summary `{n} steps · Used {s} skills · Processed {f} files`（localized、s/f=0 隱藏）取代靜態「Answer preparation steps」；分組已由 groupMessages 達成，加 `summary.*` catalog key；不動 core。
 
 ## ▶ Next Task
 
-`F-006` (tool-call 分組與 group summary) — roadmap ③ 第三張，待使用者指示開工。BUILD-007/REVIEW-007 done、待合併。
+`F-007` (Write/Edit diff) — roadmap ③ 第四張，待使用者指示開工。BUILD-008/REVIEW-008 done、待合併。
 
 ## Task Queue
 
@@ -55,3 +56,5 @@
 | `REVIEW-006` | Review: Built-in Tool-Call Variants        | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md) |
 | `BUILD-007`  | Tool-Call i18n Locale Prop                 | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)             |
 | `REVIEW-007` | Review: Tool-Call i18n Locale Prop         | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)           |
+| `BUILD-008`  | Tool-Call Grouping + Group Summary         | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)   |
+| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md) |

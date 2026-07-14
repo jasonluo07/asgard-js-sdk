@@ -16,6 +16,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'tool.skill': 'Ran skill {skill}',
     'tool.webfetch': 'Fetched {host}',
     'tool.websearch': 'Searched “{query}”',
+    'summary.steps': '{n} steps',
+    'summary.skills': ' · Used {s} skills',
+    'summary.files': ' · Processed {f} files',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -24,6 +27,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'tool.skill': 'スキル {skill} を実行',
     'tool.webfetch': '{host} を取得',
     'tool.websearch': '「{query}」を検索',
+    'summary.steps': '{n} ステップ',
+    'summary.skills': ' · スキル {s} 件',
+    'summary.files': ' · ファイル {f} 件',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -32,6 +38,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'tool.skill': '執行 skill {skill}',
     'tool.webfetch': '擷取 {host}',
     'tool.websearch': '搜尋「{query}」',
+    'summary.steps': '{n} 個步驟',
+    'summary.skills': ' · 使用 {s} 個 skill',
+    'summary.files': ' · 處理 {f} 個檔案',
   },
 };
 

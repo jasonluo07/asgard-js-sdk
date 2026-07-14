@@ -36,6 +36,7 @@ import { Thinking } from './routes/thinking';
 import { RunIndicator } from './routes/run-indicator';
 import { ToolCallVariants } from './routes/tool-call-variants';
 import { ToolCallI18n } from './routes/tool-call-i18n';
+import { ToolCallGrouping } from './routes/tool-call-grouping';
 
 export function App(): React.ReactElement {
   return (
@@ -77,6 +78,7 @@ export function App(): React.ReactElement {
         <Route path="/run-indicator" element={<RunIndicator />} />
         <Route path="/tool-call-variants" element={<ToolCallVariants />} />
         <Route path="/tool-call-i18n" element={<ToolCallI18n />} />
+        <Route path="/tool-call-grouping" element={<ToolCallGrouping />} />
       </Routes>
     </Layout>
   );

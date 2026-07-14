@@ -9,6 +9,7 @@ import {
   ToolCallStatus,
   synthesizeToolCallLabel,
   getToolCallVariant,
+  groupSummary,
 } from '../../templates';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
@@ -183,9 +184,11 @@ export function ChatbotBody(): ReactNode {
               const items = group.toolCalls.map(tc => toolCallToItemData(tc, locale));
               const firstToolCall = group.toolCalls[0];
               const key = `tool-call-group-${firstToolCall?.processId || index}`;
+              // F-006 — dynamic localized group summary, replacing the static 'Answer preparation steps'.
+              const summary = groupSummary(group.toolCalls, locale);
 
               const renderDefaultContent = (overrides?: { title?: string }): ReactNode => (
-                <ToolCallGroupTemplate items={items} time={firstToolCall?.time} title={overrides?.title} />
+                <ToolCallGroupTemplate items={items} time={firstToolCall?.time} title={overrides?.title ?? summary} />
               );
 
               if (renderToolCallGroup) {
