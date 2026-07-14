@@ -77,3 +77,24 @@ export function synthesizeToolCallLabel(call: ToolCallInput, locale: Locale): st
 
   return call.toolName;
 }
+
+/**
+ * Localized group summary (pinned spec §5): `{n} steps · Used {s} skills · Processed {f} files`.
+ * `n` = calls in the group; `s` = native Skill calls; `f` = native Read + Write + Edit calls.
+ * The `skills` / `files` segments are omitted when their count is 0.
+ */
+export function groupSummary(calls: ToolCallInput[], locale: Locale): string {
+  const n = calls.length;
+  const s = calls.filter(c => isNativeBuiltin(c) && c.toolName === 'Skill').length;
+  const f = calls.filter(
+    c => isNativeBuiltin(c) && (c.toolName === 'Read' || c.toolName === 'Write' || c.toolName === 'Edit'),
+  ).length;
+
+  let summary = t(locale, 'summary.steps', { n });
+
+  if (s > 0) summary += t(locale, 'summary.skills', { s });
+
+  if (f > 0) summary += t(locale, 'summary.files', { f });
+
+  return summary;
+}
