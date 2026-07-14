@@ -3,7 +3,13 @@ import { ConversationMessage, ConversationToolCallMessage } from '@asgard-js/cor
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
-import { ToolCallGroupTemplate, ToolCallItemData, ToolCallStatus } from '../../templates';
+import {
+  ToolCallGroupTemplate,
+  ToolCallItemData,
+  ToolCallStatus,
+  synthesizeToolCallLabel,
+  getToolCallVariant,
+} from '../../templates';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import clsx from 'clsx';
@@ -50,7 +56,9 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage): ToolCallItem
 
   return {
     id: toolCall.messageId,
-    label: toolCall.reason || toolCall.toolName,
+    // F-004 — priority reason → synthesize (native) → toolName, plus the left identity variant icon.
+    label: synthesizeToolCallLabel(toolCall),
+    variant: getToolCallVariant(toolCall),
     status,
     initial: {
       toolsetName: toolCall.toolsetName,

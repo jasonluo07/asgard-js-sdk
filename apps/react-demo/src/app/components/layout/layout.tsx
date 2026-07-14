@@ -37,6 +37,7 @@ const navItems = [
   { to: '/transcript-replay', label: 'Transcript Replay (F-014)' },
   { to: '/thinking', label: 'Thinking (F-001)' },
   { to: '/run-indicator', label: 'Run Indicator (F-003)' },
+  { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {
