@@ -98,3 +98,50 @@ export function groupSummary(calls: ToolCallInput[], locale: Locale): string {
 
   return summary;
 }
+
+export interface ToolCallDiff {
+  added: number;
+  removed: number;
+}
+
+// Line-level LCS: `added` = lines in `newStr` not on a common subsequence, `removed` = the same for
+// `oldStr`. An estimate — without the file's actual content a `replace_all` can't be sized exactly, so
+// it is counted as a single hit (pinned spec §6).
+function lineDiff(oldStr: string, newStr: string): ToolCallDiff {
+  const a = oldStr.split('\n');
+  const b = newStr.split('\n');
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const lcs = dp[0][0];
+
+  return { added: n - lcs, removed: m - lcs };
+}
+
+/**
+ * Right-side `+/-` line diff for native Write / Edit (pinned spec §6):
+ * Write (create/override) → `+{content line count}`, no removals; Edit → a line-level LCS estimate over
+ * `old_string` ↔ `new_string`. Every other tool → `null` (no diff).
+ */
+export function toolDiff(call: ToolCallInput): ToolCallDiff | null {
+  if (!isNativeBuiltin(call)) return null;
+
+  const p = call.parameter ?? {};
+
+  if (call.toolName === 'Write') {
+    const content = str(p.content);
+
+    return { added: content ? content.split('\n').length : 0, removed: 0 };
+  }
+
+  if (call.toolName === 'Edit') return lineDiff(str(p.old_string), str(p.new_string));
+
+  return null;
+}

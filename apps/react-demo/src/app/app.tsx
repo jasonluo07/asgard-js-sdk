@@ -37,6 +37,7 @@ import { RunIndicator } from './routes/run-indicator';
 import { ToolCallVariants } from './routes/tool-call-variants';
 import { ToolCallI18n } from './routes/tool-call-i18n';
 import { ToolCallGrouping } from './routes/tool-call-grouping';
+import { ToolCallDiff } from './routes/tool-call-diff';
 
 export function App(): React.ReactElement {
   return (
@@ -79,6 +80,7 @@ export function App(): React.ReactElement {
         <Route path="/tool-call-variants" element={<ToolCallVariants />} />
         <Route path="/tool-call-i18n" element={<ToolCallI18n />} />
         <Route path="/tool-call-grouping" element={<ToolCallGrouping />} />
+        <Route path="/tool-call-diff" element={<ToolCallDiff />} />
       </Routes>
     </Layout>
   );
