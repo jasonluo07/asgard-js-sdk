@@ -34,6 +34,7 @@ import { StreamResume } from './routes/stream-resume';
 import { TranscriptReplay } from './routes/transcript-replay';
 import { Thinking } from './routes/thinking';
 import { RunIndicator } from './routes/run-indicator';
+import { ToolCallVariants } from './routes/tool-call-variants';
 
 export function App(): React.ReactElement {
   return (
@@ -73,6 +74,7 @@ export function App(): React.ReactElement {
         <Route path="/transcript-replay" element={<TranscriptReplay />} />
         <Route path="/thinking" element={<Thinking />} />
         <Route path="/run-indicator" element={<RunIndicator />} />
+        <Route path="/tool-call-variants" element={<ToolCallVariants />} />
       </Routes>
     </Layout>
   );

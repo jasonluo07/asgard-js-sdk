@@ -79,6 +79,14 @@
   transform: rotate(90deg);
 }
 
+// F-004 — left identity icon (native variant or generic). Muted = identity, not status.
+.tool_call_item__variant_icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--asgard-tool-call-icon, #8c8c8c);
+}
+
 .tool_call_item__label {
   font-size: 14px;
   color: var(--asgard-tool-call-text, #fff);
