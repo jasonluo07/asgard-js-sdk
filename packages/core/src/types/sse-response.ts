@@ -202,6 +202,13 @@ export interface ToolCallBaseEventData {
 
 export interface ToolCallCompleteEventData extends ToolCallBaseEventData {
   toolCallResult: Record<string, unknown>;
+  /**
+   * Whether the tool call failed, as reported by the backend (`omitempty` → absent means `false`).
+   * The authoritative failure signal across native / platform / general tools — native tools return a
+   * plain-text `toolCallResult` with no `.error`, so the `result.error` heuristic can't detect their
+   * failures (F-009).
+   */
+  isError?: boolean;
 }
 
 export interface ToolCallConsentPendingCall {

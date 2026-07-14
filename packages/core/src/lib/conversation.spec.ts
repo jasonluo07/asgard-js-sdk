@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Conversation from './conversation';
 import { EventType } from '../constants/enum';
-import type { ConversationBotMessage, SseResponse } from '../types';
+import type { ConversationBotMessage, ConversationToolCallMessage, SseResponse } from '../types';
 
 // F-011 — message stream assembly robustness. The reducer must survive adversarial frame orders
 // (missing prefixes, replay duplicates, out-of-order) without dropping text, sticking in typing,
@@ -213,5 +213,86 @@ describe('Conversation — extended-thinking assembly (F-001)', () => {
     expect(getThinking(conv, 't5')).toMatchObject({ isThinking: false, text: 'reasoning' });
     expect(getBot(conv, 'a5')).toMatchObject({ isTyping: false, message: { text: 'answer' } });
     expect(conv.messages?.size).toBe(2);
+  });
+});
+
+// F-009 — tool-call failure detection: `onToolCallComplete` carries the backend `isError` flag onto the
+// tool-call message (omitempty → absent means not-failed). The react layer reads it for the error status.
+
+function toolCallStartEvent(processId: string, callSeq: number): SseResponse<EventType> {
+  return {
+    eventType: EventType.TOOL_CALL_START,
+    requestId: 'req-1',
+    traceId: 'trace-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: {
+      toolCallStart: {
+        processId,
+        callSeq,
+        toolCall: { toolsetName: '', toolName: 'Read', parameter: { file_path: '/a.ts' } },
+      },
+    },
+  } as unknown as SseResponse<EventType>;
+}
+
+function toolCallCompleteEvent(
+  processId: string,
+  callSeq: number,
+  toolCallResult: Record<string, unknown>,
+  isError?: boolean,
+): SseResponse<EventType> {
+  return {
+    eventType: EventType.TOOL_CALL_COMPLETE,
+    requestId: 'req-1',
+    traceId: 'trace-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: {
+      toolCallComplete: {
+        processId,
+        callSeq,
+        toolCall: { toolsetName: '', toolName: 'Read', parameter: { file_path: '/a.ts' } },
+        toolCallResult,
+        ...(isError === undefined ? {} : { isError }),
+      },
+    },
+  } as unknown as SseResponse<EventType>;
+}
+
+function getToolCall(conv: Conversation, key: string): ConversationToolCallMessage | undefined {
+  const message = conv.messages?.get(key);
+
+  return message?.type === 'tool-call' ? message : undefined;
+}
+
+describe('Conversation — tool-call failure detection (F-009)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('R1: complete with isError:true carries the flag onto the completed tool-call message', () => {
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 0))
+      .onMessage(toolCallCompleteEvent('p', 0, { text: 'permission denied' }, true));
+    expect(getToolCall(conv, 'p-0')).toMatchObject({ isComplete: true, isError: true });
+  });
+
+  it('R4: an omitted isError (omitempty) leaves the flag falsy → not-failed', () => {
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 1))
+      .onMessage(toolCallCompleteEvent('p', 1, { text: 'ok' }));
+    const toolCall = getToolCall(conv, 'p-1');
+    expect(toolCall?.isComplete).toBe(true);
+    expect(toolCall?.isError).toBeFalsy();
+  });
+
+  it('R3: the result.error fallback is preserved on the message (isError absent, result carries error)', () => {
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 2))
+      .onMessage(toolCallCompleteEvent('p', 2, { error: 'boom' }));
+    const toolCall = getToolCall(conv, 'p-2');
+    expect(toolCall?.isError).toBeFalsy();
+    expect(toolCall?.result).toMatchObject({ error: 'boom' });
   });
 });

@@ -54,7 +54,9 @@ function groupMessages(messages: ConversationMessage[]): MessageGroup[] {
 function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Locale): ToolCallItemData {
   let status: ToolCallStatus = 'pending';
   if (toolCall.isComplete) {
-    status = toolCall.result?.error ? 'error' : 'completed';
+    // F-009 — drive the error status from the backend `isError` flag (covers native / platform /
+    // general uniformly); keep the legacy `result.error` heuristic as a fallback for old data.
+    status = toolCall.isError || toolCall.result?.error ? 'error' : 'completed';
   }
 
   return {
