@@ -107,6 +107,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   const payload = await readBody(req);
   const requestId = randomUUID();
   const customChannelId = payload.customChannelId ?? 'mock-channel';
+
+  // F-011 adversarial-order demo — scoped to its own channel so the other routes' happy-flow mock below
+  // is untouched. The route sends a keyword message; the mock replays a pathological frame order.
+  if (customChannelId === 'stream-robustness-demo') {
+    await handleStreamRobustnessMock(res, payload);
+
+    return;
+  }
+
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
   const fullText = REPLY_CHUNKS.join('');
@@ -198,5 +207,98 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // 5. run.done
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
 
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-011 — message stream assembly robustness demo. Each button on the /stream-robustness route sends a
+// keyword message; this handler replays one adversarial frame order for a single messageId so the SDK's
+// reducer + renderer can be observed surviving it (no dropped text, no stuck typing, no blanked message).
+// ---------------------------------------------------------------------------------------------------
+
+const TEXT_TEMPLATE = (text: string): Record<string, unknown> => ({ type: 'TEXT', text });
+
+function messageFrame(
+  header: CommonHeader,
+  eventType: 'asgard.message.start' | 'asgard.message.delta' | 'asgard.message.complete',
+  messageId: string,
+  replyToCustomMessageId: string,
+  text: string,
+  template: Record<string, unknown> | null,
+): object {
+  const factKey =
+    eventType === 'asgard.message.start'
+      ? 'messageStart'
+      : eventType === 'asgard.message.delta'
+      ? 'messageDelta'
+      : 'messageComplete';
+
+  return {
+    ...header,
+    eventType,
+    fact: {
+      ...emptyFact(),
+      [factKey]: {
+        message: { messageId, replyToCustomMessageId, text, payload: null, isDebug: false, idx: null, template },
+      },
+    },
+  };
+}
+
+async function handleStreamRobustnessMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'stream-robustness-demo',
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const text = payload.text ?? '';
+  const messageId = randomUUID();
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  const emit = async (
+    eventType: 'asgard.message.start' | 'asgard.message.delta' | 'asgard.message.complete',
+    frameText: string,
+    template: Record<string, unknown> | null,
+  ): Promise<void> => {
+    writeEvent(res, messageFrame(header, eventType, messageId, replyTo, frameText, template));
+    await sleep(140);
+  };
+
+  if (/delta-before-start/.test(text)) {
+    // R2 — delta arrives with no start; the reducer lazy-creates and accumulates (never drops).
+    await emit('asgard.message.delta', '缺 start，直接來 delta：', null);
+    await emit('asgard.message.delta', '文字被 lazy-init 累加，不丟棄。', null);
+    const full = '缺 start，直接來 delta：文字被 lazy-init 累加，不丟棄。';
+    await emit('asgard.message.complete', full, TEXT_TEMPLATE(full));
+  } else if (/start-after-complete/.test(text)) {
+    // R3 — a completed message must not regress; the late start + delta are ignored.
+    const done = '已完成的權威答案 —— 終態不該被遲到的 start / delta 打回。';
+    await emit('asgard.message.complete', done, TEXT_TEMPLATE(done));
+    await emit('asgard.message.start', '', TEXT_TEMPLATE(''));
+    await emit('asgard.message.delta', '（這段遲到的 delta 應被忽略，不覆蓋終態）', null);
+  } else if (/dup-complete/.test(text)) {
+    // R3/R4 — duplicate complete stays idempotent (one message, terminal preserved).
+    const dup = '重複 complete → 冪等，仍只有一則完成訊息。';
+    await emit('asgard.message.complete', dup, TEXT_TEMPLATE(dup));
+    await emit('asgard.message.complete', dup, TEXT_TEMPLATE(dup));
+  } else if (/no-template/.test(text)) {
+    // R5 — a complete with no template renders its plain text (not an empty bubble).
+    await emit('asgard.message.complete', 'complete 沒有 template → 前端 fallback 顯示純文字，不是空白 <div/>。', null);
+  } else {
+    // R1 — complete-only (default): materialize the terminal from a single frame.
+    const only = '只有 complete（無 start / delta）也能直接呈現完成訊息，不經 typing 泡泡。';
+    await emit('asgard.message.complete', only, TEXT_TEMPLATE(only));
+  }
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }

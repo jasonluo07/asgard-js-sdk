@@ -25,15 +25,15 @@
 
 ## Covered Specs
 
-None yet.
+- `F-011` message 與 thinking 串流組裝健壯性 (UC-017 缺前綴直達 complete, UC-018 終態防回退) → BUILD-001 / REVIEW-001. Scope: message assembly only; thinking delegated to F-001.
 
 ## ▶ Next Task
 
-None — awaiting task selection.
+None — BUILD-001 cycle complete (awaiting user authorization to close + open PR). Next PM feature per the roadmap: F-002 (Last-Event-ID resume) or F-014 (transcript replay kernel).
 
 ## Task Queue
 
-| Task ID | Title | Priority | Status | Spec |
-| ------- | ----- | -------- | ------ | ---- |
-
-尚無任務 / none yet.
+| Task ID      | Title                                      | Priority | Status | Spec                                                                                   |
+| ------------ | ------------------------------------------ | -------- | ------ | -------------------------------------------------------------------------------------- |
+| `BUILD-001`  | Message Stream Assembly Robustness         | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
+| `REVIEW-001` | Review: Message Stream Assembly Robustness | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |

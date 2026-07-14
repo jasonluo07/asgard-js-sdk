@@ -32,6 +32,7 @@ const navItems = [
   { to: '/user-identity-hint', label: 'User Identity Hint' },
   { to: '/on-channel-ready', label: 'On Channel Ready' },
   { to: '/upload-mime-constraint', label: 'Upload MIME Constraint' },
+  { to: '/stream-robustness', label: 'Stream Robustness (F-011)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {
