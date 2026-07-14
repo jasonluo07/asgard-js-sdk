@@ -33,6 +33,7 @@ const navItems = [
   { to: '/on-channel-ready', label: 'On Channel Ready' },
   { to: '/upload-mime-constraint', label: 'Upload MIME Constraint' },
   { to: '/stream-robustness', label: 'Stream Robustness (F-011)' },
+  { to: '/stream-resume', label: 'Stream Resume (F-002)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

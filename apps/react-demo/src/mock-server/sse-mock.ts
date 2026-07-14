@@ -116,6 +116,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // F-002 Last-Event-ID resume demo — scoped channel. A fresh run drops the socket mid-stream; the
+  // library reconnects with `Last-Event-ID` and the mock resumes from that cursor. A `no-cursor` keyword
+  // fails before 200 → surfaced as an error, never re-POSTed.
+  if (customChannelId === 'stream-resume-demo') {
+    await handleStreamResumeMock(req, res, payload);
+
+    return;
+  }
+
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
   const fullText = REPLY_CHUNKS.join('');
@@ -301,4 +310,164 @@ async function handleStreamRobustnessMock(res: ServerResponse, payload: ParsedPa
 
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-002 — Last-Event-ID resume demo. A fresh run streams `id:`-tagged deltas then drops the socket
+// mid-stream; @microsoft/fetch-event-source reconnects with `Last-Event-ID` and this handler resumes
+// from that cursor (transparent — no gap, no dup). A `no-cursor` keyword fails before 200 so the SDK
+// surfaces the error without re-POSTing it (UC-004).
+// ---------------------------------------------------------------------------------------------------
+
+const RESUME_CHUNKS = [
+  '這則訊息會串到一半',
+  '被伺服器切斷連線，',
+  '接著 fetch-event-source ',
+  '帶著 Last-Event-ID ',
+  '自動重連，',
+  '後端從 cursor 續傳、不重新派送，',
+  '所以內容接續、',
+  '不缺漏、不重複 —— ',
+  '斷線對使用者透明。',
+];
+
+// Delta frame carrying a resume cursor (`id:` line written by writeCursorEvent).
+function resumeDelta(header: CommonHeader, messageId: string, replyTo: string, text: string, idx: number): object {
+  return {
+    ...header,
+    eventType: 'asgard.message.delta',
+    fact: {
+      ...emptyFact(),
+      messageDelta: {
+        message: {
+          messageId,
+          replyToCustomMessageId: replyTo,
+          text,
+          payload: null,
+          isDebug: false,
+          idx,
+          template: null,
+        },
+      },
+    },
+  };
+}
+
+function writeCursorEvent(res: ServerResponse, event: object, id: string): void {
+  res.write(`id: ${id}\n`);
+  res.write(`data: ${JSON.stringify(event)}\n\n`);
+}
+
+async function handleStreamResumeMock(
+  req: IncomingMessage,
+  res: ServerResponse,
+  payload: ParsedPayload,
+): Promise<void> {
+  const text = payload.text ?? '';
+  const replyTo = payload.customMessageId ?? '';
+  const lastEventId = typeof req.headers['last-event-id'] === 'string' ? req.headers['last-event-id'] : undefined;
+
+  // UC-004 — no cursor: fail before 200. With the RxJS retry(3) removed, this surfaces as HttpError and
+  // is NOT re-POSTed (an empty-cursor POST would be re-dispatched by the backend as a duplicate run).
+  if (!lastEventId && /no-cursor|fail/.test(text)) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('simulated pre-200 failure (UC-004): no cursor, not re-dispatched');
+
+    return;
+  }
+
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'stream-resume-demo',
+  };
+  // messageId derived from customMessageId: stable across a run + its reconnect (the library replays the
+  // same POST body), but distinct per user click. The cursor is `${messageId}:${idx}`.
+  const messageId = `resume-${replyTo || 'init'}`;
+  const fullText = RESUME_CHUNKS.join('');
+  const sseHeaders = {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  };
+
+  const complete = (): void => {
+    writeEvent(res, {
+      ...header,
+      eventType: 'asgard.message.complete',
+      fact: {
+        ...emptyFact(),
+        messageComplete: {
+          message: {
+            messageId,
+            replyToCustomMessageId: replyTo,
+            text: fullText,
+            payload: null,
+            isDebug: false,
+            idx: null,
+            template: { type: 'TEXT', text: fullText },
+          },
+        },
+      },
+    });
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+  };
+
+  // UC-003 resume — the reconnect carries `Last-Event-ID: ${messageId}:${idx}`; continue from idx+1.
+  if (lastEventId) {
+    res.writeHead(200, sseHeaders);
+    const resumeFrom = Number(lastEventId.slice(lastEventId.lastIndexOf(':') + 1)) + 1;
+    for (let i = resumeFrom; i < RESUME_CHUNKS.length; i++) {
+      await sleep(90);
+      writeCursorEvent(res, resumeDelta(header, messageId, replyTo, RESUME_CHUNKS[i], i), `${messageId}:${i}`);
+    }
+
+    await sleep(40);
+    complete();
+
+    return;
+  }
+
+  // Fresh run — stream `id:`-tagged deltas. A `resume`/`drop` keyword kills the socket mid-stream to
+  // force the native reconnect; otherwise the message just completes (baseline).
+  res.writeHead(200, sseHeaders);
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  writeEvent(res, {
+    ...header,
+    eventType: 'asgard.message.start',
+    fact: {
+      ...emptyFact(),
+      messageStart: {
+        message: {
+          messageId,
+          replyToCustomMessageId: replyTo,
+          text: '',
+          payload: null,
+          isDebug: false,
+          idx: null,
+          template: { type: 'TEXT', text: '' },
+        },
+      },
+    },
+  });
+
+  const shouldDrop = /resume|drop|斷線|續傳/.test(text);
+  const dropAt = Math.floor(RESUME_CHUNKS.length / 2);
+  for (let i = 0; i < RESUME_CHUNKS.length; i++) {
+    await sleep(90);
+    writeCursorEvent(res, resumeDelta(header, messageId, replyTo, RESUME_CHUNKS[i], i), `${messageId}:${i}`);
+
+    if (shouldDrop && i === dropAt) {
+      // Kill the socket mid-stream → the client reconnects with `Last-Event-ID: resume-msg:${dropAt}`,
+      // hitting the resume branch above.
+      res.destroy();
+
+      return;
+    }
+  }
+
+  await sleep(40);
+  complete();
 }
