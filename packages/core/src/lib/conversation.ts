@@ -303,6 +303,7 @@ export default class Conversation implements IConversation {
         ...existingMessage,
         eventType: EventType.TOOL_CALL_COMPLETE,
         result: toolCallComplete.toolCallResult,
+        isError: toolCallComplete.isError,
         isComplete: true,
         traceId: response.traceId ?? existingMessage.traceId,
       };

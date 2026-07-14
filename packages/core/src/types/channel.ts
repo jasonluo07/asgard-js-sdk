@@ -66,6 +66,8 @@ export type ConversationToolCallMessage = {
   toolsetName: string;
   parameter: Record<string, unknown>;
   result?: Record<string, unknown>;
+  /** Backend-reported failure flag carried from `tool_call.complete` (F-009); absent until complete. */
+  isError?: boolean;
   isComplete: boolean;
   time: Date;
   traceId?: string;

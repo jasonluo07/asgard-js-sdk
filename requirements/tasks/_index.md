@@ -34,11 +34,12 @@
 - `F-005` tool-call i18n locale prop (UC-008; pinned spec §3) → BUILD-007 / REVIEW-007 (done, **merged to main** via PR #297). roadmap ③ 第二張。React-only。`<Chatbot>` 加 `locale` prop（default en-US）→ AsgardTemplateContext → 把 F-004 的 `EN_LABEL` 換成 catalog + `t()`（en/ja/zh）；Bash description 不翻；不動 core。**自製 catalog、零外部套件**（未用 Tolgee/i18next）。
 - `F-006` tool-call 分組與 group summary (UC-009/UC-010; pinned spec §4/§5) → BUILD-008 / REVIEW-008 (done, **merged to main** via PR #298). roadmap ③ 第三張。React-only。動態 summary `{n} steps · Used {s} skills · Processed {f} files`（localized、s/f=0 隱藏）取代靜態「Answer preparation steps」；分組已由 groupMessages 達成，加 `summary.*` catalog key；不動 core。
 - `F-007` Write/Edit diff 與統一狀態呈現 (UC-011/UC-012; pinned spec §6/§3.5) → BUILD-009 / REVIEW-009 (done, **merged to main** via PR #299). roadmap ③ 第四張。React-only。Write=`+content 行數`、Edit=old↔new 行級 LCS 概算 `+/-`（右側）；狀態 completed 不加標記 / running 琥珀 spinner / error 紅 alert；不動 core（IsError 判定另案 F-009）。
-- `F-008` tool-call 展開內容對齊 Initial/Result (UC-013; pinned spec §8) → BUILD-010 / REVIEW-010. roadmap ③ 第五張。React-only。展開 Initial/Result JsonViewer 已存在，本張把標題 localize（加 `expand.*` catalog key、locale 串進 ToolCallGroup）；無內容不顯示 chevron；不動 core。
+- `F-008` tool-call 展開內容對齊 Initial/Result (UC-013; pinned spec §8) → BUILD-010 / REVIEW-010 (done, **merged to main** via PR #300). roadmap ③ 第五張。React-only。展開 Initial/Result JsonViewer 已存在，本張把標題 localize（加 `expand.*` catalog key、locale 串進 ToolCallGroup）；無內容不顯示 chevron；不動 core。
+- `F-009` tool-call 失敗判定改用後端 isError (UC-014; pinned spec §7) → BUILD-011 / REVIEW-011. roadmap ③ 第六張（最後）。**動 core**：SSE `ToolCallCompleteEventData` + `ConversationToolCallMessage` 加 `isError?`、`onToolCallComplete` 帶入；react status 用 `isError`（涵蓋 native/platform/general）、`result.error` 留 fallback。後端契約已在（go SDK）。
 
 ## ▶ Next Task
 
-`F-009` (tool-call 失敗判定改用後端 isError) — roadmap ③ 最後一張，待使用者指示開工。BUILD-010/REVIEW-010 done、待合併。
+`REVIEW-011` — Review: Tool-Call Failure Detection (ready). BUILD-011 done。roadmap ③ 最後一張（動 core），review 通過後 ③ 收尾。
 
 ## Task Queue
 
@@ -64,3 +65,5 @@
 | `REVIEW-009` | Review: Write/Edit Diff + Unified Status      | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)         |
 | `BUILD-010`  | Tool-Call Expanded Content + Localized Titles | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)     |
 | `REVIEW-010` | Review: Tool-Call Expanded Content            | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)   |
+| `BUILD-011`  | Tool-Call Failure Detection via isError       | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                       |
+| `REVIEW-011` | Review: Tool-Call Failure Detection           | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                     |

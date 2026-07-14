@@ -1,0 +1,24 @@
+.legend {
+  width: 380px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.legend__title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.legend__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}
