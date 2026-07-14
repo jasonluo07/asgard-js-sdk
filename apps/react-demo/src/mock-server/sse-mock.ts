@@ -142,6 +142,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // F-003 run-indicator demo — scoped channel. Streams a multi-message run with inter-message gaps
+  // and a complete→done tail, so the seam indicator can be seen staying lit the whole run (bound to
+  // the connection, not per-message) — no flicker, no disappearance in the gaps.
+  if (customChannelId === 'run-indicator-demo') {
+    await handleRunIndicatorMock(res, payload);
+
+    return;
+  }
+
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
   const fullText = REPLY_CHUNKS.join('');
@@ -424,6 +433,79 @@ async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): 
     res,
     messageFrame(header, 'asgard.message.complete', answerId, replyTo, THINKING_ANSWER, TEXT_TEMPLATE(THINKING_ANSWER)),
   );
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-003 — run-indicator demo. One connection, two messages with a deliberate gap between them and a
+// complete→done tail. `isConnecting` stays true for the whole run, so the seam indicator must stay lit
+// continuously — no flicker per message, no disappearance in the gap (where the old placeholder blanked).
+// ---------------------------------------------------------------------------------------------------
+
+async function handleRunIndicatorMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'run-indicator-demo',
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const msgA = randomUUID();
+  const msgB = randomUUID();
+  const msgC = randomUUID();
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  const streamMessage = async (id: string, chunks: string[]): Promise<void> => {
+    writeEvent(res, messageFrame(header, 'asgard.message.start', id, replyTo, '', TEXT_TEMPLATE('')));
+    for (const chunk of chunks) {
+      await sleep(200);
+      writeEvent(res, messageFrame(header, 'asgard.message.delta', id, replyTo, chunk, null));
+    }
+
+    const full = chunks.join('');
+    await sleep(120);
+    writeEvent(res, messageFrame(header, 'asgard.message.complete', id, replyTo, full, TEXT_TEMPLATE(full)));
+  };
+
+  // A long, three-message run (~14s) so the seam indicator can be watched staying lit the whole time.
+  // Message A.
+  await streamMessage(msgA, [
+    '先回覆第一段。',
+    '這則訊息串流完成後，',
+    '會有一段明顯的等待空檔，',
+    '你可以盯著交界的進度線 —— ',
+    '它不該在這裡消失。',
+  ]);
+
+  // Inter-message gap — no events for ~2.6s. The old per-message placeholder used to disappear here;
+  // the seam indicator (bound to the connection) must stay lit.
+  await sleep(2600);
+
+  // Message B.
+  await streamMessage(msgB, [
+    '接著送出第二段回覆。',
+    '整段 run 期間，',
+    '交界的進度線都持續掃動，',
+    '跨訊息、跨空檔都不閃爍。',
+  ]);
+
+  // Second gap.
+  await sleep(2600);
+
+  // Message C.
+  await streamMessage(msgC, ['最後再補一段。', 'complete 之後連線還會保持一下，', '進度線要續亮到 run.done 才熄。']);
+
+  // Complete→done tail — the connection lingers after the last message.complete (R4).
+  await sleep(2200);
 
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();

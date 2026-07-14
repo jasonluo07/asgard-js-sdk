@@ -45,6 +45,11 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   onSseMessage?: AsgardServiceContextProviderProps['onSseMessage'];
   fullScreen?: boolean;
   avatar?: string;
+  /**
+   * @deprecated Since F-003 the run-in-progress cue is a connection-bound indicator at the
+   * thread↔input seam (see `RunningIndicator`), not a per-message typing placeholder. This prop no
+   * longer renders anything and will be removed in a future major.
+   */
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
   enableLoadConfigFromService?: boolean;

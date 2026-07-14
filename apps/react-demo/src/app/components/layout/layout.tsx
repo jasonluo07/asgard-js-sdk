@@ -36,6 +36,7 @@ const navItems = [
   { to: '/stream-resume', label: 'Stream Resume (F-002)' },
   { to: '/transcript-replay', label: 'Transcript Replay (F-014)' },
   { to: '/thinking', label: 'Thinking (F-001)' },
+  { to: '/run-indicator', label: 'Run Indicator (F-003)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

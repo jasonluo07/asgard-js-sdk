@@ -18,6 +18,7 @@ import DocumentSvg from '../../../icons/document.svg?react';
 import PlusSvg from '../../../icons/plus.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import { DocumentUploadButton } from './document-upload-button';
+import { RunningIndicator } from '../running-indicator';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useFileDropContext } from '../../../context/file-drop-context';
@@ -632,6 +633,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
+      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003). */}
+      <RunningIndicator running={isConnecting} />
       {enableUpload && uploadableImages.length > 0 && (
         <div
           className={styles.file_preview_container}

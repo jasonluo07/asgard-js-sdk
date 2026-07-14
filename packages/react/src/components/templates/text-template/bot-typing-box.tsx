@@ -3,7 +3,6 @@ import { useAsgardContext } from '../../../context/asgard-service-context';
 import clsx from 'clsx';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import { Avatar } from '../avatar';
-import { useDebounce } from '../../../hooks';
 import classes from './text-template.module.scss';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { StreamdownClient } from './streamdown-client';
@@ -13,13 +12,14 @@ interface BotTypingBoxProps {
   typingText: string | null;
 }
 
+// F-003 — the "in progress" cue now lives at the seam (RunningIndicator), bound to the whole
+// connection. This box only renders the live streaming text — no 3-dot animation, no 500ms debounce.
+// It shows once there is streaming text; the empty pre-first-delta gap is covered by the seam indicator.
 export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
   const { isTyping, typingText } = props;
   const { avatar } = useAsgardContext();
 
   const theme = useAsgardThemeContext();
-
-  const _isTyping = useDebounce(isTyping, 500);
 
   const styles = useMemo<CSSProperties>(
     () => ({
@@ -29,14 +29,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
     [theme],
   );
 
-  const dotStyles = useMemo<CSSProperties>(
-    () => ({
-      backgroundColor: theme?.botMessage?.color,
-    }),
-    [theme],
-  );
-
-  if (!_isTyping) return null;
+  if (!isTyping || !typingText) return null;
 
   return (
     <TemplateBox className="asgard-text-template asgard-text-template--bot" type="bot" direction="horizontal">
@@ -44,14 +37,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
       <TemplateBoxContent time={new Date()}>
         <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
           <span>
-            {typingText ? <StreamdownClient>{typingText}</StreamdownClient> : null}
-            {_isTyping && (
-              <span className={classes['typing-indicator']}>
-                <div className={classes.dot} style={dotStyles} />
-                <div className={classes.dot} style={dotStyles} />
-                <div className={classes.dot} style={dotStyles} />
-              </span>
-            )}
+            <StreamdownClient>{typingText}</StreamdownClient>
           </span>
         </div>
       </TemplateBoxContent>
