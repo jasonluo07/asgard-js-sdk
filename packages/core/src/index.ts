@@ -10,3 +10,6 @@ export { default as AsgardServiceClient } from './lib/client';
 export { default as Channel } from './lib/channel';
 
 export { default as Conversation } from './lib/conversation';
+
+export { isTaskTool, reduceTaskEvents } from './lib/task-reducer';
+export type { TaskToolEvent } from './lib/task-reducer';

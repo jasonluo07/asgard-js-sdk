@@ -1,6 +1,6 @@
 // F-005 — the SDK's first i18n mechanism: a tiny catalog + `t()` with an en-US fallback. Introduced
 // for the synthesized tool-call labels (F-004); later tickets add their own keys (F-006 group summary,
-// F-008 expanded titles). Missing key or locale → en-US fallback → the key itself.
+// F-008 expanded titles, F-010 task check list). Missing key or locale → en-US fallback → the key itself.
 
 export type Locale = 'en-US' | 'ja-JP' | 'zh-TW';
 
@@ -21,6 +21,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.files': ' · Processed {f} files',
     'expand.initial': 'Initial',
     'expand.result': 'Result',
+    'task.title': 'Tasks',
+    'task.pending': 'To do',
+    'task.in_progress': 'In progress',
+    'task.completed': 'Done',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -34,6 +38,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.files': ' · ファイル {f} 件',
     'expand.initial': '入力',
     'expand.result': '結果',
+    'task.title': 'タスク',
+    'task.pending': '未着手',
+    'task.in_progress': '進行中',
+    'task.completed': '完了',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -47,6 +55,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'summary.files': ' · 處理 {f} 個檔案',
     'expand.initial': '輸入',
     'expand.result': '結果',
+    'task.title': '任務清單',
+    'task.pending': '待處理',
+    'task.in_progress': '進行中',
+    'task.completed': '已完成',
   },
 };
 

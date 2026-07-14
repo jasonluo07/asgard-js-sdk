@@ -35,11 +35,12 @@
 - `F-006` tool-call 分組與 group summary (UC-009/UC-010; pinned spec §4/§5) → BUILD-008 / REVIEW-008 (done, **merged to main** via PR #298). roadmap ③ 第三張。React-only。動態 summary `{n} steps · Used {s} skills · Processed {f} files`（localized、s/f=0 隱藏）取代靜態「Answer preparation steps」；分組已由 groupMessages 達成，加 `summary.*` catalog key；不動 core。
 - `F-007` Write/Edit diff 與統一狀態呈現 (UC-011/UC-012; pinned spec §6/§3.5) → BUILD-009 / REVIEW-009 (done, **merged to main** via PR #299). roadmap ③ 第四張。React-only。Write=`+content 行數`、Edit=old↔new 行級 LCS 概算 `+/-`（右側）；狀態 completed 不加標記 / running 琥珀 spinner / error 紅 alert；不動 core（IsError 判定另案 F-009）。
 - `F-008` tool-call 展開內容對齊 Initial/Result (UC-013; pinned spec §8) → BUILD-010 / REVIEW-010 (done, **merged to main** via PR #300). roadmap ③ 第五張。React-only。展開 Initial/Result JsonViewer 已存在，本張把標題 localize（加 `expand.*` catalog key、locale 串進 ToolCallGroup）；無內容不顯示 chevron；不動 core。
-- `F-009` tool-call 失敗判定改用後端 isError (UC-014; pinned spec §7) → BUILD-011 / REVIEW-011. roadmap ③ 第六張（最後）。**動 core**：SSE `ToolCallCompleteEventData` + `ConversationToolCallMessage` 加 `isError?`、`onToolCallComplete` 帶入；react status 用 `isError`（涵蓋 native/platform/general）、`result.error` 留 fallback。後端契約已在（go SDK）。
+- `F-009` tool-call 失敗判定改用後端 isError (UC-014; pinned spec §7) → BUILD-011 / REVIEW-011 (done, **merged to main** via PR #301). roadmap ③ 第六張（最後）。**動 core**：SSE `ToolCallCompleteEventData` + `ConversationToolCallMessage` 加 `isError?`、`onToolCallComplete` 帶入；react status 用 `isError`（涵蓋 native/platform/general）、`result.error` 留 fallback。後端契約已在（go SDK）。**roadmap ③ 至此完結**。
+- `F-010` Task Check List 面板（TaskCreate/TaskUpdate 累積） (UC-015/UC-016; pinned spec @ `4b879b7`) → BUILD-012 / REVIEW-012. roadmap ④ 第一張。**動 core**：SSE `ToolCallCompleteEventData` 加 `toolUseResultSidecar?`、`ConversationToolCallMessage` 加 `sidecar?`；core 新增 framework-agnostic `isTaskTool` + `reduceTaskEvents` + `Task`/`TaskStatus`（資料層 SoT，為 F-013 泛化 store 鋪路）。react：`groupMessages` 把 task 工具攔出群組、新 docked `<TaskList>`（三態、activeForm、可展開、header 計數）置於 RunningIndicator seam 之上、`task.*` i18n。
 
 ## ▶ Next Task
 
-`REVIEW-011` — Review: Tool-Call Failure Detection (ready). BUILD-011 done。roadmap ③ 最後一張（動 core），review 通過後 ③ 收尾。
+`REVIEW-012` — Review: Task Check List Panel (ready). BUILD-012 done。roadmap ④ 第一張（動 core：sidecar + task reducer 資料層 SoT）。
 
 ## Task Queue
 
@@ -67,3 +68,5 @@
 | `REVIEW-010` | Review: Tool-Call Expanded Content            | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)   |
 | `BUILD-011`  | Tool-Call Failure Detection via isError       | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                       |
 | `REVIEW-011` | Review: Tool-Call Failure Detection           | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                     |
+| `BUILD-012`  | Task Check List Panel                         | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                         |
+| `REVIEW-012` | Review: Task Check List Panel                 | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                       |

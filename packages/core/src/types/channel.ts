@@ -68,6 +68,11 @@ export type ConversationToolCallMessage = {
   result?: Record<string, unknown>;
   /** Backend-reported failure flag carried from `tool_call.complete` (F-009); absent until complete. */
   isError?: boolean;
+  /**
+   * Structured result sidecar carried from `tool_call.complete` (F-010); the replay-safe source for
+   * `TaskCreate` / `TaskUpdate` accumulation (id / status), read by `reduceTaskEvents`.
+   */
+  sidecar?: Record<string, unknown>;
   isComplete: boolean;
   time: Date;
   traceId?: string;

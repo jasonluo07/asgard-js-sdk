@@ -1,5 +1,5 @@
 import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ConversationMessage, ConversationToolCallMessage } from '@asgard-js/core';
+import { ConversationMessage, ConversationToolCallMessage, isTaskTool } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
@@ -29,6 +29,12 @@ function groupMessages(messages: ConversationMessage[]): MessageGroup[] {
   let currentToolCallGroup: ConversationToolCallMessage[] = [];
 
   for (const message of messages) {
+    // Task tools (TaskCreate / TaskUpdate) are accumulated into the docked TaskList, not shown as
+    // tool-calls — skip them here so they never enter a group (F-010).
+    if (message.type === 'tool-call' && isTaskTool(message)) {
+      continue;
+    }
+
     if (message.type === 'tool-call') {
       currentToolCallGroup.push(message);
     } else {
