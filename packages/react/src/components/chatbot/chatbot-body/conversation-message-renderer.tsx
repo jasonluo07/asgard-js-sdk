@@ -104,7 +104,9 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
       case MessageTemplateType.ATTACHMENT:
         return <AttachmentTemplate message={message} />;
       default:
-        return <div />;
+        // No-template (or unknown-template) completed message → render its plain text, never an empty
+        // bubble (F-011 / UC-017). TextTemplate reads `message.text` directly, independent of template.
+        return message.message.text ? <TextTemplate message={message} /> : <div />;
     }
   }, [message]);
 

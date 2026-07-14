@@ -50,8 +50,21 @@ export default class Conversation implements IConversation {
     }
   }
 
+  /**
+   * A message is terminal once `complete` has materialized it (a bot message with `isTyping === false`).
+   * Terminal messages must never regress to typing/streaming — late `start`/`delta` frames from replay
+   * or out-of-order delivery are ignored (F-011 / UC-018).
+   */
+  private isTerminalBot(message: ConversationMessage | undefined): boolean {
+    return message?.type === 'bot' && !message.isTyping;
+  }
+
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
     const message = response.fact.messageStart.message;
+
+    // Terminal guard: a completed message stays put; a late `start` must not blank it into a typing bubble.
+    if (this.isTerminalBot(this.messages?.get(message.messageId))) return this;
+
     const messages = new Map(this.messages);
 
     messages.set(message.messageId, {
@@ -71,25 +84,26 @@ export default class Conversation implements IConversation {
 
   onMessageDelta(response: SseResponse<EventType.MESSAGE_DELTA>): Conversation {
     const message = response.fact.messageDelta.message;
+    const currentMessage = this.messages?.get(message.messageId);
 
+    // Terminal guard: a late `delta` after `complete` must not flip the message back into typing (UC-018).
+    if (this.isTerminalBot(currentMessage)) return this;
+
+    // Lazy-init: a `delta` with no existing entry (delta-before-start / mid-stream join) creates the
+    // typing message rather than silently dropping its text (UC-017).
+    const currentBot = currentMessage?.type === 'bot' ? currentMessage : undefined;
     const messages = new Map(this.messages);
-
-    const currentMessage = messages.get(message.messageId);
-
-    if (currentMessage?.type !== 'bot') return this;
-
-    const typingText = `${currentMessage?.typingText ?? ''}${message.text}`;
 
     messages.set(message.messageId, {
       type: 'bot',
       eventType: EventType.MESSAGE_DELTA,
       isTyping: true,
-      typingText,
+      typingText: `${currentBot?.typingText ?? ''}${message.text}`,
       messageId: message.messageId,
       message,
       time: new Date(),
-      traceId: response.traceId ?? currentMessage.traceId,
-      raw: currentMessage.raw,
+      traceId: response.traceId ?? currentBot?.traceId,
+      raw: currentBot?.raw ?? '',
     });
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
