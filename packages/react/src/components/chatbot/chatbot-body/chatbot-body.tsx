@@ -1,5 +1,11 @@
 import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { ConversationMessage, ConversationToolCallMessage, isTaskTool } from '@asgard-js/core';
+import {
+  ConversationMessage,
+  ConversationToolCallMessage,
+  isAgentTool,
+  isSubagentChildTool,
+  isTaskTool,
+} from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import styles from './chatbot-body.module.scss';
 import { ConversationMessageRenderer } from './conversation-message-renderer';
@@ -29,9 +35,19 @@ function groupMessages(messages: ConversationMessage[]): MessageGroup[] {
   let currentToolCallGroup: ConversationToolCallMessage[] = [];
 
   for (const message of messages) {
-    // Task tools (TaskCreate / TaskUpdate) are accumulated into the docked TaskList, not shown as
-    // tool-calls — skip them here so they never enter a group (F-010).
-    if (message.type === 'tool-call' && isTaskTool(message)) {
+    // Subagent lifecycle events are run-level chrome shown only in the docked SubagentList (F-012),
+    // never in the thread.
+    if (message.type === 'subagent') {
+      continue;
+    }
+
+    // Route run-level chrome out of the main tool-call group: task tools go to the TaskList (F-010);
+    // the `Agent` spawn marker and every subagent child tool go to the SubagentList (F-012). The main
+    // group keeps only `parentToolUseId === "" && toolName ∉ {Agent, TaskCreate, TaskUpdate}`.
+    if (
+      message.type === 'tool-call' &&
+      (isTaskTool(message) || isAgentTool(message) || isSubagentChildTool(message.parentToolUseId))
+    ) {
       continue;
     }
 

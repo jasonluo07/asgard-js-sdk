@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import Conversation from './conversation';
 import { EventType } from '../constants/enum';
-import type { ConversationBotMessage, ConversationToolCallMessage, SseResponse } from '../types';
+import type {
+  ConversationBotMessage,
+  ConversationSubagentMessage,
+  ConversationToolCallMessage,
+  SseResponse,
+} from '../types';
 
 // F-011 — message stream assembly robustness. The reducer must survive adversarial frame orders
 // (missing prefixes, replay duplicates, out-of-order) without dropping text, sticking in typing,
@@ -318,5 +323,90 @@ describe('Conversation — tool-call sidecar plumbing (F-010)', () => {
       .onMessage(toolCallStartEvent('p', 1))
       .onMessage(toolCallCompleteEvent('p', 1, { text: 'ok' }));
     expect(getToolCall(conv, 'p-1')?.sidecar).toBeUndefined();
+  });
+});
+
+// F-012 — subagent lifecycle + tool-call id plumbing. `onToolCallStart` carries toolUseId /
+// parentToolUseId; `onSubagentStart/Complete` store a `subagent` message keyed by parentToolUseId.
+
+function agentToolStartEvent(processId: string, callSeq: number, toolUseId: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.TOOL_CALL_START,
+    requestId: 'req-1',
+    traceId: 'trace-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: {
+      toolCallStart: {
+        processId,
+        callSeq,
+        toolUseId,
+        toolCall: { toolsetName: '', toolName: 'Agent', parameter: { description: 'sub' } },
+      },
+    },
+  } as unknown as SseResponse<EventType>;
+}
+
+function subagentStartEvent(parentToolUseId: string, agentId: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.SUBAGENT_START,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { subagentStart: { agentId, parentToolUseId, subagentType: 'general-purpose', description: 'd' } },
+  } as unknown as SseResponse<EventType>;
+}
+
+function subagentCompleteEvent(parentToolUseId: string, status: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.SUBAGENT_COMPLETE,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { subagentComplete: { agentId: 'Y', parentToolUseId, status, summary: 'done' } },
+  } as unknown as SseResponse<EventType>;
+}
+
+function getSubagent(conv: Conversation, key: string): ConversationSubagentMessage | undefined {
+  const message = conv.messages?.get(key);
+
+  return message?.type === 'subagent' ? message : undefined;
+}
+
+describe('Conversation — subagent events + id plumbing (F-012)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('onToolCallStart carries toolUseId / parentToolUseId onto the message', () => {
+    const conv = empty().onMessage(agentToolStartEvent('p', 0, 'X'));
+    expect(getToolCall(conv, 'p-0')).toMatchObject({ toolName: 'Agent', toolUseId: 'X' });
+  });
+
+  it('onSubagentStart stores a subagent start message keyed by parentToolUseId', () => {
+    const conv = empty().onMessage(subagentStartEvent('X', 'Y'));
+    expect(getSubagent(conv, 'subagent:X:start')).toMatchObject({
+      kind: 'start',
+      parentToolUseId: 'X',
+      agentId: 'Y',
+      subagentType: 'general-purpose',
+    });
+  });
+
+  it('onSubagentComplete stores a subagent complete message with the terminal status', () => {
+    const conv = empty().onMessage(subagentCompleteEvent('X', 'completed'));
+    expect(getSubagent(conv, 'subagent:X:complete')).toMatchObject({
+      kind: 'complete',
+      parentToolUseId: 'X',
+      status: 'completed',
+      summary: 'done',
+    });
+  });
+
+  it('start and complete coexist as separate keyed entries', () => {
+    const conv = empty().onMessage(subagentStartEvent('X', 'Y')).onMessage(subagentCompleteEvent('X', 'failed'));
+    expect(getSubagent(conv, 'subagent:X:start')?.kind).toBe('start');
+    expect(getSubagent(conv, 'subagent:X:complete')?.status).toBe('failed');
   });
 });

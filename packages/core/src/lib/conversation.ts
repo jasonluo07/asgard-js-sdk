@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EventType } from '../constants/enum';
 import {
   ConversationMessage,
+  ConversationSubagentMessage,
   ConversationThinkingMessage,
   ConversationToolCallMessage,
   ConversationUserMessage,
@@ -58,6 +59,10 @@ export default class Conversation implements IConversation {
         return this.onToolCallComplete(response as SseResponse<EventType.TOOL_CALL_COMPLETE>);
       case EventType.TOOL_CALL_CONSENT:
         return this.onToolCallConsent(response as SseResponse<EventType.TOOL_CALL_CONSENT>);
+      case EventType.SUBAGENT_START:
+        return this.onSubagentStart(response as SseResponse<EventType.SUBAGENT_START>);
+      case EventType.SUBAGENT_COMPLETE:
+        return this.onSubagentComplete(response as SseResponse<EventType.SUBAGENT_COMPLETE>);
       case EventType.ERROR:
         return this.onMessageError(response as SseResponse<EventType.ERROR>);
       default:
@@ -281,6 +286,8 @@ export default class Conversation implements IConversation {
       reason: toolCallStart.toolCall.reason,
       toolsetName: toolCallStart.toolCall.toolsetName,
       parameter: toolCallStart.toolCall.parameter,
+      toolUseId: toolCallStart.toolUseId,
+      parentToolUseId: toolCallStart.parentToolUseId,
       isComplete: false,
       time: new Date(),
       traceId: response.traceId,
@@ -318,5 +325,50 @@ export default class Conversation implements IConversation {
     const consent = response.fact.toolCallConsent;
 
     return new Conversation({ messages: this.messages, pendingConsent: consent });
+  }
+
+  onSubagentStart(response: SseResponse<EventType.SUBAGENT_START>): Conversation {
+    const start = response.fact.subagentStart;
+    const messages = new Map(this.messages);
+    const key = `subagent:${start.parentToolUseId}:start`;
+
+    const message: ConversationSubagentMessage = {
+      type: 'subagent',
+      messageId: key,
+      kind: 'start',
+      parentToolUseId: start.parentToolUseId,
+      agentId: start.agentId,
+      subagentType: start.subagentType,
+      description: start.description,
+      time: new Date(),
+      traceId: response.traceId,
+    };
+
+    messages.set(key, message);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onSubagentComplete(response: SseResponse<EventType.SUBAGENT_COMPLETE>): Conversation {
+    const complete = response.fact.subagentComplete;
+    const messages = new Map(this.messages);
+    const key = `subagent:${complete.parentToolUseId}:complete`;
+
+    const message: ConversationSubagentMessage = {
+      type: 'subagent',
+      messageId: key,
+      kind: 'complete',
+      parentToolUseId: complete.parentToolUseId,
+      agentId: complete.agentId,
+      subagentType: complete.subagentType,
+      status: complete.status,
+      summary: complete.summary,
+      time: new Date(),
+      traceId: response.traceId,
+    };
+
+    messages.set(key, message);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
   }
 }

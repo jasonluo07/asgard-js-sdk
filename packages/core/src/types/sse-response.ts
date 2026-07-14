@@ -1,4 +1,5 @@
 import { EventType, MessageTemplateType } from '../constants/enum';
+import { SubagentTerminalStatus } from './subagent';
 
 export interface Reference {
   title: string;
@@ -192,6 +193,10 @@ export interface ErrorEventData {
 export interface ToolCallBaseEventData {
   processId: string;
   callSeq: number;
+  /** Correlation id of this tool-call. For an `Agent` spawn it becomes the subagent's `parentToolUseId` (F-012). */
+  toolUseId?: string;
+  /** Non-empty when this tool-call belongs to a subagent — points at the spawning `Agent`'s `toolUseId` (F-012). */
+  parentToolUseId?: string;
   toolCall: {
     toolsetName: string;
     toolName: string;
@@ -232,6 +237,29 @@ export interface ToolCallConsentEventData {
   pendingCalls: ToolCallConsentPendingCall[];
 }
 
+/**
+ * `asgard.subagent.start` — a subagent has begun (F-012). Correlated to the spawning `Agent`
+ * tool-call by `parentToolUseId`; `agentId` is the subagent's own id.
+ */
+export interface SubagentStartEventData {
+  agentId: string;
+  parentToolUseId: string;
+  subagentType?: string;
+  description?: string;
+}
+
+/**
+ * `asgard.subagent.complete` — the authoritative terminal signal for a subagent (F-012). The `Agent`
+ * tool-call's own completion is not it (async subagents complete with `status: "async_launched"`).
+ */
+export interface SubagentCompleteEventData {
+  agentId: string;
+  parentToolUseId: string;
+  subagentType?: string;
+  status: SubagentTerminalStatus;
+  summary?: string;
+}
+
 export interface ToolCallConsentAnswer {
   toolCallId: string;
   result: 'ALLOW_ONCE' | 'ALLOW_ALWAYS' | 'DENY_ONCE';
@@ -253,6 +281,8 @@ export interface Fact<Type extends EventType> {
   toolCallStart: IsEqual<Type, EventType.TOOL_CALL_START, ToolCallBaseEventData>;
   toolCallComplete: IsEqual<Type, EventType.TOOL_CALL_COMPLETE, ToolCallCompleteEventData>;
   toolCallConsent: IsEqual<Type, EventType.TOOL_CALL_CONSENT, ToolCallConsentEventData>;
+  subagentStart: IsEqual<Type, EventType.SUBAGENT_START, SubagentStartEventData>;
+  subagentComplete: IsEqual<Type, EventType.SUBAGENT_COMPLETE, SubagentCompleteEventData>;
 }
 
 export interface SseResponse<Type extends EventType> {

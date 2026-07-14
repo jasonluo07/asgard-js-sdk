@@ -24,6 +24,11 @@ export enum EventType {
   TOOL_CALL_START = 'asgard.tool_call.start',
   TOOL_CALL_COMPLETE = 'asgard.tool_call.complete',
   TOOL_CALL_CONSENT = 'asgard.tool_call.consent',
+  // Subagent lifecycle — a subagent spawned by an `Agent` tool-call. Its status is driven only by
+  // these events, never the `Agent` tool_call.complete (async → completes early). Accumulated into
+  // the Subagent list (F-012), keyed by `parentToolUseId` = the `Agent` tool-call's `toolUseId`.
+  SUBAGENT_START = 'asgard.subagent.start',
+  SUBAGENT_COMPLETE = 'asgard.subagent.complete',
   // Channel title push — reserved for F-016 to consume; enum aligned with asgard-core here (F-014).
   CHANNEL_TITLE_UPDATE = 'asgard.channel.title.update',
   DONE = 'asgard.run.done',

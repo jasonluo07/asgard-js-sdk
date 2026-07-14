@@ -36,11 +36,12 @@
 - `F-007` Write/Edit diff 與統一狀態呈現 (UC-011/UC-012; pinned spec §6/§3.5) → BUILD-009 / REVIEW-009 (done, **merged to main** via PR #299). roadmap ③ 第四張。React-only。Write=`+content 行數`、Edit=old↔new 行級 LCS 概算 `+/-`（右側）；狀態 completed 不加標記 / running 琥珀 spinner / error 紅 alert；不動 core（IsError 判定另案 F-009）。
 - `F-008` tool-call 展開內容對齊 Initial/Result (UC-013; pinned spec §8) → BUILD-010 / REVIEW-010 (done, **merged to main** via PR #300). roadmap ③ 第五張。React-only。展開 Initial/Result JsonViewer 已存在，本張把標題 localize（加 `expand.*` catalog key、locale 串進 ToolCallGroup）；無內容不顯示 chevron；不動 core。
 - `F-009` tool-call 失敗判定改用後端 isError (UC-014; pinned spec §7) → BUILD-011 / REVIEW-011 (done, **merged to main** via PR #301). roadmap ③ 第六張（最後）。**動 core**：SSE `ToolCallCompleteEventData` + `ConversationToolCallMessage` 加 `isError?`、`onToolCallComplete` 帶入；react status 用 `isError`（涵蓋 native/platform/general）、`result.error` 留 fallback。後端契約已在（go SDK）。**roadmap ③ 至此完結**。
-- `F-010` Task Check List 面板（TaskCreate/TaskUpdate 累積） (UC-015/UC-016; pinned spec @ `4b879b7`) → BUILD-012 / REVIEW-012. roadmap ④ 第一張。**動 core**：SSE `ToolCallCompleteEventData` 加 `toolUseResultSidecar?`、`ConversationToolCallMessage` 加 `sidecar?`；core 新增 framework-agnostic `isTaskTool` + `reduceTaskEvents` + `Task`/`TaskStatus`（資料層 SoT，為 F-013 泛化 store 鋪路）。react：`groupMessages` 把 task 工具攔出群組、新 docked `<TaskList>`（三態、activeForm、可展開、header 計數）置於 RunningIndicator seam 之上、`task.*` i18n。
+- `F-010` Task Check List 面板（TaskCreate/TaskUpdate 累積） (UC-015/UC-016; pinned spec @ `4b879b7`) → BUILD-012 / REVIEW-012 (done, **merged to main** via PR #302). roadmap ④ 第一張。**動 core**：SSE `ToolCallCompleteEventData` 加 `toolUseResultSidecar?`、`ConversationToolCallMessage` 加 `sidecar?`；core 新增 framework-agnostic `isTaskTool` + `reduceTaskEvents` + `Task`/`TaskStatus`（資料層 SoT，為 F-013 泛化 store 鋪路）。react：`groupMessages` 把 task 工具攔出群組、新 docked `<TaskList>`（三態、activeForm、可展開、header 計數）置於 RunningIndicator seam 之上、`task.*` i18n。
+- `F-012` Subagent 清單面板（Agent tool-call + subagent._） (UC-019/UC-020; pinned spec @ `f73545c`) → BUILD-013 / REVIEW-013. roadmap ④ 第二張。**動 core 較多**：新 `SUBAGENT_START/COMPLETE` 事件 + Fact；`toolUseId?`/`parentToolUseId?` 上 tool-call wire 型別 + `ConversationToolCallMessage`；新 `ConversationSubagentMessage` 變體 + `onSubagentStart/Complete`；core 新增 framework-agnostic `isAgentTool`/`isSubagentChildTool`/`reduceSubagents` + `Subagent`/`SubagentStatus`/`SubagentEvent`。**關鍵**：subagent 狀態只由 `subagent.complete` 驅動，非 Agent 的 tool_call.complete（async_launched 早退）。react：`groupMessages` 再排除 Agent + child 工具、新 docked `<SubagentList>`（疊在 TaskList 之上、自動收合、current-tool/tool-count、展開 child 工具）、`subagent._` i18n。
 
 ## ▶ Next Task
 
-`REVIEW-012` — Review: Task Check List Panel (ready). BUILD-012 done。roadmap ④ 第一張（動 core：sidecar + task reducer 資料層 SoT）。
+`REVIEW-013` — Review: Subagent List Panel (ready). BUILD-013 done。roadmap ④ 第二張（動 core 較多）。review 通過後接 F-013（泛化 store）。
 
 ## Task Queue
 
@@ -70,3 +71,5 @@
 | `REVIEW-011` | Review: Tool-Call Failure Detection           | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                     |
 | `BUILD-012`  | Task Check List Panel                         | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                         |
 | `REVIEW-012` | Review: Task Check List Panel                 | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                       |
+| `BUILD-013`  | Subagent List Panel                           | High     | done   | [BUILD-013-subagent-list.md](./BUILD-013-subagent-list.md)                             |
+| `REVIEW-013` | Review: Subagent List Panel                   | —        | done   | [REVIEW-013-subagent-list.md](./REVIEW-013-subagent-list.md)                           |

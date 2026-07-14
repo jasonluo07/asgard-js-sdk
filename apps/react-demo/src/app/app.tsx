@@ -41,6 +41,7 @@ import { ToolCallDiff } from './routes/tool-call-diff';
 import { ToolCallExpand } from './routes/tool-call-expand';
 import { ToolCallIsError } from './routes/tool-call-iserror';
 import { TaskListRoute } from './routes/task-list';
+import { SubagentListRoute } from './routes/subagent-list';
 
 export function App(): React.ReactElement {
   return (
@@ -87,6 +88,7 @@ export function App(): React.ReactElement {
         <Route path="/tool-call-expand" element={<ToolCallExpand />} />
         <Route path="/tool-call-iserror" element={<ToolCallIsError />} />
         <Route path="/task-list" element={<TaskListRoute />} />
+        <Route path="/subagent-list" element={<SubagentListRoute />} />
       </Routes>
     </Layout>
   );
