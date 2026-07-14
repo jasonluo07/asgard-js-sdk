@@ -2,6 +2,7 @@ import { ReactNode, useState, useCallback, useEffect } from 'react';
 import clsx from 'clsx';
 import styles from './tool-call-group.module.scss';
 import { ToolCallVariant, ToolCallDiff } from './tool-call-label';
+import { Locale, t } from '../../../i18n';
 
 // Icons
 function ChevronRightIcon({ className }: { className?: string }): ReactNode {
@@ -201,6 +202,8 @@ export interface ToolCallGroupProps {
   items: ToolCallItemData[];
   defaultExpanded?: boolean;
   className?: string;
+  /** Language for the expanded `Initial` / `Result` titles (F-008). Defaults to `en-US`. */
+  locale?: Locale;
 }
 
 // JSON Syntax Highlighting
@@ -445,9 +448,10 @@ function StatusIcon({ status }: { status: ToolCallStatus }): ReactNode {
 // ToolCallItem Component
 interface ToolCallItemProps {
   item: ToolCallItemData;
+  locale: Locale;
 }
 
-function ToolCallItem({ item }: ToolCallItemProps): ReactNode {
+function ToolCallItem({ item, locale }: ToolCallItemProps): ReactNode {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasContent = item.initial || item.result;
 
@@ -486,8 +490,8 @@ function ToolCallItem({ item }: ToolCallItemProps): ReactNode {
       </div>
       {isExpanded && hasContent && (
         <div className={styles.tool_call_item__content}>
-          {item.initial && <JsonViewer title="Initial" data={item.initial} />}
-          {item.result && <JsonViewer title="Result" data={item.result} />}
+          {item.initial && <JsonViewer title={t(locale, 'expand.initial')} data={item.initial} />}
+          {item.result && <JsonViewer title={t(locale, 'expand.result')} data={item.result} />}
         </div>
       )}
     </div>
@@ -500,6 +504,7 @@ export function ToolCallGroup({
   items,
   defaultExpanded = true,
   className,
+  locale = 'en-US',
 }: ToolCallGroupProps): ReactNode {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
@@ -518,7 +523,7 @@ export function ToolCallGroup({
       {isExpanded && (
         <div className={styles.tool_call_group__content}>
           {items.map(item => (
-            <ToolCallItem key={item.id} item={item} />
+            <ToolCallItem key={item.id} item={item} locale={locale} />
           ))}
         </div>
       )}

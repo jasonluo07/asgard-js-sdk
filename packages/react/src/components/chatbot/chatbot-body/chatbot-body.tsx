@@ -191,7 +191,12 @@ export function ChatbotBody(): ReactNode {
               const summary = groupSummary(group.toolCalls, locale);
 
               const renderDefaultContent = (overrides?: { title?: string }): ReactNode => (
-                <ToolCallGroupTemplate items={items} time={firstToolCall?.time} title={overrides?.title ?? summary} />
+                <ToolCallGroupTemplate
+                  items={items}
+                  time={firstToolCall?.time}
+                  title={overrides?.title ?? summary}
+                  locale={locale}
+                />
               );
 
               if (renderToolCallGroup) {

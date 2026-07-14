@@ -33,31 +33,34 @@
 - `F-004` 內建工具 tool-call variants 顯示與 label 合成 (UC-007; pinned spec §1–§3) → BUILD-006 / REVIEW-006 (done, **merged to main** via PR #296). roadmap ③ tool-call 一叢第一張。React-only。顯示序 `reason → 合成 → toolName`；native 七工具 variant icon（對齊 lucide 0.487.0）+ 合成（en-US；i18n locale 歸 F-005）；不動 core。
 - `F-005` tool-call i18n locale prop (UC-008; pinned spec §3) → BUILD-007 / REVIEW-007 (done, **merged to main** via PR #297). roadmap ③ 第二張。React-only。`<Chatbot>` 加 `locale` prop（default en-US）→ AsgardTemplateContext → 把 F-004 的 `EN_LABEL` 換成 catalog + `t()`（en/ja/zh）；Bash description 不翻；不動 core。**自製 catalog、零外部套件**（未用 Tolgee/i18next）。
 - `F-006` tool-call 分組與 group summary (UC-009/UC-010; pinned spec §4/§5) → BUILD-008 / REVIEW-008 (done, **merged to main** via PR #298). roadmap ③ 第三張。React-only。動態 summary `{n} steps · Used {s} skills · Processed {f} files`（localized、s/f=0 隱藏）取代靜態「Answer preparation steps」；分組已由 groupMessages 達成，加 `summary.*` catalog key；不動 core。
-- `F-007` Write/Edit diff 與統一狀態呈現 (UC-011/UC-012; pinned spec §6/§3.5) → BUILD-009 / REVIEW-009. roadmap ③ 第四張。React-only。Write=`+content 行數`、Edit=old↔new 行級 LCS 概算 `+/-`（右側）；狀態 completed 不加標記 / running 琥珀 spinner / error 紅 alert；不動 core（IsError 判定另案 F-009）。
+- `F-007` Write/Edit diff 與統一狀態呈現 (UC-011/UC-012; pinned spec §6/§3.5) → BUILD-009 / REVIEW-009 (done, **merged to main** via PR #299). roadmap ③ 第四張。React-only。Write=`+content 行數`、Edit=old↔new 行級 LCS 概算 `+/-`（右側）；狀態 completed 不加標記 / running 琥珀 spinner / error 紅 alert；不動 core（IsError 判定另案 F-009）。
+- `F-008` tool-call 展開內容對齊 Initial/Result (UC-013; pinned spec §8) → BUILD-010 / REVIEW-010. roadmap ③ 第五張。React-only。展開 Initial/Result JsonViewer 已存在，本張把標題 localize（加 `expand.*` catalog key、locale 串進 ToolCallGroup）；無內容不顯示 chevron；不動 core。
 
 ## ▶ Next Task
 
-`F-008` (展開內容對齊 Initial Result) — roadmap ③ 第五張，待使用者指示開工。BUILD-009/REVIEW-009 done、待合併。
+`F-009` (tool-call 失敗判定改用後端 isError) — roadmap ③ 最後一張，待使用者指示開工。BUILD-010/REVIEW-010 done、待合併。
 
 ## Task Queue
 
-| Task ID      | Title                                      | Priority | Status | Spec                                                                                   |
-| ------------ | ------------------------------------------ | -------- | ------ | -------------------------------------------------------------------------------------- |
-| `BUILD-001`  | Message Stream Assembly Robustness         | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
-| `REVIEW-001` | Review: Message Stream Assembly Robustness | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
-| `BUILD-002`  | Last-Event-ID Resume                       | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
-| `REVIEW-002` | Review: Last-Event-ID Resume               | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
-| `BUILD-003`  | Transcript Replay Kernel + message.user    | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
-| `REVIEW-003` | Review: Transcript Replay Kernel           | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
-| `BUILD-004`  | Thinking Message Display                   | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
-| `REVIEW-004` | Review: Thinking Message Display           | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |
-| `BUILD-005`  | Run Indicator Bound to Connection at Seam  | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)             |
-| `REVIEW-005` | Review: Run Indicator at Seam              | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)           |
-| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth  | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)   |
-| `REVIEW-006` | Review: Built-in Tool-Call Variants        | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md) |
-| `BUILD-007`  | Tool-Call i18n Locale Prop                 | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)             |
-| `REVIEW-007` | Review: Tool-Call i18n Locale Prop         | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)           |
-| `BUILD-008`  | Tool-Call Grouping + Group Summary         | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)   |
-| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md) |
-| `BUILD-009`  | Write/Edit Diff + Unified Status           | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)           |
-| `REVIEW-009` | Review: Write/Edit Diff + Unified Status   | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)         |
+| Task ID      | Title                                         | Priority | Status | Spec                                                                                   |
+| ------------ | --------------------------------------------- | -------- | ------ | -------------------------------------------------------------------------------------- |
+| `BUILD-001`  | Message Stream Assembly Robustness            | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
+| `REVIEW-001` | Review: Message Stream Assembly Robustness    | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
+| `BUILD-002`  | Last-Event-ID Resume                          | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
+| `REVIEW-002` | Review: Last-Event-ID Resume                  | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
+| `BUILD-003`  | Transcript Replay Kernel + message.user       | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
+| `REVIEW-003` | Review: Transcript Replay Kernel              | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
+| `BUILD-004`  | Thinking Message Display                      | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
+| `REVIEW-004` | Review: Thinking Message Display              | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |
+| `BUILD-005`  | Run Indicator Bound to Connection at Seam     | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)             |
+| `REVIEW-005` | Review: Run Indicator at Seam                 | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)           |
+| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth     | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)   |
+| `REVIEW-006` | Review: Built-in Tool-Call Variants           | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md) |
+| `BUILD-007`  | Tool-Call i18n Locale Prop                    | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)             |
+| `REVIEW-007` | Review: Tool-Call i18n Locale Prop            | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)           |
+| `BUILD-008`  | Tool-Call Grouping + Group Summary            | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)   |
+| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary    | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md) |
+| `BUILD-009`  | Write/Edit Diff + Unified Status              | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)           |
+| `REVIEW-009` | Review: Write/Edit Diff + Unified Status      | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)         |
+| `BUILD-010`  | Tool-Call Expanded Content + Localized Titles | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)     |
+| `REVIEW-010` | Review: Tool-Call Expanded Content            | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)   |
