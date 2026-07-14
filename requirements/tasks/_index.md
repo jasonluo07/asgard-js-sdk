@@ -27,11 +27,12 @@
 
 - `F-011` message 與 thinking 串流組裝健壯性 (UC-017, UC-018) → BUILD-001 / REVIEW-001 (done, **merged to main** via PR #291). Scope: message assembly only; thinking delegated to F-001.
 - `F-002` Last-Event-ID 斷線續傳 (UC-003 透明續傳, UC-004 無 cursor 不重送) → BUILD-002 / REVIEW-002 (done, **merged** via PR #292). R4/R5 deferred (dev backend).
-- `F-014` transcript 冷啟動重播內核 + message.user (UC-023) → BUILD-003 / REVIEW-003 (done, awaiting merge). Phase 0 prerequisite for F-015/F-016. Depends F-002 (GET transport) + F-011 (complete assembly).
+- `F-014` transcript 冷啟動重播內核 + message.user (UC-023) → BUILD-003 / REVIEW-003 (done, **merged to main** via PR #293). Phase 0 prerequisite for F-015/F-016. Depends F-002 (GET transport) + F-011 (complete assembly).
+- `F-001` thinking message 顯示 (UC-001 串流、UC-002 完成) → BUILD-004 / REVIEW-004 (done, awaiting merge). roadmap ② 顯示層第一張。Depends F-011 (assembly robustness). 完成態固定「Thought for a moment」不計耗時（EXT-001 已取消）。
 
 ## ▶ Next Task
 
-None — F-014 (BUILD-003 / REVIEW-003) done. Roadmap ① complete (F-011 → F-002 → F-014); next is roadmap ② (F-001 thinking display, F-003 run indicator) — awaiting task selection.
+`F-003` (run indicator) — roadmap ② 第二張，待 F-001 (BUILD-004) 合併後、使用者指示才開工。BUILD-004/REVIEW-004 done、待合併。
 
 ## Task Queue
 
@@ -43,3 +44,5 @@ None — F-014 (BUILD-003 / REVIEW-003) done. Roadmap ① complete (F-011 → F-
 | `REVIEW-002` | Review: Last-Event-ID Resume               | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
 | `BUILD-003`  | Transcript Replay Kernel + message.user    | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
 | `REVIEW-003` | Review: Transcript Replay Kernel           | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
+| `BUILD-004`  | Thinking Message Display                   | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
+| `REVIEW-004` | Review: Thinking Message Display           | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |

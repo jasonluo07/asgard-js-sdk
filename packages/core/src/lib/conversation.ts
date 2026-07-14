@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EventType } from '../constants/enum';
 import {
   ConversationMessage,
+  ConversationThinkingMessage,
   ConversationToolCallMessage,
   ConversationUserMessage,
   SseResponse,
@@ -45,6 +46,12 @@ export default class Conversation implements IConversation {
         return this.onMessageComplete(response as SseResponse<EventType.MESSAGE_COMPLETE>);
       case EventType.MESSAGE_USER:
         return this.onMessageUser(response as SseResponse<EventType.MESSAGE_USER>);
+      case EventType.MESSAGE_THINKING_START:
+        return this.onThinkingStart(response as SseResponse<EventType.MESSAGE_THINKING_START>);
+      case EventType.MESSAGE_THINKING_DELTA:
+        return this.onThinkingDelta(response as SseResponse<EventType.MESSAGE_THINKING_DELTA>);
+      case EventType.MESSAGE_THINKING_COMPLETE:
+        return this.onThinkingComplete(response as SseResponse<EventType.MESSAGE_THINKING_COMPLETE>);
       case EventType.TOOL_CALL_START:
         return this.onToolCallStart(response as SseResponse<EventType.TOOL_CALL_START>);
       case EventType.TOOL_CALL_COMPLETE:
@@ -65,6 +72,15 @@ export default class Conversation implements IConversation {
    */
   private isTerminalBot(message: ConversationMessage | undefined): boolean {
     return message?.type === 'bot' && !message.isTyping;
+  }
+
+  /**
+   * A thinking block is terminal once `thinking.complete` has settled it (`isThinking === false`).
+   * Like the bot terminal guard (F-011), it must never regress to the streaming state — late
+   * `thinking.start` / `thinking.delta` frames from replay or out-of-order delivery are ignored.
+   */
+  private isTerminalThinking(message: ConversationMessage | undefined): boolean {
+    return message?.type === 'thinking' && !message.isThinking;
   }
 
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
@@ -135,6 +151,71 @@ export default class Conversation implements IConversation {
       traceId: response.traceId ?? (currentMessage?.type === 'bot' ? currentMessage.traceId : undefined),
       raw: JSON.stringify(response),
     });
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onThinkingStart(response: SseResponse<EventType.MESSAGE_THINKING_START>): Conversation {
+    const message = response.fact.messageThinkingStart.message;
+
+    // Terminal guard: a completed thinking block stays put; a late `start` must not reopen it (F-011).
+    if (this.isTerminalThinking(this.messages?.get(message.messageId))) return this;
+
+    const messages = new Map(this.messages);
+    const thinking: ConversationThinkingMessage = {
+      type: 'thinking',
+      messageId: message.messageId,
+      text: message.text,
+      isThinking: true,
+      time: new Date(),
+      traceId: response.traceId,
+    };
+    messages.set(message.messageId, thinking);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onThinkingDelta(response: SseResponse<EventType.MESSAGE_THINKING_DELTA>): Conversation {
+    const message = response.fact.messageThinkingDelta.message;
+    const currentMessage = this.messages?.get(message.messageId);
+
+    // Terminal guard: a late `delta` after `complete` must not flip the block back into streaming (F-011).
+    if (this.isTerminalThinking(currentMessage)) return this;
+
+    // Lazy-init: a `delta` with no existing block (delta-before-start / mid-stream join) creates the
+    // streaming block rather than dropping its reasoning text (F-011 / UC-001).
+    const currentThinking = currentMessage?.type === 'thinking' ? currentMessage : undefined;
+    const messages = new Map(this.messages);
+    const thinking: ConversationThinkingMessage = {
+      type: 'thinking',
+      messageId: message.messageId,
+      text: `${currentThinking?.text ?? ''}${message.text}`,
+      isThinking: true,
+      time: currentThinking?.time ?? new Date(),
+      traceId: response.traceId ?? currentThinking?.traceId,
+    };
+    messages.set(message.messageId, thinking);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onThinkingComplete(response: SseResponse<EventType.MESSAGE_THINKING_COMPLETE>): Conversation {
+    const message = response.fact.messageThinkingComplete.message;
+    const currentMessage = this.messages?.get(message.messageId);
+    const currentThinking = currentMessage?.type === 'thinking' ? currentMessage : undefined;
+
+    const messages = new Map(this.messages);
+    const thinking: ConversationThinkingMessage = {
+      type: 'thinking',
+      messageId: message.messageId,
+      // Self-sufficient (F-011): the complete frame carries the full reasoning, so a complete-only
+      // replay (no start/delta) still renders the whole text.
+      text: message.text,
+      isThinking: false,
+      time: currentThinking?.time ?? new Date(),
+      traceId: response.traceId ?? currentThinking?.traceId,
+    };
+    messages.set(message.messageId, thinking);
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
   }

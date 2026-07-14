@@ -15,6 +15,11 @@ export enum EventType {
   MESSAGE_COMPLETE = 'asgard.message.complete',
   // Persist-only user turn — never on the live plane; only replayed on GET rejoin (F-014).
   MESSAGE_USER = 'asgard.message.user',
+  // Extended-thinking (reasoning) stream — same shape as a normal message, rendered as a
+  // separate collapsible thinking block (F-001). Independent of and usually earlier than the answer.
+  MESSAGE_THINKING_START = 'asgard.message.thinking.start',
+  MESSAGE_THINKING_DELTA = 'asgard.message.thinking.delta',
+  MESSAGE_THINKING_COMPLETE = 'asgard.message.thinking.complete',
   TOOL_CALL = 'asgard.tool_call',
   TOOL_CALL_START = 'asgard.tool_call.start',
   TOOL_CALL_COMPLETE = 'asgard.tool_call.complete',

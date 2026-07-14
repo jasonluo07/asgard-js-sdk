@@ -14,6 +14,7 @@ import {
   UserImageTemplate,
   TableTemplate,
   AttachmentTemplate,
+  ThinkingBlock,
   TemplateBox,
   TemplateBoxContent,
 } from '../../templates';
@@ -74,6 +75,11 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
     // tool-call messages are not rendered in the message flow for now
     if (message.type === 'tool-call') {
       return null;
+    }
+
+    // Extended-thinking (reasoning) renders as its own collapsible block, separate from the answer (F-001).
+    if (message.type === 'thinking') {
+      return <ThinkingBlock message={message} />;
     }
 
     if (message.isTyping) {

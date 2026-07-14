@@ -1,0 +1,129 @@
+// F-001 ThinkingBlock — collapsible extended-thinking (reasoning) block.
+// Theme via CSS variables with dark-theme fallbacks, mirroring the tool-call-group convention.
+
+.thinking_block {
+  width: 100%;
+  border: 1px solid var(--asgard-thinking-border, #333);
+  border-radius: 8px;
+  background-color: var(--asgard-thinking-bg, transparent);
+  padding: 10px 12px;
+}
+
+.thinking_block__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--asgard-thinking-text-secondary, #8c8c8c);
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
+    color: var(--asgard-thinking-text, #fff);
+  }
+}
+
+.thinking_block__chevron {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--asgard-thinking-icon, #8c8c8c);
+  transition: transform 0.2s ease;
+}
+
+.thinking_block__chevron--expanded {
+  transform: rotate(90deg);
+}
+
+.thinking_block__brain {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--asgard-thinking-icon, #8c8c8c);
+}
+
+.thinking_block__brain--streaming {
+  color: var(--asgard-thinking-accent, var(--asgard-primary, #1677ff));
+  animation: thinking_pulse 1.4s ease-in-out infinite;
+}
+
+.thinking_block__label--streaming {
+  color: var(--asgard-thinking-accent, var(--asgard-primary, #1677ff));
+}
+
+.thinking_block__body {
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--asgard-thinking-border, #333);
+}
+
+// Streaming window: bottom-anchored, auto-scrolls to latest, plain text, hidden scrollbar.
+.thinking_block__streaming {
+  max-height: 96px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--asgard-thinking-reasoning, rgba(255, 255, 255, 0.8));
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Top gradient mask — shown only when the reasoning overflows the window ("more above").
+.thinking_block__streaming--masked {
+  padding-top: 12px;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 20px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px);
+}
+
+.thinking_block__reasoning {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--asgard-thinking-reasoning, rgba(255, 255, 255, 0.8));
+}
+
+.thinking_block__more {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--asgard-thinking-accent, var(--asgard-primary, #1677ff));
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+@keyframes thinking_pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Honor reduced-motion: no pulsing (the streaming scroll is already instant).
+@media (prefers-reduced-motion: reduce) {
+  .thinking_block__brain--streaming {
+    animation: none;
+  }
+}

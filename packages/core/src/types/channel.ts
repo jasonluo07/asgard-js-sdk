@@ -71,8 +71,24 @@ export type ConversationToolCallMessage = {
   traceId?: string;
 };
 
+/**
+ * Extended-thinking (reasoning) block (F-001), assembled from `message.thinking.{start,delta,complete}`.
+ * Rendered as its own collapsible block, separate from the bot answer and tool-calls. `isThinking`
+ * distinguishes the streaming state (auto-expanded "Thinking…") from the completed state (collapsed
+ * "Thought for a moment"). No elapsed-time field — the completed summary is fixed and replay-safe.
+ */
+export type ConversationThinkingMessage = {
+  type: 'thinking';
+  messageId: string;
+  text: string;
+  isThinking: boolean;
+  time: Date;
+  traceId?: string;
+};
+
 export type ConversationMessage =
   | ConversationUserMessage
   | ConversationBotMessage
   | ConversationErrorMessage
-  | ConversationToolCallMessage;
+  | ConversationToolCallMessage
+  | ConversationThinkingMessage;
