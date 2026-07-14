@@ -8,8 +8,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import { ConversationToolCallMessage, isTaskTool, reduceTaskEvents } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
@@ -19,6 +21,7 @@ import PlusSvg from '../../../icons/plus.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import { DocumentUploadButton } from './document-upload-button';
 import { RunningIndicator } from '../running-indicator';
+import { TaskList } from '../task-list';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useFileDropContext } from '../../../context/file-drop-context';
@@ -59,6 +62,20 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     setPendingInputValue,
   } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
+  const { locale = 'en-US' } = useAsgardTemplateContext();
+
+  // F-010 — Task Check List: fold the completed TaskCreate / TaskUpdate tool-calls (routed out of the
+  // tool-call group) into the current list, docked above the seam. Empty → TaskList renders nothing.
+  const tasks = useMemo(
+    () =>
+      reduceTaskEvents(
+        Array.from(messages?.values() ?? []).filter(
+          (message): message is ConversationToolCallMessage =>
+            message.type === 'tool-call' && message.isComplete && isTaskTool(message),
+        ),
+      ),
+    [messages],
+  );
 
   const theme = useAsgardThemeContext();
   const { chatbot } = theme;
@@ -633,6 +650,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
+      {/* Task Check List: docked above the seam; hidden when empty (F-010). */}
+      <TaskList tasks={tasks} locale={locale} />
       {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003). */}
       <RunningIndicator running={isConnecting} />
       {enableUpload && uploadableImages.length > 0 && (

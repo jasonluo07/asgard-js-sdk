@@ -242,6 +242,7 @@ function toolCallCompleteEvent(
   callSeq: number,
   toolCallResult: Record<string, unknown>,
   isError?: boolean,
+  toolUseResultSidecar?: Record<string, unknown>,
 ): SseResponse<EventType> {
   return {
     eventType: EventType.TOOL_CALL_COMPLETE,
@@ -257,6 +258,7 @@ function toolCallCompleteEvent(
         toolCall: { toolsetName: '', toolName: 'Read', parameter: { file_path: '/a.ts' } },
         toolCallResult,
         ...(isError === undefined ? {} : { isError }),
+        ...(toolUseResultSidecar === undefined ? {} : { toolUseResultSidecar }),
       },
     },
   } as unknown as SseResponse<EventType>;
@@ -294,5 +296,27 @@ describe('Conversation — tool-call failure detection (F-009)', () => {
     const toolCall = getToolCall(conv, 'p-2');
     expect(toolCall?.isError).toBeFalsy();
     expect(toolCall?.result).toMatchObject({ error: 'boom' });
+  });
+});
+
+// F-010 — `onToolCallComplete` carries the structured `toolUseResultSidecar` onto the message, so the
+// task reducer can read the authoritative id / statusChange without parsing the result string.
+
+describe('Conversation — tool-call sidecar plumbing (F-010)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('carries toolUseResultSidecar onto the completed tool-call message', () => {
+    const sidecar = { task: { id: '1', subject: 'a' } };
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 0))
+      .onMessage(toolCallCompleteEvent('p', 0, { text: 'ok' }, undefined, sidecar));
+    expect(getToolCall(conv, 'p-0')?.sidecar).toMatchObject(sidecar);
+  });
+
+  it('leaves sidecar undefined when the complete event omits it', () => {
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 1))
+      .onMessage(toolCallCompleteEvent('p', 1, { text: 'ok' }));
+    expect(getToolCall(conv, 'p-1')?.sidecar).toBeUndefined();
   });
 });

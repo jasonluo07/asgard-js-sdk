@@ -43,6 +43,7 @@ const navItems = [
   { to: '/tool-call-diff', label: 'Tool-Call Diff (F-007)' },
   { to: '/tool-call-expand', label: 'Tool-Call Expand (F-008)' },
   { to: '/tool-call-iserror', label: 'Tool-Call isError (F-009)' },
+  { to: '/task-list', label: 'Task Check List (F-010)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

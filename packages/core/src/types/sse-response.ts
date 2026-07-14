@@ -209,6 +209,13 @@ export interface ToolCallCompleteEventData extends ToolCallBaseEventData {
    * failures (F-009).
    */
   isError?: boolean;
+  /**
+   * Structured, replay-safe companion to the human-readable `toolCallResult` string (F-010). The
+   * authoritative source for `TaskCreate` / `TaskUpdate` accumulation: `TaskCreate` carries
+   * `{ task: { id, subject } }` (the backend-assigned id), `TaskUpdate` carries
+   * `{ statusChange: { from, to }, taskId }`. Never parse id / status out of `toolCallResult`.
+   */
+  toolUseResultSidecar?: Record<string, unknown>;
 }
 
 export interface ToolCallConsentPendingCall {

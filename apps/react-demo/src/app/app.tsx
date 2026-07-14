@@ -40,6 +40,7 @@ import { ToolCallGrouping } from './routes/tool-call-grouping';
 import { ToolCallDiff } from './routes/tool-call-diff';
 import { ToolCallExpand } from './routes/tool-call-expand';
 import { ToolCallIsError } from './routes/tool-call-iserror';
+import { TaskListRoute } from './routes/task-list';
 
 export function App(): React.ReactElement {
   return (
@@ -85,6 +86,7 @@ export function App(): React.ReactElement {
         <Route path="/tool-call-diff" element={<ToolCallDiff />} />
         <Route path="/tool-call-expand" element={<ToolCallExpand />} />
         <Route path="/tool-call-iserror" element={<ToolCallIsError />} />
+        <Route path="/task-list" element={<TaskListRoute />} />
       </Routes>
     </Layout>
   );

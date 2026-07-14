@@ -1,0 +1,158 @@
+// F-010 — Task Check List panel. Themeable via CSS variables (reuses the tool-call chrome tokens for
+// visual consistency); the amber in_progress accent matches the tool-call running state (§3.5 idiom).
+
+.task_list {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--asgard-tool-call-border, #333);
+  border-radius: 8px;
+  background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+
+  &:hover {
+    color: var(--asgard-tool-call-text, #fff);
+  }
+}
+
+.header__icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  // Primary accent while the list is live; settles to muted once every task is done.
+  color: var(--asg-color-primary, #1677ff);
+}
+
+.header__icon--done {
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+}
+
+.header__title {
+  text-align: left;
+}
+
+.header__count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.header__chevron {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  list-style: none;
+}
+
+.row__button {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+}
+
+.glyph {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+}
+
+.glyph--in_progress {
+  color: #faad14; // amber accent — matches the tool-call running state
+}
+
+.glyph--completed {
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+}
+
+.glyph--pending {
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  opacity: 0.4;
+}
+
+.glyph__spin {
+  animation: task_list_spin 1s linear infinite;
+}
+
+@keyframes task_list_spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph__spin {
+    animation: none;
+  }
+}
+
+.row__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.row__label--active {
+  font-weight: 500;
+  color: var(--asgard-tool-call-text, #fff);
+}
+
+.row__label--done {
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+}
+
+.row__label--pending {
+  color: var(--asgard-tool-call-text, #fff);
+  opacity: 0.7;
+}
+
+.row__chevron {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+}
+
+.row__description {
+  margin: 2px 0 4px;
+  padding-left: 8px;
+  margin-left: 23px;
+  border-left: 1px solid var(--asgard-tool-call-border, #333);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+}
