@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ConversationToolCallMessage, isTaskTool, reduceTaskEvents } from '@asgard-js/core';
+import { ConversationToolCallMessage, isTaskTool, reduceSubagents, reduceTaskEvents } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
@@ -22,6 +22,7 @@ import { SpeechInputButton } from './speech-input-button';
 import { DocumentUploadButton } from './document-upload-button';
 import { RunningIndicator } from '../running-indicator';
 import { TaskList } from '../task-list';
+import { SubagentList, conversationToSubagentEvents } from '../subagent-list';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useFileDropContext } from '../../../context/file-drop-context';
@@ -74,6 +75,13 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
             message.type === 'tool-call' && message.isComplete && isTaskTool(message),
         ),
       ),
+    [messages],
+  );
+
+  // F-012 — Subagent list: fold the Agent tool-call + subagent.* + child tool-calls (routed out of the
+  // tool-call group) into the current subagent list, docked above the Task List.
+  const subagents = useMemo(
+    () => reduceSubagents(conversationToSubagentEvents(Array.from(messages?.values() ?? []))),
     [messages],
   );
 
@@ -650,6 +658,8 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
+      {/* Subagent list: docked above the Task List; hidden when never any (F-012). */}
+      <SubagentList subagents={subagents} locale={locale} />
       {/* Task Check List: docked above the seam; hidden when empty (F-010). */}
       <TaskList tasks={tasks} locale={locale} />
       {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003). */}

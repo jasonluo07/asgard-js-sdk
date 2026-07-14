@@ -357,24 +357,24 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
       case 'authenticated':
       default:
         return (
-          <>
-            <AsgardTemplateContextProvider
-              locale={locale}
-              onErrorClick={onErrorClick}
-              errorMessageRenderer={errorMessageRenderer}
-              onTemplateBtnClick={onTemplateBtnClick}
-              defaultLinkTarget={defaultLinkTarget}
-              messageActions={messageActions}
-              onMessageAction={onMessageAction}
-              renderMessageContent={renderMessageContent}
-              renderToolCallGroup={renderToolCallGroup}
-            >
-              <ChatbotBody />
-            </AsgardTemplateContextProvider>
+          <AsgardTemplateContextProvider
+            locale={locale}
+            onErrorClick={onErrorClick}
+            errorMessageRenderer={errorMessageRenderer}
+            onTemplateBtnClick={onTemplateBtnClick}
+            defaultLinkTarget={defaultLinkTarget}
+            messageActions={messageActions}
+            onMessageAction={onMessageAction}
+            renderMessageContent={renderMessageContent}
+            renderToolCallGroup={renderToolCallGroup}
+          >
+            <ChatbotBody />
             {renderMenu?.()}
+            {/* Footer must live inside the template provider so its docked TaskList / SubagentList
+                panels read `locale` from the context (F-010 / F-012). */}
             {renderFooter ? renderFooter() : <ChatbotFooter footerEndActions={footerEndActions} />}
             <ToolCallConsentGate />
-          </>
+          </AsgardTemplateContextProvider>
         );
     }
   };

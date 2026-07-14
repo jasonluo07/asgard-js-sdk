@@ -13,3 +13,6 @@ export { default as Conversation } from './lib/conversation';
 
 export { isTaskTool, reduceTaskEvents } from './lib/task-reducer';
 export type { TaskToolEvent } from './lib/task-reducer';
+
+export { isAgentTool, isSubagentChildTool, reduceSubagents } from './lib/subagent-reducer';
+export type { SubagentEvent } from './lib/subagent-reducer';

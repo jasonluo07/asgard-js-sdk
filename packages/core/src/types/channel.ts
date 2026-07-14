@@ -3,6 +3,7 @@ import { EventType } from '../constants/enum';
 import Conversation from '../lib/conversation';
 import { IAsgardServiceClient } from './client';
 import { ErrorMessage, Message } from './sse-response';
+import { SubagentTerminalStatus } from './subagent';
 
 export type ObserverOrNext<T> = Partial<Observer<T>> | ((value: T) => void);
 
@@ -73,7 +74,31 @@ export type ConversationToolCallMessage = {
    * `TaskCreate` / `TaskUpdate` accumulation (id / status), read by `reduceTaskEvents`.
    */
   sidecar?: Record<string, unknown>;
+  /** This tool-call's own correlation id; an `Agent` spawn's `toolUseId` becomes a subagent key (F-012). */
+  toolUseId?: string;
+  /** Non-empty when this tool-call belongs to a subagent (points at the `Agent`'s `toolUseId`) (F-012). */
+  parentToolUseId?: string;
   isComplete: boolean;
+  time: Date;
+  traceId?: string;
+};
+
+/**
+ * A subagent lifecycle event (F-012), stored so the react layer can fold `subagent.{start,complete}`
+ * together with the ordered `Agent` / child tool-call messages into the current subagent list.
+ * Keyed in the conversation Map by `subagent:${parentToolUseId}:${kind}` (start upserts, complete wins).
+ */
+export type ConversationSubagentMessage = {
+  type: 'subagent';
+  messageId: string;
+  kind: 'start' | 'complete';
+  parentToolUseId: string;
+  agentId?: string;
+  subagentType?: string;
+  description?: string;
+  /** Present on `complete`. */
+  status?: SubagentTerminalStatus;
+  summary?: string;
   time: Date;
   traceId?: string;
 };
@@ -98,4 +123,5 @@ export type ConversationMessage =
   | ConversationBotMessage
   | ConversationErrorMessage
   | ConversationToolCallMessage
-  | ConversationThinkingMessage;
+  | ConversationThinkingMessage
+  | ConversationSubagentMessage;
