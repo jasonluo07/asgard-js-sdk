@@ -3,13 +3,18 @@ import { EventType } from '../constants/enum';
 import Conversation from '../lib/conversation';
 import { IAsgardServiceClient } from './client';
 import { ErrorMessage, Message } from './sse-response';
-import { SubagentTerminalStatus } from './subagent';
+import { Subagent, SubagentTerminalStatus } from './subagent';
+import { Task } from './task';
 
 export type ObserverOrNext<T> = Partial<Observer<T>> | ((value: T) => void);
 
 export interface ChannelStates {
   isConnecting: boolean;
   conversation: Conversation;
+  /** Current Task Check List derived from the conversation (F-010; exposed as a store in F-013). */
+  tasks: Task[];
+  /** Current Subagent list derived from the conversation (F-012; exposed as a store in F-013). */
+  subagents: Subagent[];
 }
 
 export interface ChannelConfig {
