@@ -760,6 +760,24 @@ export function AsgardThemeContextProvider(
         }
       }
 
+      // Wire the effective primary color to the `--asg-color-primary` CSS variable. Setting
+      // `chatbot.primaryComponent.mainColor` (via props theme or bot-provider annotations) previously
+      // only reached the templated components (buttons, user bubbles); the run indicator, input focus,
+      // and other chrome read `var(--asg-color-primary)` — a fixed SCSS design token — so they stayed on
+      // the default. Injecting the variable (plus a darkened hover/active shade) onto the chatbot root
+      // themes the whole chatbot from that one setting. No mainColor → the SCSS default is kept.
+      const effectivePrimary = mergedTheme.chatbot?.primaryComponent?.mainColor;
+      if (effectivePrimary && mergedTheme.chatbot) {
+        const primaryDark = /^#[0-9a-fA-F]{6}$/.test(effectivePrimary)
+          ? darkenColor(effectivePrimary, 0.15)
+          : effectivePrimary;
+        mergedTheme.chatbot.style = {
+          ...mergedTheme.chatbot.style,
+          ['--asg-color-primary']: effectivePrimary,
+          ['--asg-color-primary-dark']: primaryDark,
+        } as CSSProperties;
+      }
+
       return mergedTheme;
     },
     [theme, annotations?.embedConfig?.theme],
