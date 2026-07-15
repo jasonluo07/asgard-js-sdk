@@ -45,6 +45,7 @@ import { SubagentListRoute } from './routes/subagent-list';
 import { DerivedStateRoute } from './routes/derived-state';
 import { ChannelTitleRoute } from './routes/channel-title';
 import { ChannelTitleUiRoute } from './routes/channel-title-ui';
+import { JoinInitRoute } from './routes/join-init';
 
 export function App(): React.ReactElement {
   return (
@@ -95,6 +96,7 @@ export function App(): React.ReactElement {
         <Route path="/derived-state" element={<DerivedStateRoute />} />
         <Route path="/channel-title" element={<ChannelTitleRoute />} />
         <Route path="/channel-title-ui" element={<ChannelTitleUiRoute />} />
+        <Route path="/join-init" element={<JoinInitRoute />} />
       </Routes>
     </Layout>
   );

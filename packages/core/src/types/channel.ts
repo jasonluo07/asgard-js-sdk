@@ -29,6 +29,22 @@ export interface ChannelConfig {
   statesObserver?: ObserverOrNext<ChannelStates>;
 }
 
+/** A channel's run state from `GET /channel/metadata` (F-015): `RUNNING` = a run is in flight. */
+export type ChannelRunState = 'RUNNING' | 'IDLE';
+
+/**
+ * Channel metadata from `GET /channel/metadata` (F-015) — the join-init existence + restore gate.
+ * Returned by `client.channelMetadata()` on `200`. A `404` (channel does not exist) is surfaced as
+ * `channelMetadata()` returning `null`, which is distinct from a `200` carrying `title: null` (an
+ * existing but unnamed channel). `title` seeds the channel-title store (F-016); `runState` describes
+ * whether a run is still streaming when history is replayed (F-014).
+ */
+export interface ChannelMetadata {
+  title: string | null;
+  runState: ChannelRunState;
+  lastActivityAt?: string;
+}
+
 export type ConversationUserMessage = {
   type: 'user';
   messageId: string;

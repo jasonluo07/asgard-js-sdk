@@ -120,6 +120,38 @@ export default class Channel {
     }
   }
 
+  /**
+   * Join an **existing** channel without resetting it (F-015). Seeds the title from `config.channelTitle`
+   * (the `GET /channel/metadata` value) at construction, then replays the server transcript via GET
+   * `rejoinSse` and holds `isConnecting` until the run reaches a terminal. Never sends `RESET_CHANNEL`,
+   * so the channel's history / session / title are preserved — this is the fix for the mount-time
+   * "join an existing channel and wipe its history" data-loss bug.
+   */
+  public static async restore(
+    config: ChannelConfig,
+    options?: FetchSseOptions,
+    onChannelCreated?: (channel: Channel) => void,
+  ): Promise<Channel> {
+    const channel = new Channel(config);
+
+    try {
+      channel.subscribe();
+
+      // Adopt the channel before the replay finishes — a RUNNING restore can stream a tool_call.consent
+      // before its terminal, and a reply submitted then must reach a non-null channel (same rationale as
+      // reset).
+      onChannelCreated?.(channel);
+
+      await channel.rejoinChannel(options);
+
+      return channel;
+    } catch (error) {
+      channel.close();
+
+      throw error;
+    }
+  }
+
   private subscribe(): void {
     this.statesSubscription = combineLatest([
       this.isConnecting$,
@@ -159,53 +191,84 @@ export default class Channel {
     return payload;
   }
 
+  /**
+   * The SSE run handlers shared by every run kind (POST send/reset and GET rejoin): fold each frame
+   * through the conversation reducer, keep the title store in sync, attach the traceId to the pending
+   * user bubble, and settle the run promise (releasing `isConnecting`) on completion / error.
+   */
+  private buildRunHandlers(
+    options: FetchSseOptions | undefined,
+    resolve: () => void,
+    reject: (err: unknown) => void,
+  ): FetchSseOptions {
+    return {
+      onSseStart: options?.onSseStart,
+      onSseMessage: (response: SseResponse<EventType>): void => {
+        options?.onSseMessage?.(response);
+
+        // F-016 — the channel title is run-level state, not a message; keep it out of the conversation
+        // (it is ephemeral and must survive rejoin replays, which don't carry this event).
+        if (response.eventType === EventType.CHANNEL_TITLE_UPDATE) {
+          this.channelTitleSubject.next(
+            (response as SseResponse<EventType.CHANNEL_TITLE_UPDATE>).fact.channelTitleUpdate.title,
+          );
+        }
+
+        if (this.currentUserMessageId && response.traceId) {
+          const messages = new Map(this.conversation$.value.messages);
+          const userMessage = messages.get(this.currentUserMessageId);
+
+          if (userMessage && userMessage.type === 'user') {
+            messages.set(this.currentUserMessageId, {
+              ...userMessage,
+              traceId: response.traceId,
+            });
+            this.conversation$.next(new Conversation({ messages }));
+          }
+
+          this.currentUserMessageId = undefined;
+        }
+
+        this.conversation$.next(this.conversation$.value.onMessage(response));
+      },
+      onSseError: (err: unknown): void => {
+        options?.onSseError?.(err);
+        this.isConnecting$.next(false);
+        this.currentUserMessageId = undefined;
+        reject(err);
+      },
+      onSseCompleted: (): void => {
+        options?.onSseCompleted?.();
+        this.isConnecting$.next(false);
+        this.currentUserMessageId = undefined;
+        resolve();
+      },
+    };
+  }
+
   private fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isConnecting$.next(true);
+      this.client.fetchSse(payload, this.buildRunHandlers(options, resolve, reject));
+    });
+  }
 
-      this.client.fetchSse(payload, {
-        onSseStart: options?.onSseStart,
-        onSseMessage: (response: SseResponse<EventType>) => {
-          options?.onSseMessage?.(response);
+  /**
+   * Join-restore transport (F-015): replay the server transcript via GET `rejoinSse` (F-014) and, if a
+   * run is still live, keep listening until its terminal — holding `isConnecting` the whole time so the
+   * input stays gated (F-003). A client without GET-replay support settles immediately (nothing to
+   * restore), so the input is released rather than stuck.
+   */
+  private rejoinChannel(options?: FetchSseOptions): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.client.rejoinSse) {
+        resolve();
 
-          // F-016 — the channel title is run-level state, not a message; keep it out of the conversation
-          // (it is ephemeral and must survive rejoin replays, which don't carry this event).
-          if (response.eventType === EventType.CHANNEL_TITLE_UPDATE) {
-            this.channelTitleSubject.next(
-              (response as SseResponse<EventType.CHANNEL_TITLE_UPDATE>).fact.channelTitleUpdate.title,
-            );
-          }
+        return;
+      }
 
-          if (this.currentUserMessageId && response.traceId) {
-            const messages = new Map(this.conversation$.value.messages);
-            const userMessage = messages.get(this.currentUserMessageId);
-
-            if (userMessage && userMessage.type === 'user') {
-              messages.set(this.currentUserMessageId, {
-                ...userMessage,
-                traceId: response.traceId,
-              });
-              this.conversation$.next(new Conversation({ messages }));
-            }
-
-            this.currentUserMessageId = undefined;
-          }
-
-          this.conversation$.next(this.conversation$.value.onMessage(response));
-        },
-        onSseError: (err: unknown) => {
-          options?.onSseError?.(err);
-          this.isConnecting$.next(false);
-          this.currentUserMessageId = undefined;
-          reject(err);
-        },
-        onSseCompleted: () => {
-          options?.onSseCompleted?.();
-          this.isConnecting$.next(false);
-          this.currentUserMessageId = undefined;
-          resolve();
-        },
-      });
+      this.isConnecting$.next(true);
+      this.client.rejoinSse(this.customChannelId, this.buildRunHandlers(options, resolve, reject));
     });
   }
 

@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Channel from './channel';
 import Conversation from './conversation';
 import { EventType } from '../constants/enum';
-import type { FetchSseOptions, FetchSsePayload, IAsgardServiceClient, SseResponse } from '../types';
+import type { ChannelStates, FetchSseOptions, FetchSsePayload, IAsgardServiceClient, SseResponse } from '../types';
 
 // F-016 — channel title store. The title lives on the Channel (seeded from config, updated by the live
 // `asgard.channel.title.update` event), never derived from the conversation — so a rejoin replay (which
@@ -107,6 +107,82 @@ describe('Channel — channel title store (F-016)', () => {
     });
     await channel.sendMessage({ text: 'hi' });
     expect(seen[seen.length - 1]).toBe('新標題');
+    channel.close();
+  });
+});
+
+// F-015 — join restore. Channel.restore adopts an existing channel via GET rejoinSse (F-014) and never
+// sends RESET_CHANNEL, so an existing channel's history / title are preserved on join.
+
+function restoreMockClient(rejoinEvents: SseResponse<EventType>[], fetchSse?: () => void): IAsgardServiceClient {
+  return {
+    fetchSse(_payload: FetchSsePayload, _options?: FetchSseOptions): void {
+      fetchSse?.();
+    },
+    rejoinSse(_customChannelId: string, options?: FetchSseOptions): void {
+      options?.onSseStart?.();
+      rejoinEvents.forEach(event => options?.onSseMessage?.(event));
+      options?.onSseCompleted?.();
+    },
+  } as unknown as IAsgardServiceClient;
+}
+
+describe('Channel — join restore (F-015)', () => {
+  it('R2: seeds the title from metadata, replays history, and never sends RESET_CHANNEL', async () => {
+    const fetchSseSpy = vi.fn();
+    let states: ChannelStates | undefined;
+
+    const channel = await Channel.restore({
+      client: restoreMockClient([messageEvent('h1', '歷史一'), messageEvent('h2', '歷史二')], fetchSseSpy),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      channelTitle: '庫存分析',
+      statesObserver: s => (states = s),
+    });
+
+    expect(fetchSseSpy).not.toHaveBeenCalled();
+    expect(channel.getChannelTitle()).toBe('庫存分析');
+    expect([...(states?.conversation.messages?.values() ?? [])].map(m => m.messageId)).toEqual(['h1', 'h2']);
+    channel.close();
+  });
+
+  it('R5: holds isConnecting during replay, then releases it on the run terminal', async () => {
+    let captured: FetchSseOptions | undefined;
+    const client = {
+      fetchSse: vi.fn(),
+      rejoinSse(_id: string, options?: FetchSseOptions): void {
+        captured = options;
+        options?.onSseStart?.();
+      },
+    } as unknown as IAsgardServiceClient;
+
+    const connecting: boolean[] = [];
+    const restorePromise = Channel.restore({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => connecting.push(s.isConnecting),
+    });
+
+    await Promise.resolve();
+    // Input is gated while the restore connection is open (no terminal yet).
+    expect(connecting[connecting.length - 1]).toBe(true);
+
+    captured?.onSseCompleted?.();
+    await restorePromise;
+    // Released once the terminal arrives (an IDLE channel's synthesized terminal does the same instantly).
+    expect(connecting[connecting.length - 1]).toBe(false);
+  });
+
+  it('settles immediately (input released) when the client has no rejoinSse — nothing to restore', async () => {
+    const channel = await Channel.restore({
+      client: { fetchSse: vi.fn() } as unknown as IAsgardServiceClient,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      channelTitle: '未命名前的標題',
+    });
+
+    expect(channel.getChannelTitle()).toBe('未命名前的標題');
     channel.close();
   });
 });
