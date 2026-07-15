@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Chatbot } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
+import { SHOWCASE_THEME_PRESETS } from '../../components/showcase-theme-presets';
 import styles from './all-features-wide.module.scss';
 
 // Big-layout variant of /all-features — the exact same `all-features-demo` mock stream, but the
@@ -17,6 +18,12 @@ const LOCALES: Locale[] = ['zh-TW', 'en-US', 'ja-JP'];
 export function AllFeaturesWideRoute(): ReactNode {
   const [locale, setLocale] = useState<Locale>('zh-TW');
   const [runKey, setRunKey] = useState(0);
+  const [themeIdx, setThemeIdx] = useState(0);
+
+  const preset = SHOWCASE_THEME_PRESETS[themeIdx];
+  // Merge the preset's primary colors with the big-layout width/height override (deepMergeTheme keeps
+  // the other chatbot theme defaults). Theme changes re-render live — no remount, so the run isn't replayed.
+  const theme = { ...preset.config, chatbot: { ...preset.config.chatbot, width: '100%', height: '100%' } };
 
   return (
     <DemoWrapper
@@ -39,6 +46,17 @@ export function AllFeaturesWideRoute(): ReactNode {
               {l}
             </button>
           ))}
+          <span className={styles.localeLabel}>theme:</span>
+          {SHOWCASE_THEME_PRESETS.map((p, i) => (
+            <button
+              key={p.name}
+              type="button"
+              className={i === themeIdx ? styles.localeActive : styles.locale}
+              onClick={() => setThemeIdx(i)}
+            >
+              {p.name}
+            </button>
+          ))}
         </div>
 
         <div className={styles.chatbotContainer}>
@@ -48,9 +66,7 @@ export function AllFeaturesWideRoute(): ReactNode {
             config={config}
             customChannelId="all-features-demo"
             locale={locale}
-            // The chatbot's default width/height (375×640) come from the theme; override them to fill
-            // the big container. deepMergeTheme keeps every other chatbot theme default.
-            theme={{ chatbot: { width: '100%', height: '100%' } }}
+            theme={theme}
             inputPlaceholder="展示串流中會停用；結束後可送訊息（會得到簡短回覆）…"
           />
         </div>
