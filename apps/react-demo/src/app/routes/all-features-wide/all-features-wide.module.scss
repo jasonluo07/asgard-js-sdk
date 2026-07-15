@@ -1,0 +1,65 @@
+// Fills the DemoWrapper content area (which is `flex: 1; display: flex`) with a single flex-column
+// stack: a slim control bar on top, then a large <Chatbot> that takes the full remaining width/height.
+.stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.replay {
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-primary);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--asg-color-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  &:hover {
+    background: var(--asg-color-primary);
+    color: #fff;
+  }
+}
+
+.localeLabel {
+  margin-left: 8px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.locale,
+.localeActive {
+  padding: 4px 10px;
+  border: 1px solid var(--asg-color-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.localeActive {
+  border-color: var(--asg-color-primary);
+  background: var(--asg-color-primary);
+  color: #fff;
+}
+
+// A definite, viewport-bounded height (not flex:1) — the shared DemoWrapper flex chain lacks
+// `min-height: 0`, so without a definite height the chatbot grows to its content instead of scrolling
+// its thread internally. The ~185px accounts for the demo chrome above (main padding + page header +
+// control bar). This keeps the whole chatbot — including the input — within the viewport.
+.chatbotContainer {
+  width: 100%;
+  height: calc(100vh - 185px);
+  min-height: 480px;
+}
