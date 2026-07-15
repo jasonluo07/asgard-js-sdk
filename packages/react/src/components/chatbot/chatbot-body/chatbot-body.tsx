@@ -2,6 +2,8 @@ import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, 
 import {
   ConversationMessage,
   ConversationToolCallMessage,
+  deriveSubagents,
+  deriveTasks,
   isAgentTool,
   isSubagentChildTool,
   isTaskTool,
@@ -23,6 +25,8 @@ import { useAsgardTemplateContext } from '../../../context/asgard-template-conte
 import { Locale } from '../../../i18n';
 import clsx from 'clsx';
 import { useResizeObserver } from '../../../hooks';
+import { SubagentList } from '../subagent-list';
+import { TaskList } from '../task-list';
 
 // Helper type for grouped messages
 type MessageGroup =
@@ -107,6 +111,7 @@ export function ChatbotBody(): ReactNode {
 
   const {
     messages,
+    conversation,
     messageBoxBottomRef,
     scrollContainerRef,
     isFollowingLatest,
@@ -190,6 +195,12 @@ export function ChatbotBody(): ReactNode {
 
   useResizeObserver({ ref: contentRef, onResize: onContentResize });
 
+  // F-010 / F-012 — the Task / Subagent live-state panels, derived from the conversation store. They
+  // render at the tail of the thread flow (below) so they scroll with the messages instead of being
+  // pinned to the footer.
+  const tasks = useMemo(() => (conversation ? deriveTasks(conversation) : []), [conversation]);
+  const subagents = useMemo(() => (conversation ? deriveSubagents(conversation) : []), [conversation]);
+
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
@@ -244,8 +255,21 @@ export function ChatbotBody(): ReactNode {
               />
             );
           })}
-          <div ref={messageBoxBottomRef} />
+          {/* Subagent (F-012) + Task (F-010) live-state panels. `margin-top: auto` on the wrapper sinks
+              them to just above the footer when the thread is short (à la Claude Code's activity line),
+              while keeping them in the scroll flow so they ride up with the messages once the thread is
+              tall enough to scroll. Rendered only when populated, so an empty wrapper never adds a gap
+              and a lone last message keeps the same 12px clearance to the footer. */}
+          {(subagents.length > 0 || tasks.length > 0) && (
+            <div className={styles.chatbot_body__docked}>
+              <SubagentList subagents={subagents} locale={locale} />
+              <TaskList tasks={tasks} locale={locale} />
+            </div>
+          )}
         </div>
+        {/* Scroll sentinel — kept outside the padded/gapped content so it adds no trailing space
+            (video/audio templates scrollIntoView it to reach the bottom). */}
+        <div ref={messageBoxBottomRef} />
       </div>
     </div>
   );
