@@ -18,6 +18,8 @@ export interface UseChannelProps {
   customChannelId: string;
   customMessageId?: string;
   initMessages?: ConversationMessage[];
+  /** Seed for the channel title store (F-016) — e.g. from `GET /channel/metadata` (wired by F-015). */
+  channelTitle?: string | null;
   autoResetChannel?: boolean;
   onSseMessage?: (
     response: SseResponse<EventType>,
@@ -48,6 +50,8 @@ export interface UseChannelReturn {
   isResetting: boolean;
   isConnecting: boolean;
   conversation: Conversation | null;
+  /** Current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
+  channelTitle: string | null;
   sendMessage?: (
     payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
       Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[]; documentNames?: string[] },
@@ -65,6 +69,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     customChannelId,
     customMessageId,
     initMessages,
+    channelTitle: channelTitleSeed,
     autoResetChannel,
     onSseMessage,
     onAuthError,
@@ -81,6 +86,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isResetting, setIsResetting] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [channelTitle, setChannelTitle] = useState<string | null>(channelTitleSeed ?? null);
 
   // Preview mode: static conversation from initMessages
   const previewConversation = useMemo(
@@ -110,9 +116,11 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           customChannelId,
           customMessageId,
           conversation,
+          channelTitle: channelTitleSeed,
           statesObserver: (states: ChannelStates): void => {
             setIsConnecting(states.isConnecting);
             setConversation(states.conversation);
+            setChannelTitle(states.channelTitle);
           },
         },
         resolvedPayload,
@@ -161,6 +169,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       customChannelId,
       customMessageId,
       initMessages,
+      channelTitleSeed,
       onSseMessage,
       onAuthError,
       onSseError,
@@ -182,15 +191,17 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       customChannelId,
       customMessageId,
       conversation,
+      channelTitle: channelTitleSeed,
       statesObserver: (states: ChannelStates): void => {
         setIsConnecting(states.isConnecting);
         setConversation(states.conversation);
+        setChannelTitle(states.channelTitle);
       },
     });
 
     setIsOpen(true);
     setChannel(channel);
-  }, [isPreviewMode, client, customChannelId, customMessageId, initMessages]);
+  }, [isPreviewMode, client, customChannelId, customMessageId, initMessages, channelTitleSeed]);
 
   const closeChannel = useCallback(() => {
     setChannel((prevChannel: Channel | null) => {
@@ -297,12 +308,14 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             isResetting: false,
             isConnecting: false,
             conversation: previewConversation,
+            channelTitle: channelTitleSeed ?? null,
           }
         : {
             isOpen,
             isResetting,
             isConnecting,
             conversation,
+            channelTitle,
             sendMessage,
             resetChannel,
             closeChannel,
@@ -315,6 +328,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       isResetting,
       isConnecting,
       conversation,
+      channelTitle,
+      channelTitleSeed,
       sendMessage,
       resetChannel,
       closeChannel,

@@ -15,6 +15,8 @@ export interface ChannelStates {
   tasks: Task[];
   /** Current Subagent list derived from the conversation (F-012; exposed as a store in F-013). */
   subagents: Subagent[];
+  /** Current channel title — seeded from metadata + updated by `title.update` (F-016). `null` = unnamed. */
+  channelTitle: string | null;
 }
 
 export interface ChannelConfig {
@@ -22,6 +24,8 @@ export interface ChannelConfig {
   customChannelId: string;
   customMessageId?: string;
   conversation: Conversation;
+  /** Seed for the channel title store (F-016) — from `GET /channel/metadata` at join (wired by F-015). `null` = unnamed. */
+  channelTitle?: string | null;
   statesObserver?: ObserverOrNext<ChannelStates>;
 }
 

@@ -1,4 +1,4 @@
-import { BehaviorSubject, combineLatest, map, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChannelConfig,
@@ -24,6 +24,7 @@ export default class Channel {
 
   private isConnecting$: BehaviorSubject<boolean>;
   private conversation$: BehaviorSubject<Conversation>;
+  private channelTitleSubject: BehaviorSubject<string | null>;
   private derivedStores: DerivedStores;
   private statesObserver?: ObserverOrNext<ChannelStates>;
   private statesSubscription?: Subscription;
@@ -32,6 +33,8 @@ export default class Channel {
   public readonly tasks$: Observable<Task[]>;
   /** Reactive Subagent list store (F-013): emits only when the list changes; replays the snapshot. */
   public readonly subagents$: Observable<Subagent[]>;
+  /** Reactive channel title store (F-016): seeded from metadata, updated by `title.update`; replay-safe. */
+  public readonly channelTitle$: Observable<string | null>;
   private currentUserMessageId?: string;
   // The most-recently-sent user message id. Unlike currentUserMessageId (which
   // is cleared once a traceId is attached), this is kept across the SSE
@@ -54,9 +57,12 @@ export default class Channel {
 
     this.isConnecting$ = new BehaviorSubject(false);
     this.conversation$ = new BehaviorSubject(config.conversation);
+    this.channelTitleSubject = new BehaviorSubject<string | null>(config.channelTitle ?? null);
     this.derivedStores = createDerivedStores(this.conversation$);
     this.tasks$ = this.derivedStores.tasks$;
     this.subagents$ = this.derivedStores.subagents$;
+    // Emit only when the title actually changes (ignore duplicate `title.update`s with the same value).
+    this.channelTitle$ = this.channelTitleSubject.pipe(distinctUntilChanged());
     this.statesObserver = config.statesObserver;
   }
 
@@ -68,6 +74,16 @@ export default class Channel {
   /** Current Subagent list snapshot (F-013) — for framework-agnostic `getSnapshot()` bridging. */
   public getSubagents(): Subagent[] {
     return this.derivedStores.getSubagents();
+  }
+
+  /** Current channel title snapshot (F-016) — for framework-agnostic `getSnapshot()` bridging. */
+  public getChannelTitle(): string | null {
+    return this.channelTitleSubject.value;
+  }
+
+  /** Seed / override the channel title (F-016) — used by the join-restore metadata seed (F-015). */
+  public setChannelTitle(title: string | null): void {
+    this.channelTitleSubject.next(title);
   }
 
   public static create(config: ChannelConfig): Channel {
@@ -110,13 +126,15 @@ export default class Channel {
       this.conversation$,
       this.derivedStores.tasks$,
       this.derivedStores.subagents$,
+      this.channelTitle$,
     ])
       .pipe(
-        map(([isConnecting, conversation, tasks, subagents]) => ({
+        map(([isConnecting, conversation, tasks, subagents, channelTitle]) => ({
           isConnecting,
           conversation,
           tasks,
           subagents,
+          channelTitle,
         })),
       )
       .subscribe(this.statesObserver);
@@ -149,6 +167,14 @@ export default class Channel {
         onSseStart: options?.onSseStart,
         onSseMessage: (response: SseResponse<EventType>) => {
           options?.onSseMessage?.(response);
+
+          // F-016 — the channel title is run-level state, not a message; keep it out of the conversation
+          // (it is ephemeral and must survive rejoin replays, which don't carry this event).
+          if (response.eventType === EventType.CHANNEL_TITLE_UPDATE) {
+            this.channelTitleSubject.next(
+              (response as SseResponse<EventType.CHANNEL_TITLE_UPDATE>).fact.channelTitleUpdate.title,
+            );
+          }
 
           if (this.currentUserMessageId && response.traceId) {
             const messages = new Map(this.conversation$.value.messages);
@@ -257,6 +283,7 @@ export default class Channel {
   public close(): void {
     this.isConnecting$.complete();
     this.conversation$.complete();
+    this.channelTitleSubject.complete();
     this.derivedStores.teardown();
     this.statesSubscription?.unsubscribe();
   }
