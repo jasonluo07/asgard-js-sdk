@@ -378,9 +378,14 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             untitledLabel={untitledLabel}
             channelTitleHidden={channelTitleHidden}
           >
-            {/* Channel-title row at the thread top — distinct from the bot-name ChatbotHeader (F-017). */}
-            <ChannelTitle />
-            <ChatbotBody />
+            {/* Group the channel-title row + scrollable thread into the grid's single `1fr` row, so
+                the footer stays pinned regardless of thread height or whether the title renders. The
+                title is fixed at the top; the body scrolls internally (its own `flex:1; overflow`). */}
+            <div className={styles.chatbot__thread_area}>
+              {/* Channel-title row at the thread top — distinct from the bot-name ChatbotHeader (F-017). */}
+              <ChannelTitle />
+              <ChatbotBody />
+            </div>
             {renderMenu?.()}
             {/* Footer must live inside the template provider so its docked TaskList / SubagentList
                 panels read `locale` from the context (F-010 / F-012). */}

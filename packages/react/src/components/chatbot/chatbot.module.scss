@@ -22,3 +22,13 @@
 .chatbot__error_state__message {
   // No additional styles needed - uses default text styling
 }
+
+// Thread area: occupies the container grid's single `1fr` row and lays out the (fixed) channel-title
+// row above the (scrollable) message body. Keeping these two in one grid cell means adding/removing
+// the title never shifts the grid rows, so the footer stays pinned and the body scrolls internally.
+.chatbot__thread_area {
+  min-height: 0; // allow shrinking below content so the body can scroll instead of pushing the footer
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
