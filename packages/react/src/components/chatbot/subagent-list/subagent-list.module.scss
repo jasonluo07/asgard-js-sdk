@@ -2,8 +2,9 @@
 // amber running accent + red failed match the tool-call status idiom (§3.5).
 
 .subagent_list {
-  // A distinct rounded card with a gap below (matches the Task panel).
-  margin-bottom: 12px;
+  // A distinct rounded card: inset 16px on each side to align with the thread content (matches the
+  // Task panel), with a gap below.
+  margin: 0 16px 12px;
   padding: 10px 12px;
   border: 1px solid var(--asgard-tool-call-border, #333);
   border-radius: 8px;
