@@ -594,13 +594,15 @@ export function AsgardThemeContextProvider(
         }
       }
 
-      // Ensure prop-level chatbot.backgroundColor is also applied to textarea background
+      // Lift the textarea to the surface elevation derived from chatbot.backgroundColor (one step
+      // lighter), so it matches the bordered thread containers instead of blending into the base bg.
       if (theme?.chatbot?.backgroundColor) {
         const bgColor = theme.chatbot.backgroundColor;
 
-        // Apply to textarea background color
         if (mergedTheme.chatbot.footer?.textArea?.style) {
-          mergedTheme.chatbot.footer.textArea.style.backgroundColor = bgColor;
+          mergedTheme.chatbot.footer.textArea.style.backgroundColor = /^#[0-9a-fA-F]{6}$/.test(bgColor)
+            ? lightenColor(bgColor, 0.08)
+            : bgColor;
         }
       }
 
