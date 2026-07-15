@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Chatbot } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
+import { SHOWCASE_THEME_PRESETS } from '../../components/showcase-theme-presets';
 import styles from './all-features.module.scss';
 
 // All-features showcase — one real <Chatbot> whose mock (customChannelId `all-features-demo`) streams
@@ -34,6 +35,10 @@ const LEGEND: { area: string; feat: string }[] = [
 export function AllFeaturesRoute(): ReactNode {
   const [locale, setLocale] = useState<Locale>('zh-TW');
   const [runKey, setRunKey] = useState(0);
+  const [themeIdx, setThemeIdx] = useState(0);
+
+  // Theme changes re-render live (no remount → the run isn't replayed).
+  const theme = SHOWCASE_THEME_PRESETS[themeIdx].config;
 
   return (
     <DemoWrapper
@@ -59,6 +64,20 @@ export function AllFeaturesRoute(): ReactNode {
           ))}
         </div>
 
+        <div className={styles.localeRow}>
+          <span className={styles.localeLabel}>theme:</span>
+          {SHOWCASE_THEME_PRESETS.map((p, i) => (
+            <button
+              key={p.name}
+              type="button"
+              className={i === themeIdx ? styles.localeActive : styles.locale}
+              onClick={() => setThemeIdx(i)}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+
         <ul className={styles.legend}>
           {LEGEND.map(item => (
             <li key={item.feat}>
@@ -76,6 +95,7 @@ export function AllFeaturesRoute(): ReactNode {
           config={config}
           customChannelId="all-features-demo"
           locale={locale}
+          theme={theme}
           inputPlaceholder="展示串流中會停用；結束後可送訊息（會得到簡短回覆）…"
         />
       </div>
