@@ -1,6 +1,6 @@
 import { createContext, CSSProperties, PropsWithChildren, ReactNode, useContext, useMemo, useCallback } from 'react';
 import { deepMerge } from '../utils/deep-merge';
-import { darkenColor } from '../utils/color-utils';
+import { darkenColor, lightenColor } from '../utils/color-utils';
 import { useAsgardAppInitializationContext, Annotations } from './asgard-app-initialization-context';
 
 export interface AsgardThemeContextValue {
@@ -760,21 +760,45 @@ export function AsgardThemeContextProvider(
         }
       }
 
-      // Wire the effective primary color to the `--asg-color-primary` CSS variable. Setting
-      // `chatbot.primaryComponent.mainColor` (via props theme or bot-provider annotations) previously
-      // only reached the templated components (buttons, user bubbles); the run indicator, input focus,
-      // and other chrome read `var(--asg-color-primary)` — a fixed SCSS design token — so they stayed on
-      // the default. Injecting the variable (plus a darkened hover/active shade) onto the chatbot root
-      // themes the whole chatbot from that one setting. No mainColor → the SCSS default is kept.
+      // Wire the effective theme colors to the SCSS design-token CSS variables, so a few theme settings
+      // color the *whole* chatbot — not just the templated bubbles/buttons. The run indicator, input,
+      // the channel-title bar, tool-call rows, and the Task/Subagent panels read these `--asg-color-*` /
+      // `--asgard-tool-call-*` tokens (fixed by default), so setting them from the theme is what makes
+      // those surfaces follow it. Each token is injected only when the theme provides a concrete color
+      // (a hex, or a non-`var()` border); otherwise the SCSS default is kept (backward compatible).
+      const themeVars: Record<string, string> = {};
+
+      // Primary → the accent (run indicator, input focus, buttons) + a darkened hover/active shade.
       const effectivePrimary = mergedTheme.chatbot?.primaryComponent?.mainColor;
-      if (effectivePrimary && mergedTheme.chatbot) {
-        const primaryDark = /^#[0-9a-fA-F]{6}$/.test(effectivePrimary)
+      if (effectivePrimary) {
+        themeVars['--asg-color-primary'] = effectivePrimary;
+        themeVars['--asg-color-primary-dark'] = /^#[0-9a-fA-F]{6}$/.test(effectivePrimary)
           ? darkenColor(effectivePrimary, 0.15)
           : effectivePrimary;
+      }
+
+      // Background → the base bg + a `surface` one step lighter (cards / channel-title / tool-call rows /
+      // Task & Subagent panels sit on the surface, keeping a subtle elevation over the base).
+      const effectiveBg = mergedTheme.chatbot?.backgroundColor;
+      if (typeof effectiveBg === 'string' && /^#[0-9a-fA-F]{6}$/.test(effectiveBg)) {
+        const surface = lightenColor(effectiveBg, 0.08);
+        themeVars['--asg-color-bg'] = effectiveBg;
+        themeVars['--asg-color-surface'] = surface;
+        themeVars['--asgard-tool-call-item-bg'] = surface;
+      }
+
+      // Border → the border + divider + the tool-call / panel border.
+      const effectiveBorder = mergedTheme.chatbot?.borderColor;
+      if (typeof effectiveBorder === 'string' && !effectiveBorder.startsWith('var(')) {
+        themeVars['--asg-color-border'] = effectiveBorder;
+        themeVars['--asg-color-divider'] = effectiveBorder;
+        themeVars['--asgard-tool-call-border'] = effectiveBorder;
+      }
+
+      if (Object.keys(themeVars).length > 0 && mergedTheme.chatbot) {
         mergedTheme.chatbot.style = {
           ...mergedTheme.chatbot.style,
-          ['--asg-color-primary']: effectivePrimary,
-          ['--asg-color-primary-dark']: primaryDark,
+          ...themeVars,
         } as CSSProperties;
       }
 
