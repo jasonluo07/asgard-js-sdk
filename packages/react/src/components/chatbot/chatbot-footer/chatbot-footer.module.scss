@@ -32,7 +32,9 @@
   height: 40px;
   padding: 8px;
   padding-left: 12px;
-  background: var(--asg-color-bg);
+  // Surface elevation to match the bordered thread containers (task/subagent/tool-call/thinking),
+  // so every bordered box shares the same background instead of the input blending into the base bg.
+  background: var(--asg-color-surface);
   border: 1px solid var(--asg-color-border);
   border-radius: var(--asg-radius-md, 8px);
   // Typed text uses the foreground color (like the rest of the footer); the placeholder stays muted
