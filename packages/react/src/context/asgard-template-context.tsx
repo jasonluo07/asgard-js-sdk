@@ -44,6 +44,17 @@ export interface ToolCallGroupRendererProps {
   renderDefaultContent: (overrides?: { title?: string }) => ReactNode;
 }
 
+/**
+ * Args passed to the custom channel-title renderer (F-017). Return a node to replace the default
+ * thread-top title row, or `null` to hide it entirely; `renderDefault()` renders the default row.
+ */
+export interface ChannelTitleRendererProps {
+  /** The current channel title (`null` = unnamed). */
+  title: string | null;
+  /** Renders the default channel-title row (for fallback inside a custom renderer). */
+  renderDefault: () => ReactNode;
+}
+
 export interface AsgardTemplateContextValue {
   /** UI language for synthesized text (tool-call labels, …). Defaults to `en-US` (F-005). */
   locale?: Locale;
@@ -59,6 +70,12 @@ export interface AsgardTemplateContextValue {
   renderMessageContent?: (props: MessageContentRendererProps) => ReactNode;
   /** Custom renderer for tool call group. Return null to hide, or return custom JSX. */
   renderToolCallGroup?: (props: ToolCallGroupRendererProps) => ReactNode;
+  /** Custom renderer for the thread-top channel-title row (F-017). Return null to hide, or custom JSX. */
+  renderTitle?: (props: ChannelTitleRendererProps) => ReactNode;
+  /** Placeholder shown when the channel title is unnamed (F-017). Defaults to `新對話`. */
+  untitledLabel?: string;
+  /** Hide the channel-title row entirely (F-017) — a shortcut for `renderTitle` returning null. */
+  channelTitleHidden?: boolean;
 }
 
 export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
@@ -71,6 +88,9 @@ export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
   onMessageAction: undefined,
   renderMessageContent: undefined,
   renderToolCallGroup: undefined,
+  renderTitle: undefined,
+  untitledLabel: undefined,
+  channelTitleHidden: undefined,
 });
 
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
@@ -83,6 +103,9 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
   onMessageAction?: (actionId: string, message: ConversationBotMessage) => void;
   renderMessageContent?: (props: MessageContentRendererProps) => ReactNode;
   renderToolCallGroup?: (props: ToolCallGroupRendererProps) => ReactNode;
+  renderTitle?: (props: ChannelTitleRendererProps) => ReactNode;
+  untitledLabel?: string;
+  channelTitleHidden?: boolean;
 }
 
 export function AsgardTemplateContextProvider(props: AsgardTemplateContextProviderProps): ReactNode {
@@ -97,6 +120,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
     onMessageAction,
     renderMessageContent,
     renderToolCallGroup,
+    renderTitle,
+    untitledLabel,
+    channelTitleHidden,
   } = props;
 
   const contextValue = useMemo(
@@ -110,6 +136,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
       onMessageAction,
       renderMessageContent,
       renderToolCallGroup,
+      renderTitle,
+      untitledLabel,
+      channelTitleHidden,
     }),
     [
       locale,
@@ -121,6 +150,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
       onMessageAction,
       renderMessageContent,
       renderToolCallGroup,
+      renderTitle,
+      untitledLabel,
+      channelTitleHidden,
     ],
   );
 

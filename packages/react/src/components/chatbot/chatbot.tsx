@@ -25,6 +25,7 @@ import { AuthState } from '@asgard-js/core';
 import clsx from 'clsx';
 import { ApiKeyInput } from './api-key-input';
 import { ChatbotHeader } from './chatbot-header';
+import { ChannelTitle } from './channel-title';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
@@ -42,6 +43,8 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   config: ClientConfig;
   customChannelId: string;
   initMessages?: ConversationMessage[];
+  /** Seed for the channel-title store (F-016) — e.g. from `GET /channel/metadata` (wired by F-015). `null` = unnamed. */
+  channelTitle?: string | null;
   onSseMessage?: AsgardServiceContextProviderProps['onSseMessage'];
   fullScreen?: boolean;
   avatar?: string;
@@ -192,6 +195,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     config,
     customChannelId,
     initMessages,
+    channelTitle,
     onSseMessage,
     fullScreen = false,
     avatar,
@@ -230,6 +234,9 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     footerEndActions,
     renderFooter,
     renderToolCallGroup,
+    renderTitle,
+    untitledLabel,
+    channelTitleHidden,
     autoResetChannel,
     keepConnectionOnUnmount = false,
     userIdentityHint,
@@ -367,7 +374,12 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             onMessageAction={onMessageAction}
             renderMessageContent={renderMessageContent}
             renderToolCallGroup={renderToolCallGroup}
+            renderTitle={renderTitle}
+            untitledLabel={untitledLabel}
+            channelTitleHidden={channelTitleHidden}
           >
+            {/* Channel-title row at the thread top — distinct from the bot-name ChatbotHeader (F-017). */}
+            <ChannelTitle />
             <ChatbotBody />
             {renderMenu?.()}
             {/* Footer must live inside the template provider so its docked TaskList / SubagentList
@@ -402,6 +414,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             config={effectiveConfig}
             customChannelId={customChannelId}
             initMessages={initMessages}
+            channelTitle={channelTitle}
             onSseMessage={onSseMessage}
             onAuthError={onAuthError}
             onSseError={onSseError}
