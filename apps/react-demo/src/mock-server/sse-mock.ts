@@ -33,6 +33,16 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Split text into small pieces for typewriter-style delta streaming (code-point aware so CJK / emoji
+// never split mid-character).
+function chunkText(text: string, size = 3): string[] {
+  const chars = Array.from(text);
+  const out: string[] = [];
+  for (let i = 0; i < chars.length; i += size) out.push(chars.slice(i, i + size).join(''));
+
+  return out;
+}
+
 const NAMESPACE = 'mock-namespace';
 const BOT_PROVIDER_NAME = 'mock-bot-provider';
 
@@ -904,7 +914,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   const nproc = 'showcase-native';
   let seq = 0;
   const next = (): number => seq++;
-  const emit = async (frame: object, ms = 130): Promise<void> => {
+  const emit = async (frame: object, ms = 220): Promise<void> => {
     writeEvent(res, frame);
     await sleep(ms);
   };
@@ -917,9 +927,11 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
 
   // thinking: streams then collapses to "Thought for a moment" (F-001).
   const think = randomUUID();
-  await emit(thinkingFrame(header, 'asgard.message.thinking.start', think, replyTo, ''), 120);
-  for (const chunk of SHOWCASE_THINKING) {
-    await emit(thinkingFrame(header, 'asgard.message.thinking.delta', think, replyTo, chunk), 120);
+  await emit(thinkingFrame(header, 'asgard.message.thinking.start', think, replyTo, ''), 400);
+  for (const clause of SHOWCASE_THINKING) {
+    for (const piece of chunkText(clause, 4)) {
+      await emit(thinkingFrame(header, 'asgard.message.thinking.delta', think, replyTo, piece), 55);
+    }
   }
 
   await emit(
@@ -937,6 +949,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
       reason: '讀取上週訂單資料',
       parameter: { week: 'LAST_WEEK' },
     }),
+    900,
   );
   await emit(
     toolCompleteFrame(
@@ -955,6 +968,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
       reason: '依通路彙總',
       parameter: {},
     }),
+    700,
   );
   await emit(
     toolCompleteFrame(
@@ -991,8 +1005,8 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   ): Promise<void> => {
     const cs = next();
     const tc = { toolsetName: '', toolName: name, parameter };
-    await emit(toolStartFrame(header, proc, cs, tc), 60);
-    await emit(toolCompleteFrame(header, proc, cs, tc, {}, { sidecar }), 90);
+    await emit(toolStartFrame(header, proc, cs, tc), 130);
+    await emit(toolCompleteFrame(header, proc, cs, tc, {}, { sidecar }), 180);
   };
 
   await task(
@@ -1090,6 +1104,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
         { toolsetName: '', toolName: childTool, reason: childReason, parameter: {} },
         { parentToolUseId: parent },
       ),
+      800,
     );
     await emit(
       toolCompleteFrame(
@@ -1140,10 +1155,11 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     parameter: Record<string, unknown>,
     result: Record<string, unknown> | string,
     isError?: boolean,
+    runMs = 700,
   ): Promise<void> => {
     const s = next();
     const tc = { toolsetName: '', toolName, parameter };
-    await emit(toolStartFrame(header, nproc, s, tc));
+    await emit(toolStartFrame(header, nproc, s, tc), runMs); // spinner spins while the tool "runs"
     await emit(
       toolCompleteFrame(
         header,
@@ -1153,6 +1169,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
         typeof result === 'string' ? { result } : result,
         isError != null ? { isError } : undefined,
       ),
+      250,
     );
   };
 
@@ -1160,11 +1177,15 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     'Bash',
     { command: 'which weasyprint || which wkhtmltopdf', description: '檢查可用的 PDF 生成工具' },
     'weasyprint ok',
+    undefined,
+    400,
   );
   await nativeCall(
     'Read',
     { file_path: '/mnt/workspace/orders.md' },
     '1\t上週訂單彙總\n2\t官網 1280 / App 940 / LINE 610',
+    undefined,
+    400,
   );
   await nativeCall(
     'Write',
@@ -1190,17 +1211,28 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     { skill: 'local-plugin:shortage-calc', args: 'SWRCH35K φ7.0 目前短缺多少?' },
     'Launching skill: local-plugin:shortage-calc',
   );
-  await nativeCall('WebSearch', { query: 'SWRCH38K 線材 交期 2026' }, 'Web search results for query: SWRCH38K 交期…');
+  await nativeCall(
+    'WebSearch',
+    { query: 'SWRCH38K 線材 交期 2026' },
+    'Web search results for query: SWRCH38K 交期…',
+    undefined,
+    1200,
+  );
   await nativeCall(
     'WebFetch',
     { url: 'https://example.com/steel-price', prompt: '摘要鋼價走勢' },
     'The server returned HTTP 403 Forbidden.',
     true,
+    1300,
   );
 
-  // Assembled final answer (F-011) — start (empty, typing) → complete (markdown).
+  // Assembled final answer (F-011) — start (empty) → typewriter deltas → complete (markdown).
   const ans = randomUUID();
-  await emit(messageFrame(header, 'asgard.message.start', ans, replyTo, '', TEXT_TEMPLATE('')), 140);
+  await emit(messageFrame(header, 'asgard.message.start', ans, replyTo, '', TEXT_TEMPLATE('')), 450);
+  for (const piece of chunkText(SHOWCASE_ANSWER, 3)) {
+    await emit(messageFrame(header, 'asgard.message.delta', ans, replyTo, piece, null), 45);
+  }
+
   await emit(
     messageFrame(header, 'asgard.message.complete', ans, replyTo, SHOWCASE_ANSWER, TEXT_TEMPLATE(SHOWCASE_ANSWER)),
     120,
