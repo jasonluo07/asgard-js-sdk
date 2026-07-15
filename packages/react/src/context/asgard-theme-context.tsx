@@ -785,6 +785,10 @@ export function AsgardThemeContextProvider(
         themeVars['--asg-color-bg'] = effectiveBg;
         themeVars['--asg-color-surface'] = surface;
         themeVars['--asgard-tool-call-item-bg'] = surface;
+        // Expanded tool-call JSON viewer: body = base bg (a step darker than the surface it sits on, so
+        // the code block reads as inset), header = surface (a step lighter than the body).
+        themeVars['--asgard-json-viewer-bg'] = effectiveBg;
+        themeVars['--asgard-json-viewer-header-bg'] = surface;
       }
 
       // Border → the border + divider + the tool-call / panel border.

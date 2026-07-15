@@ -2,13 +2,12 @@
 // visual consistency); the amber in_progress accent matches the tool-call running state (§3.5 idiom).
 
 .task_list {
-  // No gap below: the panel sits flush on the thread↔input seam (the RunningIndicator progress
-  // line, a sibling below — never covered) instead of floating 12px above it.
-  // Square corners (no border-radius) so it reads as one continuous block with the Subagent panel
-  // above rather than a rounded card with a pinched junction.
-  margin-bottom: 0;
+  // A distinct rounded card: inset 16px on each side to align with the thread content (tool-call
+  // groups / messages) instead of bleeding to the chatbot walls, with a gap below.
+  margin: 0 16px 12px;
   padding: 10px 12px;
   border: 1px solid var(--asgard-tool-call-border, #333);
+  border-radius: 8px;
   background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
 }
 

@@ -1,9 +1,13 @@
-// ToolCallGroup - 外層氣泡樣式
+// ToolCallGroup — one bordered container wraps the header + rows (chat-kit design),
+// matching the Subagent / Task list panels: rows sit tight inside, no per-item cards.
 .tool_call_group {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--asgard-tool-call-border, #333);
+  border-radius: 8px;
+  background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
 }
 
 .tool_call_group__header {
@@ -27,31 +31,29 @@
 }
 
 .tool_call_group__title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--asgard-tool-call-text, #fff);
+  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
 }
 
 .tool_call_group__content {
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-// ToolCallItem styles - 每個項目是一個獨立的深色卡片
+// ToolCallItem — a plain row inside the group container (no per-item card background/radius).
 .tool_call_item {
   display: flex;
   flex-direction: column;
-  background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .tool_call_item__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 6px 8px;
+  border-radius: 6px;
   cursor: pointer;
   user-select: none;
   transition: background-color 0.2s ease;
@@ -149,7 +151,7 @@
 }
 
 .tool_call_item__content {
-  padding: 0 16px 12px 38px;
+  padding: 2px 8px 8px 30px;
   display: flex;
   flex-direction: column;
   gap: 8px;
