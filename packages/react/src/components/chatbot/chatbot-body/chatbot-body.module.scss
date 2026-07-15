@@ -17,11 +17,13 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    // 16px around, but only 12px below so the last block — a message or the docked panels — clears the
+    // footer by a consistent 12px (the scroll sentinel lives outside this padded content, adding no space).
+    padding: 16px 16px 12px;
     gap: 16px;
     max-width: 1200px;
     // Fill the scroll viewport so the docked panels below can be pushed to the bottom when the thread
-    // is short (border-box keeps the 16px padding inside this 100%, so a short thread never scrolls).
+    // is short (border-box keeps the padding inside this 100%, so a short thread never scrolls).
     min-height: 100%;
     box-sizing: border-box;
   }

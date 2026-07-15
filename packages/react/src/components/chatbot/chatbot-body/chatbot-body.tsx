@@ -258,13 +258,18 @@ export function ChatbotBody(): ReactNode {
           {/* Subagent (F-012) + Task (F-010) live-state panels. `margin-top: auto` on the wrapper sinks
               them to just above the footer when the thread is short (à la Claude Code's activity line),
               while keeping them in the scroll flow so they ride up with the messages once the thread is
-              tall enough to scroll. Each panel hides when empty. */}
-          <div className={styles.chatbot_body__docked}>
-            <SubagentList subagents={subagents} locale={locale} />
-            <TaskList tasks={tasks} locale={locale} />
-          </div>
-          <div ref={messageBoxBottomRef} />
+              tall enough to scroll. Rendered only when populated, so an empty wrapper never adds a gap
+              and a lone last message keeps the same 12px clearance to the footer. */}
+          {(subagents.length > 0 || tasks.length > 0) && (
+            <div className={styles.chatbot_body__docked}>
+              <SubagentList subagents={subagents} locale={locale} />
+              <TaskList tasks={tasks} locale={locale} />
+            </div>
+          )}
         </div>
+        {/* Scroll sentinel — kept outside the padded/gapped content so it adds no trailing space
+            (video/audio templates scrollIntoView it to reach the bottom). */}
+        <div ref={messageBoxBottomRef} />
       </div>
     </div>
   );
