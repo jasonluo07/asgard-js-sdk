@@ -151,6 +151,17 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // All-features showcase — scoped channel. One run streams every roadmap feature through the real
+  // <Chatbot> at once: run indicator (F-003), channel title update (F-016/017), thinking (F-001),
+  // tool-call variants + grouping + diff + isError + expand (F-004/006/007/008/009), the docked Task
+  // (F-010) and Subagent (F-012) panels, and the assembled answer (F-011). Auto-plays on the mount
+  // RESET_CHANNEL; a later plain send gets a short reply so the page stays interactive.
+  if (customChannelId === 'all-features-demo') {
+    await handleAllFeaturesMock(res, payload);
+
+    return;
+  }
+
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
   const fullText = REPLY_CHUNKS.join('');
@@ -770,4 +781,432 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
   // Default: channel does not exist.
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('channel not found');
+}
+
+// ---------------------------------------------------------------------------------------------------
+// All-features showcase — one live run through the real <Chatbot> that exercises every roadmap feature.
+// Frame builders for the tool-call / subagent / title events (the other demos use preview initMessages;
+// this one streams them so the docked Task/Subagent panels, live title, and run indicator all light up).
+// ---------------------------------------------------------------------------------------------------
+
+interface ToolCallShape {
+  toolsetName: string;
+  toolName: string;
+  parameter: Record<string, unknown>;
+  reason?: string;
+}
+
+function toolStartFrame(
+  header: CommonHeader,
+  processId: string,
+  callSeq: number,
+  toolCall: ToolCallShape,
+  ids?: { toolUseId?: string; parentToolUseId?: string },
+): object {
+  return {
+    ...header,
+    eventType: 'asgard.tool_call.start',
+    fact: { ...emptyFact(), toolCallStart: { processId, callSeq, ...ids, toolCall } },
+  };
+}
+
+function toolCompleteFrame(
+  header: CommonHeader,
+  processId: string,
+  callSeq: number,
+  toolCall: ToolCallShape,
+  result: Record<string, unknown>,
+  opts?: {
+    isError?: boolean;
+    sidecar?: Record<string, unknown>;
+    ids?: { toolUseId?: string; parentToolUseId?: string };
+  },
+): object {
+  return {
+    ...header,
+    eventType: 'asgard.tool_call.complete',
+    fact: {
+      ...emptyFact(),
+      toolCallComplete: {
+        processId,
+        callSeq,
+        ...opts?.ids,
+        toolCall,
+        toolCallResult: result,
+        ...(opts?.isError != null ? { isError: opts.isError } : {}),
+        ...(opts?.sidecar ? { toolUseResultSidecar: opts.sidecar } : {}),
+      },
+    },
+  };
+}
+
+function subagentStartFrame(header: CommonHeader, data: Record<string, unknown>): object {
+  return { ...header, eventType: 'asgard.subagent.start', fact: { ...emptyFact(), subagentStart: data } };
+}
+
+function subagentCompleteFrame(header: CommonHeader, data: Record<string, unknown>): object {
+  return { ...header, eventType: 'asgard.subagent.complete', fact: { ...emptyFact(), subagentComplete: data } };
+}
+
+function titleUpdateFrame(header: CommonHeader, title: string | null): object {
+  return {
+    ...header,
+    eventType: 'asgard.channel.title.update',
+    fact: { ...emptyFact(), channelTitleUpdate: { title } },
+  };
+}
+
+const SHOWCASE_THINKING = [
+  '先確認「上週」的日期區間（系統時區週一到週日），',
+  '從 orders 表依通路彙總訂單數與金額、排除測試與取消單，',
+  '再看 Bolzen 法蘭螺栓急單的用料需求與 SWRCH35K φ7.0 線材庫存，',
+  '算出短缺量並評估標準前置 30 天是否趕得上 7/16 出貨。',
+];
+
+const SHOWCASE_ANSWER =
+  '## 分析結果\n\n上週通路訂單以**官網**居冠（1,280 筆）。Bolzen 急單需 SWRCH35K φ7.0 線材 **16,000 kg**，' +
+  '可用庫存 9,500 kg → **短缺 6,500 kg**，標準前置 30 天趕不上 7/16。已改查替代料號 **SWRCH38K**（前置 15 天），' +
+  '報表 `report.html` 已建立、`plan.md` 標題已更新。';
+
+async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'all-features-demo',
+  };
+  const replyTo = payload.customMessageId ?? '';
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  // A later plain send (action=NONE) just gets a short reply so the page stays interactive after the show.
+  if (payload.action !== 'RESET_CHANNEL') {
+    const mid = randomUUID();
+    writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+    const ack = '這是「全功能展示」頁 —— 重整頁面即可重看整段串流（進房 RESET 會重播全部功能）。';
+    await sleep(120);
+    writeEvent(res, messageFrame(header, 'asgard.message.complete', mid, replyTo, ack, TEXT_TEMPLATE(ack)));
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
+  // Distinct processId per *thread* tool-call group — the group key is `tool-call-group-${processId}`
+  // (chatbot-body), so the general and native groups must differ. Task / subagent tools are filtered out
+  // of thread groups, so they can share `proc`.
+  const proc = 'showcase';
+  const gproc = 'showcase-general';
+  const nproc = 'showcase-native';
+  let seq = 0;
+  const next = (): number => seq++;
+  const emit = async (frame: object, ms = 130): Promise<void> => {
+    writeEvent(res, frame);
+    await sleep(ms);
+  };
+
+  // run.init → seam indicator lights, input disabled (F-003).
+  await emit({ ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+
+  // channel title seed via live update (F-016 store → F-017 title bar).
+  await emit(titleUpdateFrame(header, 'Bolzen 法蘭螺栓急單備料查詢'), 200);
+
+  // thinking: streams then collapses to "Thought for a moment" (F-001).
+  const think = randomUUID();
+  await emit(thinkingFrame(header, 'asgard.message.thinking.start', think, replyTo, ''), 120);
+  for (const chunk of SHOWCASE_THINKING) {
+    await emit(thinkingFrame(header, 'asgard.message.thinking.delta', think, replyTo, chunk), 120);
+  }
+
+  await emit(
+    thinkingFrame(header, 'asgard.message.thinking.complete', think, replyTo, SHOWCASE_THINKING.join('')),
+    160,
+  );
+
+  // General tool-call group (toolsetName set + reason → label from reason; F-004/006/008).
+  const gp = 'ag-material-procurement-tools';
+  const g1 = next();
+  await emit(
+    toolStartFrame(header, gproc, g1, {
+      toolsetName: gp,
+      toolName: 'query_orders',
+      reason: '讀取上週訂單資料',
+      parameter: { week: 'LAST_WEEK' },
+    }),
+  );
+  await emit(
+    toolCompleteFrame(
+      header,
+      gproc,
+      g1,
+      { toolsetName: gp, toolName: 'query_orders', reason: '讀取上週訂單資料', parameter: { week: 'LAST_WEEK' } },
+      { rows: 1280 },
+    ),
+  );
+  const g2 = next();
+  await emit(
+    toolStartFrame(header, gproc, g2, {
+      toolsetName: gp,
+      toolName: 'aggregate_by_channel',
+      reason: '依通路彙總',
+      parameter: {},
+    }),
+  );
+  await emit(
+    toolCompleteFrame(
+      header,
+      gproc,
+      g2,
+      { toolsetName: gp, toolName: 'aggregate_by_channel', reason: '依通路彙總', parameter: {} },
+      { channels: 3 },
+    ),
+  );
+
+  // A bot text breaks the tool-call group (so the native group below renders as its own group).
+  const t1 = randomUUID();
+  await emit(
+    messageFrame(
+      header,
+      'asgard.message.complete',
+      t1,
+      replyTo,
+      '已彙總上週各通路訂單，接著查急單用料與庫存。',
+      TEXT_TEMPLATE('已彙總上週各通路訂單，接著查急單用料與庫存。'),
+    ),
+    160,
+  );
+
+  // Task Check List panel (F-010) — TaskCreate/TaskUpdate carried on tool_call.complete sidecar (never
+  // parsed from the result string). Task tools are filtered out of the thread into the docked TaskList.
+  // The reducer only updates an *existing* tool-call message on complete, so a complete-only frame is
+  // dropped — emit start (creates the message) then complete (carries the replay-safe sidecar).
+  const task = async (
+    name: 'TaskCreate' | 'TaskUpdate',
+    parameter: Record<string, unknown>,
+    sidecar: Record<string, unknown>,
+  ): Promise<void> => {
+    const cs = next();
+    const tc = { toolsetName: '', toolName: name, parameter };
+    await emit(toolStartFrame(header, proc, cs, tc), 60);
+    await emit(toolCompleteFrame(header, proc, cs, tc, {}, { sidecar }), 90);
+  };
+
+  await task(
+    'TaskCreate',
+    {
+      subject: '查詢 Bolzen 急單用料需求',
+      activeForm: '查詢 Bolzen 急單用料需求中',
+      description: '查料號、強度等級、數量並計算 SWRCH35K φ7.0 總需求。',
+    },
+    { task: { id: '1' } },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '1', status: 'in_progress' },
+    { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '1' },
+  );
+  await task(
+    'TaskCreate',
+    {
+      subject: '查詢 SWRCH35K φ7.0 庫存狀態',
+      activeForm: '查詢庫存狀態中',
+      description: '查現有量、已分配量、可用量。',
+    },
+    { task: { id: '2' } },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '1', status: 'completed' },
+    { statusChange: { from: 'in_progress', to: 'completed' }, taskId: '1' },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '2', status: 'in_progress' },
+    { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '2' },
+  );
+  await task(
+    'TaskCreate',
+    {
+      subject: '計算短缺量與補貨時效風險',
+      activeForm: '計算短缺量與風險中',
+      description: '需求 16,000kg − 可用 9,500kg，評估 30 天前置是否趕上 7/16。',
+    },
+    { task: { id: '3' } },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '2', status: 'completed' },
+    { statusChange: { from: 'in_progress', to: 'completed' }, taskId: '2' },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '3', status: 'in_progress' },
+    { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '3' },
+  );
+  await task(
+    'TaskUpdate',
+    { taskId: '3', status: 'completed' },
+    { statusChange: { from: 'in_progress', to: 'completed' }, taskId: '3' },
+  );
+
+  // Subagent panel (F-012) — Agent spawn + subagent.start + child tool + subagent.complete (status is
+  // driven by subagent.complete, not the Agent tool-call). Agent + child tools filtered into the panel.
+  const spawnSubagent = async (
+    parent: string,
+    agentId: string,
+    desc: string,
+    childTool: string,
+    childReason: string,
+    summary: string,
+  ): Promise<void> => {
+    await emit(
+      toolStartFrame(
+        header,
+        proc,
+        next(),
+        { toolsetName: '', toolName: 'Agent', parameter: { description: desc } },
+        { toolUseId: parent },
+      ),
+    );
+    await emit(
+      subagentStartFrame(header, {
+        agentId,
+        parentToolUseId: parent,
+        subagentType: 'general-purpose',
+        description: desc,
+      }),
+      150,
+    );
+    const cs = next();
+    await emit(
+      toolStartFrame(
+        header,
+        proc,
+        cs,
+        { toolsetName: '', toolName: childTool, reason: childReason, parameter: {} },
+        { parentToolUseId: parent },
+      ),
+    );
+    await emit(
+      toolCompleteFrame(
+        header,
+        proc,
+        cs,
+        { toolsetName: '', toolName: childTool, reason: childReason, parameter: {} },
+        { ok: true },
+        { ids: { parentToolUseId: parent } },
+      ),
+    );
+    await emit(
+      subagentCompleteFrame(header, {
+        agentId,
+        parentToolUseId: parent,
+        subagentType: 'general-purpose',
+        status: 'completed',
+        summary,
+      }),
+      180,
+    );
+  };
+
+  await spawnSubagent(
+    'toolu_A',
+    'ae9f13d8',
+    '查詢 Bolzen 訂單用料需求',
+    'execute_database_query',
+    '查詢用料明細',
+    '查得 SO-TM-0455，需 16,000 kg',
+  );
+  await spawnSubagent(
+    'toolu_B',
+    'a8c6caab',
+    '查詢 SWRCH35K φ7.0 庫存狀態',
+    'execute_database_query',
+    '查詢可用庫存',
+    '可用庫存 9,500 kg',
+  );
+
+  // Live title update (F-016) — the topic drifts, the title bar fades to the new value.
+  await emit(titleUpdateFrame(header, '急單備料：已改查替代料號 SWRCH38K'), 200);
+
+  // Native built-in tool variants (toolsetName === '' && no reason) — icons + labels (F-004), Write/Edit
+  // line diff (F-007), a failed call in red via backend isError (F-009), all expandable (F-008).
+  const nativeCall = async (
+    toolName: string,
+    parameter: Record<string, unknown>,
+    result: Record<string, unknown> | string,
+    isError?: boolean,
+  ): Promise<void> => {
+    const s = next();
+    const tc = { toolsetName: '', toolName, parameter };
+    await emit(toolStartFrame(header, nproc, s, tc));
+    await emit(
+      toolCompleteFrame(
+        header,
+        nproc,
+        s,
+        tc,
+        typeof result === 'string' ? { result } : result,
+        isError != null ? { isError } : undefined,
+      ),
+    );
+  };
+
+  await nativeCall(
+    'Bash',
+    { command: 'which weasyprint || which wkhtmltopdf', description: '檢查可用的 PDF 生成工具' },
+    'weasyprint ok',
+  );
+  await nativeCall(
+    'Read',
+    { file_path: '/mnt/workspace/orders.md' },
+    '1\t上週訂單彙總\n2\t官網 1280 / App 940 / LINE 610',
+  );
+  await nativeCall(
+    'Write',
+    {
+      file_path: '/work/report.html',
+      content:
+        '<!DOCTYPE html>\n<html lang="zh-TW">\n<head><meta charset="UTF-8" /></head>\n<body>\n<h1>短缺分析報告</h1>\n<p>SWRCH35K φ7.0 短缺 6,500 kg</p>\n</body>\n</html>',
+    },
+    'File created successfully at: /work/report.html',
+  );
+  await nativeCall(
+    'Edit',
+    {
+      file_path: '/work/plan.md',
+      old_string: '### 標題（暫定）\n**Bolzen 急單備料**',
+      new_string: '### 標題（已確認）\n**Bolzen 法蘭螺栓急單：替代料號 SWRCH38K 備料計畫**\n（前置 15 天）',
+      replace_all: false,
+    },
+    'The file /work/plan.md has been updated successfully.',
+  );
+  await nativeCall(
+    'Skill',
+    { skill: 'local-plugin:shortage-calc', args: 'SWRCH35K φ7.0 目前短缺多少?' },
+    'Launching skill: local-plugin:shortage-calc',
+  );
+  await nativeCall('WebSearch', { query: 'SWRCH38K 線材 交期 2026' }, 'Web search results for query: SWRCH38K 交期…');
+  await nativeCall(
+    'WebFetch',
+    { url: 'https://example.com/steel-price', prompt: '摘要鋼價走勢' },
+    'The server returned HTTP 403 Forbidden.',
+    true,
+  );
+
+  // Assembled final answer (F-011) — start (empty, typing) → complete (markdown).
+  const ans = randomUUID();
+  await emit(messageFrame(header, 'asgard.message.start', ans, replyTo, '', TEXT_TEMPLATE('')), 140);
+  await emit(
+    messageFrame(header, 'asgard.message.complete', ans, replyTo, SHOWCASE_ANSWER, TEXT_TEMPLATE(SHOWCASE_ANSWER)),
+    120,
+  );
+
+  // run.done → indicator off, input released.
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
 }
