@@ -20,5 +20,20 @@
     padding: 16px;
     gap: 16px;
     max-width: 1200px;
+    // Fill the scroll viewport so the docked panels below can be pushed to the bottom when the thread
+    // is short (border-box keeps the 16px padding inside this 100%, so a short thread never scrolls).
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+
+  // F-010 / F-012 — the Subagent + Task live-state panels dock to the tail of the thread. `margin-top:
+  // auto` absorbs the free space above them, so they sink to just above the footer when the thread is
+  // short (à la Claude Code's activity line), yet they stay in the scroll flow and ride up with the
+  // messages once the thread grows tall enough to scroll. Empty (no panels) → this collapses to 0.
+  .chatbot_body__docked {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }

@@ -255,10 +255,14 @@ export function ChatbotBody(): ReactNode {
               />
             );
           })}
-          {/* Subagent (F-012) + Task (F-010) live-state panels — docked at the tail of the thread flow so
-              they scroll with the messages instead of being pinned to the footer. Each hides when empty. */}
-          <SubagentList subagents={subagents} locale={locale} />
-          <TaskList tasks={tasks} locale={locale} />
+          {/* Subagent (F-012) + Task (F-010) live-state panels. `margin-top: auto` on the wrapper sinks
+              them to just above the footer when the thread is short (à la Claude Code's activity line),
+              while keeping them in the scroll flow so they ride up with the messages once the thread is
+              tall enough to scroll. Each panel hides when empty. */}
+          <div className={styles.chatbot_body__docked}>
+            <SubagentList subagents={subagents} locale={locale} />
+            <TaskList tasks={tasks} locale={locale} />
+          </div>
           <div ref={messageBoxBottomRef} />
         </div>
       </div>
