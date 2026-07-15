@@ -8,10 +8,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { deriveSubagents, deriveTasks } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
-import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
@@ -21,8 +19,6 @@ import PlusSvg from '../../../icons/plus.svg?react';
 import { SpeechInputButton } from './speech-input-button';
 import { DocumentUploadButton } from './document-upload-button';
 import { RunningIndicator } from '../running-indicator';
-import { TaskList } from '../task-list';
-import { SubagentList } from '../subagent-list';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useFileDropContext } from '../../../context/file-drop-context';
@@ -57,19 +53,12 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
     allowedImageMimeTypes,
     allowedDocumentMimeTypes,
     messages,
-    conversation,
     title,
     programmaticScrollToBottom,
     pendingInputValue,
     setPendingInputValue,
   } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
-  const { locale = 'en-US' } = useAsgardTemplateContext();
-
-  // F-010 / F-012 — the docked Task Check List and Subagent list, both derived from the conversation via
-  // the shared core helpers (F-013 single source of truth). Empty lists → the panels render nothing.
-  const tasks = useMemo(() => (conversation ? deriveTasks(conversation) : []), [conversation]);
-  const subagents = useMemo(() => (conversation ? deriveSubagents(conversation) : []), [conversation]);
 
   const theme = useAsgardThemeContext();
   const { chatbot } = theme;
@@ -644,11 +633,9 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
-      {/* Subagent list: docked above the Task List; hidden when never any (F-012). */}
-      <SubagentList subagents={subagents} locale={locale} />
-      {/* Task Check List: docked above the seam; hidden when empty (F-010). */}
-      <TaskList tasks={tasks} locale={locale} />
-      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003). */}
+      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003).
+          The Subagent (F-012) / Task (F-010) live-state panels now render at the tail of the thread
+          (ChatbotBody) so they scroll with the messages instead of being pinned here. */}
       <RunningIndicator running={isConnecting} />
       {enableUpload && uploadableImages.length > 0 && (
         <div

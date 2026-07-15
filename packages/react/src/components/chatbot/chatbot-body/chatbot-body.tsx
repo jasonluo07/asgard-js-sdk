@@ -2,6 +2,8 @@ import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, 
 import {
   ConversationMessage,
   ConversationToolCallMessage,
+  deriveSubagents,
+  deriveTasks,
   isAgentTool,
   isSubagentChildTool,
   isTaskTool,
@@ -23,6 +25,8 @@ import { useAsgardTemplateContext } from '../../../context/asgard-template-conte
 import { Locale } from '../../../i18n';
 import clsx from 'clsx';
 import { useResizeObserver } from '../../../hooks';
+import { SubagentList } from '../subagent-list';
+import { TaskList } from '../task-list';
 
 // Helper type for grouped messages
 type MessageGroup =
@@ -107,6 +111,7 @@ export function ChatbotBody(): ReactNode {
 
   const {
     messages,
+    conversation,
     messageBoxBottomRef,
     scrollContainerRef,
     isFollowingLatest,
@@ -190,6 +195,12 @@ export function ChatbotBody(): ReactNode {
 
   useResizeObserver({ ref: contentRef, onResize: onContentResize });
 
+  // F-010 / F-012 — the Task / Subagent live-state panels, derived from the conversation store. They
+  // render at the tail of the thread flow (below) so they scroll with the messages instead of being
+  // pinned to the footer.
+  const tasks = useMemo(() => (conversation ? deriveTasks(conversation) : []), [conversation]);
+  const subagents = useMemo(() => (conversation ? deriveSubagents(conversation) : []), [conversation]);
+
   const contentStyles = useMemo(
     () => ({
       maxWidth: chatbot?.contentMaxWidth ?? '1200px',
@@ -244,6 +255,10 @@ export function ChatbotBody(): ReactNode {
               />
             );
           })}
+          {/* Subagent (F-012) + Task (F-010) live-state panels — docked at the tail of the thread flow so
+              they scroll with the messages instead of being pinned to the footer. Each hides when empty. */}
+          <SubagentList subagents={subagents} locale={locale} />
+          <TaskList tasks={tasks} locale={locale} />
           <div ref={messageBoxBottomRef} />
         </div>
       </div>
