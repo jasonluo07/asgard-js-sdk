@@ -44,6 +44,7 @@ import { TaskListRoute } from './routes/task-list';
 import { SubagentListRoute } from './routes/subagent-list';
 import { DerivedStateRoute } from './routes/derived-state';
 import { ChannelTitleRoute } from './routes/channel-title';
+import { ChannelTitleUiRoute } from './routes/channel-title-ui';
 
 export function App(): React.ReactElement {
   return (
@@ -93,6 +94,7 @@ export function App(): React.ReactElement {
         <Route path="/subagent-list" element={<SubagentListRoute />} />
         <Route path="/derived-state" element={<DerivedStateRoute />} />
         <Route path="/channel-title" element={<ChannelTitleRoute />} />
+        <Route path="/channel-title-ui" element={<ChannelTitleUiRoute />} />
       </Routes>
     </Layout>
   );

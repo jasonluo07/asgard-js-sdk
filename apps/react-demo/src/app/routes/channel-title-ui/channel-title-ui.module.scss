@@ -1,0 +1,83 @@
+.legend {
+  width: 340px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.legend__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  button {
+    padding: 6px 10px;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .active {
+    border-color: #1677ff;
+    background: rgba(22, 119, 255, 0.12);
+  }
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}
+
+// Custom renderTitle row (demo of the F-017 escape hatch).
+.customRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--asg-color-surface, #1f1f1f);
+  border-bottom: 1px solid var(--asg-color-border, #434343);
+}
+
+.customRow__hash {
+  color: var(--asg-color-text-secondary, #8c8c8c);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.customRow__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--asg-color-text-primary, #fff);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customRow__share {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+  cursor: pointer;
+  font-size: 12px;
+}

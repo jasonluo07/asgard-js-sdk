@@ -47,6 +47,7 @@ const navItems = [
   { to: '/subagent-list', label: 'Subagent List (F-012)' },
   { to: '/derived-state', label: 'Derived-State Stores (F-013)' },
   { to: '/channel-title', label: 'Channel Title (F-016)' },
+  { to: '/channel-title-ui', label: 'Channel Title UI (F-017)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {
