@@ -2,7 +2,9 @@
 // amber running accent + red failed match the tool-call status idiom (§3.5).
 
 .subagent_list {
-  margin-bottom: 12px;
+  // No gap below: the docked panels (Subagent → Task) stack flush, and sit directly on the
+  // thread↔input seam (the RunningIndicator progress line, a sibling below — never covered).
+  margin-bottom: 0;
   padding: 10px 12px;
   border: 1px solid var(--asgard-tool-call-border, #333);
   border-radius: 8px;

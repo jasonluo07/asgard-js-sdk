@@ -2,7 +2,9 @@
 // visual consistency); the amber in_progress accent matches the tool-call running state (§3.5 idiom).
 
 .task_list {
-  margin-bottom: 12px;
+  // No gap below: the panel sits flush on the thread↔input seam (the RunningIndicator progress
+  // line, a sibling below — never covered) instead of floating 12px above it.
+  margin-bottom: 0;
   padding: 10px 12px;
   border: 1px solid var(--asgard-tool-call-border, #333);
   border-radius: 8px;
