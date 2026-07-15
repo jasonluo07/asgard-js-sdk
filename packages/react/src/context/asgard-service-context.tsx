@@ -39,6 +39,8 @@ export interface AsgardServiceContextValue {
   messages: Map<string, ConversationMessage> | null;
   /** The current Conversation (F-013) — the derivation source for the docked Task / Subagent panels. */
   conversation: Conversation | null;
+  /** The current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
+  channelTitle: string | null;
   messageBoxBottomRef: RefObject<HTMLDivElement | null>;
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
@@ -82,6 +84,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   isConnecting: false,
   messages: null,
   conversation: null,
+  channelTitle: null,
   messageBoxBottomRef: { current: null },
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
@@ -117,6 +120,8 @@ export interface AsgardServiceContextProviderProps {
   customMessageId?: string;
   delayTime?: number;
   initMessages?: ConversationMessage[];
+  /** Seed for the channel title store (F-016) — e.g. from `GET /channel/metadata` (wired by F-015). */
+  channelTitle?: string | null;
   onSseMessage?: UseChannelProps['onSseMessage'];
   onAuthError?: (error: { isAuthError: boolean; isBotProviderError: boolean; errorDetail?: unknown }) => void;
   /** Callback fired when SSE connection encounters an error */
@@ -161,6 +166,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     allowedDocumentMimeTypes,
     customChannelId,
     initMessages,
+    channelTitle: channelTitleSeed,
     onSseMessage,
     onAuthError,
     onSseError,
@@ -218,6 +224,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     isResetting,
     isConnecting,
     conversation,
+    channelTitle,
     sendMessage,
     resetChannel,
     closeChannel,
@@ -226,6 +233,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     client,
     customChannelId,
     initMessages,
+    channelTitle: channelTitleSeed,
     autoResetChannel,
     onSseMessage,
     onAuthError,
@@ -291,6 +299,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isConnecting,
       messages: conversation?.messages ?? null,
       conversation: conversation ?? null,
+      channelTitle,
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
@@ -321,6 +330,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isResetting,
       isConnecting,
       conversation,
+      channelTitle,
       wrappedSendMessage,
       resetChannel,
       closeChannel,

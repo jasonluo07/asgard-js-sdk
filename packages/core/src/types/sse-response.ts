@@ -266,6 +266,15 @@ export interface ToolCallConsentAnswer {
   denyReason: string;
 }
 
+/**
+ * `asgard.channel.title.update` — the backend pushes the current channel title on the live plane when
+ * the topic becomes clear / drifts (F-016). Ephemeral: never persisted, so a rejoin replay does not
+ * include it — the initial value comes from the `GET /channel/metadata` seed. `title: null` = unnamed.
+ */
+export interface ChannelTitleUpdateEventData {
+  title: string | null;
+}
+
 export interface Fact<Type extends EventType> {
   runInit: null;
   runDone: null;
@@ -283,6 +292,7 @@ export interface Fact<Type extends EventType> {
   toolCallConsent: IsEqual<Type, EventType.TOOL_CALL_CONSENT, ToolCallConsentEventData>;
   subagentStart: IsEqual<Type, EventType.SUBAGENT_START, SubagentStartEventData>;
   subagentComplete: IsEqual<Type, EventType.SUBAGENT_COMPLETE, SubagentCompleteEventData>;
+  channelTitleUpdate: IsEqual<Type, EventType.CHANNEL_TITLE_UPDATE, ChannelTitleUpdateEventData>;
 }
 
 export interface SseResponse<Type extends EventType> {
