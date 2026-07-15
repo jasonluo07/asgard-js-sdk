@@ -1,4 +1,5 @@
 import {
+  ChannelMetadata,
   ClientConfig,
   IAsgardServiceClient,
   FetchSsePayload,
@@ -8,6 +9,7 @@ import {
   BlobUploadResponse,
   CwdDownloadResult,
 } from '../types';
+import { HttpError } from '../types/http-error';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, Observable, of, Subject, takeUntil } from 'rxjs';
 import { EventType } from '../constants/enum';
@@ -146,6 +148,55 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       }),
       options,
     );
+  }
+
+  private deriveChannelMetadataEndpoint(): string | null {
+    const baseEndpoint = this.getBaseEndpoint();
+
+    return baseEndpoint ? `${baseEndpoint}/channel/metadata` : null;
+  }
+
+  /**
+   * Join-init existence + restore gate (F-015): `GET {base}/channel/metadata?custom_channel_id=…`.
+   * `200` → parsed {@link ChannelMetadata}; `404` → `null` (channel does not exist); any other non-OK
+   * status or network error throws. The caller must never treat an indeterminate result (throw) as
+   * "not exists" — that would let a mount-time reset wipe an existing channel's history.
+   */
+  async channelMetadata(customChannelId: string): Promise<ChannelMetadata | null> {
+    const endpoint = this.deriveChannelMetadataEndpoint();
+
+    if (!endpoint) {
+      throw new Error('Unable to derive channel metadata endpoint. Please provide botProviderEndpoint in config.');
+    }
+
+    const url = new URL(endpoint);
+    url.searchParams.set('custom_channel_id', customChannelId);
+
+    const headers: Record<string, string> = { ...this.customHeaders };
+    if (this.apiKey) {
+      headers['X-API-KEY'] = this.apiKey;
+    }
+
+    const response = await fetch(url.toString(), { method: 'GET', headers });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    // Accept both a `{ data: … }` envelope (the convention used by the bot-provider metadata fetch) and
+    // a bare body, so the shape can be confirmed against the real backend without a code change here.
+    const json: { data?: ChannelMetadata } & Partial<ChannelMetadata> = await response.json();
+    const data = json.data ?? (json as ChannelMetadata);
+
+    return {
+      title: data.title ?? null,
+      runState: data.runState ?? 'IDLE',
+      lastActivityAt: data.lastActivityAt,
+    };
   }
 
   private runSse(observable: Observable<SseResponse<EventType>>, options?: FetchSseOptions): void {

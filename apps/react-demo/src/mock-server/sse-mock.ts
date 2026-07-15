@@ -735,3 +735,39 @@ async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerRespo
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }
+
+// ---------------------------------------------------------------------------------------------------
+// F-015 — channel metadata gate. `GET /channel/metadata?custom_channel_id=…` is the join-init existence
+// check: 200 (+ title/runState) = exists → restore; 404 = not exists → per autoResetChannel; other = error.
+// Default is 404 so every other demo channel keeps its pre-F-015 mount behavior (404 → RESET_CHANNEL).
+// The /join-init route uses the scoped ids below to drive the three branches (+ the error fallback).
+// ---------------------------------------------------------------------------------------------------
+
+export async function handleMockChannelMetadata(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url ?? '', 'http://localhost');
+  const customChannelId = url.searchParams.get('custom_channel_id') ?? '';
+
+  // Non-404 error → the SDK must fall back safely (no wipe, no hang), never treat it as "not exists".
+  if (customChannelId === 'join-error-demo') {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('simulated metadata failure (F-015 R6): indeterminate, must not reset');
+
+    return;
+  }
+
+  // Exists → restore. The title seeds the channel-title bar (F-016); GET /message/sse replays history.
+  if (customChannelId.startsWith('join-existing')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        data: { title: '庫存分析（已存在的頻道）', runState: 'IDLE', lastActivityAt: '2026-07-15T00:00:00Z' },
+      }),
+    );
+
+    return;
+  }
+
+  // Default: channel does not exist.
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('channel not found');
+}

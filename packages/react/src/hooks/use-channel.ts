@@ -1,6 +1,7 @@
 import {
   AsgardServiceClient,
   Channel,
+  ChannelMetadata,
   ChannelStates,
   Conversation,
   ConversationMessage,
@@ -203,6 +204,72 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     setChannel(channel);
   }, [isPreviewMode, client, customChannelId, customMessageId, initMessages, channelTitleSeed]);
 
+  // F-015 — join an existing channel: replay the server transcript (F-014) and seed the title from
+  // metadata (F-016) without ever sending RESET_CHANNEL. `titleSeed` comes from `GET /channel/metadata`.
+  // The live restore path uses the server transcript as the single source of truth, so it does NOT seed
+  // from `initMessages` (which stays preview/offline-only — see the preview branch above).
+  const restoreChannel = useCallback(
+    async (titleSeed: string | null): Promise<void> => {
+      if (isPreviewMode || !client) return;
+
+      const conversation = new Conversation({ messages: new Map() });
+
+      setIsConnecting(true);
+      setConversation(conversation);
+      setChannelTitle(titleSeed);
+
+      try {
+        const channel = await Channel.restore(
+          {
+            client,
+            customChannelId,
+            customMessageId,
+            conversation,
+            channelTitle: titleSeed,
+            statesObserver: (states: ChannelStates): void => {
+              setIsConnecting(states.isConnecting);
+              setConversation(states.conversation);
+              setChannelTitle(states.channelTitle);
+            },
+          },
+          {
+            onSseError(error) {
+              // Restore connection failed. Drop the channel so the mount effect can re-evaluate, and
+              // surface the error — never fall back to a reset (that would wipe the channel we restored).
+              setChannel(null);
+              if (error && typeof error === 'object' && ('isAuthError' in error || 'isBotProviderError' in error)) {
+                onAuthError?.(
+                  error as {
+                    isAuthError: boolean;
+                    isBotProviderError: boolean;
+                    errorDetail?: unknown;
+                  },
+                );
+              }
+
+              onSseError?.(error);
+            },
+            onSseMessage(response: SseResponse<EventType>) {
+              onSseMessage?.(response, {
+                conversation,
+              });
+            },
+          },
+          // Adopt the channel before the replay finishes — a RUNNING restore can emit a tool_call.consent
+          // before its terminal, and a reply submitted then must reach a non-null channel.
+          setChannel,
+        );
+
+        setIsOpen(true);
+        setChannel(channel);
+      } catch {
+        // Channel.restore rethrows after onSseError already handled and dropped the channel; nothing left
+        // to do here (kept out of the unhandled-rejection path).
+      }
+    },
+    [isPreviewMode, client, customChannelId, customMessageId, onSseMessage, onAuthError, onSseError],
+  );
+
   const closeChannel = useCallback(() => {
     setChannel((prevChannel: Channel | null) => {
       prevChannel?.close();
@@ -274,17 +341,75 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, client, onSseMessage, conversation],
   );
 
+  // F-015 — metadata-gated join-init. On mount, gate on `GET /channel/metadata` instead of unconditionally
+  // resetting: an existing channel is always restored (never reset → no history loss); a non-existent one
+  // follows `autoResetChannel`. The old "mount always resets" semantics are gone.
   useEffect(() => {
-    if (isPreviewMode) return;
+    if (isPreviewMode || !client) return;
 
-    if (!channel && isOpen) {
+    if (channel || !isOpen) return;
+
+    // A client without the metadata gate (a custom IAsgardServiceClient) keeps the pre-F-015 behavior:
+    // branch on autoResetChannel with no existence check.
+    if (!client.channelMetadata) {
       if (autoResetChannel !== false) {
         resetChannel(resetPayload);
       } else {
         initChannel();
       }
+
+      return;
     }
-  }, [isPreviewMode, channel, isOpen, autoResetChannel, resetChannel, initChannel, resetPayload]);
+
+    const getMetadata = client.channelMetadata.bind(client);
+    let cancelled = false;
+
+    void (async (): Promise<void> => {
+      let metadata: ChannelMetadata | null;
+
+      try {
+        metadata = await getMetadata(customChannelId);
+      } catch (error) {
+        // R6 — indeterminate result (network / 5xx). Never reset on an unknown existence (that would
+        // wipe a channel that may exist); settle into an empty, input-enabled state and surface the error.
+        if (cancelled) return;
+
+        onSseError?.(error);
+        initChannel();
+
+        return;
+      }
+
+      if (cancelled) return;
+
+      if (metadata) {
+        // R2 — channel exists: always restore, seed the title from metadata, never RESET_CHANNEL.
+        restoreChannel(metadata.title);
+      } else if (autoResetChannel !== false) {
+        // R3 — not exists + auto-reset (default): open via RESET_CHANNEL.
+        resetChannel(resetPayload);
+      } else {
+        // R4 — not exists + no auto-reset: stay empty; the first user send starts it with action=NONE.
+        initChannel();
+      }
+    })();
+
+    return (): void => {
+      cancelled = true;
+    };
+  }, [
+    isPreviewMode,
+    client,
+    channel,
+    isOpen,
+    customChannelId,
+    autoResetChannel,
+    restoreChannel,
+    resetChannel,
+    initChannel,
+    resetPayload,
+    onSseError,
+  ]);
 
   const prevChannelRef = useRef<Channel | null>(null);
   useEffect(() => {

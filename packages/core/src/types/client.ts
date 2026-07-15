@@ -1,5 +1,6 @@
 import { EventType, FetchSseAction } from '../constants/enum';
 import { SseResponse, ToolCallConsentAnswer } from './sse-response';
+import { ChannelMetadata } from './channel';
 import { EventHandler } from './event-emitter';
 import { BlobUploadResponse } from './blob';
 
@@ -12,6 +13,12 @@ export interface IAsgardServiceClient {
   fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
   /** Cold-start transcript rejoin via GET /message/sse (F-014). Optional for backward compatibility. */
   rejoinSse?(customChannelId: string, options?: FetchSseOptions): void;
+  /**
+   * Join-init existence + restore gate via `GET /channel/metadata` (F-015). Resolves to the metadata on
+   * `200`, `null` on `404` (channel does not exist), and rejects on any other error. Optional for
+   * backward compatibility — a client without it skips the metadata gate.
+   */
+  channelMetadata?(customChannelId: string): Promise<ChannelMetadata | null>;
   uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
   downloadCwdFile?(relativePath: string, customChannelId: string): Promise<CwdDownloadResult>;
 }
