@@ -7,7 +7,7 @@ import {
   SseResponse,
   SseEvents,
   BlobUploadResponse,
-  CwdDownloadResult,
+  ChannelHomeDownloadResult,
 } from '../types';
 import { HttpError } from '../types/http-error';
 import { createSseObservable } from './create-sse-observable';
@@ -331,19 +331,19 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   }
 
   /**
-   * 下載 channel sandbox 工作目錄裡的檔案（cwd:// URI action）。
-   * 呼叫 Edge Server GET <base>/cwd/download?custom_channel_id=xxx&relative_path=xxx 取回 binary。
+   * 下載 Channel Home（每個 channel 的檔案交換平面）裡的檔案（channel-home:// URI action）。
+   * 呼叫 Edge Server GET <base>/channel-home/download?custom_channel_id=xxx&relative_path=xxx 取回 binary。
    */
-  async downloadCwdFile(relativePath: string, customChannelId: string): Promise<CwdDownloadResult> {
+  async downloadChannelHomeFile(relativePath: string, customChannelId: string): Promise<ChannelHomeDownloadResult> {
     const baseEndpoint = this.getBaseEndpoint();
 
     if (!baseEndpoint) {
-      throw new Error('Unable to derive cwd download endpoint. Please provide botProviderEndpoint in config.');
+      throw new Error('Unable to derive channel-home download endpoint. Please provide botProviderEndpoint in config.');
     }
 
     const query =
       `custom_channel_id=${encodeURIComponent(customChannelId)}` + `&relative_path=${encodeURIComponent(relativePath)}`;
-    const url = `${baseEndpoint}/cwd/download?${query}`;
+    const url = `${baseEndpoint}/channel-home/download?${query}`;
 
     const headers: HeadersInit = {
       ...this.customHeaders,
@@ -359,7 +359,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       });
 
       if (!response.ok) {
-        throw new Error(`CWD download failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Channel Home download failed: ${response.status} ${response.statusText}`);
       }
 
       const blob = await response.blob();
@@ -368,13 +368,13 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
       if (this.debugMode) {
         // eslint-disable-next-line no-console
-        console.log('[AsgardServiceClient] CWD download response:', { filename, size: blob.size });
+        console.log('[AsgardServiceClient] Channel Home download response:', { filename, size: blob.size });
       }
 
       return { blob, filename };
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('[AsgardServiceClient] CWD download error:', error);
+      console.error('[AsgardServiceClient] Channel Home download error:', error);
       throw error;
     }
   }

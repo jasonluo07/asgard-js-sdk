@@ -28,7 +28,7 @@ import { FooterEndActions } from './routes/footer-end-actions';
 import { RenderFooter } from './routes/render-footer';
 import { TextNewlines } from './routes/text-newlines';
 import { HistoryScrollBug } from './routes/history-scroll-bug';
-import { CwdDownload } from './routes/cwd-download';
+import { ChannelHomeDownload } from './routes/channel-home-download';
 import { UploadMimeConstraint } from './routes/upload-mime-constraint';
 import { StreamRobustness } from './routes/stream-robustness';
 import { StreamResume } from './routes/stream-resume';
@@ -82,7 +82,7 @@ export function App(): React.ReactElement {
         <Route path="/render-footer" element={<RenderFooter />} />
         <Route path="/text-newlines" element={<TextNewlines />} />
         <Route path="/history-scroll-bug" element={<HistoryScrollBug />} />
-        <Route path="/cwd-download" element={<CwdDownload />} />
+        <Route path="/channel-home-download" element={<ChannelHomeDownload />} />
         <Route path="/upload-mime-constraint" element={<UploadMimeConstraint />} />
         <Route path="/stream-robustness" element={<StreamRobustness />} />
         <Route path="/stream-resume" element={<StreamResume />} />

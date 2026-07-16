@@ -43,9 +43,11 @@
 - `F-017` channel title 顯示 UI 與客製 renderer (UC-028; UI 權威=pinned prototype @ `5480a67`) → BUILD-016 / REVIEW-016 (done, **merged to main** via PR #306; footer 固定 regression 隨後由 PR #308 修). roadmap ⑤ 第二張，⑤ 收尾。
 - `F-015` 進房初始化編排與 autoResetChannel metadata-gated 改版 (UC-024/UC-025/UC-026; 決議 `2026-07-13-transcript-first-class-init-lifecycle`) → BUILD-017 / REVIEW-017 (done，等授權合併). roadmap ⑥ 最後一張（整合票）。**動 core + react**：core 新增 `client.channelMetadata()`（`GET /channel/metadata`，404→null）+ `ChannelMetadata`/`ChannelRunState` 型別 + `Channel.restore()`（seed 標題 + `rejoinSse` 重播 + `isConnecting` 閘門；抽共用 `buildRunHandlers`）。react：`use-channel.ts` mount 改 metadata-gated 三向（restore / reset / 空狀態）+ 非 404 安全 fallback。**Breaking behavior**：`autoResetChannel` 語意「mount 無條件 reset」→「僅在房不存在時 reset」（修「進已存在的房砍歷史」資料流失；預設仍 true）。**依賴**：F-014（GET replay）+ F-016（title seed）+ F-003（isConnecting）。驗證靠 core Vitest（+8）+ `/join-init` mock-client demo（無真後端）。roadmap ①–⑥ 至此全數完成。**react-only UI**（綁 F-016 的 `channelTitle`）：新 `<ChannelTitle>`（thread 頂端 header 列、MessageSquare muted icon、單行 truncate、未命名 muted placeholder、標題變更 200ms 淡入 honor reduced-motion、純中性無 accent）；`renderTitle({title,renderDefault})` 客製逃生口 + `hidden` 捷徑 + `untitledLabel`（進 AsgardTemplateContext → Chatbot props）；置於 renderContent 頂端、bot-name ChatbotHeader 之下、語意分離。prototype-first gate 已 pin、不卡。
 
+- `TASK-003` Channel Home rename（`cwd://` → `channel-home://`，wire + 公開 API breaking，硬切無 fallback） → BUILD-018 done / REVIEW-018 done（§1 0 violation、§3 R1–R5 全 Pass；等使用者授權收 cycle）. Issue #21，母票 asgard-sdk-go TASK-002（PR #13 已對齊）。**動 core + react + demo + README**：URI scheme / HTTP route `/channel-home/download` / client `downloadChannelHomeFile` / 型別 `ChannelHomeDownloadResult` / react util `channel-home-download.ts`（`isChannelHomeUri`/`downloadChannelHomeUri`）+ consumer chip/card + demo route `/channel-home-download`。只認 `channel-home://`，歷史 `cwd://` 卡片不再支援（PM 決議）。§1.7 刻意豁免（硬切、version bump 承擔）。**version bump / publish / tag 不在本票**，屬 release 流程、需與 asgard-core 上線窗口綁定。
+
 ## ▶ Next Task
 
-`None — roadmap ⑥ 收尾完成`. BUILD-017 / REVIEW-017 done（F-015，等使用者授權合併）。roadmap ①–⑥ 全數完成，等待下一批任務指派。
+`None — awaiting task selection`. BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
 
 ## Task Queue
 
@@ -85,3 +87,5 @@
 | `REVIEW-016` | Review: Channel Title UI                      | —        | done   | [REVIEW-016-channel-title-ui.md](./REVIEW-016-channel-title-ui.md)                     |
 | `BUILD-017`  | Join-Init Orchestration + metadata gate       | High     | done   | [BUILD-017-join-init-metadata-gate.md](./BUILD-017-join-init-metadata-gate.md)         |
 | `REVIEW-017` | Review: Join-Init Orchestration               | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)       |
+| `BUILD-018`  | Channel Home Rename (cwd → channel-home)      | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                 |
+| `REVIEW-018` | Review: Channel Home Rename                   | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)               |

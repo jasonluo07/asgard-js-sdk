@@ -143,7 +143,7 @@ The main client class for interacting with the Asgard AI platform.
 
 - **fetchSse(payload, options?)**: Send a message via Server-Sent Events. `payload.action` is a `FetchSseAction` value — `NONE` for a normal message, `RESET_CHANNEL` to (re)initialize the channel, `RESPONSE_TOOL_CALL_CONSENT` to answer a consent prompt
 - **uploadFile(file, customChannelId)**: Upload file to Blob API and return BlobUploadResponse
-- **downloadCwdFile(relativePath, customChannelId)**: `Promise<CwdDownloadResult>` - Download a file from the channel sandbox working directory (backs `cwd://` URI actions); resolves to `{ blob, filename }`
+- **downloadChannelHomeFile(relativePath, customChannelId)**: `Promise<ChannelHomeDownloadResult>` - Download a file from the channel's Channel Home file-exchange plane (backs `channel-home://` URI actions); resolves to `{ blob, filename }`
 - **on(event, handler)**: Listen to a specific SSE event. `event` must be an `EventType` value (e.g. `EventType.MESSAGE`), not a plain string; registering a listener for an event replaces any previous one
 - **detach({ timeoutMs })**: Detach from the owning component without aborting in-flight runs — the connection stays open so the backend can finish the current run, then auto-closes once all runs settle (or after `timeoutMs` as a safety net). Backs the React `keepConnectionOnUnmount` prop
 - **close()**: Close the SSE connection and clean up resources (idempotent)
@@ -383,15 +383,15 @@ await channel.replyToolCallConsents([
 - **`ToolCallConsentEventData`**: `{ processId, pendingCalls: ToolCallConsentPendingCall[] }`
 - **`ToolCallConsentAnswer`**: `{ toolCallId, result, denyReason }`
 
-<a id="cwd-download-result"></a>
+<a id="channel-home-download-result"></a>
 <br/>
 
-### CwdDownloadResult
+### ChannelHomeDownloadResult
 
-Returned by `client.downloadCwdFile()`:
+Returned by `client.downloadChannelHomeFile()`:
 
 ```typescript
-interface CwdDownloadResult {
+interface ChannelHomeDownloadResult {
   blob: Blob;
   filename: string;
 }

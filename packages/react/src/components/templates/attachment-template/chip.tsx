@@ -5,7 +5,7 @@ import DownloadSvg from '../../../icons/download.svg?react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
-import { isCwdUri, downloadCwdUri } from '../../../utils/cwd-download';
+import { isChannelHomeUri, downloadChannelHomeUri } from '../../../utils/channel-home-download';
 import styles from './attachment-template.module.scss';
 
 interface AttachmentChipProps {
@@ -39,9 +39,9 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
           return;
         case 'uri':
         case 'URI':
-          if (isCwdUri(action.uri)) {
+          if (isChannelHomeUri(action.uri)) {
             if (client && customChannelId) {
-              void downloadCwdUri(client, customChannelId, action.uri);
+              void downloadChannelHomeUri(client, customChannelId, action.uri);
             }
 
             return;
@@ -92,9 +92,9 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
   const isDownloadEmit =
     (downloadAction?.type === 'emit' || downloadAction?.type === 'EMIT') &&
     downloadAction.eventName === 'download_file';
-  const isDownloadCwd =
-    (downloadAction?.type === 'uri' || downloadAction?.type === 'URI') && isCwdUri(downloadAction.uri);
-  const showDownloadIcon = isDownloadEmit || isDownloadCwd;
+  const isDownloadChannelHome =
+    (downloadAction?.type === 'uri' || downloadAction?.type === 'URI') && isChannelHomeUri(downloadAction.uri);
+  const showDownloadIcon = isDownloadEmit || isDownloadChannelHome;
 
   return (
     <div
