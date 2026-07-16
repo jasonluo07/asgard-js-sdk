@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, StrictMode, useState } from 'react';
 import { Chatbot } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
@@ -77,14 +77,18 @@ export function JoinInitRoute(): ReactNode {
       </div>
 
       <div className={styles.chatbotContainer}>
-        <Chatbot
-          key={scenario.key}
-          title="Join-Init Demo"
-          config={config}
-          customChannelId={scenario.customChannelId}
-          autoResetChannel={scenario.autoResetChannel}
-          inputPlaceholder={scenario.placeholder}
-        />
+        {/* Wrapped in StrictMode so this demo reproduces the mount-gate double-invoke that real consumers
+            (e.g. Next.js dev, which enables StrictMode) hit — guarding F-015 join-init against it. */}
+        <StrictMode>
+          <Chatbot
+            key={scenario.key}
+            title="Join-Init Demo"
+            config={config}
+            customChannelId={scenario.customChannelId}
+            autoResetChannel={scenario.autoResetChannel}
+            inputPlaceholder={scenario.placeholder}
+          />
+        </StrictMode>
       </div>
     </DemoWrapper>
   );

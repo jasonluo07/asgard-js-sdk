@@ -421,9 +421,19 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     }
   }, [channel, onChannelReady]);
 
+  // Tear down the channel instance on unmount (its RxJS subscription — §1.5). Close ONLY the instance via
+  // a ref; do NOT call `closeChannel`, which also resets `isOpen`/`conversation`. Those resets are moot on
+  // a real unmount, but under React StrictMode's simulated unmount/remount they flip `isOpen` to false
+  // mid-mount and abort the in-flight join-init metadata gate (F-015), leaving the channel never created
+  // (empty chat, sends no-op). Consumers that enable StrictMode (e.g. Next.js dev) hit this; keeping the
+  // unmount cleanup free of state churn lets the gate complete exactly once across the double-invoke.
+  const channelRef = useRef<Channel | null>(null);
+  channelRef.current = channel;
   useEffect(() => {
-    return (): void => closeChannel();
-  }, [closeChannel]);
+    return (): void => {
+      channelRef.current?.close();
+    };
+  }, []);
 
   return useMemo(
     () =>
