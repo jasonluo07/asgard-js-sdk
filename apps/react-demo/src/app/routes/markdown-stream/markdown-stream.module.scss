@@ -1,0 +1,31 @@
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.button {
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--asg-color-primary);
+  }
+}
+
+.chatbotContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  > div {
+    width: 100%;
+    max-width: 900px;
+    height: 80vh;
+  }
+}

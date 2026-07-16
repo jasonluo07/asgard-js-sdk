@@ -81,6 +81,51 @@ const REPLY_CHUNKS = [
   '時被換成 final template。',
 ];
 
+// 豐富 markdown 串流示範內容（scoped 到 customChannelId `markdown-stream-demo`）。用 chunkText
+// 切成細碎 delta，讓 streamdown 一邊接收未完成的 markdown（表格 / code fence / 清單）一邊漸進渲染。
+const MARKDOWN_STREAM_TEXT = [
+  '# 分析結果',
+  '',
+  '上週通路訂單以**官網居冠（1,280 筆）**，其中 *急單* 佔比偏高。以下為完整分析。',
+  '',
+  '## 庫存與缺口',
+  '',
+  'Bolzen 急單需 SWRCH35K φ7.0 線材 **16,000 kg**，可用庫存 9,500 kg → **短缺 6,500 kg**。',
+  '',
+  '### 替代方案',
+  '',
+  '- 標準料號 `SWRCH35K`：前置 30 天，趕不上 7/16',
+  '- 替代料號 `SWRCH38K`：前置 15 天',
+  '- 外購急件：成本 +20%，不建議',
+  '',
+  '1. 先鎖定替代料號 SWRCH38K',
+  '2. 通知採購開單',
+  '3. 更新生產排程',
+  '',
+  '> 註：替代料號需品保確認材質相容性後才能投產。',
+  '',
+  '## 報表產出',
+  '',
+  '| 項目 | 檔名 | 狀態 |',
+  '| --- | --- | --- |',
+  '| 分析報表 | `report.html` | 已建立 |',
+  '| 計畫文件 | `plan.md` | 標題已更新 |',
+  '| 出貨清單 | `shipping.csv` | 待補 |',
+  '',
+  '計算邏輯：',
+  '',
+  '```python',
+  'def shortage(demand, stock):',
+  '    return max(demand - stock, 0)',
+  '```',
+  '',
+  '詳見 [完整文件](https://example.com)。',
+  '',
+  '---',
+  '',
+  '*本報告由系統自動產生。*',
+].join('\n');
+
 function writeEvent(res: ServerResponse, event: object): void {
   res.write(`data: ${JSON.stringify(event)}\n\n`);
 }
@@ -174,7 +219,8 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
 
   const replyToCustomMessageId = payload.customMessageId ?? '';
   const messageId = randomUUID();
-  const fullText = REPLY_CHUNKS.join('');
+  const streamChunks = customChannelId === 'markdown-stream-demo' ? chunkText(MARKDOWN_STREAM_TEXT) : REPLY_CHUNKS;
+  const fullText = streamChunks.join('');
 
   const header: CommonHeader = {
     requestId,
@@ -216,7 +262,7 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // 3. message.delta * N — 每 60ms 一筆,模擬真實 LLM streaming
   let idx = 0;
 
-  for (const chunk of REPLY_CHUNKS) {
+  for (const chunk of streamChunks) {
     await sleep(60);
     writeEvent(res, {
       ...header,
