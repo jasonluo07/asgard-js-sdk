@@ -4,7 +4,7 @@ import { ChannelMetadata } from './channel';
 import { EventHandler } from './event-emitter';
 import { BlobUploadResponse } from './blob';
 
-export interface CwdDownloadResult {
+export interface ChannelHomeDownloadResult {
   blob: Blob;
   filename: string;
 }
@@ -20,7 +20,7 @@ export interface IAsgardServiceClient {
    */
   channelMetadata?(customChannelId: string): Promise<ChannelMetadata | null>;
   uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
-  downloadCwdFile?(relativePath: string, customChannelId: string): Promise<CwdDownloadResult>;
+  downloadChannelHomeFile?(relativePath: string, customChannelId: string): Promise<ChannelHomeDownloadResult>;
 }
 
 export type InitEventHandler = EventHandler<SseResponse<EventType.INIT>>;

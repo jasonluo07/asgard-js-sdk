@@ -4,7 +4,7 @@ import { ButtonAction, ButtonMessageTemplate, CarouselMessageTemplate } from '@a
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
-import { isCwdUri, downloadCwdUri } from '../../../utils/cwd-download';
+import { isChannelHomeUri, downloadChannelHomeUri } from '../../../utils/channel-home-download';
 import clsx from 'clsx';
 
 interface CardProps {
@@ -61,9 +61,9 @@ export function Card(props: CardProps): ReactNode {
 
           case 'uri':
           case 'URI':
-            if (isCwdUri(action.uri)) {
+            if (isChannelHomeUri(action.uri)) {
               if (client && customChannelId) {
-                void downloadCwdUri(client, customChannelId, action.uri);
+                void downloadChannelHomeUri(client, customChannelId, action.uri);
               }
 
               return;
