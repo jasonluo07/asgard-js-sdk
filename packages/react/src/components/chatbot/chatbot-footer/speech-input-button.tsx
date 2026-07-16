@@ -17,10 +17,12 @@ interface SpeechInputButtonProps {
   setValue: Dispatch<SetStateAction<string>>;
   className?: string;
   style?: CSSProperties;
+  /** When true (e.g. a run is streaming or the composer is in preview), voice input can't be started. */
+  disabled?: boolean;
 }
 
 export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
-  const { setValue, className, style } = props;
+  const { setValue, className, style, disabled = false } = props;
 
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -78,12 +80,14 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
 
   const onMouseDown = useCallback<MouseEventHandler<HTMLDivElement>>(
     event => {
+      if (disabled) return;
+
       if (!listening) {
         event.preventDefault();
         startListening();
       }
     },
-    [listening, startListening],
+    [disabled, listening, startListening],
   );
 
   const onMouseUp = useCallback<MouseEventHandler<HTMLDivElement>>(
@@ -98,12 +102,14 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
 
   const onTouchStart = useCallback<TouchEventHandler<HTMLDivElement>>(
     event => {
+      if (disabled) return;
+
       if (!listening) {
         event.preventDefault();
         startListening();
       }
     },
-    [listening, startListening],
+    [disabled, listening, startListening],
   );
 
   const onTouchEnd = useCallback<TouchEventHandler<HTMLDivElement>>(
@@ -120,6 +126,8 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
     <div
       className={className}
       style={style}
+      role="button"
+      aria-disabled={disabled}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
       onTouchStart={onTouchStart}

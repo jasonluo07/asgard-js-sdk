@@ -933,7 +933,11 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
           ) : (
             <SpeechInputButton
               setValue={setValue}
-              className={clsx(styles.chatbot_submit_button, isConnecting && styles.chatbot_submit_button__disabled)}
+              disabled={isConnecting || isPreviewMode}
+              className={clsx(
+                styles.chatbot_submit_button,
+                (isConnecting || isPreviewMode) && styles.chatbot_submit_button__disabled,
+              )}
               style={chatbot.footer?.speechInputButton?.style}
             />
           )}
