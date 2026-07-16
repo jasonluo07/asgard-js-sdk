@@ -82,6 +82,13 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
       return <ThinkingBlock message={message} />;
     }
 
+    // Subagent lifecycle events are run-level chrome shown only in the docked SubagentList (F-012), never
+    // inline — `groupMessages` (ChatbotBody) already filters them out, so this is defensive; it also
+    // narrows `message` down to `ConversationBotMessage` for the bot-only field access below.
+    if (message.type === 'subagent') {
+      return null;
+    }
+
     if (message.isTyping) {
       return <BotTypingBox isTyping={message.isTyping} typingText={message.typingText} />;
     }
