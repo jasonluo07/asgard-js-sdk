@@ -36,6 +36,9 @@
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    // Column layout → the visible vertical spacing between the Subagent and Task panels is the row-gap.
+    // 12px to match the chat-kit prototype (both panels carry `mb-3`). (`gap` shorthand would also set an
+    // unused `column-gap`; use `row-gap` so only the axis that matters is styled.)
+    row-gap: 12px;
   }
 }
