@@ -68,7 +68,6 @@ const App = () => {
         initMessages={[]}
         fullScreen={false}
         avatar="https://example.com/avatar.png"
-        botTypingPlaceholder="Bot is typing..."
         inputPlaceholder="Type your message here..."
         defaultLinkTarget="_blank"
         onReset={() => {
@@ -325,7 +324,12 @@ config: {
 - **initMessages**: `ConversationMessage[]` - Initial messages to display in the chat
 - **fullScreen**: `boolean` - Display chatbot in full screen mode, defaults to `false`
 - **avatar**: `string` - URL for the chatbot's avatar image
-- **botTypingPlaceholder**: `string` - Text to display while the bot is typing
+- **botTypingPlaceholder**: `string` - **Deprecated (since 0.3.x)**. No longer renders anything and will be removed in a future major. The run-in-progress cue is now a connection-bound running indicator shown automatically at the thread↔input seam — there is no prop to configure it.
+- **locale?**: `Locale` - UI language for built-in synthesized text — tool-call labels (`Read {file}`, `Wrote {file}`, …), the tool-call group summary, expanded Initial/Result titles, and the Task / Subagent panels. One of `'en-US' | 'ja-JP' | 'zh-TW'`; defaults to `'en-US'`. `Locale` and the `t()` helper are exported from `@asgard-js/react`.
+- **channelTitle?**: `string | null` - Seed for the reactive channel-title row rendered at the thread top (F-016). Typically the `title` returned by `client.channelMetadata()`. `null` = unnamed.
+- **renderTitle?**: `(props: ChannelTitleRendererProps) => ReactNode` - Custom renderer for the thread-top channel-title row (F-017). `props` is `{ title: string | null; renderDefault: () => ReactNode }` — return your own node, call `renderDefault()` for the built-in row, or return `null` to hide it. Distinct from `renderHeader` (the bot-name header).
+- **untitledLabel?**: `string` - Placeholder shown in the channel-title row when the title is unnamed (`null`). Defaults to `'新對話'`.
+- **channelTitleHidden?**: `boolean` - Hide the channel-title row entirely (shortcut for `renderTitle` returning `null`).
 - **inputPlaceholder**: `string` - Custom placeholder text for the message input field
 - **defaultLinkTarget?**: `'_blank' | '_self' | '_parent' | '_top'` - Default target for opening URIs when not specified by the API. Defaults to `'_blank'` (opens in new tab).
 - **className?**: `string` - Custom CSS class name applied to the chatbot container element.
@@ -369,7 +373,21 @@ The priority of themes is as follows (high to low):
 2. Theme from annotations from bot provider metadata
 3. Default theme
 
+#### Theme colors propagate to design tokens (since 0.3.x)
+
+A few `chatbot`-level colors are wired to the SDK's `--asg-color-*` design tokens, so setting them recolors the **whole** chat surface — not just the message bubbles and buttons. This is what makes the newer surfaces (the connection-bound running indicator, the composer input, the channel-title bar, tool-call groups, the thinking block, and the Task / Subagent panels) follow your theme:
+
+| Theme setting                        | Design tokens it drives                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `chatbot.primaryComponent.mainColor` | `--asg-color-primary` (+ a derived darker hover/active shade)                                                     |
+| `chatbot.backgroundColor`            | `--asg-color-bg` and `--asg-color-surface` (surface = one step lighter; tool-call / thinking / panel backgrounds) |
+| `chatbot.borderColor`                | `--asg-color-border` / `--asg-color-divider` (and the tool-call / thinking-block borders)                         |
+
+Tokens are injected only when the theme supplies a concrete color — a `#rrggbb` hex, or a non-`var()` border — so the derived surface/border/hover shades can be computed; otherwise the built-in defaults are kept.
+
 ### Theme Interface
+
+> The authoritative, always-current definition is the exported `AsgardThemeContextValue` type (`packages/react/src/context/asgard-theme-context.tsx`). The block below is an illustrative outline of its shape.
 
 ```typescript
 export interface AsgardThemeContextValue {
@@ -656,7 +674,9 @@ function MyCustomFooter() {
 | `isResetting`              | `boolean`                                  | Whether a channel reset is in progress. Use to disable reset buttons during reset.                                                                                            |
 | `isConnecting`             | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button.                                                                                    |
 | `messages`                 | `Map<string, ConversationMessage> \| null` | All messages in the current conversation. `null` before the channel is initialized.                                                                                           |
-| `botTypingPlaceholder`     | `string \| undefined`                      | Typing indicator text (from props or bot provider metadata).                                                                                                                  |
+| `conversation`             | `Conversation \| null`                     | The current `Conversation` instance (the derivation source for the Task / Subagent panels). `null` before the channel is initialized.                                         |
+| `channelTitle`             | `string \| null`                           | The current channel title, seeded from metadata and updated live by `title.update`. `null` = unnamed.                                                                         |
+| `botTypingPlaceholder`     | `string \| undefined`                      | **Deprecated (since 0.3.x)** — no longer renders anything (see the `botTypingPlaceholder` prop). Kept only for backward compatibility.                                        |
 | `inputPlaceholder`         | `string \| undefined`                      | Textarea placeholder text (from props or bot provider metadata).                                                                                                              |
 | `enableUpload`             | `boolean \| undefined`                     | Whether image upload is enabled (resolved from props / bot provider metadata).                                                                                                |
 | `enableExport`             | `boolean \| undefined`                     | Whether conversation export is enabled.                                                                                                                                       |
