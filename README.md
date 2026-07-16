@@ -36,15 +36,18 @@ SDK for integrating AI chatbots with the [Asgard AI](https://asgard-ai.com) plat
     - [Conversation](./packages/core/README.md#conversation)
     - [File Upload API](./packages/core/README.md#file-upload-api)
     - [Authentication Types](./packages/core/README.md#authentication-types)
+    - [Derived State](./packages/core/README.md#derived-state)
   - [Development](./packages/core/README.md#development)
 - [Links](#links)
 
 ## Features
 
-- **Real-time Streaming** - SSE (Server-Sent Events) for instant message delivery
-- **Rich Message Templates** - Text, images, carousels, buttons, charts, and more
-- **Customizable Themes** - Full control over chatbot appearance
-- **File Upload** - Drag & drop image uploads with preview
+- **Real-time Streaming** - SSE (Server-Sent Events) for instant message delivery, with cold-start transcript replay and automatic resume on reconnect
+- **Rich Message Templates** - Text, images, carousels, buttons, charts, tables, and more
+- **Agentic UI** - Collapsible thinking blocks, grouped tool-calls with human-readable labels and Write/Edit diffs, plus docked Task Check List and Subagent List panels
+- **Customizable Themes** - Full control over chatbot appearance; a few theme colors propagate to design tokens that recolor the whole chat surface
+- **Internationalization** - Built-in UI locales for tool-call / task / subagent text (en-US, ja-JP, zh-TW)
+- **File Upload** - Drag & drop image and document uploads with preview
 - **Voice Input** - Browser speech recognition integration
 - **Conversation Export** - Download chat history as Markdown
 - **Tool Call Consent** - Built-in approval modal for user-controlled tool execution

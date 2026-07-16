@@ -114,7 +114,7 @@ const client = new AsgardServiceClient({
 
 ## API Reference
 
-The core package exports three main classes for different levels of abstraction (`AsgardServiceClient`, `Channel`, `Conversation`), an `HttpError` class with an `isHttpError` type guard for HTTP failure handling, and authentication types for dynamic API key management:
+The core package exports three main classes for different levels of abstraction (`AsgardServiceClient`, `Channel`, `Conversation`), an `HttpError` class with an `isHttpError` type guard for HTTP failure handling, authentication types for dynamic API key management, and a set of framework-agnostic **derived-state** helpers (Task Check List / Subagent List) for headless / non-React consumers — see [Derived State](#derived-state):
 
 <a id="asgardserviceclient"></a>
 <br/>
@@ -144,6 +144,8 @@ The main client class for interacting with the Asgard AI platform.
 - **fetchSse(payload, options?)**: Send a message via Server-Sent Events. `payload.action` is a `FetchSseAction` value — `NONE` for a normal message, `RESET_CHANNEL` to (re)initialize the channel, `RESPONSE_TOOL_CALL_CONSENT` to answer a consent prompt
 - **uploadFile(file, customChannelId)**: Upload file to Blob API and return BlobUploadResponse
 - **downloadChannelHomeFile(relativePath, customChannelId)**: `Promise<ChannelHomeDownloadResult>` - Download a file from the channel's Channel Home file-exchange plane (backs `channel-home://` URI actions); resolves to `{ blob, filename }`
+- **rejoinSse(customChannelId, options?)**: Cold-start transcript rejoin — a `GET /message/sse` with an empty `Last-Event-ID` that replays the channel's collapsed history through the same reducer, so a returning user sees their prior conversation without re-POSTing. Optional on `IAsgardServiceClient` for backward compatibility
+- **channelMetadata(customChannelId)**: `Promise<ChannelMetadata | null>` - Join-init existence + restore gate — `GET /channel/metadata`; resolves to the metadata on `200`, `null` on `404` (channel does not exist), and rejects on any other error. `ChannelMetadata` is `{ title: string | null; runState: 'RUNNING' | 'IDLE'; lastActivityAt?: string }`. Optional on `IAsgardServiceClient` for backward compatibility
 - **on(event, handler)**: Listen to a specific SSE event. `event` must be an `EventType` value (e.g. `EventType.MESSAGE`), not a plain string; registering a listener for an event replaces any previous one
 - **detach({ timeoutMs })**: Detach from the owning component without aborting in-flight runs — the connection stays open so the backend can finish the current run, then auto-closes once all runs settle (or after `timeoutMs` as a safety net). Backs the React `keepConnectionOnUnmount` prop
 - **close()**: Close the SSE connection and clean up resources (idempotent)
@@ -169,12 +171,16 @@ Higher-level abstraction for managing a conversation channel with reactive state
 
 #### Static Methods
 
-- **Channel.reset(config, payload?, options?)**: `Promise<Channel>` - Create and initialize a new channel
+- **Channel.reset(config, payload?, options?)**: `Promise<Channel>` - Create a channel and send `RESET_CHANNEL`, starting a fresh conversation (the server replies with a welcome message)
+- **Channel.restore(config, options?)**: `Promise<Channel>` - Join an **existing** channel without resetting it — seeds the title from `config.channelTitle` and replays the server transcript via `rejoinSse`, preserving history / session / title. This is the join-without-wiping path behind the metadata-gated mount (F-015)
+- **Channel.create(config)**: `Channel` - Create a channel and subscribe to its state without any SSE request (no reset, no rejoin); the first connection happens when you call `sendMessage`
 
 #### Instance Methods
 
 - **sendMessage(payload, options?)**: `Promise<void>` - Send a message through the channel
 - **replyToolCallConsents(answers, options?, payload?)**: `Promise<void>` - Reply to a pending tool-call consent prompt. `answers` is an array of `ToolCallConsentAnswer` (each `{ toolCallId, result, denyReason }`, where `result` is a `ToolCallConsentResult` value)
+- **getTasks() / getSubagents() / getChannelTitle()**: `Task[]` / `Subagent[]` / `string | null` - Current immutable snapshots of the derived state (for `getSnapshot()`-style bridging; see [Derived State](#derived-state))
+- **setChannelTitle(title)**: `void` - Seed or override the reactive channel title (F-016)
 - **close()**: `void` - Close the channel and cleanup subscriptions
 
 #### Configuration (ChannelConfig)
@@ -183,12 +189,16 @@ Higher-level abstraction for managing a conversation channel with reactive state
 - **customChannelId**: `string` - Unique channel identifier
 - **customMessageId?**: `string` - Optional message ID
 - **conversation**: `Conversation` - Initial conversation state
-- **statesObserver?**: `ObserverOrNext<ChannelStates>` - Observer for channel state changes
+- **channelTitle?**: `string | null` - Seed for the reactive channel-title store (F-016), typically the `title` from `channelMetadata()`. `null` = unnamed
+- **statesObserver?**: `ObserverOrNext<ChannelStates>` - Observer for channel state changes. `ChannelStates` carries `isConnecting`, `conversation`, and (since 0.3.x) the derived `tasks: Task[]`, `subagents: Subagent[]`, and `channelTitle: string | null`
 
 #### Properties
 
 - **customChannelId**: `string` - The channel identifier
 - **customMessageId?**: `string` - Optional message identifier
+- **tasks$**: `Observable<Task[]>` - Reactive Task Check List store; replays the current snapshot and emits only when the list changes (F-010 / F-013)
+- **subagents$**: `Observable<Subagent[]>` - Reactive Subagent List store; replays the current snapshot and emits only when the list changes (F-012 / F-013)
+- **channelTitle$**: `Observable<string | null>` - Reactive channel-title store; seeded from metadata, updated by `title.update` (F-016)
 
 #### Example Usage
 
@@ -242,7 +252,9 @@ Immutable conversation state manager that handles message updates and SSE event 
 
 - **ConversationUserMessage**: User-sent messages with `text` and `time`
 - **ConversationBotMessage**: Bot responses with `message`, `isTyping`, `typingText`, `eventType`
-- **ConversationToolCallMessage**: Tool-call entries with `toolName`, `reason`, `parameter`, `result`, `isComplete`
+- **ConversationToolCallMessage**: Tool-call entries with `toolName`, `reason`, `parameter`, `result`, `isComplete`, and (since 0.3.x) `isError` (backend failure flag, F-009), `toolUseId` / `parentToolUseId` (subagent correlation, F-012)
+- **ConversationThinkingMessage**: Extended-thinking (reasoning) block with `text` and `isThinking`, rendered as a collapsible block separate from the answer (F-001)
+- **ConversationSubagentMessage**: Subagent lifecycle entry with `kind` (`start` / `complete`), `parentToolUseId`, `status`, `summary` (F-012)
 - **ConversationErrorMessage**: Error messages with `error` details
 
 #### Example Usage
@@ -396,6 +408,30 @@ interface ChannelHomeDownloadResult {
   filename: string;
 }
 ```
+
+<a id="derived-state"></a>
+<br/>
+
+### Derived State (Task Check List / Subagent List)
+
+The Task Check List (F-010) and Subagent List (F-012) are pure folds over the conversation, exposed as **framework-agnostic** reactive slices so you can render them outside React — in Vue, Svelte, or vanilla JS. Each slice replays its current immutable snapshot and only emits when that slice actually changes (unrelated high-frequency message deltas are suppressed).
+
+The simplest path is the reactive stores already on `Channel` (`channel.tasks$`, `channel.subagents$`, `channel.channelTitle$`) plus the snapshot getters (`getTasks()`, `getSubagents()`, `getChannelTitle()`). To build the slices from a bare `conversation$` yourself, use `createDerivedStores(conversation$)`:
+
+```typescript
+import { createDerivedStores } from '@asgard-js/core';
+
+const stores = createDerivedStores(conversation$);
+// stores: { tasks$, subagents$, getTasks(), getSubagents(), teardown() }
+const sub = stores.tasks$.subscribe(tasks => renderTaskList(tasks));
+// ... later
+sub.unsubscribe();
+stores.teardown();
+```
+
+For one-shot derivation without subscriptions, `deriveTasks(conversation)` and `deriveSubagents(conversation)` return the current lists directly. Lower-level building blocks are also exported: the reducers `reduceTaskEvents` / `reduceSubagents`, the type guards `isTaskTool` / `isAgentTool` / `isSubagentChildTool`, the adapter `conversationToSubagentEvents`, the structural-equality helpers `tasksEqual` / `subagentsEqual`, and the types `Task`, `Subagent`, `DerivedStores`, `TaskToolEvent`, `SubagentEvent`.
+
+> In React, prefer the `useTaskList(channel)`, `useSubagents(channel)`, and `useChannelTitle(channel)` hooks from `@asgard-js/react`, which bridge these stores into `useSyncExternalStore` for you.
 
 <a id="development"></a>
 <br/>
