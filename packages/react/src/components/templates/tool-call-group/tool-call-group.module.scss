@@ -21,17 +21,17 @@
   cursor: pointer;
   user-select: none;
   text-align: left;
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 
   &:hover {
-    color: var(--asgard-tool-call-text, #fff);
+    color: var(--asg-color-text-primary, #fff);
   }
 }
 
 .tool_call_group__chevron {
   width: 13px;
   height: 13px;
-  color: var(--asgard-tool-call-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -78,7 +78,7 @@
 .tool_call_item__chevron {
   width: 14px;
   height: 14px;
-  color: var(--asgard-tool-call-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -92,12 +92,12 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--asgard-tool-call-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
 }
 
 .tool_call_item__label {
   font-size: 13px;
-  color: var(--asgard-tool-call-text, #fff);
+  color: var(--asg-color-text-primary, #fff);
 }
 
 .tool_call_item__status {
@@ -184,7 +184,7 @@
 .json_viewer__title {
   font-size: 12px;
   font-weight: 500;
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
 
 .json_viewer__actions {
@@ -201,14 +201,14 @@
   height: 24px;
   border: none;
   background: transparent;
-  color: var(--asgard-tool-call-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
 
   &:hover {
     background-color: var(--asgard-tool-call-hover, rgba(255, 255, 255, 0.1));
-    color: var(--asgard-tool-call-text, #fff);
+    color: var(--asg-color-action-active, #fff);
   }
 
   svg {
@@ -298,7 +298,7 @@
 .json_modal__title {
   font-size: 14px;
   font-weight: 500;
-  color: var(--asgard-tool-call-text, #fff);
+  color: var(--asg-color-text-primary, #fff);
 }
 
 .json_modal__actions {
@@ -315,14 +315,14 @@
   height: 28px;
   border: none;
   background: transparent;
-  color: var(--asgard-tool-call-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
 
   &:hover {
     background-color: var(--asgard-tool-call-hover, rgba(255, 255, 255, 0.1));
-    color: var(--asgard-tool-call-text, #fff);
+    color: var(--asg-color-action-active, #fff);
   }
 
   svg {

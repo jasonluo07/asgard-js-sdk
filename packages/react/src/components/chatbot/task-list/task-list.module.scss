@@ -22,10 +22,10 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 
   &:hover {
-    color: var(--asgard-tool-call-text, #fff);
+    color: var(--asg-color-text-primary, #fff);
   }
 }
 
@@ -38,7 +38,7 @@
 }
 
 .header__icon--done {
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
 
 .header__title {
@@ -94,11 +94,11 @@
 }
 
 .glyph--completed {
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
 
 .glyph--pending {
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
   opacity: 0.4;
 }
 
@@ -129,15 +129,15 @@
 
 .row__label--active {
   font-weight: 500;
-  color: var(--asgard-tool-call-text, #fff);
+  color: var(--asg-color-text-primary, #fff);
 }
 
 .row__label--done {
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
 
 .row__label--pending {
-  color: var(--asgard-tool-call-text, #fff);
+  color: var(--asg-color-text-primary, #fff);
   opacity: 0.7;
 }
 
@@ -146,7 +146,7 @@
   width: 12px;
   height: 12px;
   margin-top: 3px;
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
 
 .row__description {
@@ -156,5 +156,5 @@
   border-left: 1px solid var(--asgard-tool-call-border, #333);
   font-size: 12px;
   line-height: 1.6;
-  color: var(--asgard-tool-call-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 }
