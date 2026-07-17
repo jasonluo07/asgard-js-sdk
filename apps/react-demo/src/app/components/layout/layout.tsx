@@ -43,6 +43,7 @@ const navItems = [
   { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
   { to: '/tool-call-i18n', label: 'Tool-Call i18n (F-005)' },
   { to: '/tool-call-grouping', label: 'Tool-Call Grouping (F-006)' },
+  { to: '/tool-call-group-key', label: 'Tool-Call Group Key (same processId)' },
   { to: '/tool-call-diff', label: 'Tool-Call Diff (F-007)' },
   { to: '/tool-call-expand', label: 'Tool-Call Expand (F-008)' },
   { to: '/tool-call-iserror', label: 'Tool-Call isError (F-009)' },
