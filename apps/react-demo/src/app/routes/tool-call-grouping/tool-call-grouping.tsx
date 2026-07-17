@@ -14,12 +14,16 @@ import styles from './tool-call-grouping.module.scss';
 //  - group 1: Bash + Read + Write + Edit + Skill → "5 steps · Used 1 skills · Processed 3 files"
 //  - group 2: WebFetch + WebSearch → "2 steps" (skills / files segments hidden, s=0 / f=0)
 // The thinking block between them breaks the group and keeps the thinking×tool-call timeline order.
+// Both groups share one processId, as a real run does — group identity comes from the leading tool
+// call's messageId, so splitting a run into several groups needs no distinct processIds.
+const PROCESS_ID = 'grp';
+
 function toolCall(seq: number, toolName: string, parameter: Record<string, unknown>): ConversationToolCallMessage {
   return {
     type: 'tool-call',
-    messageId: `grp-${seq}`,
+    messageId: `${PROCESS_ID}-${seq}`,
     eventType: EventType.TOOL_CALL_COMPLETE,
-    processId: seq <= 5 ? 'grp-a' : 'grp-b',
+    processId: PROCESS_ID,
     callSeq: seq,
     toolName,
     reason: '',

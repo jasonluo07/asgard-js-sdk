@@ -952,12 +952,10 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     return;
   }
 
-  // Distinct processId per *thread* tool-call group — the group key is `tool-call-group-${processId}`
-  // (chatbot-body), so the general and native groups must differ. Task / subagent tools are filtered out
-  // of thread groups, so they can share `proc`.
+  // One run, one processId — the shape every real backend emits. The thread tool-call groups are keyed
+  // by their leading tool call's messageId (`${processId}-${callSeq}`, see chatbot-body), so groups
+  // split apart by interleaved text/thinking stay distinct without faking separate processIds.
   const proc = 'showcase';
-  const gproc = 'showcase-general';
-  const nproc = 'showcase-native';
   let seq = 0;
   const next = (): number => seq++;
   const emit = async (frame: object, ms = 220): Promise<void> => {
@@ -989,7 +987,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   const gp = 'ag-material-procurement-tools';
   const g1 = next();
   await emit(
-    toolStartFrame(header, gproc, g1, {
+    toolStartFrame(header, proc, g1, {
       toolsetName: gp,
       toolName: 'query_orders',
       reason: '讀取上週訂單資料',
@@ -1000,7 +998,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   await emit(
     toolCompleteFrame(
       header,
-      gproc,
+      proc,
       g1,
       { toolsetName: gp, toolName: 'query_orders', reason: '讀取上週訂單資料', parameter: { week: 'LAST_WEEK' } },
       { rows: 1280 },
@@ -1008,7 +1006,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   );
   const g2 = next();
   await emit(
-    toolStartFrame(header, gproc, g2, {
+    toolStartFrame(header, proc, g2, {
       toolsetName: gp,
       toolName: 'aggregate_by_channel',
       reason: '依通路彙總',
@@ -1019,7 +1017,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   await emit(
     toolCompleteFrame(
       header,
-      gproc,
+      proc,
       g2,
       { toolsetName: gp, toolName: 'aggregate_by_channel', reason: '依通路彙總', parameter: {} },
       { channels: 3 },
@@ -1205,11 +1203,11 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   ): Promise<void> => {
     const s = next();
     const tc = { toolsetName: '', toolName, parameter };
-    await emit(toolStartFrame(header, nproc, s, tc), runMs); // spinner spins while the tool "runs"
+    await emit(toolStartFrame(header, proc, s, tc), runMs); // spinner spins while the tool "runs"
     await emit(
       toolCompleteFrame(
         header,
-        nproc,
+        proc,
         s,
         tc,
         typeof result === 'string' ? { result } : result,

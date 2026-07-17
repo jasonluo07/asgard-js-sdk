@@ -225,7 +225,10 @@ export function ChatbotBody(): ReactNode {
             if (group.type === 'tool-call-group') {
               const items = group.toolCalls.map(tc => toolCallToItemData(tc, locale));
               const firstToolCall = group.toolCalls[0];
-              const key = `tool-call-group-${firstToolCall?.processId || index}`;
+              // Key off the leading tool call's messageId (`${processId}-${callSeq}`), not processId:
+              // one run emits a fresh group every time text/thinking interleaves between tool calls, so
+              // every group in that run shares the same processId and the keys collide.
+              const key = `tool-call-group-${firstToolCall?.messageId || index}`;
               // F-006 — dynamic localized group summary, replacing the static 'Answer preparation steps'.
               const summary = groupSummary(group.toolCalls, locale);
               // Sealed once any later group/message follows → the assistant has moved on, so the group may
