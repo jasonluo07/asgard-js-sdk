@@ -22,14 +22,14 @@
   user-select: none;
   font-size: 12px;
   font-weight: 500;
-  color: var(--asgard-thinking-text-secondary, #8c8c8c);
+  color: var(--asg-color-text-secondary, #8c8c8c);
 
   &:disabled {
     cursor: default;
   }
 
   &:not(:disabled):hover {
-    color: var(--asgard-thinking-text, #fff);
+    color: var(--asg-color-text-primary, #fff);
   }
 }
 
@@ -37,7 +37,7 @@
   width: 13px;
   height: 13px;
   flex-shrink: 0;
-  color: var(--asgard-thinking-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
   transition: transform 0.2s ease;
 }
 
@@ -49,7 +49,7 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: var(--asgard-thinking-icon, #8c8c8c);
+  color: var(--asg-color-action-inactive, #8c8c8c);
 }
 
 .thinking_block__brain--streaming {
