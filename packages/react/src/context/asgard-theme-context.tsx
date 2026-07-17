@@ -805,6 +805,24 @@ export function AsgardThemeContextProvider(
         themeVars['--asgard-thinking-border'] = effectiveBorder;
       }
 
+      // Inactive → the muted text/icon tier (tool-call & thinking headers, chevrons, the Task/Subagent
+      // rows, the channel title). Reuses `inactiveColor`'s established meaning — it already colors the
+      // timestamp, the placeholder and the header action icons — so the muted tier is themed by the same
+      // field everywhere instead of being stuck on the palette default.
+      const effectiveInactive = mergedTheme.chatbot?.inactiveColor;
+      if (typeof effectiveInactive === 'string' && !effectiveInactive.startsWith('var(')) {
+        themeVars['--asg-color-text-secondary'] = effectiveInactive;
+        themeVars['--asg-color-action-inactive'] = effectiveInactive;
+      }
+
+      // Secondary → the primary text/icon tier (tool-call item labels, hover states), matching the field
+      // that already colors the header title and the input text.
+      const effectiveForeground = mergedTheme.chatbot?.primaryComponent?.secondaryColor;
+      if (typeof effectiveForeground === 'string' && !effectiveForeground.startsWith('var(')) {
+        themeVars['--asg-color-text-primary'] = effectiveForeground;
+        themeVars['--asg-color-action-active'] = effectiveForeground;
+      }
+
       if (Object.keys(themeVars).length > 0 && mergedTheme.chatbot) {
         mergedTheme.chatbot.style = {
           ...mergedTheme.chatbot.style,
