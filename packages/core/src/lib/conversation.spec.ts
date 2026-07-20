@@ -410,3 +410,47 @@ describe('Conversation — subagent events + id plumbing (F-012)', () => {
     expect(getSubagent(conv, 'subagent:X:complete')?.status).toBe('failed');
   });
 });
+
+// F-020 AC10 — stop-generation converges any still-running tool-call to `cancelled` so it never lingers
+// as `running` after the run is aborted.
+describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  function toolCall(messageId: string, isComplete: boolean): ConversationToolCallMessage {
+    return {
+      type: 'tool-call',
+      messageId,
+      eventType: isComplete ? EventType.TOOL_CALL_COMPLETE : EventType.TOOL_CALL_START,
+      processId: 'p1',
+      callSeq: 0,
+      toolName: 'Bash',
+      toolsetName: '',
+      parameter: {},
+      isComplete,
+      time: new Date(),
+    };
+  }
+
+  it('converges a running tool-call to isComplete + isCancelled, leaving settled ones untouched', () => {
+    const conv = empty()
+      .pushMessage(toolCall('running', false))
+      .pushMessage(toolCall('done', true))
+      .pushMessage({ type: 'user', messageId: 'u1', text: 'hi', time: new Date() });
+
+    const settled = conv.cancelInFlightToolCalls();
+
+    const running = settled.messages?.get('running') as ConversationToolCallMessage;
+    expect(running.isComplete).toBe(true);
+    expect(running.isCancelled).toBe(true);
+
+    const done = settled.messages?.get('done') as ConversationToolCallMessage;
+    expect(done.isCancelled).toBeUndefined(); // already settled — untouched
+
+    expect(settled.messages?.get('u1')?.type).toBe('user'); // non-tool-call untouched
+  });
+
+  it('is a no-op (same instance) when nothing is in flight', () => {
+    const conv = empty().pushMessage(toolCall('done', true));
+    expect(conv.cancelInFlightToolCalls()).toBe(conv);
+  });
+});

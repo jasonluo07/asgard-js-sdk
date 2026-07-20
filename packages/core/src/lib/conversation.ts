@@ -37,6 +37,30 @@ export default class Conversation implements IConversation {
     return new Conversation({ messages: this.messages, pendingConsent: null });
   }
 
+  /**
+   * Converge every still-running tool-call to `cancelled` (F-020 AC10). Called when a user-initiated
+   * stop-generation aborts the run: an in-flight tool-call (`isComplete === false`) would otherwise
+   * linger as `running` forever, since its `tool_call.complete` frame never arrives. Already-settled
+   * calls and non-tool-call messages are left untouched; content is preserved (never rolled back).
+   * Returns the same instance when nothing is in flight.
+   */
+  cancelInFlightToolCalls(): Conversation {
+    if (!this.messages) return this;
+
+    let changed = false;
+    const messages = new Map(this.messages);
+    for (const [id, message] of messages) {
+      if (message.type === 'tool-call' && !message.isComplete) {
+        messages.set(id, { ...message, isComplete: true, isCancelled: true });
+        changed = true;
+      }
+    }
+
+    if (!changed) return this;
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
   onMessage(response: SseResponse<EventType>): Conversation {
     switch (response.eventType) {
       case EventType.MESSAGE_START:
