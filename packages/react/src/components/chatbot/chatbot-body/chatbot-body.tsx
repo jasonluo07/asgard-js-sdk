@@ -109,7 +109,12 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Local
 /** 判斷「是否在底部」的閾值 */
 const BOTTOM_THRESHOLD = 50;
 
-export function ChatbotBody(): ReactNode {
+/**
+ * @param hideRunChrome When true, the internal docked SubagentList / TaskList are not rendered — the
+ *   consumer takes over placing the run-chrome (e.g. pinned between the thread and the composer via
+ *   `renderMenu`), deriving from the same `conversation` with `deriveTasks` / `deriveSubagents`.
+ */
+export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean } = {}): ReactNode {
   const { chatbot } = useAsgardThemeContext();
   const { renderToolCallGroup, locale = 'en-US' } = useAsgardTemplateContext();
 
@@ -275,7 +280,7 @@ export function ChatbotBody(): ReactNode {
               while keeping them in the scroll flow so they ride up with the messages once the thread is
               tall enough to scroll. Rendered only when populated, so an empty wrapper never adds a gap
               and a lone last message keeps the same 12px clearance to the footer. */}
-          {(subagents.length > 0 || tasks.length > 0) && (
+          {!hideRunChrome && (subagents.length > 0 || tasks.length > 0) && (
             <div className={styles.chatbot_body__docked}>
               <SubagentList subagents={subagents} locale={locale} />
               <TaskList tasks={tasks} locale={locale} />
