@@ -362,6 +362,9 @@ export default class Channel {
     this.currentRun = undefined;
     this.isConnecting$.next(false);
     this.currentUserMessageId = undefined;
+    // F-020 AC10: converge any tool-call still in flight to `cancelled` — its `tool_call.complete` frame
+    // will never arrive now that the run is aborted, so it must not linger as `running`.
+    this.conversation$.next(this.conversation$.value.cancelInFlightToolCalls());
   }
 
   public close(): void {

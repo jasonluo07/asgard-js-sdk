@@ -22,6 +22,13 @@ const ITEMS: ToolCallItemData[] = [
     status: 'completed',
     variant: 'generic',
   },
+  {
+    id: 'cancelled',
+    label: 'Bash（停止生成時中止 → cancelled）',
+    status: 'cancelled',
+    variant: 'bash',
+    initial: { toolsetName: '', toolName: 'Bash', parameter: { command: 'sleep 30' } },
+  },
 ];
 
 const LOCALES: Locale[] = ['en-US', 'ja-JP', 'zh-TW'];

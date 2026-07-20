@@ -139,6 +139,11 @@
   color: #faad14;
 }
 
+// F-020 AC10 — cancelled (stop-generation force-settle): muted, neither success nor error.
+.tool_call_item__status_icon--cancelled {
+  color: #8c8c8c;
+}
+
 .tool_call_item__status_icon_spin {
   animation: tool_call_spin 1s linear infinite;
 }

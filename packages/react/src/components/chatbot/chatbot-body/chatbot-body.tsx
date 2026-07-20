@@ -79,7 +79,11 @@ function groupMessages(messages: ConversationMessage[]): MessageGroup[] {
 // Convert tool-call message to ToolCallItemData
 function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Locale): ToolCallItemData {
   let status: ToolCallStatus = 'pending';
-  if (toolCall.isComplete) {
+  if (toolCall.isCancelled) {
+    // F-020 AC10 — a stop-generation force-settled this call before its terminal frame; show it as
+    // cancelled rather than a success `completed` or a lingering `pending` spinner.
+    status = 'cancelled';
+  } else if (toolCall.isComplete) {
     // F-009 — drive the error status from the backend `isError` flag (covers native / platform /
     // general uniformly); keep the legacy `result.error` heuristic as a fallback for old data.
     status = toolCall.isError || toolCall.result?.error ? 'error' : 'completed';

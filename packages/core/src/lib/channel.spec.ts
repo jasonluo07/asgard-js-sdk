@@ -229,7 +229,7 @@ describe('Channel — stop generation (UC-017 / EXT-2)', () => {
     expect(unsubscribe).toHaveBeenCalledTimes(1); // run aborted
     const last = states[states.length - 1];
     expect(last.isConnecting).toBe(false); // input released
-    expect(last.conversation.messages.has('a1')).toBe(true); // partial reply kept
+    expect(last.conversation.messages?.has('a1')).toBe(true); // partial reply kept
 
     channel.close();
   });

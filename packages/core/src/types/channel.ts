@@ -95,6 +95,12 @@ export type ConversationToolCallMessage = {
   /** Backend-reported failure flag carried from `tool_call.complete` (F-009); absent until complete. */
   isError?: boolean;
   /**
+   * Set when a still-running tool-call is force-settled by a user-initiated stop-generation (F-020 AC10):
+   * the run was aborted before this call's `tool_call.complete` arrived, so it converges to `cancelled`
+   * instead of lingering as `running`. Never set by a real terminal frame.
+   */
+  isCancelled?: boolean;
+  /**
    * Structured result sidecar carried from `tool_call.complete` (F-010); the replay-safe source for
    * `TaskCreate` / `TaskUpdate` accumulation (id / status), read by `reduceTaskEvents`.
    */

@@ -49,6 +49,24 @@ function CircleAlertIcon({ className }: { className?: string }): ReactNode {
   );
 }
 
+// `cancelled` (F-020 AC10) = CircleSlash (muted) — a stop-generation force-settled this call.
+function CircleSlashIcon({ className }: { className?: string }): ReactNode {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="9" x2="15" y1="15" y2="9" />
+    </svg>
+  );
+}
+
 function CopyIcon({ className }: { className?: string }): ReactNode {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -183,7 +201,7 @@ function VariantIcon({ variant, className }: { variant: ToolCallVariant; classNa
 }
 
 // Types
-export type ToolCallStatus = 'pending' | 'completed' | 'error';
+export type ToolCallStatus = 'pending' | 'completed' | 'error' | 'cancelled';
 
 export interface ToolCallItemData {
   id: string;
@@ -442,6 +460,8 @@ function StatusIcon({ status }: { status: ToolCallStatus }): ReactNode {
       return null;
     case 'error':
       return <CircleAlertIcon className={clsx(iconClass, styles['tool_call_item__status_icon--error'])} />;
+    case 'cancelled':
+      return <CircleSlashIcon className={clsx(iconClass, styles['tool_call_item__status_icon--cancelled'])} />;
     case 'pending':
     default:
       return (
