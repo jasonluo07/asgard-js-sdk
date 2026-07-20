@@ -275,6 +275,17 @@ export interface ChannelTitleUpdateEventData {
   title: string | null;
 }
 
+/**
+ * `asgard.sandbox.launch` / `asgard.sandbox.ready` — the backend cold-start signals for a compute
+ * sandbox (F-018). Shape aligns with asgard-sdk-go `GenericBotSseEventFactSandbox{Launch,Ready}`.
+ * Consumed by the sandbox-phase store that feeds the Launch HUD; carried on the run stream (replayed
+ * on rejoin, so the derived phase is replay-safe).
+ */
+export interface SandboxEventData {
+  sandboxName: string;
+  blueprintName: string;
+}
+
 export interface Fact<Type extends EventType> {
   runInit: null;
   runDone: null;
@@ -293,6 +304,8 @@ export interface Fact<Type extends EventType> {
   subagentStart: IsEqual<Type, EventType.SUBAGENT_START, SubagentStartEventData>;
   subagentComplete: IsEqual<Type, EventType.SUBAGENT_COMPLETE, SubagentCompleteEventData>;
   channelTitleUpdate: IsEqual<Type, EventType.CHANNEL_TITLE_UPDATE, ChannelTitleUpdateEventData>;
+  sandboxLaunch: IsEqual<Type, EventType.SANDBOX_LAUNCH, SandboxEventData>;
+  sandboxReady: IsEqual<Type, EventType.SANDBOX_READY, SandboxEventData>;
 }
 
 export interface SseResponse<Type extends EventType> {

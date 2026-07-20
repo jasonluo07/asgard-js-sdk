@@ -1,0 +1,165 @@
+// F-018 SandboxLaunchHud — the cold-start "Sandbox 啟動中" HUD. Grid (chip-scan) variant only.
+// Theme via `--asg-color-*` CSS variables; single accent (`--asg-color-primary`); honors
+// prefers-reduced-motion. Ported from the pinned prototype `SandboxLaunchOverlay` (@ aa0899d).
+
+// absolute (never fixed) — scoped inside the SDK chat view (ChatbotContainer is position:relative),
+// only overlays the bottom-right of the SDK area, never intrudes on the host page's viewport coords.
+.sandbox_hud {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  pointer-events: none; // passive HUD: never blocks clicks
+}
+
+.sandbox_hud__card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.85rem 0.45rem 0.5rem; // single row → compact
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--asg-color-surface, #1f1f1f) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--asg-color-primary, #1677ff) 34%, var(--asg-color-border, #434343));
+  box-shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.55),
+    0 0 24px -6px color-mix(in srgb, var(--asg-color-primary, #1677ff) 45%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--asg-color-primary, #1677ff) 6%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  animation: sandbox_hud_in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.sandbox_hud__card.is_ready {
+  border-color: color-mix(in srgb, var(--asg-color-primary, #1677ff) 60%, transparent);
+  box-shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.55),
+    0 0 34px -4px color-mix(in srgb, var(--asg-color-primary, #1677ff) 70%, transparent);
+}
+
+// Exit: a gentler fade-out, slower than the entrance (duration must match the hook's exitMs).
+.sandbox_hud__card.is_leaving {
+  animation: sandbox_hud_out 600ms ease forwards;
+}
+
+@keyframes sandbox_hud_in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sandbox_hud_out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+}
+
+.sandbox_hud__canvas {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
+// ready: brighten the whole glyph, a sense of "locking in".
+.sandbox_hud__canvas.is_ready {
+  filter: brightness(1.35) saturate(1.15);
+  transition: filter 200ms ease;
+}
+
+// grid (chip boot-scan): 4×4 fixed 3px cells + 2px gap = 18px block, centered in the 28px canvas.
+.sandbox_hud__grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 3px);
+  grid-template-rows: repeat(4, 3px);
+  gap: 2px;
+  place-content: center;
+}
+
+.sandbox_hud__cell {
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--asg-color-primary, #1677ff) 20%, transparent);
+  animation: sandbox_hud_sweep 1.5s ease-in-out infinite;
+  animation-delay: calc(var(--sandbox-hud-d) * 0.09s);
+}
+
+@keyframes sandbox_hud_sweep {
+  0%,
+  70%,
+  100% {
+    background: color-mix(in srgb, var(--asg-color-primary, #1677ff) 16%, transparent);
+    box-shadow: none;
+  }
+
+  20% {
+    background: var(--asg-color-primary, #1677ff);
+    box-shadow: 0 0 6px 0 color-mix(in srgb, var(--asg-color-primary, #1677ff) 70%, transparent);
+  }
+}
+
+// ready: a single ring expanding outward.
+.sandbox_hud__ready_ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1.5px solid var(--asg-color-primary, #1677ff);
+  animation: sandbox_hud_ready 700ms ease-out forwards;
+}
+
+@keyframes sandbox_hud_ready {
+  0% {
+    transform: rotate(45deg) scale(0.5);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: rotate(45deg) scale(2.4);
+    opacity: 0;
+  }
+}
+
+.sandbox_hud__label {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--asg-color-text-primary, #ffffff);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+// Accessibility: reduced motion → static composite + no scan / no ring pulse; exit is a plain opacity fade.
+@media (prefers-reduced-motion: reduce) {
+  .sandbox_hud__card {
+    animation: none;
+  }
+
+  .sandbox_hud__card.is_leaving {
+    animation: sandbox_hud_fade_out 500ms linear forwards;
+  }
+
+  @keyframes sandbox_hud_fade_out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .sandbox_hud__cell,
+  .sandbox_hud__ready_ring {
+    animation: none;
+  }
+
+  .sandbox_hud__cell {
+    background: color-mix(in srgb, var(--asg-color-primary, #1677ff) 35%, transparent);
+  }
+}

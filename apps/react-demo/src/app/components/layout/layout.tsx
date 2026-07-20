@@ -40,6 +40,7 @@ const navItems = [
   { to: '/transcript-replay', label: 'Transcript Replay (F-014)' },
   { to: '/thinking', label: 'Thinking (F-001)' },
   { to: '/run-indicator', label: 'Run Indicator (F-003)' },
+  { to: '/sandbox-hud', label: 'Sandbox Launch HUD (F-018)' },
   { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
   { to: '/tool-call-i18n', label: 'Tool-Call i18n (F-005)' },
   { to: '/tool-call-grouping', label: 'Tool-Call Grouping (F-006)' },

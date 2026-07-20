@@ -31,6 +31,11 @@ export enum EventType {
   SUBAGENT_COMPLETE = 'asgard.subagent.complete',
   // Channel title push — reserved for F-016 to consume; enum aligned with asgard-core here (F-014).
   CHANNEL_TITLE_UPDATE = 'asgard.channel.title.update',
+  // Sandbox cold-start lifecycle (F-018) — `launch` = the backend is provisioning a compute sandbox,
+  // `ready` = it is up. Drives the sandbox-phase store consumed by the Launch HUD; independent of the
+  // run seam / RunningIndicator. Fact shape aligns with asgard-sdk-go `{ sandboxName, blueprintName }`.
+  SANDBOX_LAUNCH = 'asgard.sandbox.launch',
+  SANDBOX_READY = 'asgard.sandbox.ready',
   DONE = 'asgard.run.done',
   ERROR = 'asgard.run.error',
 }

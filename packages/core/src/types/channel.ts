@@ -8,6 +8,13 @@ import { Task } from './task';
 
 export type ObserverOrNext<T> = Partial<Observer<T>> | ((value: T) => void);
 
+/**
+ * Sandbox cold-start phase derived from the last sandbox event (F-018): `launching` after
+ * `sandbox.launch`, `ready` after `sandbox.ready`, `idle` with no sandbox event (also reset on run
+ * init / error). Feeds the Launch HUD latch on the react side.
+ */
+export type SandboxPhase = 'idle' | 'launching' | 'ready';
+
 export interface ChannelStates {
   isConnecting: boolean;
   conversation: Conversation;
@@ -17,6 +24,8 @@ export interface ChannelStates {
   subagents: Subagent[];
   /** Current channel title — seeded from metadata + updated by `title.update` (F-016). `null` = unnamed. */
   channelTitle: string | null;
+  /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
+  sandboxPhase: SandboxPhase;
 }
 
 export interface ChannelConfig {

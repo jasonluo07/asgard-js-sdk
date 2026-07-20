@@ -206,6 +206,16 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // F-018 sandbox launch HUD demo — scoped channel. Streams sandbox.launch → (gap) → sandbox.ready
+  // around a normal message run. A "cold" send holds `launch` >1s so the HUD floats in then rings out
+  // on ready; a "warm" send reaches ready <1s so the HUD stays silent. The run seam indicator lights the
+  // whole time, demonstrating the two are independent and can coexist.
+  if (customChannelId === 'sandbox-hud-demo') {
+    await handleSandboxHudMock(res, payload);
+
+    return;
+  }
+
   // All-features showcase — scoped channel. One run streams every roadmap feature through the real
   // <Chatbot> at once: run indicator (F-003), channel title update (F-016/017), thinking (F-001),
   // tool-call variants + grouping + diff + isError + expand (F-004/006/007/008/009), the docked Task
@@ -574,6 +584,63 @@ async function handleRunIndicatorMock(res: ServerResponse, payload: ParsedPayloa
   // Complete→done tail — the connection lingers after the last message.complete (R4).
   await sleep(2200);
 
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+function sandboxFact(kind: 'launch' | 'ready'): Record<string, unknown> {
+  const factKey = kind === 'launch' ? 'sandboxLaunch' : 'sandboxReady';
+
+  return { ...emptyFact(), [factKey]: { sandboxName: 'sbx-demo-1', blueprintName: 'python-3.12' } };
+}
+
+// F-018 sandbox launch HUD demo. `launch` → gap → `ready` wrapped around a normal message run. A "warm"
+// send (text contains 熱 / warm) reaches ready in ~300ms so the HUD never crosses the 1s threshold and
+// stays silent; any other ("cold") send holds launch ~2.6s so the HUD floats in, then rings out on ready.
+async function handleSandboxHudMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId: 'sandbox-hud-demo',
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const text = payload.text ?? '';
+  const warm = text.includes('熱') || text.toLowerCase().includes('warm');
+  const msgId = randomUUID();
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  // Sandbox starts provisioning.
+  writeEvent(res, { ...header, eventType: 'asgard.sandbox.launch', fact: sandboxFact('launch') });
+
+  // Warm: ready before the 1s threshold (HUD stays silent). Cold: held well past it (HUD shows).
+  await sleep(warm ? 300 : 2600);
+  writeEvent(res, { ...header, eventType: 'asgard.sandbox.ready', fact: sandboxFact('ready') });
+
+  // A short answer once the sandbox is up, so there is chat content and the run seam indicator lights
+  // alongside (or independently of) the HUD.
+  const chunks = warm
+    ? ['熱啟動：', 'sandbox 已就緒，', 'HUD 全程靜音。']
+    : ['冷啟動：', 'sandbox 花了點時間開機，', '右下角浮出啟動中 HUD，', 'ready 後播收尾拍再淡出。'];
+  writeEvent(res, messageFrame(header, 'asgard.message.start', msgId, replyTo, '', TEXT_TEMPLATE('')));
+  for (const chunk of chunks) {
+    await sleep(200);
+    writeEvent(res, messageFrame(header, 'asgard.message.delta', msgId, replyTo, chunk, null));
+  }
+
+  const full = chunks.join('');
+  await sleep(120);
+  writeEvent(res, messageFrame(header, 'asgard.message.complete', msgId, replyTo, full, TEXT_TEMPLATE(full)));
+
+  await sleep(300);
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }
