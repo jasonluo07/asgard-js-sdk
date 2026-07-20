@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const navItems = [
   { to: '/', label: 'Home' },
-  { to: '/all-features', label: '★ All-Features Showcase (F-001~F-017)' },
+  { to: '/all-features', label: '★ All-Features Showcase (F-001~F-018)' },
   { to: '/all-features-wide', label: '★ All-Features Showcase — Wide' },
   { to: '/templates', label: 'Templates' },
   { to: '/data-insight-style', label: 'Data Insight Style' },

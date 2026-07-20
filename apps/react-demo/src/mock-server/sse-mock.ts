@@ -217,7 +217,7 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   }
 
   // All-features showcase — scoped channel. One run streams every roadmap feature through the real
-  // <Chatbot> at once: run indicator (F-003), channel title update (F-016/017), thinking (F-001),
+  // <Chatbot> at once: run indicator (F-003), sandbox Launch HUD (F-018), channel title update (F-016/017), thinking (F-001),
   // tool-call variants + grouping + diff + isError + expand (F-004/006/007/008/009), the docked Task
   // (F-010) and Subagent (F-012) panels, and the assembled answer (F-011). Auto-plays on the mount
   // RESET_CHANNEL; a later plain send gets a short reply so the page stays interactive.
@@ -1033,6 +1033,11 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   // run.init → seam indicator lights, input disabled (F-003).
   await emit({ ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
 
+  // sandbox cold-start (F-018): launch now; ready arrives after the thinking block (well past the 1s
+  // threshold), so the Launch HUD floats into the chat view's bottom-right during the intro then rings
+  // out — independent of, and coexisting with, the run seam indicator.
+  await emit({ ...header, eventType: 'asgard.sandbox.launch', fact: sandboxFact('launch') }, 200);
+
   // channel title seed via live update (F-016 store → F-017 title bar).
   await emit(titleUpdateFrame(header, 'Bolzen 法蘭螺栓急單備料查詢'), 200);
 
@@ -1049,6 +1054,9 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     thinkingFrame(header, 'asgard.message.thinking.complete', think, replyTo, SHOWCASE_THINKING.join('')),
     160,
   );
+
+  // sandbox ready (F-018) → HUD plays the "Sandbox 就緒" beat then fades out.
+  await emit({ ...header, eventType: 'asgard.sandbox.ready', fact: sandboxFact('ready') }, 200);
 
   // General tool-call group (toolsetName set + reason → label from reason; F-004/006/008).
   const gp = 'ag-material-procurement-tools';
