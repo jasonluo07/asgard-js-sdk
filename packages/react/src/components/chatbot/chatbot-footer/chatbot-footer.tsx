@@ -12,6 +12,7 @@ import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import styles from './chatbot-footer.module.scss';
 import SendSvg from '../../../icons/send.svg?react';
+import StopSvg from '../../../icons/stop.svg?react';
 import GallerySvg from '../../../icons/gallery.svg?react';
 import DownloadSvg from '../../../icons/download.svg?react';
 import DocumentSvg from '../../../icons/document.svg?react';
@@ -44,6 +45,7 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
   const {
     sendMessage,
     isConnecting,
+    stopGeneration,
     inputPlaceholder,
     client,
     customChannelId,
@@ -921,7 +923,16 @@ export function ChatbotFooter({ footerEndActions }: ChatbotFooterProps = {}): Re
           onCompositionEnd={() => setIsComposing(false)}
         />
         <div className={styles.send_zone}>
-          {value || uploadableImages.length > 0 || uploadableDocuments.length > 0 ? (
+          {isConnecting && stopGeneration ? (
+            <button
+              className={clsx(styles.chatbot_submit_button)}
+              style={chatbot.footer?.submitButton?.style}
+              onClick={stopGeneration}
+              aria-label="Stop generating"
+            >
+              <StopSvg />
+            </button>
+          ) : value || uploadableImages.length > 0 || uploadableDocuments.length > 0 ? (
             <button
               className={clsx(styles.chatbot_submit_button, disabled && styles.chatbot_submit_button__disabled)}
               style={chatbot.footer?.submitButton?.style}

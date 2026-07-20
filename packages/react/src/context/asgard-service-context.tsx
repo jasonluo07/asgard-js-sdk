@@ -45,6 +45,8 @@ export interface AsgardServiceContextValue {
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
   closeChannel?: UseChannelReturn['closeChannel'];
+  /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
+  stopGeneration?: UseChannelReturn['stopGeneration'];
   replyToolCallConsents?: UseChannelReturn['replyToolCallConsents'];
   pendingConsent: ToolCallConsentEventData | null;
   botTypingPlaceholder?: string;
@@ -228,6 +230,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     sendMessage,
     resetChannel,
     closeChannel,
+    stopGeneration,
     replyToolCallConsents,
   } = useChannel({
     client,
@@ -303,6 +306,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
+      stopGeneration,
       replyToolCallConsents: wrappedReplyToolCallConsents,
       pendingConsent: conversation?.pendingConsent ?? null,
       botTypingPlaceholder,
@@ -334,6 +338,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       wrappedSendMessage,
       resetChannel,
       closeChannel,
+      stopGeneration,
       wrappedReplyToolCallConsents,
       botTypingPlaceholder,
       inputPlaceholder,

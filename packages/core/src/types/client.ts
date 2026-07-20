@@ -1,3 +1,4 @@
+import { Subscription } from 'rxjs';
 import { EventType, FetchSseAction } from '../constants/enum';
 import { SseResponse, ToolCallConsentAnswer } from './sse-response';
 import { ChannelMetadata } from './channel';
@@ -10,9 +11,13 @@ export interface ChannelHomeDownloadResult {
 }
 
 export interface IAsgardServiceClient {
-  fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void;
+  /**
+   * Start an SSE run. Returns the run's `Subscription`; unsubscribing it aborts the in-flight
+   * connection (used by user-initiated stop-generation). Callers that don't need to abort may ignore it.
+   */
+  fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Subscription;
   /** Cold-start transcript rejoin via GET /message/sse (F-014). Optional for backward compatibility. */
-  rejoinSse?(customChannelId: string, options?: FetchSseOptions): void;
+  rejoinSse?(customChannelId: string, options?: FetchSseOptions): Subscription;
   /**
    * Join-init existence + restore gate via `GET /channel/metadata` (F-015). Resolves to the metadata on
    * `200`, `null` on `404` (channel does not exist), and rejects on any other error. Optional for

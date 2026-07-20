@@ -41,6 +41,10 @@ export default class Channel {
   // lifecycle so RESPONSE_TOOL_CALL_CONSENT — fired after run.done — can echo
   // back the message id the bot is waiting on.
   private lastSentMessageId?: string;
+  // The in-flight SSE run's subscription. Held so a user-initiated stop-generation can abort the
+  // connection (unsubscribe → create-sse-observable teardown → AbortController.abort()). Cleared on
+  // every terminal (complete / error) and on stop.
+  private currentRun?: Subscription;
 
   private constructor(config: ChannelConfig) {
     if (!config.client) {
@@ -235,12 +239,14 @@ export default class Channel {
         options?.onSseError?.(err);
         this.isConnecting$.next(false);
         this.currentUserMessageId = undefined;
+        this.currentRun = undefined;
         reject(err);
       },
       onSseCompleted: (): void => {
         options?.onSseCompleted?.();
         this.isConnecting$.next(false);
         this.currentUserMessageId = undefined;
+        this.currentRun = undefined;
         resolve();
       },
     };
@@ -249,7 +255,7 @@ export default class Channel {
   private fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isConnecting$.next(true);
-      this.client.fetchSse(payload, this.buildRunHandlers(options, resolve, reject));
+      this.currentRun = this.client.fetchSse(payload, this.buildRunHandlers(options, resolve, reject));
     });
   }
 
@@ -268,7 +274,7 @@ export default class Channel {
       }
 
       this.isConnecting$.next(true);
-      this.client.rejoinSse(this.customChannelId, this.buildRunHandlers(options, resolve, reject));
+      this.currentRun = this.client.rejoinSse(this.customChannelId, this.buildRunHandlers(options, resolve, reject));
     });
   }
 
@@ -343,7 +349,24 @@ export default class Channel {
     );
   }
 
+  /**
+   * User-initiated stop-generation: abort the in-flight SSE run (if any) and release the input.
+   * Unsubscribing tears down the SSE observable → AbortController.abort() cuts the HTTP stream. The
+   * partial assistant message already received stays in the conversation (frozen, not deleted). A no-op
+   * when nothing is running.
+   */
+  public stopGeneration(): void {
+    if (!this.currentRun) return;
+
+    this.currentRun.unsubscribe();
+    this.currentRun = undefined;
+    this.isConnecting$.next(false);
+    this.currentUserMessageId = undefined;
+  }
+
   public close(): void {
+    this.currentRun?.unsubscribe();
+    this.currentRun = undefined;
     this.isConnecting$.complete();
     this.conversation$.complete();
     this.channelTitleSubject.complete();

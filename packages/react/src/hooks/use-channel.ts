@@ -59,6 +59,8 @@ export interface UseChannelReturn {
   ) => Promise<void>;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
+  /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
+  stopGeneration?: () => void;
   replyToolCallConsents?: (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']) => Promise<void>;
 }
 
@@ -317,6 +319,12 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, customMessageId, onSseMessage, onAuthError, onSseError, conversation],
   );
 
+  const stopGeneration = useCallback(() => {
+    // Abort the in-flight run; the channel flips isConnecting$ → false, which propagates to the
+    // isConnecting state via the states observer. The partial reply already received is kept.
+    channel?.stopGeneration();
+  }, [channel]);
+
   const replyToolCallConsents = useCallback(
     async (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']): Promise<void> => {
       if (client?.debugMode) {
@@ -454,6 +462,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             sendMessage,
             resetChannel,
             closeChannel,
+            stopGeneration,
             replyToolCallConsents,
           },
     [
@@ -468,6 +477,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       sendMessage,
       resetChannel,
       closeChannel,
+      stopGeneration,
       replyToolCallConsents,
     ],
   );

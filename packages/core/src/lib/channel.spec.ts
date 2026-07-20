@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { Subscription } from 'rxjs';
 import Channel from './channel';
 import Conversation from './conversation';
 import { EventType } from '../constants/enum';
@@ -183,6 +184,60 @@ describe('Channel — join restore (F-015)', () => {
     });
 
     expect(channel.getChannelTitle()).toBe('未命名前的標題');
+    channel.close();
+  });
+});
+
+// UC-017 / EXT-2 — user-initiated stop-generation. The run is held as a Subscription; stopGeneration
+// unsubscribes it (→ create-sse-observable teardown → AbortController.abort()) and releases the input,
+// while the partial reply already received stays in the conversation (frozen, not deleted).
+
+describe('Channel — stop generation (UC-017 / EXT-2)', () => {
+  it('aborts the in-flight run, releases isConnecting, and keeps the partial reply', async () => {
+    const run = new Subscription();
+    const unsubscribe = vi.spyOn(run, 'unsubscribe');
+    let captured: FetchSseOptions | undefined;
+
+    const states: ChannelStates[] = [];
+    const client = {
+      // Start the run but never emit a terminal → it stays in-flight until stopped.
+      fetchSse(_payload: FetchSsePayload, options?: FetchSseOptions): Subscription {
+        captured = options;
+        options?.onSseStart?.();
+
+        return run;
+      },
+    } as unknown as IAsgardServiceClient;
+
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: (s: ChannelStates) => states.push(s),
+    });
+
+    channel.sendMessage({ text: 'hi' });
+    // A partial assistant message arrives before the user stops.
+    captured?.onSseMessage?.(messageEvent('a1', '部分回覆'));
+    await Promise.resolve();
+
+    expect(states[states.length - 1].isConnecting).toBe(true);
+
+    channel.stopGeneration();
+    await Promise.resolve();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1); // run aborted
+    const last = states[states.length - 1];
+    expect(last.isConnecting).toBe(false); // input released
+    expect(last.conversation.messages.has('a1')).toBe(true); // partial reply kept
+
+    channel.close();
+  });
+
+  it('is a no-op when nothing is running', () => {
+    const channel = makeChannel([]);
+
+    expect(() => channel.stopGeneration()).not.toThrow();
     channel.close();
   });
 });
