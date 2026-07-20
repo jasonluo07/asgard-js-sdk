@@ -11,7 +11,7 @@ import {
 } from '../types';
 import { HttpError } from '../types/http-error';
 import { createSseObservable } from './create-sse-observable';
-import { concatMap, delay, Observable, of, Subject, takeUntil } from 'rxjs';
+import { concatMap, delay, finalize, Observable, of, Subject, Subscription, takeUntil } from 'rxjs';
 import { EventType } from '../constants/enum';
 import { EventEmitter } from './event-emitter';
 
@@ -110,11 +110,11 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     }
   }
 
-  fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
+  fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Subscription {
     options?.onSseStart?.();
     this.inFlight += 1;
 
-    this.runSse(
+    return this.runSse(
       createSseObservable({
         apiKey: this.apiKey,
         endpoint: this.endpoint,
@@ -131,14 +131,14 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
    * `Last-Event-ID` replays the collapsed history (`message.user` + self-sufficient `*.complete`),
    * assembled through the same reducer. Reuses the F-002 native Last-Event-ID transport (no re-POST).
    */
-  rejoinSse(customChannelId: string, options?: FetchSseOptions): void {
+  rejoinSse(customChannelId: string, options?: FetchSseOptions): Subscription {
     options?.onSseStart?.();
     this.inFlight += 1;
 
     const url = new URL(this.endpoint);
     url.searchParams.set('custom_channel_id', customChannelId);
 
-    this.runSse(
+    return this.runSse(
       createSseObservable({
         apiKey: this.apiKey,
         endpoint: url.toString(),
@@ -199,14 +199,17 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     };
   }
 
-  private runSse(observable: Observable<SseResponse<EventType>>, options?: FetchSseOptions): void {
-    observable
+  private runSse(observable: Observable<SseResponse<EventType>>, options?: FetchSseOptions): Subscription {
+    return observable
       .pipe(
         // No RxJS-level retry: re-subscribing would re-POST and the backend would re-dispatch a duplicate
         // run. Mid-stream resume is the library's job (native Last-Event-ID reconnect in
         // create-sse-observable); a no-cursor failure surfaces via `error` below.
         concatMap(event => of(event).pipe(delay(options?.delayTime ?? 50))),
         takeUntil(this.destroy$),
+        // Settle the run accounting on every termination path — complete, error, AND a user-initiated
+        // unsubscribe (stop-generation aborts the connection without a terminal event).
+        finalize(() => this.onRunSettled()),
       )
       .subscribe({
         next: response => {
@@ -219,13 +222,9 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         },
         error: error => {
           if (!this.detached) options?.onSseError?.(error);
-
-          this.onRunSettled();
         },
         complete: () => {
           if (!this.detached) options?.onSseCompleted?.();
-
-          this.onRunSettled();
         },
       });
   }
