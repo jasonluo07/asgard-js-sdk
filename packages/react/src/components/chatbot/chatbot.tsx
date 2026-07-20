@@ -184,7 +184,8 @@ interface ChatbotProps extends AsgardTemplateContextValue {
 
 export interface ChatbotRef {
   serviceContext?: AsgardServiceContextValue;
-  setInputValue?: (value: string) => void;
+  /** 字串 → 取代 textarea；`(current) => next` → 依當前草稿更新（例：`c => c ? c + "\n" + t : t` 換行接續）。 */
+  setInputValue?: (value: string | ((current: string) => string)) => void;
 }
 
 export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: ForwardedRef<ChatbotRef>): ReactNode {

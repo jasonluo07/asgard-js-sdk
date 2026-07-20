@@ -66,10 +66,14 @@ export interface AsgardServiceContextValue {
   programmaticScrollToBottom: (behavior?: ScrollBehavior) => void;
   /** 滾動容器的 ref */
   scrollContainerRef: RefObject<HTMLDivElement | null>;
-  /** 外部設定 textarea 文字的值（透過 ref 呼叫） */
-  pendingInputValue: string | null;
-  /** 設定待填入 textarea 的文字 */
-  setPendingInputValue: (value: string | null) => void;
+  /**
+   * 外部設定 textarea 文字的值（透過 ref 呼叫）。可為字串（取代）或 `(current) => next` 更新函式（依當前
+   * 草稿計算，供「換行接續」等情境）——footer 以 `setValue(pendingInputValue)` 套用，函式即走 React
+   * functional update。
+   */
+  pendingInputValue: string | ((current: string) => string) | null;
+  /** 設定待填入 textarea 的文字（字串取代 / 函式依當前草稿更新） */
+  setPendingInputValue: (value: string | ((current: string) => string) | null) => void;
 }
 
 function noop(): void {
@@ -182,8 +186,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
   const messageBoxBottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // 外部設定 textarea 文字
-  const [pendingInputValue, setPendingInputValue] = useState<string | null>(null);
+  // 外部設定 textarea 文字（字串取代 / 函式依當前草稿更新）
+  const [pendingInputValue, setPendingInputValue] = useState<string | ((current: string) => string) | null>(null);
 
   // 滾動跟隨狀態管理
   const [isFollowingLatest, setIsFollowingLatest] = useState(true);
@@ -358,7 +362,15 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
   useImperativeHandle(parentRef, () => {
     return {
       serviceContext: contextValue,
-      setInputValue: (value: string): void => setPendingInputValue(value),
+      // 字串 → 取代；函式 → 依當前草稿更新（換行接續）。存函式時用 updater 回傳它，避免 React 把它當
+      // setState 的 updater 立即執行掉；原封存進 pendingInputValue，由 footer 的 setValue 套用。
+      setInputValue: (value: string | ((current: string) => string)): void => {
+        if (typeof value === 'function') {
+          setPendingInputValue((): ((current: string) => string) => value);
+        } else {
+          setPendingInputValue(value);
+        }
+      },
     };
   });
 
