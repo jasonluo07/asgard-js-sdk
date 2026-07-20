@@ -129,6 +129,13 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   renderMenu?: () => ReactNode;
 
   /**
+   * When true, the built-in docked SubagentList / TaskList inside the thread are not rendered, letting
+   * the consumer place the run-chrome itself (e.g. pinned above the composer via `renderMenu`), derived
+   * from the same conversation with `deriveTasks` / `deriveSubagents`. Defaults to false.
+   */
+  hideRunChrome?: boolean;
+
+  /**
    * Extra action nodes rendered at the end of the footer input row, after the
    * send/mic button. Pure additive slot — built-in textarea / attachment
    * buttons / send / mic remain unchanged. Use it to add buttons such as
@@ -231,6 +238,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     onChannelReady,
     renderHeader,
     renderMenu,
+    hideRunChrome,
     footerEndActions,
     renderFooter,
     renderToolCallGroup,
@@ -384,7 +392,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             <div className={styles.chatbot__thread_area}>
               {/* Channel-title row at the thread top — distinct from the bot-name ChatbotHeader (F-017). */}
               <ChannelTitle />
-              <ChatbotBody />
+              <ChatbotBody hideRunChrome={hideRunChrome} />
             </div>
             {renderMenu?.()}
             {/* Footer must live inside the template provider so its docked TaskList / SubagentList
