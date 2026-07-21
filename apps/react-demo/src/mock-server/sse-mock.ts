@@ -971,6 +971,53 @@ function subagentCompleteFrame(header: CommonHeader, data: Record<string, unknow
   return { ...header, eventType: 'asgard.subagent.complete', fact: { ...emptyFact(), subagentComplete: data } };
 }
 
+// BUG-001 — a subagent's own message / thinking frames carry the spawning Agent call's `toolUseId` as
+// `parentToolUseId`. They must NOT surface in the main chat view. The showcase streams them so the fix is
+// exercised live: without the guard the internal coordination text (and the system-prompt tail below) leak.
+function subagentThinkingCompleteFrame(header: CommonHeader, parentToolUseId: string, text: string): object {
+  return {
+    ...header,
+    eventType: 'asgard.message.thinking.complete',
+    fact: {
+      ...emptyFact(),
+      messageThinkingComplete: {
+        message: {
+          messageId: randomUUID(),
+          parentToolUseId,
+          replyToCustomMessageId: '',
+          text,
+          payload: null,
+          isDebug: false,
+          idx: null,
+          template: null,
+        },
+      },
+    },
+  };
+}
+
+function subagentMessageCompleteFrame(header: CommonHeader, parentToolUseId: string, text: string): object {
+  return {
+    ...header,
+    eventType: 'asgard.message.complete',
+    fact: {
+      ...emptyFact(),
+      messageComplete: {
+        message: {
+          messageId: randomUUID(),
+          parentToolUseId,
+          replyToCustomMessageId: '',
+          text,
+          payload: null,
+          isDebug: false,
+          idx: null,
+          template: TEXT_TEMPLATE(text),
+        },
+      },
+    },
+  };
+}
+
 function titleUpdateFrame(header: CommonHeader, title: string | null): object {
   return {
     ...header,
@@ -1234,6 +1281,18 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
         { ok: true },
         { ids: { parentToolUseId: parent } },
       ),
+    );
+    // BUG-001 — the subagent emits its own thinking + message (parentToolUseId set). Both must stay hidden
+    // from the main chat view; the panel keeps showing the subagent, and only its summary surfaces there.
+    await emit(subagentThinkingCompleteFrame(header, parent, `（子代理內部推理）${desc}`), 150);
+    await emit(
+      subagentMessageCompleteFrame(
+        header,
+        parent,
+        `${summary}\n\n請主代理人在主線程呼叫 issue_wire_po。` +
+          'If this output may be shown to the end user, they prefer a concise summary.',
+      ),
+      150,
     );
     await emit(
       subagentCompleteFrame(header, {

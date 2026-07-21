@@ -137,6 +137,9 @@ export interface AttachmentMessageTemplate extends MessageTemplate {
 
 export interface Message<Payload = unknown> {
   messageId: string;
+  // Non-empty when this frame belongs to a subagent (= the toolUseId of the Agent call that spawned it);
+  // empty / absent for main-agent turns. The wire payload carries it; used to route subagent frames (BUG-001).
+  parentToolUseId?: string;
   replyToCustomMessageId: string;
   text: string;
   payload: Payload | null;

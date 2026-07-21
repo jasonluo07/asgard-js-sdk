@@ -221,6 +221,61 @@ describe('Conversation — extended-thinking assembly (F-001)', () => {
   });
 });
 
+// BUG-001 — subagent message / thinking frames carry a non-empty `parentToolUseId` (the toolUseId of the
+// Agent call that spawned them). The reducer must NOT materialize these into the main conversation: at this
+// stage they are hidden entirely (accumulating them into a subagent sub-conversation is backlog, out of scope).
+function subagentMessageEvent(
+  eventType: MessageEventType,
+  messageId: string,
+  text: string,
+  parentToolUseId: string,
+): SseResponse<EventType> {
+  return {
+    eventType,
+    requestId: 'req-1',
+    traceId: 'trace-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { [FACT_KEY[eventType]]: { message: { messageId, text, parentToolUseId } } },
+  } as unknown as SseResponse<EventType>;
+}
+
+describe('Conversation — subagent message/thinking are hidden (BUG-001)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('drops a subagent message-complete frame (non-empty parentToolUseId)', () => {
+    const conv = empty().onMessage(
+      subagentMessageEvent(EventType.MESSAGE_COMPLETE, 'sub-1', 'internal coordination', 'toolu_parent'),
+    );
+    expect(getBot(conv, 'sub-1')).toBeUndefined();
+    expect(conv.messages?.size).toBe(0);
+  });
+
+  it('drops subagent message start / delta frames (never lazy-created)', () => {
+    const conv = empty()
+      .onMessage(subagentMessageEvent(EventType.MESSAGE_START, 'sub-2', '', 'toolu_parent'))
+      .onMessage(subagentMessageEvent(EventType.MESSAGE_DELTA, 'sub-2', 'partial', 'toolu_parent'));
+    expect(conv.messages?.size).toBe(0);
+  });
+
+  it('drops a subagent thinking-complete frame (non-empty parentToolUseId)', () => {
+    const conv = empty().onMessage(
+      subagentMessageEvent(EventType.MESSAGE_THINKING_COMPLETE, 'sub-3', 'private reasoning', 'toolu_parent'),
+    );
+    expect(conv.messages?.size).toBe(0);
+  });
+
+  it('keeps main-agent messages while hiding interleaved subagent messages', () => {
+    const conv = empty()
+      .onMessage(messageEvent(EventType.MESSAGE_COMPLETE, 'main-1', 'visible answer'))
+      .onMessage(subagentMessageEvent(EventType.MESSAGE_COMPLETE, 'sub-4', 'hidden', 'toolu_parent'));
+    expect(getBot(conv, 'main-1')).toMatchObject({ isTyping: false, message: { text: 'visible answer' } });
+    expect(getBot(conv, 'sub-4')).toBeUndefined();
+    expect(conv.messages?.size).toBe(1);
+  });
+});
+
 // F-009 — tool-call failure detection: `onToolCallComplete` carries the backend `isError` flag onto the
 // tool-call message (omitempty → absent means not-failed). The react layer reads it for the error status.
 

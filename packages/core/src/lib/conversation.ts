@@ -115,6 +115,9 @@ export default class Conversation implements IConversation {
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
     const message = response.fact.messageStart.message;
 
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     // Terminal guard: a completed message stays put; a late `start` must not blank it into a typing bubble.
     if (this.isTerminalBot(this.messages?.get(message.messageId))) return this;
 
@@ -137,6 +140,10 @@ export default class Conversation implements IConversation {
 
   onMessageDelta(response: SseResponse<EventType.MESSAGE_DELTA>): Conversation {
     const message = response.fact.messageDelta.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     const currentMessage = this.messages?.get(message.messageId);
 
     // Terminal guard: a late `delta` after `complete` must not flip the message back into typing (UC-018).
@@ -165,6 +172,9 @@ export default class Conversation implements IConversation {
   onMessageComplete(response: SseResponse<EventType.MESSAGE_COMPLETE>): Conversation {
     const message = response.fact.messageComplete.message;
 
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     const messages = new Map(this.messages);
 
     const currentMessage = messages.get(message.messageId);
@@ -187,6 +197,9 @@ export default class Conversation implements IConversation {
   onThinkingStart(response: SseResponse<EventType.MESSAGE_THINKING_START>): Conversation {
     const message = response.fact.messageThinkingStart.message;
 
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     // Terminal guard: a completed thinking block stays put; a late `start` must not reopen it (F-011).
     if (this.isTerminalThinking(this.messages?.get(message.messageId))) return this;
 
@@ -206,6 +219,10 @@ export default class Conversation implements IConversation {
 
   onThinkingDelta(response: SseResponse<EventType.MESSAGE_THINKING_DELTA>): Conversation {
     const message = response.fact.messageThinkingDelta.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     const currentMessage = this.messages?.get(message.messageId);
 
     // Terminal guard: a late `delta` after `complete` must not flip the block back into streaming (F-011).
@@ -230,6 +247,10 @@ export default class Conversation implements IConversation {
 
   onThinkingComplete(response: SseResponse<EventType.MESSAGE_THINKING_COMPLETE>): Conversation {
     const message = response.fact.messageThinkingComplete.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
     const currentMessage = this.messages?.get(message.messageId);
     const currentThinking = currentMessage?.type === 'thinking' ? currentMessage : undefined;
 
