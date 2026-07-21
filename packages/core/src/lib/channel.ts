@@ -6,6 +6,7 @@ import {
   FetchSseOptions,
   FetchSsePayload,
   IAsgardServiceClient,
+  LaunchedSandbox,
   ObserverOrNext,
   SandboxPhase,
   Subagent,
@@ -16,6 +17,7 @@ import {
 import { FetchSseAction, EventType } from '../constants/enum';
 import Conversation from './conversation';
 import { createDerivedStores, DerivedStores } from './derived-stores';
+import { reconcileLaunched } from './launched-sandboxes';
 
 export default class Channel {
   private client: IAsgardServiceClient;
@@ -27,6 +29,10 @@ export default class Channel {
   private conversation$: BehaviorSubject<Conversation>;
   private channelTitleSubject: BehaviorSubject<string | null>;
   private sandboxPhaseSubject: BehaviorSubject<SandboxPhase>;
+  private launchedSandboxesSubject: BehaviorSubject<LaunchedSandbox[]>;
+  // Sandboxes hinted live by an `asgard.sandbox.launch` frame but not yet confirmed by metadata (F-019).
+  // Never merged into the live list directly — cleared once metadata confirms (or held until it does).
+  private pendingLaunches: string[] = [];
   private derivedStores: DerivedStores;
   private statesObserver?: ObserverOrNext<ChannelStates>;
   private statesSubscription?: Subscription;
@@ -39,6 +45,8 @@ export default class Channel {
   public readonly channelTitle$: Observable<string | null>;
   /** Reactive sandbox cold-start phase store (F-018): per-slice, derived from the last sandbox event; replay-safe. */
   public readonly sandboxPhase$: Observable<SandboxPhase>;
+  /** Reactive live-sandbox list store (F-019): authoritative from `/channel/metadata`, per-slice; replay-safe. */
+  public readonly launchedSandboxes$: Observable<LaunchedSandbox[]>;
   private currentUserMessageId?: string;
   // The most-recently-sent user message id. Unlike currentUserMessageId (which
   // is cleared once a traceId is attached), this is kept across the SSE
@@ -67,6 +75,9 @@ export default class Channel {
     this.conversation$ = new BehaviorSubject(config.conversation);
     this.channelTitleSubject = new BehaviorSubject<string | null>(config.channelTitle ?? null);
     this.sandboxPhaseSubject = new BehaviorSubject<SandboxPhase>('idle');
+    this.launchedSandboxesSubject = new BehaviorSubject<LaunchedSandbox[]>(
+      reconcileLaunched(config.launchedSandboxes ?? []),
+    );
     this.derivedStores = createDerivedStores(this.conversation$);
     this.tasks$ = this.derivedStores.tasks$;
     this.subagents$ = this.derivedStores.subagents$;
@@ -75,6 +86,9 @@ export default class Channel {
     // Per-slice: emit only when the phase actually changes, so unrelated high-frequency message
     // deltas never re-notify the HUD (UC-031, same performance rule as the F-013 derived stores).
     this.sandboxPhase$ = this.sandboxPhaseSubject.pipe(distinctUntilChanged());
+    // Per-slice: only `applyLaunchedSandboxes` / `dropSandbox` push here (never the conversation stream),
+    // so high-frequency message deltas never re-emit the live-sandbox list (UC-032 ALT2).
+    this.launchedSandboxes$ = this.launchedSandboxesSubject.pipe(distinctUntilChanged());
     this.statesObserver = config.statesObserver;
   }
 
@@ -96,6 +110,62 @@ export default class Channel {
   /** Current sandbox phase snapshot (F-018) — for framework-agnostic `getSnapshot()` bridging. */
   public getSandboxPhase(): SandboxPhase {
     return this.sandboxPhaseSubject.value;
+  }
+
+  /** Current live-sandbox snapshot (F-019) — for framework-agnostic `getSnapshot()` bridging. */
+  public getLaunchedSandboxes(): LaunchedSandbox[] {
+    return this.launchedSandboxesSubject.value;
+  }
+
+  /** Names hinted by `sandbox.launch` but not yet confirmed live by metadata (F-019) — "starting" placeholders. */
+  public getPendingLaunches(): string[] {
+    return this.pendingLaunches;
+  }
+
+  /**
+   * Authoritatively replace the live-sandbox list from a fresh `/channel/metadata` snapshot (F-019). This
+   * is the only sanctioned way to change "who is live": it reconciles the list and clears any pending
+   * launch whose name now appears (promoted to live). metadata (heartbeat-backed) is the sole authority.
+   */
+  public applyLaunchedSandboxes(list: readonly LaunchedSandbox[]): void {
+    const next = reconcileLaunched(list);
+    this.pendingLaunches = this.pendingLaunches.filter(name => !next.some(sandbox => sandbox.sandboxName === name));
+    this.launchedSandboxesSubject.next(next);
+  }
+
+  /**
+   * Optimistically drop one sandbox (F-019) — e.g. its fs calls keep failing or it is known to be
+   * recycled. The next `/channel/metadata` refetch reconciles the authoritative truth.
+   */
+  public dropSandbox(sandboxName: string): void {
+    const current = this.launchedSandboxesSubject.value;
+    const next = current.filter(sandbox => sandbox.sandboxName !== sandboxName);
+    if (next.length !== current.length) this.launchedSandboxesSubject.next(next);
+  }
+
+  /**
+   * Record an `asgard.sandbox.launch` hint (F-019): the event is not trusted to add a live sandbox (it may
+   * not be Ready / heartbeat-visible yet), so the name is held as pending and a metadata refetch is
+   * scheduled. `applyLaunchedSandboxes` promotes it to live once metadata confirms.
+   */
+  public noteSandboxLaunch(sandboxName: string): void {
+    if (!this.pendingLaunches.includes(sandboxName)) {
+      this.pendingLaunches = [...this.pendingLaunches, sandboxName];
+    }
+
+    void this.refetchMetadata();
+  }
+
+  /**
+   * Re-fetch `/channel/metadata` and authoritatively apply its `launchedSandboxes` (F-019). Called on a
+   * launch hint, and by the react adapter on `visibilitychange` / polling. A client without metadata
+   * support is a no-op.
+   */
+  public async refetchMetadata(): Promise<void> {
+    if (!this.client.channelMetadata) return;
+
+    const metadata = await this.client.channelMetadata(this.customChannelId);
+    if (metadata) this.applyLaunchedSandboxes(metadata.launchedSandboxes);
   }
 
   /** Seed / override the channel title (F-016) — used by the join-restore metadata seed (F-015). */
@@ -177,15 +247,17 @@ export default class Channel {
       this.derivedStores.subagents$,
       this.channelTitle$,
       this.sandboxPhase$,
+      this.launchedSandboxes$,
     ])
       .pipe(
-        map(([isConnecting, conversation, tasks, subagents, channelTitle, sandboxPhase]) => ({
+        map(([isConnecting, conversation, tasks, subagents, channelTitle, sandboxPhase, launchedSandboxes]) => ({
           isConnecting,
           conversation,
           tasks,
           subagents,
           channelTitle,
           sandboxPhase,
+          launchedSandboxes,
         })),
       )
       .subscribe(this.statesObserver);
@@ -263,6 +335,12 @@ export default class Channel {
         // idle on run init (fresh run re-arms) and error (collapse); `done` is left to the react latch so
         // the ready-beat / fade-out can finish (happy path: `done` arrives after `ready`).
         this.updateSandboxPhase(response.eventType);
+
+        // F-019 — a `sandbox.launch` frame is only a hint: record the name as pending and schedule a
+        // metadata refetch (the authority on "who is live"). Never merge it into the live list directly.
+        if (response.eventType === EventType.SANDBOX_LAUNCH) {
+          this.noteSandboxLaunch((response as SseResponse<EventType.SANDBOX_LAUNCH>).fact.sandboxLaunch.sandboxName);
+        }
 
         if (this.currentUserMessageId && response.traceId) {
           const messages = new Map(this.conversation$.value.messages);
@@ -420,6 +498,7 @@ export default class Channel {
     this.conversation$.complete();
     this.channelTitleSubject.complete();
     this.sandboxPhaseSubject.complete();
+    this.launchedSandboxesSubject.complete();
     this.derivedStores.teardown();
     this.statesSubscription?.unsubscribe();
   }

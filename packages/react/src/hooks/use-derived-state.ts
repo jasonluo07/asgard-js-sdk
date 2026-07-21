@@ -1,5 +1,5 @@
-import { Channel, Subagent, Task } from '@asgard-js/core';
-import { useCallback, useSyncExternalStore } from 'react';
+import { Channel, LaunchedSandbox, Subagent, Task } from '@asgard-js/core';
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 
 // F-016 — the channel title store is not a list, so a null channel yields a stable `null` snapshot.
 
@@ -10,6 +10,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 
 const EMPTY_TASKS: Task[] = [];
 const EMPTY_SUBAGENTS: Subagent[] = [];
+const EMPTY_LAUNCHED: LaunchedSandbox[] = [];
 
 /** Subscribe to a `Channel`'s current Task Check List (F-010 / F-013). Re-renders only on list change. */
 export function useTaskList(channel: Channel | null): Task[] {
@@ -63,4 +64,68 @@ export function useChannelTitle(channel: Channel | null): string | null {
   const getSnapshot = useCallback((): string | null => channel?.getChannelTitle() ?? null, [channel]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** Options for {@link useLaunchedSandboxes}'s metadata-refetch lifecycle (F-019 / UC-033). */
+export interface UseLaunchedSandboxesOptions {
+  /** Poll interval (ms) to refetch `/channel/metadata` so idle-recycled sandboxes drop off. `0` disables. Default 15000. */
+  pollMs?: number;
+  /** Refetch on `document.visibilitychange → visible` (a tab hidden long enough loses its sandbox). Default true. */
+  refetchOnVisible?: boolean;
+}
+
+/**
+ * Subscribe to a `Channel`'s live-sandbox list (F-019). Bridges the `launchedSandboxes$` slice +
+ * snapshot into `useSyncExternalStore` (re-renders only when the list changes, AC3), and owns the
+ * DOM-bound refetch lifecycle (AC5): a `visibilitychange → visible` and an optional poll both call
+ * `channel.refetchMetadata()` — metadata being the sole authority on "who is live". A null channel
+ * yields a stable `[]` and no lifecycle.
+ */
+export function useLaunchedSandboxes(
+  channel: Channel | null,
+  { pollMs = 15000, refetchOnVisible = true }: UseLaunchedSandboxesOptions = {},
+): LaunchedSandbox[] {
+  const subscribe = useCallback(
+    (onStoreChange: () => void): (() => void) => {
+      if (!channel) return () => undefined;
+
+      const subscription = channel.launchedSandboxes$.subscribe(() => onStoreChange());
+
+      return () => subscription.unsubscribe();
+    },
+    [channel],
+  );
+
+  const getSnapshot = useCallback(
+    (): LaunchedSandbox[] => channel?.getLaunchedSandboxes() ?? EMPTY_LAUNCHED,
+    [channel],
+  );
+
+  const sandboxes = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  // Keep the refetch bound to the current channel without re-arming the listeners on every render.
+  const refetch = useRef<() => void>(() => undefined);
+  refetch.current = (): void => void channel?.refetchMetadata();
+
+  useEffect(() => {
+    if (!channel || !pollMs) return;
+
+    const id = window.setInterval(() => refetch.current(), pollMs);
+
+    return (): void => window.clearInterval(id);
+  }, [channel, pollMs]);
+
+  useEffect(() => {
+    if (!channel || !refetchOnVisible) return;
+
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible') refetch.current();
+    };
+
+    document.addEventListener('visibilitychange', onVisible);
+
+    return (): void => document.removeEventListener('visibilitychange', onVisible);
+  }, [channel, refetchOnVisible]);
+
+  return sandboxes;
 }

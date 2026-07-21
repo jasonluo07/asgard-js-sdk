@@ -39,7 +39,12 @@ describe('AsgardServiceClient.channelMetadata (F-015)', () => {
 
     const meta = await makeClient().channelMetadata('ch-1');
 
-    expect(meta).toEqual({ title: '訂單查詢', runState: 'IDLE', lastActivityAt: '2026-07-15T00:00:00Z' });
+    expect(meta).toEqual({
+      title: '訂單查詢',
+      runState: 'IDLE',
+      lastActivityAt: '2026-07-15T00:00:00Z',
+      launchedSandboxes: [],
+    });
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://api.example.com/ns/x/bot-provider/y/channel/metadata?custom_channel_id=ch-1');
@@ -52,7 +57,7 @@ describe('AsgardServiceClient.channelMetadata (F-015)', () => {
 
     const meta = await makeClient().channelMetadata('ch-2');
 
-    expect(meta).toEqual({ title: null, runState: 'RUNNING', lastActivityAt: undefined });
+    expect(meta).toEqual({ title: null, runState: 'RUNNING', lastActivityAt: undefined, launchedSandboxes: [] });
   });
 
   it('R1: 404 → null (channel does not exist)', async () => {
@@ -73,5 +78,50 @@ describe('AsgardServiceClient.channelMetadata (F-015)', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
 
     await expect(makeClient().channelMetadata('ch-4')).rejects.toThrow('network down');
+  });
+
+  // F-019 / UC-032 — the metadata decode must whitelist-pass `launchedSandboxes` (mapping the five backend
+  // fields) instead of silently dropping it.
+  it('F-019: decodes launchedSandboxes, mapping the five backend fields', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        fakeResponse(200, {
+          data: {
+            title: null,
+            runState: 'IDLE',
+            launchedSandboxes: [
+              {
+                sandboxName: 'sbx-1',
+                sandboxBlueprintName: 'analysis',
+                workingDirectory: '/home/user/work',
+                editorServerEnabled: true,
+                browserEnabled: false,
+              },
+            ],
+          },
+        }),
+      ),
+    );
+
+    const metadata = await makeClient().channelMetadata('ch-5');
+
+    expect(metadata?.launchedSandboxes).toEqual([
+      {
+        sandboxName: 'sbx-1',
+        sandboxBlueprintName: 'analysis',
+        workingDirectory: '/home/user/work',
+        editorServerEnabled: true,
+        browserEnabled: false,
+      },
+    ]);
+  });
+
+  it('F-019: an absent launchedSandboxes (old backend) decodes to an empty array', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(200, { title: null, runState: 'IDLE' })));
+
+    const metadata = await makeClient().channelMetadata('ch-6');
+
+    expect(metadata?.launchedSandboxes).toEqual([]);
   });
 });

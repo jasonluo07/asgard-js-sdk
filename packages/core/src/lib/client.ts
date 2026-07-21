@@ -196,6 +196,15 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       title: data.title ?? null,
       runState: data.runState ?? 'IDLE',
       lastActivityAt: data.lastActivityAt,
+      // F-019 — whitelist-pass the live-sandbox list (map the five backend fields); `[]` for an old
+      // backend / a channel with none live. metadata is the sole authority on "who is live".
+      launchedSandboxes: (data.launchedSandboxes ?? []).map(sandbox => ({
+        sandboxName: sandbox.sandboxName,
+        sandboxBlueprintName: sandbox.sandboxBlueprintName,
+        workingDirectory: sandbox.workingDirectory,
+        editorServerEnabled: sandbox.editorServerEnabled,
+        browserEnabled: sandbox.browserEnabled,
+      })),
     };
   }
 

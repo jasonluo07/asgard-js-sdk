@@ -15,6 +15,25 @@ export type ObserverOrNext<T> = Partial<Observer<T>> | ((value: T) => void);
  */
 export type SandboxPhase = 'idle' | 'launching' | 'ready';
 
+/**
+ * One live sandbox in a channel, from `GET /channel/metadata` `launchedSandboxes[]` (F-019). A channel
+ * may hold several at once (e.g. one running analysis, one driving a browser), so this is always handled
+ * as a set — never assume a singleton. metadata (heartbeat-backed) is the sole authority on "who is live";
+ * the `asgard.sandbox.launch` SSE event is only a hint.
+ */
+export interface LaunchedSandbox {
+  /** Authoritative identity key — every fs / browser API call locates the sandbox by this. */
+  sandboxName: string;
+  /** The blueprint that created it — the display label (usually more readable than `sandboxName`). */
+  sandboxBlueprintName: string;
+  /** This sandbox's working directory (the File Explorer tree root, F-021). */
+  workingDirectory: string;
+  /** Whether the editor server is enabled (gates the "open editor" affordance). */
+  editorServerEnabled: boolean;
+  /** Whether the browser is enabled (gates the browser-handoff card, F-020). */
+  browserEnabled: boolean;
+}
+
 export interface ChannelStates {
   isConnecting: boolean;
   conversation: Conversation;
@@ -26,6 +45,8 @@ export interface ChannelStates {
   channelTitle: string | null;
   /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
+  /** Live sandboxes in this channel from the latest `/channel/metadata` (F-019). Empty when none live. */
+  launchedSandboxes: LaunchedSandbox[];
 }
 
 export interface ChannelConfig {
@@ -35,6 +56,8 @@ export interface ChannelConfig {
   conversation: Conversation;
   /** Seed for the channel title store (F-016) — from `GET /channel/metadata` at join (wired by F-015). `null` = unnamed. */
   channelTitle?: string | null;
+  /** Seed for the launchedSandboxes store (F-019) — from `GET /channel/metadata` at join. Reconciled on set. */
+  launchedSandboxes?: LaunchedSandbox[];
   statesObserver?: ObserverOrNext<ChannelStates>;
 }
 
@@ -52,6 +75,8 @@ export interface ChannelMetadata {
   title: string | null;
   runState: ChannelRunState;
   lastActivityAt?: string;
+  /** Live sandboxes in this channel (F-019) — the sole authority on "who is live". `[]` when none / old backend. */
+  launchedSandboxes: LaunchedSandbox[];
 }
 
 export type ConversationUserMessage = {
