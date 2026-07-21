@@ -388,6 +388,44 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
   }
 
   /**
+   * F-020 — 取得 sandbox 瀏覽器一次性接手 URL（`sandbox://<name>/open-browser` 卡的副作用）。
+   * 呼叫 `POST {base}/sandbox/{sandboxName}/browser/open-url`（對標 asgard-core edgeserver
+   * `GenerateSandboxBrowserOpenUrl`：path 參數 namespace / bot-provider 已在 base、sandbox_name 在路徑，
+   * 不需 custom_channel_id）。回應 `{ data: { openURL } }`（envelope 容錯，比照 `channelMetadata`）。
+   */
+  async generateSandboxBrowserOpenUrl(sandboxName: string): Promise<string> {
+    const baseEndpoint = this.getBaseEndpoint();
+
+    if (!baseEndpoint) {
+      throw new Error(
+        'Unable to derive sandbox browser open-url endpoint. Please provide botProviderEndpoint in config.',
+      );
+    }
+
+    const url = `${baseEndpoint}/sandbox/${encodeURIComponent(sandboxName)}/browser/open-url`;
+
+    const headers: Record<string, string> = { ...this.customHeaders };
+    if (this.apiKey) {
+      headers['X-API-KEY'] = this.apiKey;
+    }
+
+    const response = await fetch(url, { method: 'POST', headers });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    const json: { data?: { openURL?: string } } & { openURL?: string } = await response.json();
+    const openURL = json.data?.openURL ?? json.openURL;
+
+    if (!openURL) {
+      throw new Error('Sandbox browser open-url response did not contain an openURL.');
+    }
+
+    return openURL;
+  }
+
+  /**
    * 從 botProviderEndpoint 衍生 Blob API endpoint
    */
   private deriveBlobEndpoint(): string | null {

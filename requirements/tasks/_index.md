@@ -53,7 +53,7 @@
 
 ## ▶ Next Task
 
-`None — awaiting authorization to close BUILD-021 / REVIEW-021 cycle`（F-019；§1 0 violation、§3 R1–R7 全 Pass、core Vitest 101/101；PR base `main` 開好待授權合併）。**接續**：F-020（#28 handoff 卡）、F-021（#29 File Explorer）依序可開，兩者共用本張的 `launchedSandboxes$`。BUG-001（BUILD-020）已 **merged to main** via PR #339、發版 0.3.13；F-018（BUILD-019）已 merged via PR #331、發版 0.3.12。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
+`None — awaiting authorization to close BUILD-022 / REVIEW-022 cycle`（F-020；§1 10 ✅/0 ❌、§3 R1–R7 全 Pass、core Vitest 112/112；待授權後開 PR base `main`）。**下一張**：F-021（#29 File Explorer 側欄），消費 F-019 `launchedSandboxes$` + F-020 open-file callback。F-019（BUILD-021）已 **merged to main** via PR #340。F-021（#29 File Explorer）為下一張，與 F-020 共用 `launchedSandboxes$`。BUG-001（BUILD-020）已 **merged to main** via PR #339、發版 0.3.13；F-018（BUILD-019）已 merged via PR #331、發版 0.3.12。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
 
 ## Task Queue
 
@@ -101,3 +101,5 @@
 | `REVIEW-020` | Review: Hide Subagent Message / Thinking      | —        | done   | [REVIEW-020-hide-subagent-messages.md](./REVIEW-020-hide-subagent-messages.md)         |
 | `BUILD-021`  | Consume launchedSandboxes + Rx Store          | High     | done   | [BUILD-021-launched-sandboxes-store.md](./BUILD-021-launched-sandboxes-store.md)       |
 | `REVIEW-021` | Review: launchedSandboxes Rx Store            | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)     |
+| `BUILD-022`  | sandbox:// Handoff Cards                      | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)             |
+| `REVIEW-022` | Review: sandbox:// Handoff Cards              | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)           |
