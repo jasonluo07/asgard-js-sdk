@@ -32,6 +32,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'subagent.cancelled': 'Cancelled',
     'subagent.activeTool': 'Running: {tool}',
     'subagent.toolCount': '{n} tools',
+    'thinking.streaming': 'Thinking…',
+    'thinking.summary': 'Thought for a moment',
+    'thinking.showMore': 'Show more',
+    'thinking.showLess': 'Show less',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -56,6 +60,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'subagent.cancelled': 'キャンセル',
     'subagent.activeTool': '実行中:{tool}',
     'subagent.toolCount': 'ツール {n} 個',
+    'thinking.streaming': '考え中…',
+    'thinking.summary': '少し考えました',
+    'thinking.showMore': 'もっと見る',
+    'thinking.showLess': '折りたたむ',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -80,6 +88,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'subagent.cancelled': '已取消',
     'subagent.activeTool': '執行中:{tool}',
     'subagent.toolCount': '{n} 個工具',
+    'thinking.streaming': '思考中…',
+    'thinking.summary': '已思考片刻',
+    'thinking.showMore': '顯示更多',
+    'thinking.showLess': '顯示較少',
   },
 };
 
