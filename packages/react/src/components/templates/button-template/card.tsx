@@ -3,8 +3,7 @@ import styles from './card.module.scss';
 import { ButtonAction, ButtonMessageTemplate, CarouselMessageTemplate } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { safeWindowOpen } from '../../../utils/uri-validation';
-import { isChannelHomeUri, downloadChannelHomeUri } from '../../../utils/channel-home-download';
+import { dispatchUriAction } from '../../../utils/dispatch-uri-action';
 import clsx from 'clsx';
 
 interface CardProps {
@@ -28,7 +27,8 @@ export function Card(props: CardProps): ReactNode {
   const { template, raw, customStyle } = props;
 
   const { sendMessage, client, customChannelId } = useAsgardContext();
-  const { onTemplateBtnClick, defaultLinkTarget } = useAsgardTemplateContext();
+  const { onTemplateBtnClick, defaultLinkTarget, onSandboxOpenBrowser, onSandboxOpenFile, sandboxBrowserOpenTarget } =
+    useAsgardTemplateContext();
 
   const [imageError, setImageError] = useState(false);
 
@@ -61,15 +61,15 @@ export function Card(props: CardProps): ReactNode {
 
           case 'uri':
           case 'URI':
-            if (isChannelHomeUri(action.uri)) {
-              if (client && customChannelId) {
-                void downloadChannelHomeUri(client, customChannelId, action.uri);
-              }
-
-              return;
-            }
-
-            safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
+            dispatchUriAction(action.uri, {
+              client,
+              customChannelId,
+              target: action.target,
+              defaultLinkTarget,
+              onSandboxOpenBrowser,
+              onSandboxOpenFile,
+              sandboxBrowserOpenTarget,
+            });
 
             return;
           case 'emit':
@@ -82,7 +82,17 @@ export function Card(props: CardProps): ReactNode {
         }
       };
     },
-    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw, client, customChannelId],
+    [
+      sendMessage,
+      onTemplateBtnClick,
+      defaultLinkTarget,
+      raw,
+      client,
+      customChannelId,
+      onSandboxOpenBrowser,
+      onSandboxOpenFile,
+      sandboxBrowserOpenTarget,
+    ],
   );
 
   return (

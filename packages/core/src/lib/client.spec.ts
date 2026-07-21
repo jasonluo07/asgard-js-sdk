@@ -125,3 +125,49 @@ describe('AsgardServiceClient.channelMetadata (F-015)', () => {
     expect(metadata?.launchedSandboxes).toEqual([]);
   });
 });
+
+// F-020 / UC-034 — generateSandboxBrowserOpenUrl POSTs to the sandbox browser open-url endpoint and returns
+// the one-time openURL. Contract confirmed against asgard-core edgeserver GenerateSandboxBrowserOpenUrl:
+// POST {botProviderEndpoint}/sandbox/{sandbox_name}/browser/open-url, path params only, { data: { openURL } }.
+describe('AsgardServiceClient.generateSandboxBrowserOpenUrl (F-020)', () => {
+  it('POSTs to the browser open-url endpoint and returns data.openURL', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(fakeResponse(200, { data: { openURL: 'https://neko.example.com/t/abc' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const url = await makeClient().generateSandboxBrowserOpenUrl('sbx-1');
+
+    expect(url).toBe('https://neko.example.com/t/abc');
+
+    const [reqUrl, init] = fetchMock.mock.calls[0];
+    expect(reqUrl).toBe('https://api.example.com/ns/x/bot-provider/y/sandbox/sbx-1/browser/open-url');
+    expect(init.method).toBe('POST');
+    expect(init.headers['X-API-KEY']).toBe('test-key');
+  });
+
+  it('accepts a bare body without the { data } envelope', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(200, { openURL: 'https://neko.example.com/t/xyz' })));
+
+    expect(await makeClient().generateSandboxBrowserOpenUrl('sbx-2')).toBe('https://neko.example.com/t/xyz');
+  });
+
+  it('url-encodes the sandbox name in the path', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(fakeResponse(200, { data: { openURL: 'https://neko.example.com/t/1' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().generateSandboxBrowserOpenUrl('sbx a');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.example.com/ns/x/bot-provider/y/sandbox/sbx%20a/browser/open-url',
+    );
+  });
+
+  it('throws when the response is not ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(500, 'boom')));
+
+    await expect(makeClient().generateSandboxBrowserOpenUrl('sbx-3')).rejects.toThrow();
+  });
+});

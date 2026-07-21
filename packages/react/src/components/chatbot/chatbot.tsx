@@ -83,6 +83,13 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   loadingComponent?: ReactNode;
   defaultLinkTarget?: '_blank' | '_self' | '_parent' | '_top';
 
+  /** Host override for a `sandbox://<name>/open-browser` card (F-020); if set the SDK defers to it. */
+  onSandboxOpenBrowser?: (sandboxName: string) => void;
+  /** Host handler for a `sandbox://<name>/open-file` card (F-020) — the File Explorer destination (F-021). */
+  onSandboxOpenFile?: (sandboxName: string, absolutePath: string) => void;
+  /** Where the default open-browser handler opens the one-time URL (F-020). Defaults to `_blank`. */
+  sandboxBrowserOpenTarget?: '_blank' | '_self' | '_parent' | '_top';
+
   // Auth state props
   authState?: AuthState;
   onApiKeySubmit?: (apiKey: string) => Promise<void>;
@@ -247,6 +254,9 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     renderTitle,
     untitledLabel,
     channelTitleHidden,
+    onSandboxOpenBrowser,
+    onSandboxOpenFile,
+    sandboxBrowserOpenTarget,
     autoResetChannel,
     keepConnectionOnUnmount = false,
     userIdentityHint,
@@ -387,6 +397,9 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             renderTitle={renderTitle}
             untitledLabel={untitledLabel}
             channelTitleHidden={channelTitleHidden}
+            onSandboxOpenBrowser={onSandboxOpenBrowser}
+            onSandboxOpenFile={onSandboxOpenFile}
+            sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
           >
             {/* Group the channel-title row + scrollable thread into the grid's single `1fr` row, so
                 the footer stays pinned regardless of thread height or whether the title renders. The

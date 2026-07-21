@@ -4,8 +4,8 @@ import DocumentSvg from '../../../icons/document.svg?react';
 import DownloadSvg from '../../../icons/download.svg?react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { safeWindowOpen } from '../../../utils/uri-validation';
-import { isChannelHomeUri, downloadChannelHomeUri } from '../../../utils/channel-home-download';
+import { isChannelHomeUri } from '../../../utils/channel-home-download';
+import { dispatchUriAction } from '../../../utils/dispatch-uri-action';
 import styles from './attachment-template.module.scss';
 
 interface AttachmentChipProps {
@@ -27,7 +27,8 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
   const { title, text, defaultAction, downloadAction, raw, customStyle } = props;
 
   const { sendMessage, client, customChannelId } = useAsgardContext();
-  const { onTemplateBtnClick, defaultLinkTarget } = useAsgardTemplateContext();
+  const { onTemplateBtnClick, defaultLinkTarget, onSandboxOpenBrowser, onSandboxOpenFile, sandboxBrowserOpenTarget } =
+    useAsgardTemplateContext();
 
   const dispatchAction = useCallback(
     (action: ButtonAction): void => {
@@ -39,15 +40,15 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
           return;
         case 'uri':
         case 'URI':
-          if (isChannelHomeUri(action.uri)) {
-            if (client && customChannelId) {
-              void downloadChannelHomeUri(client, customChannelId, action.uri);
-            }
-
-            return;
-          }
-
-          safeWindowOpen(action.uri, action.target || defaultLinkTarget || '_blank');
+          dispatchUriAction(action.uri, {
+            client,
+            customChannelId,
+            target: action.target,
+            defaultLinkTarget,
+            onSandboxOpenBrowser,
+            onSandboxOpenFile,
+            sandboxBrowserOpenTarget,
+          });
 
           return;
         case 'emit':
@@ -59,7 +60,17 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
           return;
       }
     },
-    [sendMessage, onTemplateBtnClick, defaultLinkTarget, raw, client, customChannelId],
+    [
+      sendMessage,
+      onTemplateBtnClick,
+      defaultLinkTarget,
+      raw,
+      client,
+      customChannelId,
+      onSandboxOpenBrowser,
+      onSandboxOpenFile,
+      sandboxBrowserOpenTarget,
+    ],
   );
 
   const handleChipClick = useCallback(() => {

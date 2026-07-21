@@ -76,6 +76,12 @@ export interface AsgardTemplateContextValue {
   untitledLabel?: string;
   /** Hide the channel-title row entirely (F-017) — a shortcut for `renderTitle` returning null. */
   channelTitleHidden?: boolean;
+  /** Host override for a `sandbox://<name>/open-browser` card (F-020); if set the SDK defers to it. */
+  onSandboxOpenBrowser?: (sandboxName: string) => void;
+  /** Host handler for a `sandbox://<name>/open-file` card (F-020) — the File Explorer destination (F-021). */
+  onSandboxOpenFile?: (sandboxName: string, absolutePath: string) => void;
+  /** Where the default open-browser handler opens the one-time URL (F-020). Defaults to `_blank`. */
+  sandboxBrowserOpenTarget?: '_blank' | '_self' | '_parent' | '_top';
 }
 
 export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
@@ -91,6 +97,9 @@ export const AsgardTemplateContext = createContext<AsgardTemplateContextValue>({
   renderTitle: undefined,
   untitledLabel: undefined,
   channelTitleHidden: undefined,
+  onSandboxOpenBrowser: undefined,
+  onSandboxOpenFile: undefined,
+  sandboxBrowserOpenTarget: undefined,
 });
 
 interface AsgardTemplateContextProviderProps extends PropsWithChildren {
@@ -106,6 +115,9 @@ interface AsgardTemplateContextProviderProps extends PropsWithChildren {
   renderTitle?: (props: ChannelTitleRendererProps) => ReactNode;
   untitledLabel?: string;
   channelTitleHidden?: boolean;
+  onSandboxOpenBrowser?: (sandboxName: string) => void;
+  onSandboxOpenFile?: (sandboxName: string, absolutePath: string) => void;
+  sandboxBrowserOpenTarget?: '_blank' | '_self' | '_parent' | '_top';
 }
 
 export function AsgardTemplateContextProvider(props: AsgardTemplateContextProviderProps): ReactNode {
@@ -123,6 +135,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
     renderTitle,
     untitledLabel,
     channelTitleHidden,
+    onSandboxOpenBrowser,
+    onSandboxOpenFile,
+    sandboxBrowserOpenTarget,
   } = props;
 
   const contextValue = useMemo(
@@ -139,6 +154,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
       renderTitle,
       untitledLabel,
       channelTitleHidden,
+      onSandboxOpenBrowser,
+      onSandboxOpenFile,
+      sandboxBrowserOpenTarget,
     }),
     [
       locale,
@@ -153,6 +171,9 @@ export function AsgardTemplateContextProvider(props: AsgardTemplateContextProvid
       renderTitle,
       untitledLabel,
       channelTitleHidden,
+      onSandboxOpenBrowser,
+      onSandboxOpenFile,
+      sandboxBrowserOpenTarget,
     ],
   );
 

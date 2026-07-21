@@ -19,6 +19,9 @@ export type { SubagentEvent } from './lib/subagent-reducer';
 
 export { reconcileLaunched } from './lib/launched-sandboxes';
 
+export { resolveSandboxUri } from './lib/resolve-sandbox-uri';
+export type { SandboxUriIntent } from './lib/resolve-sandbox-uri';
+
 export {
   conversationToSubagentEvents,
   createDerivedStores,
