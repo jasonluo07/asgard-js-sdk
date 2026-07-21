@@ -7,6 +7,7 @@ import {
   ConversationMessage,
   EventType,
   FetchSsePayload,
+  SandboxPhase,
   SseResponse,
   ToolCallConsentAnswer,
 } from '@asgard-js/core';
@@ -53,6 +54,8 @@ export interface UseChannelReturn {
   conversation: Conversation | null;
   /** Current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
   channelTitle: string | null;
+  /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
+  sandboxPhase: SandboxPhase;
   sendMessage?: (
     payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
       Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[]; documentNames?: string[] },
@@ -90,6 +93,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [channelTitle, setChannelTitle] = useState<string | null>(channelTitleSeed ?? null);
+  const [sandboxPhase, setSandboxPhase] = useState<SandboxPhase>('idle');
 
   // Preview mode: static conversation from initMessages
   const previewConversation = useMemo(
@@ -124,6 +128,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             setIsConnecting(states.isConnecting);
             setConversation(states.conversation);
             setChannelTitle(states.channelTitle);
+            setSandboxPhase(states.sandboxPhase);
           },
         },
         resolvedPayload,
@@ -282,6 +287,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     setIsResetting(false);
     setIsConnecting(false);
     setConversation(null);
+    setSandboxPhase('idle');
   }, []);
 
   const sendMessage = useCallback(
@@ -452,6 +458,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             isConnecting: false,
             conversation: previewConversation,
             channelTitle: channelTitleSeed ?? null,
+            sandboxPhase: 'idle',
           }
         : {
             isOpen,
@@ -459,6 +466,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             isConnecting,
             conversation,
             channelTitle,
+            sandboxPhase,
             sendMessage,
             resetChannel,
             closeChannel,
@@ -474,6 +482,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       conversation,
       channelTitle,
       channelTitleSeed,
+      sandboxPhase,
       sendMessage,
       resetChannel,
       closeChannel,

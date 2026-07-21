@@ -7,6 +7,7 @@ import {
   FetchSsePayload,
   IAsgardServiceClient,
   ObserverOrNext,
+  SandboxPhase,
   Subagent,
   SseResponse,
   Task,
@@ -25,6 +26,7 @@ export default class Channel {
   private isConnecting$: BehaviorSubject<boolean>;
   private conversation$: BehaviorSubject<Conversation>;
   private channelTitleSubject: BehaviorSubject<string | null>;
+  private sandboxPhaseSubject: BehaviorSubject<SandboxPhase>;
   private derivedStores: DerivedStores;
   private statesObserver?: ObserverOrNext<ChannelStates>;
   private statesSubscription?: Subscription;
@@ -35,6 +37,8 @@ export default class Channel {
   public readonly subagents$: Observable<Subagent[]>;
   /** Reactive channel title store (F-016): seeded from metadata, updated by `title.update`; replay-safe. */
   public readonly channelTitle$: Observable<string | null>;
+  /** Reactive sandbox cold-start phase store (F-018): per-slice, derived from the last sandbox event; replay-safe. */
+  public readonly sandboxPhase$: Observable<SandboxPhase>;
   private currentUserMessageId?: string;
   // The most-recently-sent user message id. Unlike currentUserMessageId (which
   // is cleared once a traceId is attached), this is kept across the SSE
@@ -62,11 +66,15 @@ export default class Channel {
     this.isConnecting$ = new BehaviorSubject(false);
     this.conversation$ = new BehaviorSubject(config.conversation);
     this.channelTitleSubject = new BehaviorSubject<string | null>(config.channelTitle ?? null);
+    this.sandboxPhaseSubject = new BehaviorSubject<SandboxPhase>('idle');
     this.derivedStores = createDerivedStores(this.conversation$);
     this.tasks$ = this.derivedStores.tasks$;
     this.subagents$ = this.derivedStores.subagents$;
     // Emit only when the title actually changes (ignore duplicate `title.update`s with the same value).
     this.channelTitle$ = this.channelTitleSubject.pipe(distinctUntilChanged());
+    // Per-slice: emit only when the phase actually changes, so unrelated high-frequency message
+    // deltas never re-notify the HUD (UC-031, same performance rule as the F-013 derived stores).
+    this.sandboxPhase$ = this.sandboxPhaseSubject.pipe(distinctUntilChanged());
     this.statesObserver = config.statesObserver;
   }
 
@@ -83,6 +91,11 @@ export default class Channel {
   /** Current channel title snapshot (F-016) — for framework-agnostic `getSnapshot()` bridging. */
   public getChannelTitle(): string | null {
     return this.channelTitleSubject.value;
+  }
+
+  /** Current sandbox phase snapshot (F-018) — for framework-agnostic `getSnapshot()` bridging. */
+  public getSandboxPhase(): SandboxPhase {
+    return this.sandboxPhaseSubject.value;
   }
 
   /** Seed / override the channel title (F-016) — used by the join-restore metadata seed (F-015). */
@@ -163,14 +176,16 @@ export default class Channel {
       this.derivedStores.tasks$,
       this.derivedStores.subagents$,
       this.channelTitle$,
+      this.sandboxPhase$,
     ])
       .pipe(
-        map(([isConnecting, conversation, tasks, subagents, channelTitle]) => ({
+        map(([isConnecting, conversation, tasks, subagents, channelTitle, sandboxPhase]) => ({
           isConnecting,
           conversation,
           tasks,
           subagents,
           channelTitle,
+          sandboxPhase,
         })),
       )
       .subscribe(this.statesObserver);
@@ -196,6 +211,31 @@ export default class Channel {
   }
 
   /**
+   * Advance the sandbox phase store from an incoming event's type (F-018). Only sandbox / run-boundary
+   * events move it; every other event is a no-op, so `distinctUntilChanged` suppresses re-emission on
+   * high-frequency message deltas.
+   */
+  private updateSandboxPhase(eventType: EventType): void {
+    switch (eventType) {
+      case EventType.SANDBOX_LAUNCH:
+        this.sandboxPhaseSubject.next('launching');
+
+        break;
+      case EventType.SANDBOX_READY:
+        this.sandboxPhaseSubject.next('ready');
+
+        break;
+      case EventType.INIT:
+      case EventType.ERROR:
+        this.sandboxPhaseSubject.next('idle');
+
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
    * The SSE run handlers shared by every run kind (POST send/reset and GET rejoin): fold each frame
    * through the conversation reducer, keep the title store in sync, attach the traceId to the pending
    * user bubble, and settle the run promise (releasing `isConnecting`) on completion / error.
@@ -217,6 +257,12 @@ export default class Channel {
             (response as SseResponse<EventType.CHANNEL_TITLE_UPDATE>).fact.channelTitleUpdate.title,
           );
         }
+
+        // F-018 — sandbox cold-start phase, derived from the last sandbox event. Run-level (not a
+        // conversation message); folds identically on live and on rejoin replay (replay-safe). Reset to
+        // idle on run init (fresh run re-arms) and error (collapse); `done` is left to the react latch so
+        // the ready-beat / fade-out can finish (happy path: `done` arrives after `ready`).
+        this.updateSandboxPhase(response.eventType);
 
         if (this.currentUserMessageId && response.traceId) {
           const messages = new Map(this.conversation$.value.messages);
@@ -373,6 +419,7 @@ export default class Channel {
     this.isConnecting$.complete();
     this.conversation$.complete();
     this.channelTitleSubject.complete();
+    this.sandboxPhaseSubject.complete();
     this.derivedStores.teardown();
     this.statesSubscription?.unsubscribe();
   }

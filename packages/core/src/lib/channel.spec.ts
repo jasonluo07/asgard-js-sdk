@@ -41,6 +41,31 @@ function messageEvent(messageId: string, text: string): SseResponse<EventType> {
   } as unknown as SseResponse<EventType>;
 }
 
+function sandboxEvent(kind: 'launch' | 'ready'): SseResponse<EventType> {
+  const eventType = kind === 'launch' ? EventType.SANDBOX_LAUNCH : EventType.SANDBOX_READY;
+  const factKey = kind === 'launch' ? 'sandboxLaunch' : 'sandboxReady';
+
+  return {
+    eventType,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { [factKey]: { sandboxName: 'sbx-1', blueprintName: 'bp-1' } },
+  } as unknown as SseResponse<EventType>;
+}
+
+function runEvent(kind: EventType.INIT | EventType.ERROR): SseResponse<EventType> {
+  return {
+    eventType: kind,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: kind === EventType.ERROR ? { runError: { error: { code: 'E', message: 'boom' } } } : {},
+  } as unknown as SseResponse<EventType>;
+}
+
 function makeChannel(events: SseResponse<EventType>[], channelTitle?: string | null): Channel {
   return Channel.create({
     client: mockClient(events),
@@ -108,6 +133,66 @@ describe('Channel — channel title store (F-016)', () => {
     });
     await channel.sendMessage({ text: 'hi' });
     expect(seen[seen.length - 1]).toBe('新標題');
+    channel.close();
+  });
+});
+
+// F-018 — sandbox cold-start phase store. Phase is derived from the last sandbox event on the run
+// stream (launch → launching, ready → ready), reset to idle on run init / error, and never derived
+// from the conversation — so it folds identically live and on rejoin replay (replay-safe, UC-031).
+
+describe('Channel — sandbox phase store (F-018)', () => {
+  it('R1: defaults to idle with no sandbox event', () => {
+    const channel = makeChannel([]);
+    expect(channel.getSandboxPhase()).toBe('idle');
+    channel.close();
+  });
+
+  it('R1: launch → launching, ready → ready (last event wins)', async () => {
+    const channel = makeChannel([sandboxEvent('launch')]);
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getSandboxPhase()).toBe('launching');
+    channel.close();
+
+    const channel2 = makeChannel([sandboxEvent('launch'), sandboxEvent('ready')]);
+    await channel2.sendMessage({ text: 'hi' });
+    expect(channel2.getSandboxPhase()).toBe('ready');
+    channel2.close();
+  });
+
+  it('R1: resets to idle on run init and error', async () => {
+    const onInit = makeChannel([sandboxEvent('launch'), runEvent(EventType.INIT)]);
+    await onInit.sendMessage({ text: 'hi' });
+    expect(onInit.getSandboxPhase()).toBe('idle');
+    onInit.close();
+
+    const onError = makeChannel([sandboxEvent('launch'), runEvent(EventType.ERROR)]);
+    await onError.sendMessage({ text: 'hi' });
+    expect(onError.getSandboxPhase()).toBe('idle');
+    onError.close();
+  });
+
+  it('R1: sandboxPhase$ is per-slice — a message delta does not re-emit the phase', async () => {
+    const channel = makeChannel([sandboxEvent('launch'), messageEvent('m1', 'hello'), messageEvent('m2', 'world')]);
+    const emissions: string[] = [];
+    const sub = channel.sandboxPhase$.subscribe(p => emissions.push(p));
+    await channel.sendMessage({ text: 'hi' });
+    // initial idle, then launching once — message deltas do not re-notify (distinctUntilChanged).
+    expect(emissions).toEqual(['idle', 'launching']);
+    sub.unsubscribe();
+    channel.close();
+  });
+
+  it('R1: sandboxPhase is exposed on ChannelStates via statesObserver', async () => {
+    const seen: string[] = [];
+    const channel = Channel.create({
+      client: mockClient([sandboxEvent('launch'), sandboxEvent('ready')]),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: states => seen.push(states.sandboxPhase),
+    });
+    await channel.sendMessage({ text: 'hi' });
+    expect(seen[seen.length - 1]).toBe('ready');
     channel.close();
   });
 });

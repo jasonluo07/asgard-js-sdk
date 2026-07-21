@@ -45,9 +45,11 @@
 
 - `TASK-003` Channel Home rename（`cwd://` → `channel-home://`，wire + 公開 API breaking，硬切無 fallback） → BUILD-018 done / REVIEW-018 done（§1 0 violation、§3 R1–R5 全 Pass；等使用者授權收 cycle）. Issue #21，母票 asgard-sdk-go TASK-002（PR #13 已對齊）。**動 core + react + demo + README**：URI scheme / HTTP route `/channel-home/download` / client `downloadChannelHomeFile` / 型別 `ChannelHomeDownloadResult` / react util `channel-home-download.ts`（`isChannelHomeUri`/`downloadChannelHomeUri`）+ consumer chip/card + demo route `/channel-home-download`。只認 `channel-home://`，歷史 `cwd://` 卡片不再支援（PM 決議）。§1.7 刻意豁免（硬切、version bump 承擔）。**version bump / publish / tag 不在本票**，屬 release 流程、需與 asgard-core 上線窗口綁定。
 
+- `F-018` Sandbox 冷啟動指示浮層 Launch HUD (UC-029/UC-030/UC-031; UI 權威=pinned prototype @ `aa0899d`) → BUILD-019 (done) / REVIEW-019 (ready). Issue #24。**動 core + react**：core 補 `SANDBOX_LAUNCH`/`SANDBOX_READY` 事件 + `SandboxEventData {sandboxName, blueprintName}` Fact、新 `SandboxPhase` 型別 + `Channel.sandboxPhase$`（BehaviorSubject + distinctUntilChanged，mirror `channelTitle$`）+ `getSandboxPhase()`、`ChannelStates.sandboxPhase`（launch→launching / ready→ready / init·error→idle）。react：port latch hook `useSandboxLaunch`（1s 門檻靜音熱啟動、ready 收尾拍 → 慢速 fade）+ `SandboxLaunchHud`（grid 掃描、`--asg-color-*` token、`.module.scss`、reduced-motion、i18n `sandbox.*`），`position:absolute` 掛 `ChatbotContainer`（與 `RunningIndicator` 獨立、`pointer-events:none`）。prototype 為視覺權威、以本 repo SCSS-module + token + i18n 慣例落地（非逐行照抄）。
+
 ## ▶ Next Task
 
-`None — awaiting task selection`. BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
+`None — awaiting authorization to close BUILD-019 / REVIEW-019 cycle`（§1 0 violation、§3 R1–R6 全 Pass；待使用者授權後開 PR base `main`）。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
 
 ## Task Queue
 
@@ -89,3 +91,5 @@
 | `REVIEW-017` | Review: Join-Init Orchestration               | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)       |
 | `BUILD-018`  | Channel Home Rename (cwd → channel-home)      | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                 |
 | `REVIEW-018` | Review: Channel Home Rename                   | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)               |
+| `BUILD-019`  | Sandbox Launch HUD                            | High     | done   | [BUILD-019-sandbox-launch-hud.md](./BUILD-019-sandbox-launch-hud.md)                   |
+| `REVIEW-019` | Review: Sandbox Launch HUD                    | —        | done   | [REVIEW-019-sandbox-launch-hud.md](./REVIEW-019-sandbox-launch-hud.md)                 |

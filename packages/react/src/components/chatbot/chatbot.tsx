@@ -31,6 +31,7 @@ import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 import { ServiceErrorState } from './service-error-state';
 import { DropZoneOverlay } from './drop-zone-overlay/drop-zone-overlay';
+import { SandboxLaunchHud } from './sandbox-launch-hud';
 import { ToolCallConsentGate } from '../tool-call-consent';
 import styles from './chatbot.module.scss';
 
@@ -400,6 +401,10 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                 panels read `locale` from the context (F-010 / F-012). */}
             {renderFooter ? renderFooter() : <ChatbotFooter footerEndActions={footerEndActions} />}
             <ToolCallConsentGate />
+            {/* F-018 — sandbox cold-start HUD. Inside the template provider so it reads `locale` for its
+                labels (like the docked panels); position:absolute anchors it to ChatbotContainer
+                (position:relative), independent of and able to coexist with RunningIndicator. */}
+            <SandboxLaunchHud />
           </AsgardTemplateContextProvider>
         );
     }

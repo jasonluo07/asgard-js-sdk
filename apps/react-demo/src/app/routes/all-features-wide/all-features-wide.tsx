@@ -27,7 +27,7 @@ export function AllFeaturesWideRoute(): ReactNode {
 
   return (
     <DemoWrapper
-      title="All-Features Showcase — Wide (F-001 ~ F-017)"
+      title="All-Features Showcase — Wide (F-001 ~ F-018)"
       description="與 /all-features 相同的 all-features-demo 串流，但 <Chatbot> 佔滿整個內容區的大版面，適合展示 / 投影。/all-features 頁不受影響。"
     >
       <div className={styles.stack}>

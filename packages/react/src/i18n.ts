@@ -36,6 +36,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.summary': 'Thought for a moment',
     'thinking.showMore': 'Show more',
     'thinking.showLess': 'Show less',
+    'sandbox.launching': 'Starting sandbox',
+    'sandbox.ready': 'Sandbox ready',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -64,6 +66,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.summary': '少し考えました',
     'thinking.showMore': 'もっと見る',
     'thinking.showLess': '折りたたむ',
+    'sandbox.launching': 'サンドボックス起動中',
+    'sandbox.ready': 'サンドボックス準備完了',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -92,6 +96,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.summary': '已思考片刻',
     'thinking.showMore': '顯示更多',
     'thinking.showLess': '顯示較少',
+    'sandbox.launching': 'Sandbox 啟動中',
+    'sandbox.ready': 'Sandbox 就緒',
   },
 };
 

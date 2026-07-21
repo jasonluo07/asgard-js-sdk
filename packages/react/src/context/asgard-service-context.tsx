@@ -3,6 +3,7 @@ import {
   ClientConfig,
   Conversation,
   ConversationMessage,
+  SandboxPhase,
   ToolCallConsentEventData,
 } from '@asgard-js/core';
 import {
@@ -41,6 +42,8 @@ export interface AsgardServiceContextValue {
   conversation: Conversation | null;
   /** The current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
   channelTitle: string | null;
+  /** The current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
+  sandboxPhase: SandboxPhase;
   messageBoxBottomRef: RefObject<HTMLDivElement | null>;
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
@@ -91,6 +94,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   messages: null,
   conversation: null,
   channelTitle: null,
+  sandboxPhase: 'idle',
   messageBoxBottomRef: { current: null },
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
@@ -231,6 +235,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     isConnecting,
     conversation,
     channelTitle,
+    sandboxPhase,
     sendMessage,
     resetChannel,
     closeChannel,
@@ -307,6 +312,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       messages: conversation?.messages ?? null,
       conversation: conversation ?? null,
       channelTitle,
+      sandboxPhase,
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
@@ -339,6 +345,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isConnecting,
       conversation,
       channelTitle,
+      sandboxPhase,
       wrappedSendMessage,
       resetChannel,
       closeChannel,

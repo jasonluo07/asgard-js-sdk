@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const navItems = [
   { to: '/', label: 'Home' },
-  { to: '/all-features', label: '★ All-Features Showcase (F-001~F-017)' },
+  { to: '/all-features', label: '★ All-Features Showcase (F-001~F-018)' },
   { to: '/all-features-wide', label: '★ All-Features Showcase — Wide' },
   { to: '/templates', label: 'Templates' },
   { to: '/data-insight-style', label: 'Data Insight Style' },
@@ -40,6 +40,7 @@ const navItems = [
   { to: '/transcript-replay', label: 'Transcript Replay (F-014)' },
   { to: '/thinking', label: 'Thinking (F-001)' },
   { to: '/run-indicator', label: 'Run Indicator (F-003)' },
+  { to: '/sandbox-hud', label: 'Sandbox Launch HUD (F-018)' },
   { to: '/tool-call-variants', label: 'Tool-Call Variants (F-004)' },
   { to: '/tool-call-i18n', label: 'Tool-Call i18n (F-005)' },
   { to: '/tool-call-grouping', label: 'Tool-Call Grouping (F-006)' },
