@@ -2,6 +2,8 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ConversationThinkingMessage } from '@asgard-js/core';
 import { StreamdownClient } from '../text-template/streamdown-client';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import styles from './thinking-block.module.scss';
 
 // F-001 — extended-thinking (reasoning) block. Two states:
@@ -14,8 +16,6 @@ import styles from './thinking-block.module.scss';
 //    to full markdown reasoning with a leading preview + show more / less.
 
 const PREVIEW_LIMIT = 160; // completed-state leading preview cap (chars, ~4 lines)
-const COMPLETED_SUMMARY = 'Thought for a moment';
-const STREAMING_LABEL = 'Thinking…';
 
 function BrainIcon({ className }: { className?: string }): ReactNode {
   return (
@@ -102,6 +102,7 @@ export interface ThinkingBlockProps {
 }
 
 export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
+  const { locale = 'en-US' } = useAsgardTemplateContext();
   const streaming = message.isThinking;
   const [manualOpen, setManualOpen] = useState(false);
   const [showFull, setShowFull] = useState(false);
@@ -130,7 +131,7 @@ export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
           className={clsx(styles.thinking_block__brain, streaming && styles['thinking_block__brain--streaming'])}
         />
         <span className={clsx(streaming && styles['thinking_block__label--streaming'])}>
-          {streaming ? STREAMING_LABEL : COMPLETED_SUMMARY}
+          {streaming ? t(locale, 'thinking.streaming') : t(locale, 'thinking.summary')}
         </span>
       </button>
       {open && (
@@ -146,7 +147,7 @@ export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
                   className={styles.thinking_block__more}
                   onClick={() => setShowFull(prev => !prev)}
                 >
-                  {showFull ? '顯示較少' : '顯示更多'}
+                  {showFull ? t(locale, 'thinking.showLess') : t(locale, 'thinking.showMore')}
                 </button>
               )}
             </div>
