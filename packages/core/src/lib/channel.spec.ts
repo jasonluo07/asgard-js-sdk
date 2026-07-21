@@ -3,7 +3,15 @@ import { Subscription } from 'rxjs';
 import Channel from './channel';
 import Conversation from './conversation';
 import { EventType } from '../constants/enum';
-import type { ChannelStates, FetchSseOptions, FetchSsePayload, IAsgardServiceClient, SseResponse } from '../types';
+import type {
+  ChannelMetadata,
+  ChannelStates,
+  FetchSseOptions,
+  FetchSsePayload,
+  IAsgardServiceClient,
+  LaunchedSandbox,
+  SseResponse,
+} from '../types';
 
 // F-016 — channel title store. The title lives on the Channel (seeded from config, updated by the live
 // `asgard.channel.title.update` event), never derived from the conversation — so a rejoin replay (which
@@ -323,6 +331,195 @@ describe('Channel — stop generation (UC-017 / EXT-2)', () => {
     const channel = makeChannel([]);
 
     expect(() => channel.stopGeneration()).not.toThrow();
+    channel.close();
+  });
+});
+
+// F-019 — launchedSandboxes store. `GET /channel/metadata` is the sole authority on "who is live"; the
+// store is seeded from that metadata, authoritatively replaced on every refetch, and a `sandbox.launch`
+// SSE frame is only a hint (recorded as pending + a refetch, never merged into live directly).
+
+const flush = (): Promise<void> => new Promise(resolve => setTimeout(resolve, 0));
+
+function sb(sandboxName: string, overrides: Partial<LaunchedSandbox> = {}): LaunchedSandbox {
+  return {
+    sandboxName,
+    sandboxBlueprintName: '',
+    workingDirectory: '/work',
+    editorServerEnabled: false,
+    browserEnabled: false,
+    ...overrides,
+  };
+}
+
+function launchEventNamed(sandboxName: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.SANDBOX_LAUNCH,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { sandboxLaunch: { sandboxName, blueprintName: 'bp-1' } },
+  } as unknown as SseResponse<EventType>;
+}
+
+function metadataClient(opts: {
+  events?: SseResponse<EventType>[];
+  metadata?: () => ChannelMetadata | null;
+}): IAsgardServiceClient {
+  return {
+    fetchSse(_payload: FetchSsePayload, options?: FetchSseOptions): void {
+      options?.onSseStart?.();
+      (opts.events ?? []).forEach(event => options?.onSseMessage?.(event));
+      options?.onSseCompleted?.();
+    },
+    channelMetadata: vi.fn(async () => (opts.metadata ? opts.metadata() : null)),
+  } as unknown as IAsgardServiceClient;
+}
+
+function meta(launchedSandboxes: LaunchedSandbox[]): ChannelMetadata {
+  return { title: null, runState: 'IDLE', launchedSandboxes };
+}
+
+describe('Channel — launchedSandboxes store (F-019)', () => {
+  const bare = (config: Partial<Parameters<typeof Channel.create>[0]> = {}): Channel =>
+    Channel.create({
+      client: mockClient([]),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      ...config,
+    });
+
+  it('AC2: seeds launchedSandboxes from config, reconciled (empty by default)', () => {
+    expect(bare().getLaunchedSandboxes()).toEqual([]);
+
+    const channel = bare({
+      launchedSandboxes: [sb('b', { sandboxBlueprintName: 'B' }), sb('a', { sandboxBlueprintName: 'A' })],
+    });
+    expect(channel.getLaunchedSandboxes().map(s => s.sandboxName)).toEqual(['a', 'b']);
+    channel.close();
+  });
+
+  it('AC4: applyLaunchedSandboxes replaces authoritatively (not merges) and emits each time', () => {
+    const channel = bare();
+    const seen: string[][] = [];
+    const sub = channel.launchedSandboxes$.subscribe(list => seen.push(list.map(s => s.sandboxName)));
+
+    channel.applyLaunchedSandboxes([sb('x')]);
+    channel.applyLaunchedSandboxes([sb('y')]);
+
+    expect(channel.getLaunchedSandboxes().map(s => s.sandboxName)).toEqual(['y']);
+    expect(seen).toEqual([[], ['x'], ['y']]);
+    sub.unsubscribe();
+    channel.close();
+  });
+
+  it('AC3: launchedSandboxes$ replays the current snapshot to a late subscriber', () => {
+    const channel = bare();
+    channel.applyLaunchedSandboxes([sb('x')]);
+
+    let latest: LaunchedSandbox[] | undefined;
+    const sub = channel.launchedSandboxes$.subscribe(list => (latest = list));
+    expect(latest?.map(s => s.sandboxName)).toEqual(['x']);
+    sub.unsubscribe();
+    channel.close();
+  });
+
+  it('AC4: per-slice — a message delta run does not re-emit launchedSandboxes$', async () => {
+    const channel = makeChannel([messageEvent('m1', 'hi')]);
+    channel.applyLaunchedSandboxes([sb('x')]);
+
+    const emissions: number[] = [];
+    const sub = channel.launchedSandboxes$.subscribe(list => emissions.push(list.length));
+    channel.sendMessage({ text: 'hi' });
+    await flush();
+
+    expect(emissions).toEqual([1]); // only the replayed snapshot; the run never touches this slice
+    sub.unsubscribe();
+    channel.close();
+  });
+
+  it('ALT2: dropSandbox optimistically removes a sandbox', () => {
+    const channel = bare();
+    channel.applyLaunchedSandboxes([sb('x'), sb('y')]);
+    channel.dropSandbox('x');
+
+    expect(channel.getLaunchedSandboxes().map(s => s.sandboxName)).toEqual(['y']);
+    channel.close();
+  });
+
+  it('AC6: noteSandboxLaunch records pending + refetches metadata, promoting to live on confirm', async () => {
+    const client = metadataClient({ metadata: () => meta([sb('new')]) });
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    channel.noteSandboxLaunch('new');
+    expect(channel.getPendingLaunches()).toEqual(['new']); // pending, not yet live
+    expect(channel.getLaunchedSandboxes()).toEqual([]);
+
+    await flush();
+    expect(client.channelMetadata).toHaveBeenCalledWith('ch');
+    expect(channel.getLaunchedSandboxes().map(s => s.sandboxName)).toEqual(['new']); // metadata confirmed → live
+    expect(channel.getPendingLaunches()).toEqual([]); // cleared on confirm
+    channel.close();
+  });
+
+  it('AC6: an asgard.sandbox.launch frame in the run records pending + requests a refetch', async () => {
+    const client = metadataClient({ events: [launchEventNamed('sbx-9')], metadata: () => null });
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    channel.sendMessage({ text: 'go' });
+    await flush();
+
+    expect(channel.getPendingLaunches()).toContain('sbx-9');
+    expect(client.channelMetadata).toHaveBeenCalledWith('ch');
+    channel.close();
+  });
+
+  it('AC5: refetchMetadata applies the fetched launchedSandboxes', async () => {
+    const client = metadataClient({ metadata: () => meta([sb('r')]) });
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    await channel.refetchMetadata();
+    expect(channel.getLaunchedSandboxes().map(s => s.sandboxName)).toEqual(['r']);
+    channel.close();
+  });
+
+  it('ALT3: a launch hint that metadata never confirms stays pending (not promoted)', async () => {
+    const client = metadataClient({ metadata: () => meta([]) });
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    channel.noteSandboxLaunch('ghost');
+    await flush();
+
+    expect(channel.getLaunchedSandboxes()).toEqual([]);
+    expect(channel.getPendingLaunches()).toEqual(['ghost']); // still pending, not falsely reported live
+    channel.close();
+  });
+
+  it('AC2: launchedSandboxes is exposed on ChannelStates via statesObserver', () => {
+    const seen: string[][] = [];
+    const channel = bare({
+      statesObserver: (s: ChannelStates) => seen.push(s.launchedSandboxes.map(x => x.sandboxName)),
+    });
+    channel.applyLaunchedSandboxes([sb('x')]);
+
+    expect(seen[seen.length - 1]).toEqual(['x']);
     channel.close();
   });
 });
