@@ -770,20 +770,27 @@ export function AsgardThemeContextProvider(
       // (a hex, or a non-`var()` border); otherwise the SCSS default is kept (backward compatible).
       const themeVars: Record<string, string> = {};
 
+      // A concrete 6-digit hex can be lightened/darkened arithmetically; any other value (a `var()`
+      // token, `oklch(…)`, `color-mix(…)`, `rgb(…)`) is passed through as-is so consumers can wire the
+      // chat to their own design tokens — derived shades for those fall back to CSS `color-mix()`.
+      const isHex = (color: string): boolean => /^#[0-9a-fA-F]{6}$/.test(color);
+      const darker = (color: string): string =>
+        isHex(color) ? darkenColor(color, 0.15) : `color-mix(in srgb, ${color} 85%, #000)`;
+      const lighter = (color: string): string =>
+        isHex(color) ? lightenColor(color, 0.08) : `color-mix(in srgb, ${color} 92%, #fff)`;
+
       // Primary → the accent (run indicator, input focus, buttons) + a darkened hover/active shade.
       const effectivePrimary = mergedTheme.chatbot?.primaryComponent?.mainColor;
       if (effectivePrimary) {
         themeVars['--asg-color-primary'] = effectivePrimary;
-        themeVars['--asg-color-primary-dark'] = /^#[0-9a-fA-F]{6}$/.test(effectivePrimary)
-          ? darkenColor(effectivePrimary, 0.15)
-          : effectivePrimary;
+        themeVars['--asg-color-primary-dark'] = darker(effectivePrimary);
       }
 
       // Background → the base bg + a `surface` one step lighter (cards / channel-title / tool-call rows /
       // Task & Subagent panels sit on the surface, keeping a subtle elevation over the base).
       const effectiveBg = mergedTheme.chatbot?.backgroundColor;
-      if (typeof effectiveBg === 'string' && /^#[0-9a-fA-F]{6}$/.test(effectiveBg)) {
-        const surface = lightenColor(effectiveBg, 0.08);
+      if (typeof effectiveBg === 'string' && effectiveBg) {
+        const surface = lighter(effectiveBg);
         themeVars['--asg-color-bg'] = effectiveBg;
         themeVars['--asg-color-surface'] = surface;
         themeVars['--asgard-tool-call-item-bg'] = surface;
@@ -798,7 +805,7 @@ export function AsgardThemeContextProvider(
       // Border → the border + divider + the tool-call / panel / thinking-block border (all the bordered
       // thread containers share the theme border so none is left on the fixed `#333` default).
       const effectiveBorder = mergedTheme.chatbot?.borderColor;
-      if (typeof effectiveBorder === 'string' && !effectiveBorder.startsWith('var(')) {
+      if (typeof effectiveBorder === 'string' && effectiveBorder) {
         themeVars['--asg-color-border'] = effectiveBorder;
         themeVars['--asg-color-divider'] = effectiveBorder;
         themeVars['--asgard-tool-call-border'] = effectiveBorder;
@@ -810,7 +817,7 @@ export function AsgardThemeContextProvider(
       // timestamp, the placeholder and the header action icons — so the muted tier is themed by the same
       // field everywhere instead of being stuck on the palette default.
       const effectiveInactive = mergedTheme.chatbot?.inactiveColor;
-      if (typeof effectiveInactive === 'string' && !effectiveInactive.startsWith('var(')) {
+      if (typeof effectiveInactive === 'string' && effectiveInactive) {
         themeVars['--asg-color-text-secondary'] = effectiveInactive;
         themeVars['--asg-color-action-inactive'] = effectiveInactive;
       }
@@ -818,7 +825,7 @@ export function AsgardThemeContextProvider(
       // Secondary → the primary text/icon tier (tool-call item labels, hover states), matching the field
       // that already colors the header title and the input text.
       const effectiveForeground = mergedTheme.chatbot?.primaryComponent?.secondaryColor;
-      if (typeof effectiveForeground === 'string' && !effectiveForeground.startsWith('var(')) {
+      if (typeof effectiveForeground === 'string' && effectiveForeground) {
         themeVars['--asg-color-text-primary'] = effectiveForeground;
         themeVars['--asg-color-action-active'] = effectiveForeground;
       }
