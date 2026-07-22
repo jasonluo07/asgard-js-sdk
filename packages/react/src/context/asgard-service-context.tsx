@@ -1,5 +1,6 @@
 import {
   AsgardServiceClient,
+  Channel,
   ClientConfig,
   Conversation,
   ConversationMessage,
@@ -33,6 +34,8 @@ export interface AsgardServiceContextValue {
   avatar?: string;
   title?: string;
   client: AsgardServiceClient | null;
+  /** The live `Channel` (F-019+) — for hooks that need the channel object (e.g. `useLaunchedSandboxes`). */
+  channel: Channel | null;
   customChannelId?: string;
   isOpen: boolean;
   isResetting: boolean;
@@ -87,6 +90,7 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   avatar: undefined,
   title: undefined,
   client: null,
+  channel: null,
   customChannelId: undefined,
   isOpen: false,
   isResetting: false,
@@ -230,6 +234,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
   const client = useAsgardServiceClient({ config, keepConnectionOnUnmount });
 
   const {
+    channel,
     isOpen,
     isResetting,
     isConnecting,
@@ -305,6 +310,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       avatar,
       title,
       client,
+      channel,
       customChannelId,
       isOpen,
       isResetting,
@@ -339,6 +345,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       avatar,
       title,
       client,
+      channel,
       customChannelId,
       isOpen,
       isResetting,

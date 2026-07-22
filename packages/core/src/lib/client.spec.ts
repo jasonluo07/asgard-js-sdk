@@ -171,3 +171,107 @@ describe('AsgardServiceClient.generateSandboxBrowserOpenUrl (F-020)', () => {
     await expect(makeClient().generateSandboxBrowserOpenUrl('sbx-3')).rejects.toThrow();
   });
 });
+
+// F-021 / UC-037 — sandbox fs client methods (Cycle 1: list / read / write). Contract confirmed against
+// asgard-core edgeserver: GET fs/list (JSON), GET fs/file (raw octet-stream + X-Total-Bytes/X-Truncated),
+// PUT fs/file (multipart form-data → { data: { bytesWritten } }).
+
+function blobResponse(status: number, body: BodyInit, headers: Record<string, string> = {}): Response {
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    statusText: status >= 500 ? 'Internal Server Error' : 'OK',
+    headers: { get: (k: string): string | null => headers[k] ?? null },
+    blob: async () => new Blob([body]),
+    text: async () => String(body),
+  } as unknown as Response;
+}
+
+describe('AsgardServiceClient sandbox fs (F-021)', () => {
+  it('sandboxFsList: GET fs/list?path=… → decoded entries + truncated', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      fakeResponse(200, {
+        data: {
+          entries: [{ name: 'report.md', isDir: false, sizeBytes: 12, mtimeUnix: 1700000000, mode: 420 }],
+          truncated: false,
+        },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().sandboxFsList('sbx-1', '/home/user');
+
+    expect(result).toEqual({
+      entries: [{ name: 'report.md', isDir: false, sizeBytes: 12, mtimeUnix: 1700000000, mode: 420 }],
+      truncated: false,
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe('https://api.example.com/ns/x/bot-provider/y/sandbox/sbx-1/fs/list?path=%2Fhome%2Fuser');
+    expect(init.method).toBe('GET');
+    expect(init.headers['X-API-KEY']).toBe('test-key');
+  });
+
+  it('sandboxFsRead: GET fs/file → blob content + X-Total-Bytes / X-Truncated', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(blobResponse(200, 'hello', { 'X-Total-Bytes': '5', 'X-Truncated': 'false' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().sandboxFsRead('sbx-1', '/home/user/report.md');
+
+    expect(result.totalBytes).toBe(5);
+    expect(result.truncated).toBe(false);
+    expect(await result.content.text()).toBe('hello');
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://api.example.com/ns/x/bot-provider/y/sandbox/sbx-1/fs/file?path=%2Fhome%2Fuser%2Freport.md',
+    );
+  });
+
+  it('sandboxFsRead: forwards offset_bytes / limit_bytes and reads X-Truncated=true', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(blobResponse(200, 'par', { 'X-Total-Bytes': '100', 'X-Truncated': 'true' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().sandboxFsRead('sbx-1', '/f.txt', { offsetBytes: 0, limitBytes: 3 });
+
+    expect(result.truncated).toBe(true);
+    expect(result.totalBytes).toBe(100);
+    expect(fetchMock.mock.calls[0][0]).toContain('offset_bytes=0');
+    expect(fetchMock.mock.calls[0][0]).toContain('limit_bytes=3');
+  });
+
+  it('sandboxFsWrite: PUT fs/file multipart → bytesWritten', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: { bytesWritten: 5 } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().sandboxFsWrite('sbx-1', '/home/user/report.md', 'hello');
+
+    expect(result).toEqual({ bytesWritten: 5 });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(
+      'https://api.example.com/ns/x/bot-provider/y/sandbox/sbx-1/fs/file?path=%2Fhome%2Fuser%2Freport.md',
+    );
+    expect(init.method).toBe('PUT');
+    expect(init.body).toBeInstanceOf(FormData);
+  });
+
+  it('sandboxFsWrite: forwards mode / create_only', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: { bytesWritten: 1 } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().sandboxFsWrite('sbx-1', '/f.txt', 'x', { mode: 420, createOnly: true });
+
+    const url = fetchMock.mock.calls[0][0];
+    expect(url).toContain('mode=420');
+    expect(url).toContain('create_only=true');
+  });
+
+  it('sandboxFsList: throws on a non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(500, 'boom')));
+
+    await expect(makeClient().sandboxFsList('sbx-1', '/x')).rejects.toThrow();
+  });
+});

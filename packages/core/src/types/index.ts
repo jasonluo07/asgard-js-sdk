@@ -6,4 +6,5 @@ export type * from './task';
 export type * from './subagent';
 export type * from './event-emitter';
 export type * from './blob';
+export type * from './sandbox-fs';
 export { HttpError, isHttpError } from './http-error';

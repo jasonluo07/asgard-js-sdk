@@ -107,6 +107,12 @@ export function useLaunchedSandboxes(
   const refetch = useRef<() => void>(() => undefined);
   refetch.current = (): void => void channel?.refetchMetadata();
 
+  // Populate the live-sandbox list once on mount / channel change (otherwise it stays empty until the first
+  // poll / visibility change). metadata remains the sole authority; this is just the initial pull.
+  useEffect(() => {
+    if (channel) refetch.current();
+  }, [channel]);
+
   useEffect(() => {
     if (!channel || !pollMs) return;
 

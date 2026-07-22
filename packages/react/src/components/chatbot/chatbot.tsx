@@ -32,6 +32,12 @@ import { ChatbotContainer } from './chatbot-container/chatbot-container';
 import { ServiceErrorState } from './service-error-state';
 import { DropZoneOverlay } from './drop-zone-overlay/drop-zone-overlay';
 import { SandboxLaunchHud } from './sandbox-launch-hud';
+import {
+  ChatbotFileExplorerAside,
+  FileExplorerArrivalBridge,
+  FileExplorerToggle,
+} from './file-explorer/chatbot-file-explorer';
+import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 import { ToolCallConsentGate } from '../tool-call-consent';
 import styles from './chatbot.module.scss';
 
@@ -89,6 +95,17 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   onSandboxOpenFile?: (sandboxName: string, absolutePath: string) => void;
   /** Where the default open-browser handler opens the one-time URL (F-020). Defaults to `_blank`. */
   sandboxBrowserOpenTarget?: '_blank' | '_self' | '_parent' | '_top';
+
+  /**
+   * Built-in File Explorer side panel (F-021). `'builtin'` renders a header folder toggle + a right-side
+   * aside; `'off'` (default) renders nothing built-in — the consumer places the exported `<FileExplorerPanel>`
+   * itself. Either way an `open-file` card hits the panel via the shared controller.
+   */
+  fileExplorer?: 'builtin' | 'off';
+  /** Whether an arriving `open-file` card auto-reveals the built-in aside (F-021 AC9). Defaults to true; a mid-edit dirty file suppresses the yank (AC10). */
+  autoRevealOnOpenFileCard?: boolean;
+  /** Override the File Explorer tree root (absolute path) instead of the sandbox `workingDirectory` (F-021 AC2). */
+  fileExplorerBasePath?: string;
 
   // Auth state props
   authState?: AuthState;
@@ -257,12 +274,34 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     onSandboxOpenBrowser,
     onSandboxOpenFile,
     sandboxBrowserOpenTarget,
+    fileExplorer = 'off',
+    autoRevealOnOpenFileCard = true,
+    fileExplorerBasePath,
     autoResetChannel,
     keepConnectionOnUnmount = false,
     userIdentityHint,
   } = props;
 
   const effectiveConfig = userIdentityHint ? { ...config, userIdentityHint } : config;
+
+  // F-021 — the shared File Explorer controller (built-in aside + open-file card + a consumer-placed panel
+  // all bind this one, so an open-file intent hits the panel regardless of placement).
+  const fileExplorerController = useFileExplorerController();
+  const builtinFileExplorer = fileExplorer === 'builtin';
+
+  // open-file intent (F-021 AC9, notify-not-force): expose it via the host callback, and — for the built-in
+  // aside — reveal the panel unless the user is mid-edit (AC10 guard) and auto-reveal is enabled.
+  const handleSandboxOpenFile = useCallback(
+    (sandboxName: string, absolutePath: string): void => {
+      onSandboxOpenFile?.(sandboxName, absolutePath);
+
+      if (builtinFileExplorer) {
+        const reveal = autoRevealOnOpenFileCard && !fileExplorerController.isEditingDirty;
+        fileExplorerController.requestFile(sandboxName, absolutePath, { reveal });
+      }
+    },
+    [onSandboxOpenFile, builtinFileExplorer, autoRevealOnOpenFileCard, fileExplorerController],
+  );
 
   const dragCounterRef = useRef(0);
   const fileDropRef = useRef<{
@@ -398,17 +437,36 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             untitledLabel={untitledLabel}
             channelTitleHidden={channelTitleHidden}
             onSandboxOpenBrowser={onSandboxOpenBrowser}
-            onSandboxOpenFile={onSandboxOpenFile}
+            onSandboxOpenFile={handleSandboxOpenFile}
             sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
           >
             {/* Group the channel-title row + scrollable thread into the grid's single `1fr` row, so
                 the footer stays pinned regardless of thread height or whether the title renders. The
-                title is fixed at the top; the body scrolls internally (its own `flex:1; overflow`). */}
-            <div className={styles.chatbot__thread_area}>
-              {/* Channel-title row at the thread top — distinct from the bot-name ChatbotHeader (F-017). */}
-              <ChannelTitle />
-              <ChatbotBody hideRunChrome={hideRunChrome} />
+                title is fixed at the top; the body scrolls internally (its own `flex:1; overflow`).
+                F-021 — that row is a flex row so the built-in File Explorer aside sits to the right. */}
+            <div className={styles.chatbot__main_row}>
+              <div className={styles.chatbot__thread_area}>
+                {/* Channel-title row + folder toggle — distinct from the bot-name ChatbotHeader (F-017/F-021). */}
+                {builtinFileExplorer ? (
+                  <div className={styles.chatbot__title_row}>
+                    <ChannelTitle />
+                    <span className={styles.chatbot__title_toggle}>
+                      <FileExplorerToggle controller={fileExplorerController} />
+                    </span>
+                  </div>
+                ) : (
+                  <ChannelTitle />
+                )}
+                <ChatbotBody hideRunChrome={hideRunChrome} />
+              </div>
+              {builtinFileExplorer && fileExplorerController.open && (
+                <aside className={styles.chatbot__file_explorer_aside}>
+                  <ChatbotFileExplorerAside controller={fileExplorerController} basePath={fileExplorerBasePath} />
+                </aside>
+              )}
             </div>
+            {/* F-021 AC9 — fire the open-file intent on card arrival (not only on click). */}
+            {builtinFileExplorer && <FileExplorerArrivalBridge onIntent={handleSandboxOpenFile} />}
             {renderMenu?.()}
             {/* Footer must live inside the template provider so its docked TaskList / SubagentList
                 panels read `locale` from the context (F-010 / F-012). */}

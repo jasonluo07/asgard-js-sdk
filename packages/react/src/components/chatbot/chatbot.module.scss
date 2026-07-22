@@ -32,3 +32,43 @@
   flex-direction: column;
   overflow: hidden;
 }
+
+// F-021 — the grid's single `1fr` row becomes a flex row so the built-in File Explorer aside can sit to
+// the right of the (flex:1) thread column inside the same position:relative chat shell (not fixed to the
+// viewport, not a message block). When the aside is closed this collapses to just the thread column.
+.chatbot__main_row {
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.chatbot__main_row .chatbot__thread_area {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatbot__file_explorer_aside {
+  flex: 0 0 20rem;
+  max-width: 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// The channel-title row + the folder toggle share one line (toggle sits to the right of the title).
+.chatbot__title_row {
+  display: flex;
+  align-items: stretch;
+}
+
+.chatbot__title_row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatbot__title_toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}

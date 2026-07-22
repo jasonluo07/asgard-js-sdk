@@ -53,7 +53,7 @@
 
 ## ▶ Next Task
 
-`None — awaiting authorization to close BUILD-022 / REVIEW-022 cycle`（F-020；§1 10 ✅/0 ❌、§3 R1–R7 全 Pass、core Vitest 112/112；待授權後開 PR base `main`）。**下一張**：F-021（#29 File Explorer 側欄），消費 F-019 `launchedSandboxes$` + F-020 open-file callback。F-019（BUILD-021）已 **merged to main** via PR #340。F-021（#29 File Explorer）為下一張，與 F-020 共用 `launchedSandboxes$`。BUG-001（BUILD-020）已 **merged to main** via PR #339、發版 0.3.13；F-018（BUILD-019）已 merged via PR #331、發版 0.3.12。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
+`None — awaiting authorization to close BUILD-023 / REVIEW-023 cycle`（F-021 Cycle 1；§1 9 ✅/0 ❌、§3 R1–R10 全 Pass、core Vitest 118/118、`/file-explorer` 瀏覽器驗證 + 截圖；PR base `main` 待開）。**F-021 Cycle 2**（等後端補 `fs/mkdir|item|all|copy|move` + `fs/watch` + `action=NUDGE`）= 變更操作 + context menu + 自動重載 + Nudge + CodeMirror。F-020（BUILD-022）已 **merged to main** via PR #341。**F-021 拆兩 cycle**：Cycle 1 = 瀏覽（`fs/list`）+ FileView 預覽/編輯存檔（`fs/file` read/write, CodeMirror）+ 側欄 slot/controller + open-file intent 抵達即通知（AC9）+ 編輯中狀態（AC10）+ 生命週期；Cycle 2（等後端補 `fs/mkdir|item|all|copy|move` + `fs/watch` + `action=NUDGE`）= 變更操作 + context menu + 自動重載 + Nudge。後端契約已對 asgard-core 核實（目前僅 3 支 fs 端點）。F-019（BUILD-021）已 **merged to main** via PR #340。F-021（#29 File Explorer）為下一張，與 F-020 共用 `launchedSandboxes$`。BUG-001（BUILD-020）已 **merged to main** via PR #339、發版 0.3.13；F-018（BUILD-019）已 merged via PR #331、發版 0.3.12。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
 
 ## Task Queue
 
@@ -103,3 +103,5 @@
 | `REVIEW-021` | Review: launchedSandboxes Rx Store            | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)     |
 | `BUILD-022`  | sandbox:// Handoff Cards                      | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)             |
 | `REVIEW-022` | Review: sandbox:// Handoff Cards              | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)           |
+| `BUILD-023`  | File Explorer Side Panel — Cycle 1            | High     | done   | [BUILD-023-file-explorer-panel.md](./BUILD-023-file-explorer-panel.md)                 |
+| `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1    | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)               |
