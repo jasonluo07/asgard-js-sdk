@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { Subscription } from 'rxjs';
 import Channel from './channel';
 import Conversation from './conversation';
-import { EventType } from '../constants/enum';
+import { EventType, FetchSseAction } from '../constants/enum';
 import type {
   ChannelMetadata,
   ChannelStates,
@@ -520,6 +520,36 @@ describe('Channel — launchedSandboxes store (F-019)', () => {
     channel.applyLaunchedSandboxes([sb('x')]);
 
     expect(seen[seen.length - 1]).toEqual(['x']);
+    channel.close();
+  });
+});
+
+describe('Channel — nudge (F-021 AC4)', () => {
+  it('sends action=NUDGE with empty text and renders no message', async () => {
+    const sent: FetchSsePayload[] = [];
+    const client = {
+      fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
+        sent.push(payload);
+        options?.onSseStart?.();
+        options?.onSseCompleted?.();
+      },
+    } as unknown as IAsgardServiceClient;
+    let lastMessageCount = -1;
+    const channel = Channel.create({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: (s: ChannelStates) => (lastMessageCount = s.conversation.messages.size),
+    });
+
+    await channel.nudge();
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0].action).toBe(FetchSseAction.NUDGE);
+    expect(sent[0].customChannelId).toBe('ch');
+    expect(sent[0].text).toBe('');
+    // Invisible turn: nudge does not push a user message into the conversation (unlike sendMessage).
+    expect(lastMessageCount).toBe(0);
     channel.close();
   });
 });

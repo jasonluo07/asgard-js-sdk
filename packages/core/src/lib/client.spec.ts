@@ -176,7 +176,7 @@ describe('AsgardServiceClient.generateSandboxBrowserOpenUrl (F-020)', () => {
 // asgard-core edgeserver: GET fs/list (JSON), GET fs/file (raw octet-stream + X-Total-Bytes/X-Truncated),
 // PUT fs/file (multipart form-data → { data: { bytesWritten } }).
 
-function blobResponse(status: number, body: BodyInit, headers: Record<string, string> = {}): Response {
+function blobResponse(status: number, body: string, headers: Record<string, string> = {}): Response {
   return {
     status,
     ok: status >= 200 && status < 300,
