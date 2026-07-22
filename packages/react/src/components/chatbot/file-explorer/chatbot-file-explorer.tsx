@@ -109,7 +109,7 @@ export function ChatbotFileExplorerAside({
   controller: FileExplorerController;
   basePath?: string;
 }): ReactNode {
-  const { client, channel } = useAsgardContext();
+  const { client, channel, nudge } = useAsgardContext();
   const sandboxes = useLaunchedSandboxes(channel);
   const providers = useMemo(() => (client ? createSandboxFsProviders(client) : null), [client]);
 
@@ -122,6 +122,13 @@ export function ChatbotFileExplorerAside({
       listDir={providers.listDir}
       readFile={providers.readFile}
       saveFile={providers.saveFile}
+      mkdir={providers.mkdir}
+      remove={providers.remove}
+      copy={providers.copy}
+      move={providers.move}
+      upload={providers.upload}
+      download={providers.download}
+      onNudge={nudge}
       basePath={basePath}
     />
   );

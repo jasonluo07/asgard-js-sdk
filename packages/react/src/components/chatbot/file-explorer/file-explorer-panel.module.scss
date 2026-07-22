@@ -1,4 +1,5 @@
 .root {
+  position: relative; // context menu clamps within this container (not fixed to the viewport)
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -6,6 +7,59 @@
   background: var(--asg-color-surface, #fff);
   color: var(--asg-color-text-primary, inherit);
   border-left: 1px solid var(--asg-color-border, rgba(0, 0, 0, 0.1));
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--asg-color-border, rgba(0, 0, 0, 0.06));
+}
+
+.toolBtn {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--asg-color-text-secondary, #6b7280);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 10%, transparent);
+    color: var(--asg-color-primary, #4f46e5);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.toolDanger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--asg-color-error, #ef4444) 12%, transparent);
+  color: var(--asg-color-error, #ef4444);
+}
+
+.toolSep {
+  width: 1px;
+  height: 1.1rem;
+  margin: 0 0.2rem;
+  background: var(--asg-color-border, rgba(0, 0, 0, 0.1));
+}
+
+.tree {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 0.25rem 0;
+}
+
+.cut {
+  opacity: 0.5;
 }
 
 .header {
@@ -57,15 +111,42 @@
 .body {
   min-height: 0;
   flex: 1;
-  overflow: auto;
-  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
   padding: 1rem;
   font-size: 0.8125rem;
   color: var(--asg-color-text-secondary, #6b7280);
   text-align: center;
+}
+
+.nudgeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--asg-color-primary, #4f46e5);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--asg-color-primary, #4f46e5);
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 10%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
 }
 
 .emptyDir {
