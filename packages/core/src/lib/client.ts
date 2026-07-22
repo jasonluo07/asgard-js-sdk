@@ -8,6 +8,11 @@ import {
   SseEvents,
   BlobUploadResponse,
   ChannelHomeDownloadResult,
+  SandboxFsListResult,
+  SandboxFsReadOptions,
+  SandboxFsReadResult,
+  SandboxFsWriteOptions,
+  SandboxFsWriteResult,
 } from '../types';
 import { HttpError } from '../types/http-error';
 import { createSseObservable } from './create-sse-observable';
@@ -423,6 +428,106 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     }
 
     return openURL;
+  }
+
+  /**
+   * F-021 — 衍生 sandbox fs 端點 base：`{base}/sandbox/{sandboxName}/fs`（namespace / bot-provider 已在 base）。
+   */
+  private deriveSandboxFsEndpoint(sandboxName: string): string {
+    const baseEndpoint = this.getBaseEndpoint();
+
+    if (!baseEndpoint) {
+      throw new Error('Unable to derive sandbox fs endpoint. Please provide botProviderEndpoint in config.');
+    }
+
+    return `${baseEndpoint}/sandbox/${encodeURIComponent(sandboxName)}/fs`;
+  }
+
+  private sandboxFsHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { ...this.customHeaders };
+    if (this.apiKey) {
+      headers['X-API-KEY'] = this.apiKey;
+    }
+
+    return headers;
+  }
+
+  /**
+   * F-021 — 列出 sandbox 目錄內容（`GET fs/list?path=`）。回應 `{ data: { entries, truncated } }`（envelope
+   * 容錯，比照 `channelMetadata`）。
+   */
+  async sandboxFsList(sandboxName: string, path: string): Promise<SandboxFsListResult> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/list`);
+    url.searchParams.set('path', path);
+
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    const json: { data?: SandboxFsListResult } & Partial<SandboxFsListResult> = await response.json();
+    const data = json.data ?? (json as SandboxFsListResult);
+
+    return { entries: data.entries ?? [], truncated: data.truncated ?? false };
+  }
+
+  /**
+   * F-021 — 讀取 sandbox 檔案（`GET fs/file?path=[&offset_bytes&limit_bytes]`）。回應是 raw octet-stream，
+   * 檔案總長度 / 是否截斷走 `X-Total-Bytes` / `X-Truncated` header。
+   */
+  async sandboxFsRead(sandboxName: string, path: string, options?: SandboxFsReadOptions): Promise<SandboxFsReadResult> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/file`);
+    url.searchParams.set('path', path);
+    if (options?.offsetBytes != null) url.searchParams.set('offset_bytes', String(options.offsetBytes));
+
+    if (options?.limitBytes != null) url.searchParams.set('limit_bytes', String(options.limitBytes));
+
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    const content = await response.blob();
+    const totalBytesHeader = response.headers.get('X-Total-Bytes');
+
+    return {
+      content,
+      totalBytes: totalBytesHeader != null ? Number(totalBytesHeader) : content.size,
+      truncated: response.headers.get('X-Truncated') === 'true',
+    };
+  }
+
+  /**
+   * F-021 — 寫入 sandbox 檔案（`PUT fs/file?path=[&mode&create_only]`，`multipart/form-data` 帶 `file`）。
+   * 回應 `{ data: { bytesWritten } }`。
+   */
+  async sandboxFsWrite(
+    sandboxName: string,
+    path: string,
+    content: Blob | string,
+    options?: SandboxFsWriteOptions,
+  ): Promise<SandboxFsWriteResult> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/file`);
+    url.searchParams.set('path', path);
+    if (options?.mode != null) url.searchParams.set('mode', String(options.mode));
+
+    if (options?.createOnly) url.searchParams.set('create_only', 'true');
+
+    const form = new FormData();
+    form.append('file', content instanceof Blob ? content : new Blob([content]));
+
+    const response = await fetch(url.toString(), { method: 'PUT', headers: this.sandboxFsHeaders(), body: form });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    const json: { data?: SandboxFsWriteResult } & Partial<SandboxFsWriteResult> = await response.json();
+    const data = json.data ?? (json as SandboxFsWriteResult);
+
+    return { bytesWritten: data.bytesWritten ?? 0 };
   }
 
   /**
