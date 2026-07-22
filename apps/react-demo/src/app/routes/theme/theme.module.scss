@@ -59,15 +59,12 @@
   overflow-y: auto;
 }
 
+// A definite, viewport-bounded height (not flex:1) — the shared DemoWrapper flex chain lacks
+// `min-height: 0`, so without a definite height the chatbot grows to its content instead of scrolling
+// its thread internally. The ~185px accounts for the demo chrome above (main padding + page header).
 .chatbotContainer {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-
-  > div {
-    width: 100%;
-    max-width: 420px;
-    height: 600px;
-  }
+  min-width: 0;
+  height: calc(100vh - 185px);
+  min-height: 480px;
 }

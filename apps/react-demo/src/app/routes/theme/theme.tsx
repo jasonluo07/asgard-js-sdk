@@ -77,6 +77,15 @@ export function Theme(): ReactNode {
     createAttachmentTemplateExample(),
   ];
 
+  // Same big-layout treatment as /all-features-wide: the <Chatbot> fills the remaining content area
+  // instead of a narrow 420px card, so wide-layout templates (carousel, table, tool-call blocks) are
+  // actually reviewable when judging a theme. The width/height override is layout-only and is kept out
+  // of the `theme` state so "Current Theme Config" keeps showing the preset as authored.
+  const layoutTheme: ChatbotTheme = {
+    ...theme,
+    chatbot: { ...theme.chatbot, width: '100%', height: '100%' },
+  };
+
   const handlePresetChange = (presetName: string): void => {
     const preset = presets.find(p => p.name === presetName);
     if (preset) {
@@ -115,7 +124,7 @@ export function Theme(): ReactNode {
           config={{ botProviderEndpoint: 'skip' }}
           customChannelId="theme-demo"
           initMessages={initMessages}
-          theme={theme}
+          theme={layoutTheme}
         />
       </div>
     </DemoWrapper>
