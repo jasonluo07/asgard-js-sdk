@@ -48,3 +48,24 @@ export interface SandboxFsWriteOptions {
 export interface SandboxFsWriteResult {
   bytesWritten: number;
 }
+
+/** `GET fs/stat` result: `{ data: { exists, isDir, sizeBytes, mtimeUnix, mode, etag? } }` (F-021 Cycle 2). */
+export interface SandboxFsStatResult {
+  exists: boolean;
+  isDir: boolean;
+  sizeBytes: number;
+  mtimeUnix: number;
+  mode: number;
+  etag?: string;
+}
+
+/** Options for `POST fs/copy` / `POST fs/move` (F-021 Cycle 2). */
+export interface SandboxFsCopyMoveOptions {
+  /** Overwrite an existing destination. */
+  overwrite?: boolean;
+}
+
+/** `POST fs/copy` result: `{ data: { bytesCopied } }` (F-021 Cycle 2). */
+export interface SandboxFsCopyResult {
+  bytesCopied: number;
+}

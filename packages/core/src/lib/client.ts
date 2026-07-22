@@ -8,9 +8,12 @@ import {
   SseEvents,
   BlobUploadResponse,
   ChannelHomeDownloadResult,
+  SandboxFsCopyMoveOptions,
+  SandboxFsCopyResult,
   SandboxFsListResult,
   SandboxFsReadOptions,
   SandboxFsReadResult,
+  SandboxFsStatResult,
   SandboxFsWriteOptions,
   SandboxFsWriteResult,
 } from '../types';
@@ -528,6 +531,95 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const data = json.data ?? (json as SandboxFsWriteResult);
 
     return { bytesWritten: data.bytesWritten ?? 0 };
+  }
+
+  /** F-021 Cycle 2 — `sandbox://` fs mutation shared request helper (throws `HttpError` on non-OK). */
+  private async sandboxFsRequest(
+    sandboxName: string,
+    op: string,
+    method: 'POST' | 'DELETE',
+    query: Record<string, string>,
+  ): Promise<unknown> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/${op}`);
+    Object.entries(query).forEach(([k, v]) => url.searchParams.set(k, v));
+
+    const response = await fetch(url.toString(), { method, headers: this.sandboxFsHeaders() });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    return response.json().catch(() => null);
+  }
+
+  /** F-021 — stat a sandbox path (`GET fs/stat?path=`). */
+  async sandboxFsStat(sandboxName: string, path: string): Promise<SandboxFsStatResult> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/stat`);
+    url.searchParams.set('path', path);
+
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
+    }
+
+    const json: { data?: SandboxFsStatResult } & Partial<SandboxFsStatResult> = await response.json();
+    const data = json.data ?? (json as SandboxFsStatResult);
+
+    return {
+      exists: data.exists ?? false,
+      isDir: data.isDir ?? false,
+      sizeBytes: data.sizeBytes ?? 0,
+      mtimeUnix: data.mtimeUnix ?? 0,
+      mode: data.mode ?? 0,
+      etag: data.etag,
+    };
+  }
+
+  /** F-021 — create a directory (`POST fs/mkdir?path=`). */
+  async sandboxFsMkdir(sandboxName: string, path: string): Promise<void> {
+    await this.sandboxFsRequest(sandboxName, 'mkdir', 'POST', { path });
+  }
+
+  /** F-021 — delete a file (`DELETE fs/item?path=`). */
+  async sandboxFsRemove(sandboxName: string, path: string): Promise<void> {
+    await this.sandboxFsRequest(sandboxName, 'item', 'DELETE', { path });
+  }
+
+  /** F-021 — recursively delete a directory (`DELETE fs/all?path=`). */
+  async sandboxFsRemoveAll(sandboxName: string, path: string): Promise<void> {
+    await this.sandboxFsRequest(sandboxName, 'all', 'DELETE', { path });
+  }
+
+  /** F-021 — copy a path (`POST fs/copy?src=&dst=[&overwrite]`) → bytes copied. */
+  async sandboxFsCopy(
+    sandboxName: string,
+    src: string,
+    dst: string,
+    options?: SandboxFsCopyMoveOptions,
+  ): Promise<SandboxFsCopyResult> {
+    const query: Record<string, string> = { src, dst };
+    if (options?.overwrite) query.overwrite = 'true';
+
+    const json = (await this.sandboxFsRequest(sandboxName, 'copy', 'POST', query)) as
+      | ({ data?: SandboxFsCopyResult } & Partial<SandboxFsCopyResult>)
+      | null;
+    const data = json?.data ?? (json as SandboxFsCopyResult | null);
+
+    return { bytesCopied: data?.bytesCopied ?? 0 };
+  }
+
+  /** F-021 — move / rename a path (`POST fs/move?src=&dst=[&overwrite]`). */
+  async sandboxFsMove(
+    sandboxName: string,
+    src: string,
+    dst: string,
+    options?: SandboxFsCopyMoveOptions,
+  ): Promise<void> {
+    const query: Record<string, string> = { src, dst };
+    if (options?.overwrite) query.overwrite = 'true';
+
+    await this.sandboxFsRequest(sandboxName, 'move', 'POST', query);
   }
 
   /**

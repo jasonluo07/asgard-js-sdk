@@ -275,3 +275,96 @@ describe('AsgardServiceClient sandbox fs (F-021)', () => {
     await expect(makeClient().sandboxFsList('sbx-1', '/x')).rejects.toThrow();
   });
 });
+
+// F-021 Cycle 2 — sandbox fs mutation client methods. Contract verified against asgard-core develop
+// (dev-1.16.34): stat (JSON), mkdir/item/all/move → { data: null }, copy → { data: { bytesCopied } }.
+describe('AsgardServiceClient sandbox fs mutations (F-021 Cycle 2)', () => {
+  const base = 'https://api.example.com/ns/x/bot-provider/y/sandbox/sbx-1/fs';
+
+  it('sandboxFsStat: GET fs/stat?path= → decoded stat', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          fakeResponse(200, { data: { exists: true, isDir: false, sizeBytes: 12, mtimeUnix: 1700000000, mode: 420 } }),
+        ),
+    );
+
+    const stat = await makeClient().sandboxFsStat('sbx-1', '/f.txt');
+
+    expect(stat).toEqual({
+      exists: true,
+      isDir: false,
+      sizeBytes: 12,
+      mtimeUnix: 1700000000,
+      mode: 420,
+      etag: undefined,
+    });
+  });
+
+  it('sandboxFsMkdir: POST fs/mkdir?path=', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().sandboxFsMkdir('sbx-1', '/home/new');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${base}/mkdir?path=%2Fhome%2Fnew`);
+    expect(init.method).toBe('POST');
+    expect(init.headers['X-API-KEY']).toBe('test-key');
+  });
+
+  it('sandboxFsRemove: DELETE fs/item?path=', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().sandboxFsRemove('sbx-1', '/f.txt');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${base}/item?path=%2Ff.txt`);
+    expect(init.method).toBe('DELETE');
+  });
+
+  it('sandboxFsRemoveAll: DELETE fs/all?path=', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().sandboxFsRemoveAll('sbx-1', '/dir');
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${base}/all?path=%2Fdir`);
+    expect(init.method).toBe('DELETE');
+  });
+
+  it('sandboxFsCopy: POST fs/copy?src=&dst=&overwrite → bytesCopied', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: { bytesCopied: 34 } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().sandboxFsCopy('sbx-1', '/a.txt', '/b.txt', { overwrite: true });
+
+    expect(result).toEqual({ bytesCopied: 34 });
+    const url = fetchMock.mock.calls[0][0];
+    expect(url).toContain('src=%2Fa.txt');
+    expect(url).toContain('dst=%2Fb.txt');
+    expect(url).toContain('overwrite=true');
+    expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+  });
+
+  it('sandboxFsMove: POST fs/move?src=&dst=', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(fakeResponse(200, { data: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await makeClient().sandboxFsMove('sbx-1', '/a.txt', '/sub/a.txt');
+
+    const url = fetchMock.mock.calls[0][0];
+    expect(url).toBe(`${base}/move?src=%2Fa.txt&dst=%2Fsub%2Fa.txt`);
+    expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+  });
+
+  it('sandboxFsMkdir: throws on a non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(500, 'boom')));
+
+    await expect(makeClient().sandboxFsMkdir('sbx-1', '/x')).rejects.toThrow();
+  });
+});
