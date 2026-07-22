@@ -107,3 +107,4 @@
 | `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1     | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)               |
 | `BUILD-024`  | File Explorer Mutations + Context Menu + Nudge | High     | done   | [BUILD-024-file-explorer-mutations.md](./BUILD-024-file-explorer-mutations.md)         |
 | `REVIEW-024` | Review: File Explorer Mutations + Nudge        | —        | done   | [REVIEW-024-file-explorer-mutations.md](./REVIEW-024-file-explorer-mutations.md)       |
+| `BUILD-025`  | Guard the File Explorer glyphs against drift   | Normal   | done   | [BUILD-025-file-explorer-icon-guard.md](./BUILD-025-file-explorer-icon-guard.md)       |
