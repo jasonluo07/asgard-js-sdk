@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-023`
-- Status: `in-progress`
+- Status: `done`
 - Issue: `https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/29`
 - Source spec: `references/asgard-sdk-pm/tracking/asgard-js-sdk/features/F-021-sandbox-working-directory-file-explorer-側欄.md` (+ `use-cases/UC-037` / `UC-038` / `UC-039`; prototype `FileExplorerPanel.tsx` / `FileView.tsx` / `useFileExplorerController.ts`); related product decision `asgard-sindri-pm#94`
 - Complexity: `L`
@@ -63,26 +63,43 @@ Cycle-1 subset of F-021 (F-021 AC → R# mapping in parentheses). Deferred ACs l
 
 ## Implementation Tasks
 
-- [ ] T1 (R1): `core/src/types/` — sandbox fs types (`SandboxFsDirEntry`, list/read/write result + option types).
-- [ ] T2 (R1): `client.ts` — `sandboxFsList(sandboxName, path)`, `sandboxFsRead(sandboxName, path, opts?)` (octet-stream + `X-Total-Bytes`/`X-Truncated`), `sandboxFsWrite(sandboxName, path, content, opts?)` (multipart); export from core entry.
-- [ ] T3 (R7): extend F-020's `dispatch-uri-action` / the message pipeline so an arriving `open-file` card fires the intent (callback + controller `requestedFile` with nonce) without requiring a click; keep the click path.
-- [ ] T4 (R2, R3, R9): react `FileExplorerPanel` — live-sandbox dropdown, `workingDirectory` root + `basePath` override, tree browse via `sandboxFsList`.
-- [ ] T5 (R4, R8): react `FileView` — textarea preview/edit, `.md` markdown render via `streamdown`, image preview; save via `sandboxFsWrite`; expose editing/dirty state; manual refresh. (CodeMirror → Cycle 2.)
-- [ ] T6 (R5, R6): `useFileExplorerController` + Chatbot `renderSidePanel` slot + `fileExplorer` prop + header folder toggle + right aside layout.
-- [ ] T7 (R6, R7, R8): wire header toggle / open-file card / consumer panel to one controller; `autoRevealOnOpenFileCard` prop; expose controller state.
-- [ ] T8 (R1, R10): core Vitest for the three fs client methods.
-- [ ] T9 (R10): scoped `/file-explorer` react-demo with a mock fs backend; browser-verify + screenshot to `.github/screenshots/`.
-- [ ] T10: `npm run lint:packages` + `npm run format:check` + `npm run build:core && npm run build:react`.
+- [x] T1 (R1): `core/src/types/` — sandbox fs types (`SandboxFsDirEntry`, list/read/write result + option types).
+- [x] T2 (R1): `client.ts` — `sandboxFsList(sandboxName, path)`, `sandboxFsRead(sandboxName, path, opts?)` (octet-stream + `X-Total-Bytes`/`X-Truncated`), `sandboxFsWrite(sandboxName, path, content, opts?)` (multipart); export from core entry.
+- [x] T3 (R7): extend F-020's `dispatch-uri-action` / the message pipeline so an arriving `open-file` card fires the intent (callback + controller `requestedFile` with nonce) without requiring a click; keep the click path.
+- [x] T4 (R2, R3, R9): react `FileExplorerPanel` — live-sandbox dropdown, `workingDirectory` root + `basePath` override, tree browse via `sandboxFsList`.
+- [x] T5 (R4, R8): react `FileView` — textarea preview/edit, `.md` markdown render via `streamdown`, image preview; save via `sandboxFsWrite`; expose editing/dirty state; manual refresh. (CodeMirror → Cycle 2.)
+- [x] T6 (R5, R6): `useFileExplorerController` + Chatbot `renderSidePanel` slot + `fileExplorer` prop + header folder toggle + right aside layout.
+- [x] T7 (R6, R7, R8): wire header toggle / open-file card / consumer panel to one controller; `autoRevealOnOpenFileCard` prop; expose controller state.
+- [x] T8 (R1, R10): core Vitest for the three fs client methods.
+- [x] T9 (R10): scoped `/file-explorer` react-demo with a mock fs backend; browser-verify + screenshot to `.github/screenshots/`.
+- [x] T10: `npm run lint:packages` + `npm run format:check` + `npm run build:core && npm run build:react`.
 
 ---
 
 ## Coverage
 
-Use Cases: [filled during build]
-Files: [filled during build]
+Use Cases: R1 (core Vitest — fs client methods), R2/R3 (`/file-explorer` browser — dropdown + tree), R4 (browser — FileView preview/edit/save), R5/R6 (builtin toggle + aside layout + `off` consumer panel), R7 (browser — open-file intent → reveal; arrival bridge), R8 (dirty wiring), R9 (launchedSandboxes$ inherited), R10 (build + Vitest + `/file-explorer` screenshot)
+Files:
+
+- `packages/core/src/types/sandbox-fs.ts` (core) — `SandboxFsDirEntry` + list/read/write result & option types
+- `packages/core/src/types/index.ts` (core) — export sandbox-fs types
+- `packages/core/src/lib/client.ts` (core) — `sandboxFsList` / `sandboxFsRead` / `sandboxFsWrite`
+- `packages/core/src/lib/client.spec.ts` (core) — +6 fs tests
+- `packages/core/src/index.ts` (core) — (types re-exported via `export type *`)
+- `packages/react/src/hooks/use-file-explorer-controller.ts` (react) — shared controller
+- `packages/react/src/hooks/use-derived-state.ts` (react) — `useLaunchedSandboxes` initial mount refetch
+- `packages/react/src/hooks/index.ts` (react) — export controller
+- `packages/react/src/components/chatbot/file-explorer/*` (react) — panel, FileView, icons, providers, chatbot-file-explorer (aside + toggle + arrival bridge), barrels + scss
+- `packages/react/src/components/index.ts` (react) — export file-explorer
+- `packages/react/src/context/asgard-service-context.tsx` (react) — expose `channel`
+- `packages/react/src/components/chatbot/chatbot.tsx` + `chatbot.module.scss` (react) — `fileExplorer` / `autoRevealOnOpenFileCard` / `fileExplorerBasePath` props, controller, main-row + aside layout, folder toggle, arrival bridge, composed `onSandboxOpenFile`
+- `apps/react-demo/src/app/routes/file-explorer/*` + `app.tsx` + `layout.tsx` (demo)
+- `apps/react-demo/src/mock-server/sse-mock.ts` + `vite.config.ts` (demo) — fs mock + metadata launchedSandboxes
+- `.github/screenshots/f-021-file-explorer.png` (evidence)
 
 ---
 
 ## Execution Log / Change Log
 
 - 2026-07-22: BUILD task created from https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/29 (F-021). Scoped to **Cycle 1** after verifying `asgard-core` exposes only `fs/list` + `fs/file` (read/write); mutations + `fs/watch` + Nudge deferred to Cycle 2 (backend gap). Product alignment per `asgard-sindri-pm#94` (open-file notify-not-force, browser stays click). CodeMirror 6 adopted per F-021 AC3 (Status: `draft`).
+- 2026-07-22: Implemented T1–T10. Core fs client + types (TDD, +6 Vitest → 118/118). React: controller (reveal flag + isEditingDirty), FileView (textarea + streamdown + save + dirty; **CodeMirror deferred to Cycle 2** to keep Cycle 1 dependency-light), FileExplorerPanel (dropdown + lazy tree + open-file), createSandboxFsProviders, inline icons (no lucide dep). Chatbot builtin: `fileExplorer` prop + folder toggle + right aside (flex row in the chat shell) + arrival bridge (fire intent on card arrival, gated `autoRevealOnOpenFileCard` + mid-edit guard) + composed `onSandboxOpenFile`; exposed `channel` on the service context; `useLaunchedSandboxes` now refetches metadata on mount. `/file-explorer` demo browser-verified (dropdown, tree, README preview/edit/save, open-file intent → reveal) + screenshot. lint + build green (Status: `in-progress → done`).
