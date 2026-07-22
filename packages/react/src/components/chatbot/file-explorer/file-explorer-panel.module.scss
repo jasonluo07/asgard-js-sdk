@@ -61,11 +61,18 @@
   padding: 0.25rem 0;
 }
 
-.empty {
+.emptyState {
   padding: 1rem;
   font-size: 0.8125rem;
   color: var(--asg-color-text-secondary, #6b7280);
   text-align: center;
+}
+
+.emptyDir {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--asg-color-text-secondary, #6b7280);
+  opacity: 0.7;
 }
 
 .status {
