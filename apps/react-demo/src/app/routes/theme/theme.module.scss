@@ -47,6 +47,15 @@
   }
 }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
 .themeCode {
   background: #1a1a2e;
   color: #a0e0a0;

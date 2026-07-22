@@ -1,13 +1,8 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { Chatbot, ChatbotTheme } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
-import {
-  createTextTemplateExample,
-  createButtonTemplateExample,
-  createCarouselTemplateExample,
-  createAttachmentTemplateExample,
-} from '../../mocks/messages';
+import { createThemeGalleryMessages } from '../../mocks/theme-gallery';
 import styles from './theme.module.scss';
 
 const presets: { name: string; config: ChatbotTheme }[] = [
@@ -69,13 +64,11 @@ const presets: { name: string; config: ChatbotTheme }[] = [
 export function Theme(): ReactNode {
   const [selectedPreset, setSelectedPreset] = useState<string>('Default');
   const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
+  const [showDockedPanels, setShowDockedPanels] = useState(true);
 
-  const initMessages = [
-    createTextTemplateExample(),
-    createButtonTemplateExample(),
-    createCarouselTemplateExample(),
-    createAttachmentTemplateExample(),
-  ];
+  // Rebuilt only when the docked panels are toggled: the creators mint nanoid message ids, so
+  // regenerating on every render would churn the whole thread each time a preset button is clicked.
+  const initMessages = useMemo(() => createThemeGalleryMessages(showDockedPanels), [showDockedPanels]);
 
   // Same big-layout treatment as /all-features-wide: the <Chatbot> fills the remaining content area
   // instead of a narrow 420px card, so wide-layout templates (carousel, table, tool-call blocks) are
@@ -97,7 +90,7 @@ export function Theme(): ReactNode {
   return (
     <DemoWrapper
       title="Theme Customization"
-      description="Customize the chatbot appearance with theme configuration. Try the 'Crazy' preset to see all theme options in action."
+      description="以主題設定調整 chatbot 外觀。對話串刻意塞滿所有可套主題的表面 —— 全部 message template、markdown / 程式碼、thinking、tool-call 群組（完成 / 執行中 / 失敗）、錯誤訊息，以及 docked 的任務清單與 subagent 面板 —— 這樣才看得出哪些地方沒跟著主題走。切到 'Crazy' 一次翻掉所有顏色最容易抓漏。"
     >
       <div className={styles.controls}>
         <h3>Presets</h3>
@@ -113,13 +106,19 @@ export function Theme(): ReactNode {
           ))}
         </div>
 
+        <h3>Thread</h3>
+        <label className={styles.toggle}>
+          <input type="checkbox" checked={showDockedPanels} onChange={e => setShowDockedPanels(e.target.checked)} />
+          顯示 docked 面板（Tasks / Subagents）
+        </label>
+
         <h3>Current Theme Config</h3>
         <pre className={styles.themeCode}>{JSON.stringify(theme, null, 2)}</pre>
       </div>
 
       <div className={styles.chatbotContainer}>
         <Chatbot
-          key={selectedPreset}
+          key={`${selectedPreset}-${showDockedPanels}`}
           title="Theme Demo"
           config={{ botProviderEndpoint: 'skip' }}
           customChannelId="theme-demo"
