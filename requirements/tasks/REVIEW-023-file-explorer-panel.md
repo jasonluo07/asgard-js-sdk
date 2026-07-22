@@ -103,6 +103,15 @@ None.
 
 None.
 
+### Prototype fidelity (aligned post full-read)
+
+After a full read of the pinned `FileExplorerPanel.tsx`, four Cycle-1 behaviors were corrected to match it:
+cwd always shows the sandbox `workingDirectory` even when `basePath` overrides the tree root (spec AC2); the
+tree sorts dirs-first then by name; single-click selects (dir toggles) / double-click opens the FileView;
+the open-file reveal expands ancestor dirs + highlights the target (expanded/selected state lifted to the
+panel). The remaining prototype surfaces (mutation toolbar, right-click context menu, close button, chrome
+variants, empty-state icon + Nudge) are Cycle 2 / deferred by scope.
+
 ### Minor (nice to have)
 
 - **Deferred to Cycle 2** (backend `fs/mkdir|item|all|copy|move` + `fs/watch` + `action=NUDGE` not yet in `asgard-core`): mutations (copy/move/mkdir/delete/upload), the right-click context-menu mutation actions (AC8), `fs/watch` auto-reload (AC3), and the empty-state Nudge (AC4). Also CodeMirror 6 syntax highlighting (AC3) — Cycle 1 uses a textarea.
