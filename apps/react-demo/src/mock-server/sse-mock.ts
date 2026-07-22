@@ -46,6 +46,10 @@ function chunkText(text: string, size = 3): string[] {
 const NAMESPACE = 'mock-namespace';
 const BOT_PROVIDER_NAME = 'mock-bot-provider';
 
+// F-021 — channels that have received a NUDGE (empty-state → wake). The metadata handler starts them with
+// no live sandbox and, once nudged, reports one — so the built-in aside's dropdown refills after the wake.
+const nudgedChannels = new Set<string>();
+
 // 預設的長回覆 (~28 個 deltas),夠 overflow 一個高度 600px 的 chatbot,
 // 讓 scroll follow-bottom 行為在 streaming 過程中可被觀察。
 const REPLY_CHUNKS = [
@@ -223,6 +227,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // RESET_CHANNEL; a later plain send gets a short reply so the page stays interactive.
   if (customChannelId === 'all-features-demo') {
     await handleAllFeaturesMock(res, payload);
+
+    return;
+  }
+
+  // F-021 AC4 — NUDGE: an invisible turn (empty text, no message frames). Wakes an idle sandbox: the mock
+  // records the channel as nudged (so the next metadata refetch reports a live sandbox) and emits
+  // sandbox.launch → ready. The SDK's launch handler auto-refetches metadata → the dropdown refills.
+  if (payload.action === 'NUDGE') {
+    await handleNudgeMock(res, customChannelId);
 
     return;
   }
@@ -645,6 +658,42 @@ async function handleSandboxHudMock(res: ServerResponse, payload: ParsedPayload)
   res.end();
 }
 
+// F-021 AC4 — Nudge wake. An invisible turn: emit run.init → sandbox.launch → (gap) → sandbox.ready →
+// run.done, with NO message frames (the empty text must not surface a bubble). The launch frame triggers
+// the SDK's metadata refetch; `nudgedChannels` makes that refetch report the now-live sandbox.
+async function handleNudgeMock(res: ServerResponse, customChannelId: string): Promise<void> {
+  nudgedChannels.add(customChannelId);
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(300);
+  writeEvent(res, {
+    ...header,
+    eventType: 'asgard.sandbox.launch',
+    fact: { ...emptyFact(), sandboxLaunch: { sandboxName: 'sbx-nudged', blueprintName: 'demo-workspace' } },
+  });
+  await sleep(1400);
+  writeEvent(res, {
+    ...header,
+    eventType: 'asgard.sandbox.ready',
+    fact: { ...emptyFact(), sandboxReady: { sandboxName: 'sbx-nudged', blueprintName: 'demo-workspace' } },
+  });
+  await sleep(200);
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
 // ---------------------------------------------------------------------------------------------------
 // F-002 — Last-Event-ID resume demo. A fresh run streams `id:`-tagged deltas then drops the socket
 // mid-stream; @microsoft/fetch-event-source reconnects with `Last-Event-ID` and this handler resumes
@@ -914,6 +963,26 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
     return;
   }
 
+  // F-021 AC4 — the Nudge empty-state channel: no live sandbox until nudged, then one appears (so the
+  // built-in aside starts on the empty state + Nudge button, and the dropdown refills after the wake).
+  if (customChannelId === 'file-explorer-empty-demo') {
+    const launchedSandboxes = nudgedChannels.has(customChannelId)
+      ? [
+          {
+            sandboxName: 'sbx-nudged',
+            sandboxBlueprintName: 'demo-workspace',
+            workingDirectory: '/home/user/project',
+            editorServerEnabled: true,
+            browserEnabled: false,
+          },
+        ]
+      : [];
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: { title: 'File Explorer（Nudge 空狀態）', runState: 'IDLE', launchedSandboxes } }));
+
+    return;
+  }
+
   // Exists → restore. The title seeds the channel-title bar (F-016); GET /message/sse replays history.
   if (customChannelId.startsWith('join-existing')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -932,12 +1001,20 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
 }
 
 // ---------------------------------------------------------------------------------------------------
-// F-021 — in-memory sandbox fs mock for the /file-explorer demo. Serves the three edge endpoints the SDK
-// Cycle-1 fs client calls: GET fs/list (JSON), GET fs/file (octet-stream + X-Total-Bytes/X-Truncated),
-// PUT fs/file (multipart → { data: { bytesWritten } }). A tiny fixed tree; writes are echoed, not persisted.
+// F-021 — in-memory sandbox fs mock for the /file-explorer demo. Cycle 1: GET fs/list (JSON), GET fs/file
+// (octet-stream + X-Total-Bytes/X-Truncated), PUT fs/file (multipart → { data: { bytesWritten } }).
+// Cycle 2: GET fs/stat, POST fs/mkdir, DELETE fs/item (file), DELETE fs/all (dir, recursive),
+// POST fs/copy?src=&dst=, POST fs/move?src=&dst=. The tree is now *mutable* so mutations reflect on
+// re-list — reset to the seed on server restart.
 // ---------------------------------------------------------------------------------------------------
 
-const FS_DIRS: Record<string, Array<{ name: string; isDir: boolean; sizeBytes: number }>> = {
+interface FsDirEntry {
+  name: string;
+  isDir: boolean;
+  sizeBytes: number;
+}
+
+const FS_DIRS: Record<string, FsDirEntry[]> = {
   '/home/user/project': [
     { name: 'src', isDir: true, sizeBytes: 0 },
     { name: 'README.md', isDir: false, sizeBytes: 92 },
@@ -957,12 +1034,76 @@ const FS_FILES: Record<string, string> = {
   '/home/user/project/src/app.tsx': 'export function App() {\n  return <div>hello</div>;\n}\n',
 };
 
+function fsParentOf(path: string): string {
+  const norm = path.replace(/\/+$/, '');
+  const i = norm.lastIndexOf('/');
+
+  return i > 0 ? norm.slice(0, i) : '/';
+}
+
+function fsBaseOf(path: string): string {
+  return path.replace(/\/+$/, '').split('/').pop() ?? path;
+}
+
+function fsAddEntry(dir: string, name: string, isDir: boolean, sizeBytes: number): void {
+  const list = FS_DIRS[dir] ?? (FS_DIRS[dir] = []);
+  const existing = list.find(e => e.name === name);
+  if (existing) {
+    existing.isDir = isDir;
+    existing.sizeBytes = sizeBytes;
+  } else {
+    list.push({ name, isDir, sizeBytes });
+  }
+}
+
+function fsRemoveEntry(dir: string, name: string): void {
+  const list = FS_DIRS[dir];
+  if (list) FS_DIRS[dir] = list.filter(e => e.name !== name);
+}
+
+function fsIsDir(path: string): boolean {
+  return path in FS_DIRS;
+}
+
+/** Recursively copy a file or dir subtree (prefix key replace). Registers the dst entry in its parent. */
+function fsCopyTree(src: string, dst: string): void {
+  if (src in FS_FILES) {
+    FS_FILES[dst] = FS_FILES[src];
+    fsAddEntry(fsParentOf(dst), fsBaseOf(dst), false, Buffer.byteLength(FS_FILES[dst], 'utf-8'));
+
+    return;
+  }
+
+  for (const key of Object.keys(FS_DIRS)) {
+    if (key === src || key.startsWith(`${src}/`))
+      FS_DIRS[dst + key.slice(src.length)] = FS_DIRS[key].map(e => ({ ...e }));
+  }
+
+  for (const key of Object.keys(FS_FILES)) {
+    if (key.startsWith(`${src}/`)) FS_FILES[dst + key.slice(src.length)] = FS_FILES[key];
+  }
+
+  fsAddEntry(fsParentOf(dst), fsBaseOf(dst), true, 0);
+}
+
+function fsRemoveTree(path: string): void {
+  delete FS_FILES[path];
+  for (const key of Object.keys(FS_FILES)) if (key.startsWith(`${path}/`)) delete FS_FILES[key];
+  for (const key of Object.keys(FS_DIRS)) if (key === path || key.startsWith(`${path}/`)) delete FS_DIRS[key];
+  fsRemoveEntry(fsParentOf(path), fsBaseOf(path));
+}
+
+function fsJson(res: ServerResponse, data: unknown, status = 200): void {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ data }));
+}
+
 export async function handleMockSandboxFs(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '', 'http://localhost');
   const path = url.searchParams.get('path') ?? '';
-  const isList = url.pathname.endsWith('/fs/list');
+  const op = url.pathname.split('/fs/')[1] ?? '';
 
-  if (isList) {
+  if (op === 'list') {
     const entries = (FS_DIRS[path] ?? []).map(e => ({
       name: e.name,
       isDir: e.isDir,
@@ -970,20 +1111,65 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
       mtimeUnix: 1_700_000_000,
       mode: e.isDir ? 493 : 420,
     }));
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ data: { entries, truncated: false } }));
+    fsJson(res, { entries, truncated: false });
+
+    return;
+  }
+
+  if (op === 'stat') {
+    const isDir = fsIsDir(path);
+    const exists = isDir || path in FS_FILES;
+    fsJson(res, {
+      exists,
+      isDir,
+      sizeBytes: isDir ? 0 : Buffer.byteLength(FS_FILES[path] ?? '', 'utf-8'),
+      mtimeUnix: 1_700_000_000,
+      mode: isDir ? 493 : 420,
+    });
+
+    return;
+  }
+
+  if (op === 'mkdir') {
+    if (!(path in FS_DIRS)) FS_DIRS[path] = [];
+
+    fsAddEntry(fsParentOf(path), fsBaseOf(path), true, 0);
+    fsJson(res, null);
+
+    return;
+  }
+
+  if (op === 'item' || op === 'all') {
+    fsRemoveTree(path);
+    fsJson(res, null);
+
+    return;
+  }
+
+  if (op === 'copy' || op === 'move') {
+    const src = url.searchParams.get('src') ?? '';
+    const dst = url.searchParams.get('dst') ?? '';
+    const bytesCopied = src in FS_FILES ? Buffer.byteLength(FS_FILES[src], 'utf-8') : 0;
+    fsCopyTree(src, dst);
+    if (op === 'move') fsRemoveTree(src);
+
+    fsJson(res, op === 'copy' ? { bytesCopied } : null);
 
     return;
   }
 
   // fs/file
   if (req.method === 'PUT') {
-    // Drain the multipart body; echo bytesWritten (not persisted).
+    // Drain the multipart body; the path comes from the query param, so persist an entry (new-file /
+    // upload show up on re-list). Content is not extracted from multipart — persisted as empty for demo.
     const chunks: Buffer[] = [];
     req.on('data', c => chunks.push(c));
     await new Promise<void>(resolve => req.on('end', () => resolve()));
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ data: { bytesWritten: Buffer.concat(chunks).length } }));
+    const bytesWritten = Buffer.concat(chunks).length;
+    if (!(path in FS_FILES)) FS_FILES[path] = '';
+
+    fsAddEntry(fsParentOf(path), fsBaseOf(path), false, Buffer.byteLength(FS_FILES[path], 'utf-8'));
+    fsJson(res, { bytesWritten });
 
     return;
   }
