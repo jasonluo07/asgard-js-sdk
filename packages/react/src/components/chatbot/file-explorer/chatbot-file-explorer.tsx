@@ -5,7 +5,7 @@ import { useLaunchedSandboxes } from '../../../hooks/use-derived-state';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
 import { FileExplorerPanel } from './file-explorer-panel';
 import { createSandboxFsProviders } from './create-sandbox-fs-providers';
-import { FolderIcon } from './icons';
+import { FolderTreeIcon } from './icons';
 import styles from './chatbot-file-explorer.module.scss';
 
 /**
@@ -93,7 +93,7 @@ export function FileExplorerToggle({ controller }: { controller: FileExplorerCon
       aria-pressed={controller.open}
       title="檔案總管"
     >
-      <FolderIcon size={16} />
+      <FolderTreeIcon size={18} />
     </button>
   );
 }
@@ -129,6 +129,8 @@ export function ChatbotFileExplorerAside({
       upload={providers.upload}
       download={providers.download}
       onNudge={nudge}
+      onClose={controller.closeExplorer}
+      chrome="flush"
       basePath={basePath}
     />
   );

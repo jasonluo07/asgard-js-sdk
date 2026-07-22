@@ -5,21 +5,27 @@ import { FileView } from './file-view';
 import { ContextMenu, ContextMenuItem } from './context-menu';
 import { FsEntry, FsReadFile, FsSaveFile } from './types';
 import {
+  ChevronDownIcon,
   ChevronRightIcon,
   CircleAlertIcon,
   ClipboardPasteIcon,
   CopyIcon,
   DownloadIcon,
+  EyeIcon,
   FileIcon,
   FilePlusIcon,
   FolderIcon,
+  FolderOpenIcon,
   FolderPlusIcon,
   LoaderCircleIcon,
+  PackageOpenIcon,
   PencilIcon,
   RefreshIcon,
   ScissorsIcon,
   TrashIcon,
   UploadIcon,
+  XIcon,
+  ZapIcon,
 } from './icons';
 import styles from './file-explorer-panel.module.scss';
 
@@ -51,6 +57,13 @@ export interface FileExplorerPanelProps extends FileExplorerMutations {
   basePath?: string;
   /** Nudge an idle sandbox back to life (F-021 AC4); when provided, the empty state shows a Nudge button. */
   onNudge?: () => void | Promise<void>;
+  /** When provided, the header shows a close (X) button (the built-in aside passes `controller.closeExplorer`). */
+  onClose?: () => void;
+  /**
+   * Chrome: `card` = a standalone card (rounded, fully bordered) for consumer-placed panels;
+   * `flush` = the built-in aside split into the chat view (no radius, left divider only). Defaults to `card`.
+   */
+  chrome?: 'card' | 'flush';
 }
 
 function joinPath(dir: string, name: string): string {
@@ -201,7 +214,7 @@ function TreeNode(props: TreeNodeProps): ReactNode {
       <button
         type="button"
         className={`${styles.node} ${selected ? styles.selected : ''} ${isCut ? styles.cut : ''}`}
-        style={{ paddingLeft: `${0.25 + depth * 0.85}rem` }}
+        style={{ paddingLeft: `${0.5 + depth * 0.85}rem` }}
         onClick={onClick}
         onDoubleClick={() => !entry.isDir && onOpen(entry)}
         onContextMenu={e => onContext(e, entry)}
@@ -213,7 +226,11 @@ function TreeNode(props: TreeNodeProps): ReactNode {
           <span className={styles.chevronSpacer} />
         )}
         {entry.isDir ? (
-          <FolderIcon size={15} className={styles.nodeIcon} />
+          isOpen ? (
+            <FolderOpenIcon size={15} className={styles.nodeIcon} />
+          ) : (
+            <FolderIcon size={15} className={styles.nodeIcon} />
+          )
         ) : (
           <FileIcon size={15} className={styles.nodeIcon} />
         )}
@@ -246,7 +263,11 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     upload,
     download,
     onNudge,
+    onClose,
+    chrome = 'card',
   } = props;
+
+  const rootClass = `${styles.root} ${chrome === 'flush' ? styles.flush : ''}`;
 
   const activeSandboxName = controller.activeSandboxName ?? sandboxes[0]?.sandboxName ?? null;
   const activeSandbox = sandboxes.find(s => s.sandboxName === activeSandboxName) ?? null;
@@ -265,7 +286,6 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
 
   const rootPath = basePath ?? activeSandbox?.workingDirectory ?? null;
   const sandboxName = activeSandboxName;
-  const hasMutations = Boolean(mkdir || remove || copy || move || upload);
 
   const bumpRefresh = useCallback((): void => setRefreshKey(k => k + 1), []);
   const closeMenu = useCallback((): void => setMenu(null), []);
@@ -435,17 +455,28 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
 
   if (sandboxes.length === 0 || !activeSandbox) {
     return (
-      <div className={styles.root}>
+      <div className={rootClass} ref={rootRef}>
+        {onClose && (
+          <div className={styles.emptyClose}>
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="關閉檔案總管" title="關閉">
+              <XIcon size={16} />
+            </button>
+          </div>
+        )}
         <div className={styles.emptyState}>
-          <p>目前沒有執行中的 sandbox。</p>
+          <PackageOpenIcon size={30} className={styles.emptyIcon} />
+          <div className={styles.emptyTitle}>目前沒有執行中的 sandbox</div>
+          <div className={styles.emptyDesc}>sandbox 可能因閒置已被回收。可推一則訊息喚醒一台來繼續作業。</div>
           {onNudge && (
             <button type="button" className={styles.nudgeBtn} onClick={handleNudge} disabled={nudging}>
               {nudging ? (
                 <>
-                  <LoaderCircleIcon size={14} className={styles.spin} /> 喚醒中…
+                  <LoaderCircleIcon size={15} className={styles.spin} /> 喚醒中…
                 </>
               ) : (
-                '喚醒 sandbox'
+                <>
+                  <ZapIcon size={15} /> 喚醒 sandbox
+                </>
               )}
             </button>
           )}
@@ -468,6 +499,12 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
 
       return [
         [
+          {
+            key: 'open',
+            label: '開啟',
+            icon: <EyeIcon size={15} />,
+            onSelect: () => setOpenFile(e),
+          },
           {
             key: 'download',
             label: '下載',
@@ -513,8 +550,17 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
 
     if (target.kind === 'dir') {
       const e = target.entry;
+      const isExpanded = expanded.has(e.path);
 
       return [
+        [
+          {
+            key: 'toggle',
+            label: isExpanded ? '收合' : '展開',
+            icon: isExpanded ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />,
+            onSelect: () => toggleExpand(e.path),
+          },
+        ],
         [
           {
             key: 'newfile',
@@ -609,30 +655,38 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
   }
 
   return (
-    <div className={styles.root} ref={rootRef}>
+    <div className={rootClass} ref={rootRef}>
       <div className={styles.header}>
-        <select
-          className={styles.select}
-          value={activeSandboxName ?? ''}
-          onChange={e => controller.selectSandbox(e.target.value)}
-          aria-label="選擇 sandbox"
-        >
-          {sandboxes.map(s => (
-            <option key={s.sandboxName} value={s.sandboxName}>
-              {labelOf(s, sandboxes.length > 1)}
-            </option>
-          ))}
-        </select>
-        <button type="button" className={styles.iconBtn} onClick={bumpRefresh} aria-label="重新整理" title="重新整理">
-          <RefreshIcon size={15} />
-        </button>
+        <div className={styles.headerRow}>
+          <label className={styles.selectWrap}>
+            <span className={styles.selectCaret}>
+              <ChevronRightIcon size={14} />
+            </span>
+            <select
+              className={styles.select}
+              value={activeSandboxName ?? ''}
+              onChange={e => controller.selectSandbox(e.target.value)}
+              aria-label="選擇 sandbox"
+            >
+              {sandboxes.map(s => (
+                <option key={s.sandboxName} value={s.sandboxName}>
+                  {labelOf(s, sandboxes.length > 1)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {onClose && (
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="關閉檔案總管" title="關閉">
+              <XIcon size={16} />
+            </button>
+          )}
+        </div>
+        <div className={styles.cwd} title={activeSandbox.workingDirectory}>
+          {activeSandbox.workingDirectory}
+        </div>
       </div>
 
-      <div className={styles.cwd} title={activeSandbox.workingDirectory}>
-        {activeSandbox.workingDirectory}
-      </div>
-
-      {!openFile && hasMutations && (
+      {!openFile && (
         <div className={styles.toolbar} role="toolbar" aria-label="檔案操作">
           <button
             type="button"
@@ -704,6 +758,10 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             title="刪除"
           >
             <TrashIcon size={16} />
+          </button>
+          <span className={styles.toolSpacer} />
+          <button type="button" className={styles.toolBtn} onClick={bumpRefresh} aria-label="重新整理" title="重新整理">
+            <RefreshIcon size={16} />
           </button>
         </div>
       )}
