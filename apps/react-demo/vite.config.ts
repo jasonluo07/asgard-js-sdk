@@ -31,6 +31,22 @@ function asgardSseMockPlugin(): Plugin {
           next(err as Error);
         }
       });
+
+      // F-021 — sandbox fs mock (`/mock-asgard/sandbox/:name/fs/list|file`) for the /file-explorer demo.
+      server.middlewares.use('/mock-asgard/sandbox', async (req, res, next) => {
+        if (!/\/fs\/(list|file)/.test(req.url ?? '')) {
+          next();
+
+          return;
+        }
+        try {
+          const { handleMockSandboxFs } = await import('./src/mock-server/sse-mock');
+
+          await handleMockSandboxFs(req, res);
+        } catch (err) {
+          next(err as Error);
+        }
+      });
     },
   };
 }

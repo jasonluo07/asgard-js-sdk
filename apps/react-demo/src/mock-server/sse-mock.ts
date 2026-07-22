@@ -889,6 +889,31 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
     return;
   }
 
+  // F-021 — the File Explorer demo channel: exists + advertises one live sandbox so the built-in aside's
+  // dropdown (driven by launchedSandboxes$) has something to show.
+  if (customChannelId === 'file-explorer-demo') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        data: {
+          title: 'File Explorer 展示',
+          runState: 'IDLE',
+          launchedSandboxes: [
+            {
+              sandboxName: 'sbx-demo',
+              sandboxBlueprintName: 'demo-workspace',
+              workingDirectory: '/home/user/project',
+              editorServerEnabled: true,
+              browserEnabled: false,
+            },
+          ],
+        },
+      }),
+    );
+
+    return;
+  }
+
   // Exists → restore. The title seeds the channel-title bar (F-016); GET /message/sse replays history.
   if (customChannelId.startsWith('join-existing')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -904,6 +929,73 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
   // Default: channel does not exist.
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('channel not found');
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-021 — in-memory sandbox fs mock for the /file-explorer demo. Serves the three edge endpoints the SDK
+// Cycle-1 fs client calls: GET fs/list (JSON), GET fs/file (octet-stream + X-Total-Bytes/X-Truncated),
+// PUT fs/file (multipart → { data: { bytesWritten } }). A tiny fixed tree; writes are echoed, not persisted.
+// ---------------------------------------------------------------------------------------------------
+
+const FS_DIRS: Record<string, Array<{ name: string; isDir: boolean; sizeBytes: number }>> = {
+  '/home/user/project': [
+    { name: 'src', isDir: true, sizeBytes: 0 },
+    { name: 'README.md', isDir: false, sizeBytes: 92 },
+    { name: 'notes.txt', isDir: false, sizeBytes: 34 },
+  ],
+  '/home/user/project/src': [
+    { name: 'index.ts', isDir: false, sizeBytes: 48 },
+    { name: 'app.tsx', isDir: false, sizeBytes: 60 },
+  ],
+};
+
+const FS_FILES: Record<string, string> = {
+  '/home/user/project/README.md':
+    '# Demo Workspace\n\n這是 **File Explorer** 展示用的 mock 檔案。\n\n- 點資料夾展開\n- 點檔案預覽\n- 切換編輯後打字會存檔',
+  '/home/user/project/notes.txt': 'plain text note — 切到編輯試打字。',
+  '/home/user/project/src/index.ts': 'export const greet = (n: string) => `hi ${n}`;\n',
+  '/home/user/project/src/app.tsx': 'export function App() {\n  return <div>hello</div>;\n}\n',
+};
+
+export async function handleMockSandboxFs(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url ?? '', 'http://localhost');
+  const path = url.searchParams.get('path') ?? '';
+  const isList = url.pathname.endsWith('/fs/list');
+
+  if (isList) {
+    const entries = (FS_DIRS[path] ?? []).map(e => ({
+      name: e.name,
+      isDir: e.isDir,
+      sizeBytes: e.sizeBytes,
+      mtimeUnix: 1_700_000_000,
+      mode: e.isDir ? 493 : 420,
+    }));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: { entries, truncated: false } }));
+
+    return;
+  }
+
+  // fs/file
+  if (req.method === 'PUT') {
+    // Drain the multipart body; echo bytesWritten (not persisted).
+    const chunks: Buffer[] = [];
+    req.on('data', c => chunks.push(c));
+    await new Promise<void>(resolve => req.on('end', () => resolve()));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: { bytesWritten: Buffer.concat(chunks).length } }));
+
+    return;
+  }
+
+  const content = FS_FILES[path] ?? '';
+  const buf = Buffer.from(content, 'utf-8');
+  res.writeHead(200, {
+    'Content-Type': 'application/octet-stream',
+    'X-Total-Bytes': String(buf.length),
+    'X-Truncated': 'false',
+  });
+  res.end(buf);
 }
 
 // ---------------------------------------------------------------------------------------------------

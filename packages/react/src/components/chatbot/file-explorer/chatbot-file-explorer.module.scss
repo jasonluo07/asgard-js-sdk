@@ -1,0 +1,23 @@
+.toggle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--asg-color-text-secondary, #6b7280);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 8%, transparent);
+    color: var(--asg-color-primary, #4f46e5);
+  }
+}
+
+.toggleActive {
+  color: var(--asg-color-primary, #4f46e5);
+  background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 12%, transparent);
+}
