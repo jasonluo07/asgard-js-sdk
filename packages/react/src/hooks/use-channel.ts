@@ -7,6 +7,7 @@ import {
   ConversationMessage,
   EventType,
   FetchSsePayload,
+  LaunchedSandbox,
   SandboxPhase,
   SseResponse,
   ToolCallConsentAnswer,
@@ -48,6 +49,8 @@ export interface UseChannelProps {
 }
 
 export interface UseChannelReturn {
+  /** The live `Channel` (null in preview mode / before creation) — for hooks like `useLaunchedSandboxes`. */
+  channel: Channel | null;
   isOpen: boolean;
   isResetting: boolean;
   isConnecting: boolean;
@@ -216,7 +219,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   // The live restore path uses the server transcript as the single source of truth, so it does NOT seed
   // from `initMessages` (which stays preview/offline-only — see the preview branch above).
   const restoreChannel = useCallback(
-    async (titleSeed: string | null): Promise<void> => {
+    async (titleSeed: string | null, launchedSandboxesSeed?: LaunchedSandbox[]): Promise<void> => {
       if (isPreviewMode || !client) return;
 
       const conversation = new Conversation({ messages: new Map() });
@@ -233,6 +236,9 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             customMessageId,
             conversation,
             channelTitle: titleSeed,
+            // F-019/F-021 — seed the live-sandbox list from the same `/channel/metadata` fetch that gated
+            // the restore, so the File Explorer dropdown is populated immediately on join.
+            launchedSandboxes: launchedSandboxesSeed,
             statesObserver: (states: ChannelStates): void => {
               setIsConnecting(states.isConnecting);
               setConversation(states.conversation);
@@ -397,8 +403,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       if (cancelled) return;
 
       if (metadata) {
-        // R2 — channel exists: always restore, seed the title from metadata, never RESET_CHANNEL.
-        restoreChannel(metadata.title);
+        // R2 — channel exists: always restore, seed the title + live sandboxes from metadata, never RESET_CHANNEL.
+        restoreChannel(metadata.title, metadata.launchedSandboxes);
       } else if (autoResetChannel !== false) {
         // R3 — not exists + auto-reset (default): open via RESET_CHANNEL.
         resetChannel(resetPayload);
@@ -453,6 +459,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     () =>
       isPreviewMode
         ? {
+            channel: null,
             isOpen: true,
             isResetting: false,
             isConnecting: false,
@@ -461,6 +468,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             sandboxPhase: 'idle',
           }
         : {
+            channel,
             isOpen,
             isResetting,
             isConnecting,
@@ -476,6 +484,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [
       isPreviewMode,
       previewConversation,
+      channel,
       isOpen,
       isResetting,
       isConnecting,
