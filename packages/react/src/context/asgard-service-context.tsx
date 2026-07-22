@@ -54,6 +54,8 @@ export interface AsgardServiceContextValue {
   /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
   stopGeneration?: UseChannelReturn['stopGeneration'];
   replyToolCallConsents?: UseChannelReturn['replyToolCallConsents'];
+  /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn. */
+  nudge?: UseChannelReturn['nudge'];
   pendingConsent: ToolCallConsentEventData | null;
   botTypingPlaceholder?: string;
   inputPlaceholder?: string;
@@ -246,6 +248,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     closeChannel,
     stopGeneration,
     replyToolCallConsents,
+    nudge,
   } = useChannel({
     client,
     customChannelId,
@@ -324,6 +327,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       closeChannel,
       stopGeneration,
       replyToolCallConsents: wrappedReplyToolCallConsents,
+      nudge,
       pendingConsent: conversation?.pendingConsent ?? null,
       botTypingPlaceholder,
       inputPlaceholder,
@@ -358,6 +362,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       closeChannel,
       stopGeneration,
       wrappedReplyToolCallConsents,
+      nudge,
       botTypingPlaceholder,
       inputPlaceholder,
       enableUpload,

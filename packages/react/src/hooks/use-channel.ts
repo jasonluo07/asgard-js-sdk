@@ -68,6 +68,8 @@ export interface UseChannelReturn {
   /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
   stopGeneration?: () => void;
   replyToolCallConsents?: (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']) => Promise<void>;
+  /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn, no reply rendered. */
+  nudge?: () => Promise<void>;
 }
 
 export function useChannel(props: UseChannelProps): UseChannelReturn {
@@ -361,6 +363,14 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, client, onSseMessage, conversation],
   );
 
+  const nudge = useCallback(async (): Promise<void> => {
+    await channel?.nudge({
+      onSseMessage(response: SseResponse<EventType>) {
+        onSseMessage?.(response, { conversation });
+      },
+    });
+  }, [channel, onSseMessage, conversation]);
+
   // F-015 — metadata-gated join-init. On mount, gate on `GET /channel/metadata` instead of unconditionally
   // resetting: an existing channel is always restored (never reset → no history loss); a non-existent one
   // follows `autoResetChannel`. The old "mount always resets" semantics are gone.
@@ -480,6 +490,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             closeChannel,
             stopGeneration,
             replyToolCallConsents,
+            nudge,
           },
     [
       isPreviewMode,
@@ -497,6 +508,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       closeChannel,
       stopGeneration,
       replyToolCallConsents,
+      nudge,
     ],
   );
 }

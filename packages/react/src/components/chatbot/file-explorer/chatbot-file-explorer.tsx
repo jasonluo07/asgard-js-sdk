@@ -5,7 +5,7 @@ import { useLaunchedSandboxes } from '../../../hooks/use-derived-state';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
 import { FileExplorerPanel } from './file-explorer-panel';
 import { createSandboxFsProviders } from './create-sandbox-fs-providers';
-import { FolderIcon } from './icons';
+import { FolderTreeIcon } from './icons';
 import styles from './chatbot-file-explorer.module.scss';
 
 /**
@@ -93,7 +93,7 @@ export function FileExplorerToggle({ controller }: { controller: FileExplorerCon
       aria-pressed={controller.open}
       title="檔案總管"
     >
-      <FolderIcon size={16} />
+      <FolderTreeIcon size={18} />
     </button>
   );
 }
@@ -109,7 +109,7 @@ export function ChatbotFileExplorerAside({
   controller: FileExplorerController;
   basePath?: string;
 }): ReactNode {
-  const { client, channel } = useAsgardContext();
+  const { client, channel, nudge } = useAsgardContext();
   const sandboxes = useLaunchedSandboxes(channel);
   const providers = useMemo(() => (client ? createSandboxFsProviders(client) : null), [client]);
 
@@ -122,6 +122,15 @@ export function ChatbotFileExplorerAside({
       listDir={providers.listDir}
       readFile={providers.readFile}
       saveFile={providers.saveFile}
+      mkdir={providers.mkdir}
+      remove={providers.remove}
+      copy={providers.copy}
+      move={providers.move}
+      upload={providers.upload}
+      download={providers.download}
+      onNudge={nudge}
+      onClose={controller.closeExplorer}
+      chrome="flush"
       basePath={basePath}
     />
   );

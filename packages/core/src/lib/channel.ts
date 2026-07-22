@@ -474,6 +474,24 @@ export default class Channel {
   }
 
   /**
+   * Nudge an idle / recycled sandbox back to life (F-021 AC4). Sends an `action=NUDGE` turn with empty
+   * text — the backend suppresses `message.*` and writes no transcript, so nothing renders in the
+   * conversation; the FE simply waits for the resulting `sandbox.launch`/`ready` frames (and a metadata
+   * refetch) to refill `launchedSandboxes$`. An invisible turn, unlike `sendMessage`.
+   */
+  public nudge(options?: FetchSseOptions): Promise<void> {
+    return this.fetchSse(
+      {
+        action: FetchSseAction.NUDGE,
+        customChannelId: this.customChannelId,
+        customMessageId: this.lastSentMessageId ?? this.customMessageId,
+        text: '',
+      },
+      options,
+    );
+  }
+
+  /**
    * User-initiated stop-generation: abort the in-flight SSE run (if any) and release the input.
    * Unsubscribing tears down the SSE observable → AbortController.abort() cuts the HTTP stream. The
    * partial assistant message already received stays in the conversation (frozen, not deleted). A no-op

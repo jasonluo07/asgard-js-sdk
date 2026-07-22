@@ -1,0 +1,74 @@
+.menu {
+  position: absolute;
+  z-index: 20;
+  min-width: 10rem;
+  max-width: 16rem;
+  padding: 0.25rem;
+  border: 1px solid var(--asg-color-border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.5rem;
+  background: var(--asg-color-surface, #fff);
+  color: var(--asg-color-text-primary, inherit);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  font-size: 0.8125rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+.separator {
+  height: 1px;
+  margin: 0.25rem 0;
+  background: var(--asg-color-border, rgba(0, 0, 0, 0.08));
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.active:not(:disabled) {
+  background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 12%, transparent);
+}
+
+.danger {
+  color: var(--asg-color-error, #ef4444);
+}
+
+.danger.active:not(:disabled) {
+  background: color-mix(in srgb, var(--asg-color-error, #ef4444) 12%, transparent);
+}
+
+.itemIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--asg-color-text-secondary, #6b7280);
+}
+
+.danger .itemIcon {
+  color: inherit;
+}
+
+.itemLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

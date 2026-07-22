@@ -2,6 +2,7 @@ export enum FetchSseAction {
   RESET_CHANNEL = 'RESET_CHANNEL',
   NONE = 'NONE',
   RESPONSE_TOOL_CALL_CONSENT = 'RESPONSE_TOOL_CALL_CONSENT',
+  NUDGE = 'NUDGE',
 }
 
 export enum EventType {

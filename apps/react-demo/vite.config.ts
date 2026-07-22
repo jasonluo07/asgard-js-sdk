@@ -32,9 +32,10 @@ function asgardSseMockPlugin(): Plugin {
         }
       });
 
-      // F-021 — sandbox fs mock (`/mock-asgard/sandbox/:name/fs/list|file`) for the /file-explorer demo.
+      // F-021 — sandbox fs mock for the /file-explorer demo: Cycle 1 (list/file) + Cycle 2 mutations
+      // (stat/mkdir/item/all/copy/move).
       server.middlewares.use('/mock-asgard/sandbox', async (req, res, next) => {
-        if (!/\/fs\/(list|file)/.test(req.url ?? '')) {
+        if (!/\/fs\/(list|file|stat|mkdir|item|all|copy|move)/.test(req.url ?? '')) {
           next();
 
           return;
