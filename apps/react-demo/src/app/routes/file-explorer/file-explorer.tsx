@@ -1,8 +1,10 @@
 import { ReactNode, useMemo } from 'react';
-import { FileExplorerPanel, useFileExplorerController } from '@asgard-js/react';
+import { Chatbot, FileExplorerPanel, useFileExplorerController } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { DemoWrapper } from '../../components/demo-wrapper';
+
+const MOCK_ENDPOINT = `${typeof window !== 'undefined' ? window.location.origin : ''}/mock-asgard`;
 
 /**
  * Verification route for the F-021 File Explorer side panel (Cycle 1).
@@ -100,6 +102,20 @@ export function FileExplorer(): ReactNode {
             模擬 open-file 卡片 → README.md
           </button>
         </div>
+      </div>
+
+      <h3 style={{ marginTop: '1.5rem' }}>Built-in aside（fileExplorer=&quot;builtin&quot;）</h3>
+      <p style={{ fontSize: '0.85rem', color: '#666' }}>
+        真實 <code>&lt;Chatbot fileExplorer=&quot;builtin&quot;&gt;</code>：標題列右側的資料夾鈕 toggle 出右側
+        aside（切進 chat 殼內、不 fixed），dropdown 由 <code>launchedSandboxes$</code>（metadata mock）驅動。
+      </p>
+      <div style={{ height: '560px' }}>
+        <Chatbot
+          title="File Explorer（builtin）"
+          config={{ botProviderEndpoint: MOCK_ENDPOINT }}
+          customChannelId="file-explorer-demo"
+          fileExplorer="builtin"
+        />
       </div>
     </DemoWrapper>
   );
