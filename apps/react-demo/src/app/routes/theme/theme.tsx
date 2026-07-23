@@ -5,11 +5,9 @@ import { DemoWrapper } from '../../components/demo-wrapper';
 import { createThemeGalleryMessages } from '../../mocks/theme-gallery';
 import styles from './theme.module.scss';
 
+// Crazy first, and therefore selected on load: a preset that flips every color at once is the fastest
+// way to spot a surface that is not following the theme. Default sits last as the neutral baseline.
 const presets: { name: string; config: ChatbotTheme }[] = [
-  {
-    name: 'Default',
-    config: {},
-  },
   {
     name: 'Crazy',
     config: {
@@ -59,10 +57,14 @@ const presets: { name: string; config: ChatbotTheme }[] = [
       },
     },
   },
+  {
+    name: 'Default',
+    config: {},
+  },
 ];
 
 export function Theme(): ReactNode {
-  const [selectedPreset, setSelectedPreset] = useState<string>('Default');
+  const [selectedPreset, setSelectedPreset] = useState<string>(presets[0].name);
   const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
   const [showDockedPanels, setShowDockedPanels] = useState(true);
 
@@ -90,7 +92,7 @@ export function Theme(): ReactNode {
   return (
     <DemoWrapper
       title="Theme Customization"
-      description="以主題設定調整 chatbot 外觀。對話串刻意塞滿所有可套主題的表面 —— 全部 message template、markdown / 程式碼、thinking、tool-call 群組（完成 / 執行中 / 失敗）、錯誤訊息，以及 docked 的任務清單與 subagent 面板 —— 這樣才看得出哪些地方沒跟著主題走。切到 'Crazy' 一次翻掉所有顏色最容易抓漏。"
+      description="以主題設定調整 chatbot 外觀。對話串刻意塞滿所有可套主題的表面 —— 全部 message template、markdown / 程式碼、thinking、tool-call 群組（完成 / 執行中 / 失敗）、錯誤訊息，以及 docked 的任務清單與 subagent 面板 —— 這樣才看得出哪些地方沒跟著主題走。預設就開在 'Crazy'（一次翻掉所有顏色，最容易抓漏），'Default' 是對照用的基準。"
     >
       <div className={styles.controls}>
         <h3>Presets</h3>
