@@ -63,6 +63,42 @@ const presets: { name: string; config: ChatbotTheme }[] = [
   },
 ];
 
+// Hex / rgb() / hsl() literals get a swatch next to the code — reading a theme as a wall of hex tells
+// you nothing about what you actually picked. Anything else (`'100%'`, `var(--x)`) renders as plain text.
+const COLOR_LITERAL = /^(#[0-9a-fA-F]{3,8}|rgba?\(.+\)|hsla?\(.+\))$/;
+
+function renderConfigLines(obj: Record<string, unknown>, depth: number, path: string): ReactNode[] {
+  return Object.entries(obj).flatMap(([key, value]) => {
+    const indent = { paddingLeft: `${depth * 14}px` };
+
+    if (value !== null && typeof value === 'object') {
+      return [
+        <div key={`${path}.${key}<`} className={styles.configLine} style={indent}>
+          <span className={styles.configKey}>{key}</span>
+          <span className={styles.configPunct}>{': {'}</span>
+        </div>,
+        ...renderConfigLines(value as Record<string, unknown>, depth + 1, `${path}.${key}`),
+        <div key={`${path}.${key}>`} className={styles.configLine} style={indent}>
+          <span className={styles.configPunct}>{'}'}</span>
+        </div>,
+      ];
+    }
+
+    const text = String(value);
+
+    return [
+      <div key={`${path}.${key}`} className={styles.configLine} style={indent}>
+        <span className={styles.configKey}>{key}</span>
+        <span className={styles.configPunct}>:</span>
+        {COLOR_LITERAL.test(text) && (
+          <span className={styles.configSwatch} style={{ backgroundColor: text }} aria-hidden />
+        )}
+        <span className={styles.configValue}>{text}</span>
+      </div>,
+    ];
+  });
+}
+
 export function Theme(): ReactNode {
   const [selectedPreset, setSelectedPreset] = useState<string>(presets[0].name);
   const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
@@ -115,7 +151,13 @@ export function Theme(): ReactNode {
         </label>
 
         <h3>Current Theme Config</h3>
-        <pre className={styles.themeCode}>{JSON.stringify(theme, null, 2)}</pre>
+        <div className={styles.themeCode}>
+          {Object.keys(theme).length === 0 ? (
+            <div className={styles.configEmpty}>{'{} — 沿用 SDK 內建預設值'}</div>
+          ) : (
+            renderConfigLines(theme as Record<string, unknown>, 0, 'root')
+          )}
+        </div>
       </div>
 
       <div className={styles.chatbotContainer}>
