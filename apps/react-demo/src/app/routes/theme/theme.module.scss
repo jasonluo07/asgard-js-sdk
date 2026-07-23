@@ -1,10 +1,21 @@
+// A definite, viewport-bounded height shared by both columns — the shared DemoWrapper flex chain lacks
+// `min-height: 0`, so without one neither column can bound its own scrolling and both grow to content.
+// The ~185px accounts for the demo chrome above (main padding + page header).
+$column-height: calc(100vh - 185px);
+
+// A flex column so the config block below can claim exactly the leftover height and scroll inside the
+// card, instead of a magic max-height that overflows the panel once the swatch rows make it taller.
 .controls {
+  height: $column-height;
   background: white;
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   width: 320px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 
   h3 {
     font-size: 16px;
@@ -47,27 +58,65 @@
   }
 }
 
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
 .themeCode {
   background: #1a1a2e;
-  color: #a0e0a0;
   padding: 16px;
   border-radius: 8px;
   font-size: 12px;
   font-family: 'Monaco', 'Menlo', monospace;
-  overflow-x: auto;
-  max-height: 300px;
+  flex: 1;
+  min-height: 120px;
   overflow-y: auto;
+}
+
+// Each entry is its own flex row so the swatch sits inline with the code and long keys wrap instead of
+// being clipped by the 320px control panel (the old <pre> hid `carouselButtonBackgroundColor`).
+.configLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  line-height: 1.9;
+}
+
+.configKey {
+  color: #9ad4ff;
+}
+
+.configPunct {
+  color: #7a7a99;
+}
+
+.configValue {
+  color: #a0e0a0;
+}
+
+.configSwatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  // A light ring so near-black swatches (e.g. userMessage.color #000000) stay visible on the dark panel.
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.configEmpty {
+  color: #7a7a99;
+  line-height: 1.9;
 }
 
 .chatbotContainer {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-
-  > div {
-    width: 100%;
-    max-width: 420px;
-    height: 600px;
-  }
+  min-width: 0;
+  height: $column-height;
+  min-height: 480px;
 }

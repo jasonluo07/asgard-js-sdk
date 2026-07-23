@@ -1,20 +1,13 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { Chatbot, ChatbotTheme } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
-import {
-  createTextTemplateExample,
-  createButtonTemplateExample,
-  createCarouselTemplateExample,
-  createAttachmentTemplateExample,
-} from '../../mocks/messages';
+import { createThemeGalleryMessages } from '../../mocks/theme-gallery';
 import styles from './theme.module.scss';
 
+// Crazy first, and therefore selected on load: a preset that flips every color at once is the fastest
+// way to spot a surface that is not following the theme. Default sits last as the neutral baseline.
 const presets: { name: string; config: ChatbotTheme }[] = [
-  {
-    name: 'Default',
-    config: {},
-  },
   {
     name: 'Crazy',
     config: {
@@ -64,18 +57,72 @@ const presets: { name: string; config: ChatbotTheme }[] = [
       },
     },
   },
+  {
+    name: 'Default',
+    config: {},
+  },
 ];
 
-export function Theme(): ReactNode {
-  const [selectedPreset, setSelectedPreset] = useState<string>('Default');
-  const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
+// Hex / rgb() / hsl() literals get a swatch next to the code — reading a theme as a wall of hex tells
+// you nothing about what you actually picked. Anything else (`'100%'`, `var(--x)`) renders as plain text.
+const COLOR_LITERAL = /^(#[0-9a-fA-F]{3,8}|rgba?\(.+\)|hsla?\(.+\))$/;
 
-  const initMessages = [
-    createTextTemplateExample(),
-    createButtonTemplateExample(),
-    createCarouselTemplateExample(),
-    createAttachmentTemplateExample(),
-  ];
+function renderConfigLines(obj: Record<string, unknown>, depth: number, path: string): ReactNode[] {
+  return Object.entries(obj).flatMap(([key, value]) => {
+    const indent = { paddingLeft: `${depth * 14}px` };
+
+    if (value !== null && typeof value === 'object') {
+      return [
+        <div key={`${path}.${key}<`} className={styles.configLine} style={indent}>
+          <span className={styles.configKey}>{key}</span>
+          <span className={styles.configPunct}>{': {'}</span>
+        </div>,
+        ...renderConfigLines(value as Record<string, unknown>, depth + 1, `${path}.${key}`),
+        <div key={`${path}.${key}>`} className={styles.configLine} style={indent}>
+          <span className={styles.configPunct}>{'}'}</span>
+        </div>,
+      ];
+    }
+
+    const text = String(value);
+
+    return [
+      <div key={`${path}.${key}`} className={styles.configLine} style={indent}>
+        <span className={styles.configKey}>{key}</span>
+        <span className={styles.configPunct}>:</span>
+        {COLOR_LITERAL.test(text) && (
+          <span className={styles.configSwatch} style={{ backgroundColor: text }} aria-hidden />
+        )}
+        <span className={styles.configValue}>{text}</span>
+      </div>,
+    ];
+  });
+}
+
+// The SDK does not export its `Locale` union, so declare the subset this route offers — same approach as
+// /all-features-wide. Chinese and English are enough to see whether the chrome's own strings (tool-call
+// summaries, thinking label, Tasks / Subagents headers, timestamps) follow the theme in both.
+const LOCALES = ['zh-TW', 'en-US'] as const;
+type DemoLocale = (typeof LOCALES)[number];
+
+export function Theme(): ReactNode {
+  const [locale, setLocale] = useState<DemoLocale>('zh-TW');
+  const [selectedPreset, setSelectedPreset] = useState<string>(presets[0].name);
+  const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
+  const [showDockedPanels, setShowDockedPanels] = useState(true);
+
+  // Rebuilt only when the docked panels are toggled: the creators mint nanoid message ids, so
+  // regenerating on every render would churn the whole thread each time a preset button is clicked.
+  const initMessages = useMemo(() => createThemeGalleryMessages(showDockedPanels), [showDockedPanels]);
+
+  // Same big-layout treatment as /all-features-wide: the <Chatbot> fills the remaining content area
+  // instead of a narrow 420px card, so wide-layout templates (carousel, table, tool-call blocks) are
+  // actually reviewable when judging a theme. The width/height override is layout-only and is kept out
+  // of the `theme` state so "Current Theme Config" keeps showing the preset as authored.
+  const layoutTheme: ChatbotTheme = {
+    ...theme,
+    chatbot: { ...theme.chatbot, width: '100%', height: '100%' },
+  };
 
   const handlePresetChange = (presetName: string): void => {
     const preset = presets.find(p => p.name === presetName);
@@ -88,7 +135,7 @@ export function Theme(): ReactNode {
   return (
     <DemoWrapper
       title="Theme Customization"
-      description="Customize the chatbot appearance with theme configuration. Try the 'Crazy' preset to see all theme options in action."
+      description="以主題設定調整 chatbot 外觀。對話串刻意塞滿所有可套主題的表面 —— 全部 message template、markdown / 程式碼、thinking、tool-call 群組（完成 / 執行中 / 失敗）、錯誤訊息，以及 docked 的任務清單與 subagent 面板 —— 這樣才看得出哪些地方沒跟著主題走。預設就開在 'Crazy'（一次翻掉所有顏色，最容易抓漏），'Default' 是對照用的基準。"
     >
       <div className={styles.controls}>
         <h3>Presets</h3>
@@ -104,18 +151,46 @@ export function Theme(): ReactNode {
           ))}
         </div>
 
+        <h3>Locale</h3>
+        <div className={styles.presets}>
+          {LOCALES.map(l => (
+            <button
+              key={l}
+              className={`${styles.presetButton} ${locale === l ? styles.active : ''}`}
+              onClick={() => setLocale(l)}
+            >
+              {l === 'zh-TW' ? '繁體中文' : 'English'}
+            </button>
+          ))}
+        </div>
+
+        <h3>Thread</h3>
+        <label className={styles.toggle}>
+          <input type="checkbox" checked={showDockedPanels} onChange={e => setShowDockedPanels(e.target.checked)} />
+          顯示 docked 面板（Tasks / Subagents）
+        </label>
+
         <h3>Current Theme Config</h3>
-        <pre className={styles.themeCode}>{JSON.stringify(theme, null, 2)}</pre>
+        <div className={styles.themeCode}>
+          {Object.keys(theme).length === 0 ? (
+            <div className={styles.configEmpty}>{'{} — 沿用 SDK 內建預設值'}</div>
+          ) : (
+            renderConfigLines(theme as Record<string, unknown>, 0, 'root')
+          )}
+        </div>
       </div>
 
       <div className={styles.chatbotContainer}>
         <Chatbot
-          key={selectedPreset}
+          key={`${selectedPreset}-${showDockedPanels}`}
           title="Theme Demo"
           config={{ botProviderEndpoint: 'skip' }}
           customChannelId="theme-demo"
           initMessages={initMessages}
-          theme={theme}
+          theme={layoutTheme}
+          // Deliberately not part of `key`: switching locale re-renders in place, so the thread keeps its
+          // scroll position and you can compare the same view across languages.
+          locale={locale}
         />
       </div>
     </DemoWrapper>
