@@ -539,7 +539,7 @@ describe('Channel — nudge (F-021 AC4)', () => {
       client,
       customChannelId: 'ch',
       conversation: new Conversation({ messages: new Map() }),
-      statesObserver: (s: ChannelStates) => (lastMessageCount = s.conversation.messages.size),
+      statesObserver: (s: ChannelStates) => (lastMessageCount = s.conversation.messages?.size ?? 0),
     });
 
     await channel.nudge();
