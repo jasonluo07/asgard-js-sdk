@@ -7,7 +7,7 @@ import { Avatar } from '../avatar';
 import { Time } from '../time';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
-import { StreamdownClient } from './streamdown-client';
+import { BotMessageText } from './bot-message-text';
 
 interface TextTemplateProps {
   message: ConversationMessage;
@@ -32,11 +32,6 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         return {
           color: theme?.userMessage?.color,
           backgroundColor: theme?.userMessage?.backgroundColor,
-        };
-      case 'bot':
-        return {
-          color: theme?.botMessage?.color,
-          backgroundColor: theme?.botMessage?.backgroundColor,
         };
       default:
         return {
@@ -116,9 +111,13 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         references={references}
         message={botConversationMessage}
       >
-        <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
-          {isBot ? <StreamdownClient>{messageText}</StreamdownClient> : messageText}
-        </div>
+        {isBot ? (
+          <BotMessageText>{messageText}</BotMessageText>
+        ) : (
+          <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
+            {messageText}
+          </div>
+        )}
       </TemplateBoxContent>
     </TemplateBox>
   );

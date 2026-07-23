@@ -51,60 +51,63 @@
 
 - `F-018` Sandbox 冷啟動指示浮層 Launch HUD (UC-029/UC-030/UC-031; UI 權威=pinned prototype @ `aa0899d`) → BUILD-019 (done) / REVIEW-019 (ready). Issue #24。**動 core + react**：core 補 `SANDBOX_LAUNCH`/`SANDBOX_READY` 事件 + `SandboxEventData {sandboxName, blueprintName}` Fact、新 `SandboxPhase` 型別 + `Channel.sandboxPhase$`（BehaviorSubject + distinctUntilChanged，mirror `channelTitle$`）+ `getSandboxPhase()`、`ChannelStates.sandboxPhase`（launch→launching / ready→ready / init·error→idle）。react：port latch hook `useSandboxLaunch`（1s 門檻靜音熱啟動、ready 收尾拍 → 慢速 fade）+ `SandboxLaunchHud`（grid 掃描、`--asg-color-*` token、`.module.scss`、reduced-motion、i18n `sandbox.*`），`position:absolute` 掛 `ChatbotContainer`（與 `RunningIndicator` 獨立、`pointer-events:none`）。prototype 為視覺權威、以本 repo SCSS-module + token + i18n 慣例落地（非逐行照抄）。
 
+- `BUILD-026` Export bot text content renderer（`BotMessageText`）→ done（build/lint/format/test 全綠、react-demo `/templates` 目視無回歸；**未發版**、Sindri 端另計）。內部票，源自 Sindri REVIEW-025 Minor 1（SDK 訊息列有 chat-kit 設計稿沒有的 avatar／timestamp，Sindri 無 prop 可關；使用者明確不要開關 prop）。**react-only、純新增 + 內部重構**：把 `TextTemplate` bot 分支的內文（主題化 `.text .text--bot` wrapper + `StreamdownClient`）抽成可 export 的 `BotMessageText`，`TextTemplate` 改用它（輸出不變 → embed/react-demo 零回歸），從套件進入點導出。消費端（Sindri）可用 `renderMessageContent` + 已 export 的 `TemplateBox`/`TemplateBoxContent` 自組 bot 列、不放 Avatar／不傳 time。**不改 SDK 預設行為**（不全面移除 avatar/time —— 會回歸 `asgard-embed-frontend` 刻意的頭像）、**不含 Sindri 端改動**、**不含發版**。僅解 TEXT（其他型別另案）。
+
 ## ▶ Next Task
 
 `BUILD-024`（F-021 Cycle 2：mutations + context menu + Nudge；plan 完成、**待使用者確認範圍後開工**）。後端已 ready（asgard-core `dev-1.16.34`：完整 fs API + `action=NUDGE`，契約已對 develop 核實）。**Cycle 3** 續延：`fs/watch` 自動重載 + CodeMirror。F-021 Cycle 1（BUILD-023 / REVIEW-023）已 **merged to main** via PR #342（含完整讀 prototype 後的 fidelity 對齊：cwd/AC2、樹排序、單擊選取+雙擊開檔、reveal 展開祖先；順修 `useChannel` 未回傳 `channel` 的 bug）。**Backlog**：(1) **F-021 Cycle 2** —— 等後端補 `fs/mkdir|item|all|copy|move` + `fs/watch` + `action=NUDGE`，做變更操作 + context menu + 自動重載 + Nudge + CodeMirror；(2) **F-020 sandbox 動作卡視覺** —— port prototype 的 `SandboxBrowserHandoffCard`/`SandboxOpenFileCard`（目前沿用既有附件 chip，屬當初核准的範圍決策，非缺陷）。**未發版**：F-019 / F-020 / F-021-C1 都在 main 未發（現 0.3.13），待使用者決定版號一起發。F-020（BUILD-022）已 **merged to main** via PR #341。**F-021 拆兩 cycle**：Cycle 1 = 瀏覽（`fs/list`）+ FileView 預覽/編輯存檔（`fs/file` read/write, CodeMirror）+ 側欄 slot/controller + open-file intent 抵達即通知（AC9）+ 編輯中狀態（AC10）+ 生命週期；Cycle 2（等後端補 `fs/mkdir|item|all|copy|move` + `fs/watch` + `action=NUDGE`）= 變更操作 + context menu + 自動重載 + Nudge。後端契約已對 asgard-core 核實（目前僅 3 支 fs 端點）。F-019（BUILD-021）已 **merged to main** via PR #340。F-021（#29 File Explorer）為下一張，與 F-020 共用 `launchedSandboxes$`。BUG-001（BUILD-020）已 **merged to main** via PR #339、發版 0.3.13；F-018（BUILD-019）已 merged via PR #331、發版 0.3.12。BUILD-018 / REVIEW-018 皆 done（§1 0 violation、§3 R1–R5 全 Pass），cycle 收尾、開 PR（base `main`）。version bump / npm publish 待 asgard-core 上線窗口由使用者驅動。
 
 ## Task Queue
 
-| Task ID      | Title                                          | Priority | Status | Spec                                                                                   |
-| ------------ | ---------------------------------------------- | -------- | ------ | -------------------------------------------------------------------------------------- |
-| `BUILD-001`  | Message Stream Assembly Robustness             | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
-| `REVIEW-001` | Review: Message Stream Assembly Robustness     | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
-| `BUILD-002`  | Last-Event-ID Resume                           | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
-| `REVIEW-002` | Review: Last-Event-ID Resume                   | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
-| `BUILD-003`  | Transcript Replay Kernel + message.user        | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
-| `REVIEW-003` | Review: Transcript Replay Kernel               | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
-| `BUILD-004`  | Thinking Message Display                       | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
-| `REVIEW-004` | Review: Thinking Message Display               | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |
-| `BUILD-005`  | Run Indicator Bound to Connection at Seam      | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)             |
-| `REVIEW-005` | Review: Run Indicator at Seam                  | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)           |
-| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth      | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)   |
-| `REVIEW-006` | Review: Built-in Tool-Call Variants            | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md) |
-| `BUILD-007`  | Tool-Call i18n Locale Prop                     | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)             |
-| `REVIEW-007` | Review: Tool-Call i18n Locale Prop             | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)           |
-| `BUILD-008`  | Tool-Call Grouping + Group Summary             | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)   |
-| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary     | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md) |
-| `BUILD-009`  | Write/Edit Diff + Unified Status               | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)           |
-| `REVIEW-009` | Review: Write/Edit Diff + Unified Status       | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)         |
-| `BUILD-010`  | Tool-Call Expanded Content + Localized Titles  | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)     |
-| `REVIEW-010` | Review: Tool-Call Expanded Content             | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)   |
-| `BUILD-011`  | Tool-Call Failure Detection via isError        | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                       |
-| `REVIEW-011` | Review: Tool-Call Failure Detection            | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                     |
-| `BUILD-012`  | Task Check List Panel                          | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                         |
-| `REVIEW-012` | Review: Task Check List Panel                  | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                       |
-| `BUILD-013`  | Subagent List Panel                            | High     | done   | [BUILD-013-subagent-list.md](./BUILD-013-subagent-list.md)                             |
-| `REVIEW-013` | Review: Subagent List Panel                    | —        | done   | [REVIEW-013-subagent-list.md](./REVIEW-013-subagent-list.md)                           |
-| `BUILD-014`  | Derived-State Stores                           | High     | done   | [BUILD-014-derived-state-stores.md](./BUILD-014-derived-state-stores.md)               |
-| `REVIEW-014` | Review: Derived-State Stores                   | —        | done   | [REVIEW-014-derived-state-stores.md](./REVIEW-014-derived-state-stores.md)             |
-| `BUILD-015`  | Channel Title Store                            | Normal   | done   | [BUILD-015-channel-title-store.md](./BUILD-015-channel-title-store.md)                 |
-| `REVIEW-015` | Review: Channel Title Store                    | —        | done   | [REVIEW-015-channel-title-store.md](./REVIEW-015-channel-title-store.md)               |
-| `BUILD-016`  | Channel Title UI                               | High     | done   | [BUILD-016-channel-title-ui.md](./BUILD-016-channel-title-ui.md)                       |
-| `REVIEW-016` | Review: Channel Title UI                       | —        | done   | [REVIEW-016-channel-title-ui.md](./REVIEW-016-channel-title-ui.md)                     |
-| `BUILD-017`  | Join-Init Orchestration + metadata gate        | High     | done   | [BUILD-017-join-init-metadata-gate.md](./BUILD-017-join-init-metadata-gate.md)         |
-| `REVIEW-017` | Review: Join-Init Orchestration                | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)       |
-| `BUILD-018`  | Channel Home Rename (cwd → channel-home)       | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                 |
-| `REVIEW-018` | Review: Channel Home Rename                    | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)               |
-| `BUILD-019`  | Sandbox Launch HUD                             | High     | done   | [BUILD-019-sandbox-launch-hud.md](./BUILD-019-sandbox-launch-hud.md)                   |
-| `REVIEW-019` | Review: Sandbox Launch HUD                     | —        | done   | [REVIEW-019-sandbox-launch-hud.md](./REVIEW-019-sandbox-launch-hud.md)                 |
-| `BUILD-020`  | Hide Subagent Message / Thinking Frames        | High     | done   | [BUILD-020-hide-subagent-messages.md](./BUILD-020-hide-subagent-messages.md)           |
-| `REVIEW-020` | Review: Hide Subagent Message / Thinking       | —        | done   | [REVIEW-020-hide-subagent-messages.md](./REVIEW-020-hide-subagent-messages.md)         |
-| `BUILD-021`  | Consume launchedSandboxes + Rx Store           | High     | done   | [BUILD-021-launched-sandboxes-store.md](./BUILD-021-launched-sandboxes-store.md)       |
-| `REVIEW-021` | Review: launchedSandboxes Rx Store             | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)     |
-| `BUILD-022`  | sandbox:// Handoff Cards                       | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)             |
-| `REVIEW-022` | Review: sandbox:// Handoff Cards               | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)           |
-| `BUILD-023`  | File Explorer Side Panel — Cycle 1             | High     | done   | [BUILD-023-file-explorer-panel.md](./BUILD-023-file-explorer-panel.md)                 |
-| `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1     | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)               |
-| `BUILD-024`  | File Explorer Mutations + Context Menu + Nudge | High     | done   | [BUILD-024-file-explorer-mutations.md](./BUILD-024-file-explorer-mutations.md)         |
-| `REVIEW-024` | Review: File Explorer Mutations + Nudge        | —        | done   | [REVIEW-024-file-explorer-mutations.md](./REVIEW-024-file-explorer-mutations.md)       |
-| `BUILD-025`  | Guard the File Explorer glyphs against drift   | Normal   | done   | [BUILD-025-file-explorer-icon-guard.md](./BUILD-025-file-explorer-icon-guard.md)       |
+| Task ID      | Title                                             | Priority | Status | Spec                                                                                   |
+| ------------ | ------------------------------------------------- | -------- | ------ | -------------------------------------------------------------------------------------- |
+| `BUILD-001`  | Message Stream Assembly Robustness                | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)   |
+| `REVIEW-001` | Review: Message Stream Assembly Robustness        | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md) |
+| `BUILD-002`  | Last-Event-ID Resume                              | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)               |
+| `REVIEW-002` | Review: Last-Event-ID Resume                      | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)             |
+| `BUILD-003`  | Transcript Replay Kernel + message.user           | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)       |
+| `REVIEW-003` | Review: Transcript Replay Kernel                  | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)     |
+| `BUILD-004`  | Thinking Message Display                          | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)       |
+| `REVIEW-004` | Review: Thinking Message Display                  | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)     |
+| `BUILD-005`  | Run Indicator Bound to Connection at Seam         | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)             |
+| `REVIEW-005` | Review: Run Indicator at Seam                     | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)           |
+| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth         | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)   |
+| `REVIEW-006` | Review: Built-in Tool-Call Variants               | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md) |
+| `BUILD-007`  | Tool-Call i18n Locale Prop                        | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)             |
+| `REVIEW-007` | Review: Tool-Call i18n Locale Prop                | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)           |
+| `BUILD-008`  | Tool-Call Grouping + Group Summary                | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)   |
+| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary        | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md) |
+| `BUILD-009`  | Write/Edit Diff + Unified Status                  | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)           |
+| `REVIEW-009` | Review: Write/Edit Diff + Unified Status          | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)         |
+| `BUILD-010`  | Tool-Call Expanded Content + Localized Titles     | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)     |
+| `REVIEW-010` | Review: Tool-Call Expanded Content                | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)   |
+| `BUILD-011`  | Tool-Call Failure Detection via isError           | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                       |
+| `REVIEW-011` | Review: Tool-Call Failure Detection               | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                     |
+| `BUILD-012`  | Task Check List Panel                             | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                         |
+| `REVIEW-012` | Review: Task Check List Panel                     | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                       |
+| `BUILD-013`  | Subagent List Panel                               | High     | done   | [BUILD-013-subagent-list.md](./BUILD-013-subagent-list.md)                             |
+| `REVIEW-013` | Review: Subagent List Panel                       | —        | done   | [REVIEW-013-subagent-list.md](./REVIEW-013-subagent-list.md)                           |
+| `BUILD-014`  | Derived-State Stores                              | High     | done   | [BUILD-014-derived-state-stores.md](./BUILD-014-derived-state-stores.md)               |
+| `REVIEW-014` | Review: Derived-State Stores                      | —        | done   | [REVIEW-014-derived-state-stores.md](./REVIEW-014-derived-state-stores.md)             |
+| `BUILD-015`  | Channel Title Store                               | Normal   | done   | [BUILD-015-channel-title-store.md](./BUILD-015-channel-title-store.md)                 |
+| `REVIEW-015` | Review: Channel Title Store                       | —        | done   | [REVIEW-015-channel-title-store.md](./REVIEW-015-channel-title-store.md)               |
+| `BUILD-016`  | Channel Title UI                                  | High     | done   | [BUILD-016-channel-title-ui.md](./BUILD-016-channel-title-ui.md)                       |
+| `REVIEW-016` | Review: Channel Title UI                          | —        | done   | [REVIEW-016-channel-title-ui.md](./REVIEW-016-channel-title-ui.md)                     |
+| `BUILD-017`  | Join-Init Orchestration + metadata gate           | High     | done   | [BUILD-017-join-init-metadata-gate.md](./BUILD-017-join-init-metadata-gate.md)         |
+| `REVIEW-017` | Review: Join-Init Orchestration                   | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)       |
+| `BUILD-018`  | Channel Home Rename (cwd → channel-home)          | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                 |
+| `REVIEW-018` | Review: Channel Home Rename                       | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)               |
+| `BUILD-019`  | Sandbox Launch HUD                                | High     | done   | [BUILD-019-sandbox-launch-hud.md](./BUILD-019-sandbox-launch-hud.md)                   |
+| `REVIEW-019` | Review: Sandbox Launch HUD                        | —        | done   | [REVIEW-019-sandbox-launch-hud.md](./REVIEW-019-sandbox-launch-hud.md)                 |
+| `BUILD-020`  | Hide Subagent Message / Thinking Frames           | High     | done   | [BUILD-020-hide-subagent-messages.md](./BUILD-020-hide-subagent-messages.md)           |
+| `REVIEW-020` | Review: Hide Subagent Message / Thinking          | —        | done   | [REVIEW-020-hide-subagent-messages.md](./REVIEW-020-hide-subagent-messages.md)         |
+| `BUILD-021`  | Consume launchedSandboxes + Rx Store              | High     | done   | [BUILD-021-launched-sandboxes-store.md](./BUILD-021-launched-sandboxes-store.md)       |
+| `REVIEW-021` | Review: launchedSandboxes Rx Store                | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)     |
+| `BUILD-022`  | sandbox:// Handoff Cards                          | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)             |
+| `REVIEW-022` | Review: sandbox:// Handoff Cards                  | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)           |
+| `BUILD-023`  | File Explorer Side Panel — Cycle 1                | High     | done   | [BUILD-023-file-explorer-panel.md](./BUILD-023-file-explorer-panel.md)                 |
+| `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1        | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)               |
+| `BUILD-024`  | File Explorer Mutations + Context Menu + Nudge    | High     | done   | [BUILD-024-file-explorer-mutations.md](./BUILD-024-file-explorer-mutations.md)         |
+| `REVIEW-024` | Review: File Explorer Mutations + Nudge           | —        | done   | [REVIEW-024-file-explorer-mutations.md](./REVIEW-024-file-explorer-mutations.md)       |
+| `BUILD-025`  | Guard the File Explorer glyphs against drift      | Normal   | done   | [BUILD-025-file-explorer-icon-guard.md](./BUILD-025-file-explorer-icon-guard.md)       |
+| `BUILD-026`  | Export bot text content renderer (BotMessageText) | Normal   | done   | [BUILD-026-export-bot-message-text.md](./BUILD-026-export-bot-message-text.md)         |
