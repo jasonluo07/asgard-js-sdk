@@ -10,6 +10,7 @@ import { Events } from './routes/events';
 import { Fullscreen } from './routes/fullscreen';
 import { Markdown } from './routes/markdown';
 import { MarkdownTable } from './routes/markdown-table';
+import { MarkdownTheme } from './routes/markdown-theme';
 import { MarkdownStream } from './routes/markdown-stream';
 import { KeepConnection } from './routes/keep-connection';
 import { Private } from './routes/private';
@@ -69,6 +70,7 @@ export function App(): React.ReactElement {
         <Route path="/fullscreen" element={<Fullscreen />} />
         <Route path="/markdown" element={<Markdown />} />
         <Route path="/markdown-table" element={<MarkdownTable />} />
+        <Route path="/markdown-theme" element={<MarkdownTheme />} />
         <Route path="/markdown-stream" element={<MarkdownStream />} />
         <Route path="/keep-connection" element={<KeepConnection />} />
         <Route path="/private" element={<Private />} />

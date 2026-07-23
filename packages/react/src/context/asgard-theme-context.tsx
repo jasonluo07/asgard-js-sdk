@@ -778,6 +778,9 @@ export function AsgardThemeContextProvider(
         isHex(color) ? darkenColor(color, 0.15) : `color-mix(in srgb, ${color} 85%, #000)`;
       const lighter = (color: string): string =>
         isHex(color) ? lightenColor(color, 0.08) : `color-mix(in srgb, ${color} 92%, #fff)`;
+      // A translucent wash of a color, for overlays that sit on whatever surface is behind them
+      // (markdown's muted text, hairlines and tinted code/table backgrounds).
+      const wash = (color: string, percent: number): string => `color-mix(in srgb, ${color} ${percent}%, transparent)`;
 
       // Primary → the accent (run indicator, input focus, buttons) + a darkened hover/active shade.
       const effectivePrimary = mergedTheme.chatbot?.primaryComponent?.mainColor;
@@ -800,6 +803,13 @@ export function AsgardThemeContextProvider(
         // the code block reads as inset), header = surface (a step lighter than the body).
         themeVars['--asgard-json-viewer-bg'] = effectiveBg;
         themeVars['--asgard-json-viewer-header-bg'] = surface;
+        // Markdown code blocks read as inset the same way the JSON viewer body does. Unlike the tokens
+        // above, this one replaces a fixed `#1a1a1a` that is unrelated to the palette, so it is only
+        // taken when the theme names a concrete color — the default `var(--asg-color-bg)` passthrough
+        // would otherwise repaint code blocks in a chatbot that was never themed.
+        if (!effectiveBg.startsWith('var(')) {
+          themeVars['--asgard-markdown-pre-bg'] = effectiveBg;
+        }
       }
 
       // Border → the border + divider + the tool-call / panel / thinking-block border (all the bordered
@@ -828,6 +838,18 @@ export function AsgardThemeContextProvider(
       if (typeof effectiveForeground === 'string' && effectiveForeground) {
         themeVars['--asg-color-text-primary'] = effectiveForeground;
         themeVars['--asg-color-action-active'] = effectiveForeground;
+
+        // Markdown had been left on its own `--asgard-markdown-*` scale with fixed dark fallbacks, so a
+        // light-themed chatbot rendered blockquotes as white-on-white. Every one of those fallbacks is a
+        // wash of white — the same `#ffffff` this field defaults to — so re-deriving them from the theme
+        // foreground at the identical percentages themes markdown without moving the untouched default.
+        themeVars['--asgard-markdown-blockquote'] = wash(effectiveForeground, 70);
+        themeVars['--asgard-markdown-blockquote-border'] = wash(effectiveForeground, 30);
+        themeVars['--asgard-markdown-hr'] = wash(effectiveForeground, 20);
+        themeVars['--asgard-markdown-table-border'] = wash(effectiveForeground, 20);
+        themeVars['--asgard-markdown-code-bg'] = wash(effectiveForeground, 10);
+        themeVars['--asgard-markdown-table-header-bg'] = wash(effectiveForeground, 5);
+        themeVars['--asgard-markdown-table-row-alt'] = wash(effectiveForeground, 2);
       }
 
       if (Object.keys(themeVars).length > 0 && mergedTheme.chatbot) {
