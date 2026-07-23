@@ -11,18 +11,69 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow-y: auto;
+  // The scroll lives on .nav, not here, so the logo row — and with it the toggle — stays pinned once
+  // the 49-item list overflows.
+  overflow: hidden;
+  transition: width 0.2s ease;
+
+  // Collapsed: a bare rail holding the toggle. `overflow: hidden` keeps the 240px-wide nav from
+  // spilling out during the width transition.
+  &.collapsed {
+    width: 44px;
+    overflow: hidden;
+
+    .logo {
+      padding: 16px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .nav {
+      display: none;
+    }
+  }
 }
 
 .logo {
-  padding: 24px;
+  flex-shrink: 0;
+  padding: 24px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 
   h1 {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
     color: #fff;
+    white-space: nowrap;
+  }
+}
+
+.toggle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4a9eff;
+    outline-offset: 2px;
   }
 }
 
@@ -30,6 +81,9 @@
   display: flex;
   flex-direction: column;
   padding: 16px 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .navLink {

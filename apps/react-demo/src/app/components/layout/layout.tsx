@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from './layout.module.scss';
 
@@ -58,11 +58,26 @@ const navItems = [
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {
+  // Collapsed the nav shrinks to a rail holding only the toggle — with 49 unlabelled entries an icon rail
+  // would be unreadable, and the point is to hand the horizontal space to the demo (the wide chatbot
+  // routes in particular).
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
     <div className={styles.layout}>
-      <aside className={styles.sidebar}>
+      <aside className={collapsed ? `${styles.sidebar} ${styles.collapsed}` : styles.sidebar}>
         <div className={styles.logo}>
-          <h1>Asgard SDK Demo</h1>
+          {!collapsed && <h1>Asgard SDK Demo</h1>}
+          <button
+            type="button"
+            className={styles.toggle}
+            onClick={() => setCollapsed(v => !v)}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? '展開側邊欄' : '收合側邊欄'}
+            title={collapsed ? '展開側邊欄' : '收合側邊欄'}
+          >
+            {collapsed ? '»' : '«'}
+          </button>
         </div>
         <nav className={styles.nav}>
           {navItems.map(item => (
