@@ -21,6 +21,16 @@ Use this skill to turn unclear work into implementable, reviewable specs before 
 - One-file documentation/config update.
 - User provided exact implementation details and no behavior is ambiguous.
 
+## Before You Start — Refresh design references（每次開工先執行）
+
+在讀取 `references/` 下任何 PM spec 或 prototype 之前，先把它們更新到遠端最新，確保對到的是最新設計：
+
+```bash
+git submodule update --init --recursive --remote references
+```
+
+註：`--remote` 會把 submodule checkout 到遠端最新，父 repo 的 pin 會顯示為已變更。這個 pin bump commit 進 feature 分支**完全無妨、也不影響開發**——`references/` 只是背景參考（不被 app 編譯，實作以 distill 進 `requirements/` 的內容為準），且 CI 未開 `submodules: true`。因此就讓 pin 始終浮到最新、bump 自然留在分支即可，不必刻意避免 commit。
+
 ## Repository Convention Discovery
 
 Before writing specs, inspect the repo source of truth:
