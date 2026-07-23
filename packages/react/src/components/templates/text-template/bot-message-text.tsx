@@ -6,6 +6,8 @@ import { StreamdownClient } from './streamdown-client';
 
 export interface BotMessageTextProps {
   children: string;
+  /** Appended to the built-in classes — use it to add layout (width, margin) without losing the theming. */
+  className?: string;
 }
 
 /**
@@ -13,8 +15,11 @@ export interface BotMessageTextProps {
  * without the surrounding `TemplateBox`, `Avatar`, or `Time`. Exported so a consumer can compose a custom
  * bot message row (e.g. via `renderMessageContent` + `TemplateBox` / `TemplateBoxContent`) without
  * re-implementing the markdown styling.
+ *
+ * It carries no width constraint of its own, so it fills whatever container it is placed in. The built-in
+ * `TextTemplate` adds the chat-bubble width itself; a custom row can add one through `className`.
  */
-export function BotMessageText({ children }: BotMessageTextProps): ReactNode {
+export function BotMessageText({ children, className }: BotMessageTextProps): ReactNode {
   const theme = useAsgardThemeContext();
 
   const style: CSSProperties = {
@@ -23,7 +28,7 @@ export function BotMessageText({ children }: BotMessageTextProps): ReactNode {
   };
 
   return (
-    <div className={clsx(classes.text, classes['text--bot'])} style={style}>
+    <div className={clsx(classes.text, classes['text--bot'], className)} style={style}>
       <StreamdownClient>{children}</StreamdownClient>
     </div>
   );

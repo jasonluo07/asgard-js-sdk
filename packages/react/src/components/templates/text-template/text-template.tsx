@@ -112,9 +112,9 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         message={botConversationMessage}
       >
         {isBot ? (
-          <BotMessageText>{messageText}</BotMessageText>
+          <BotMessageText className={classes['text--bot-default']}>{messageText}</BotMessageText>
         ) : (
-          <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
+          <div className={clsx(classes.text, classes['text--bot'], classes['text--bot-default'])} style={styles}>
             {messageText}
           </div>
         )}

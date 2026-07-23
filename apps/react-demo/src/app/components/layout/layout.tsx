@@ -22,6 +22,7 @@ const navItems = [
   { to: '/markdown-stream', label: 'Markdown Stream' },
   { to: '/keep-connection', label: 'Keep Connection' },
   { to: '/custom-renderer', label: 'Custom Renderer' },
+  { to: '/composed-bot-text', label: 'Composed Bot Text' },
   { to: '/before-send-message', label: 'Before Send Message' },
   { to: '/custom-header', label: 'Custom Header' },
   { to: '/auto-reset-channel', label: 'Auto Reset Channel' },
