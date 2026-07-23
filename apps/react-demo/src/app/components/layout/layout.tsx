@@ -60,8 +60,9 @@ const navItems = [
 export function Layout({ children }: LayoutProps): ReactNode {
   // Collapsed the nav shrinks to a rail holding only the toggle — with 49 unlabelled entries an icon rail
   // would be unreadable, and the point is to hand the horizontal space to the demo (the wide chatbot
-  // routes in particular).
-  const [collapsed, setCollapsed] = useState(false);
+  // routes in particular). Collapsed is the default: the demo is what you came to look at, and the nav
+  // is one click away.
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className={styles.layout}>
