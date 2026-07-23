@@ -99,7 +99,14 @@ function renderConfigLines(obj: Record<string, unknown>, depth: number, path: st
   });
 }
 
+// The SDK does not export its `Locale` union, so declare the subset this route offers — same approach as
+// /all-features-wide. Chinese and English are enough to see whether the chrome's own strings (tool-call
+// summaries, thinking label, Tasks / Subagents headers, timestamps) follow the theme in both.
+const LOCALES = ['zh-TW', 'en-US'] as const;
+type DemoLocale = (typeof LOCALES)[number];
+
 export function Theme(): ReactNode {
+  const [locale, setLocale] = useState<DemoLocale>('zh-TW');
   const [selectedPreset, setSelectedPreset] = useState<string>(presets[0].name);
   const [theme, setTheme] = useState<ChatbotTheme>(presets[0].config);
   const [showDockedPanels, setShowDockedPanels] = useState(true);
@@ -144,6 +151,19 @@ export function Theme(): ReactNode {
           ))}
         </div>
 
+        <h3>Locale</h3>
+        <div className={styles.presets}>
+          {LOCALES.map(l => (
+            <button
+              key={l}
+              className={`${styles.presetButton} ${locale === l ? styles.active : ''}`}
+              onClick={() => setLocale(l)}
+            >
+              {l === 'zh-TW' ? '繁體中文' : 'English'}
+            </button>
+          ))}
+        </div>
+
         <h3>Thread</h3>
         <label className={styles.toggle}>
           <input type="checkbox" checked={showDockedPanels} onChange={e => setShowDockedPanels(e.target.checked)} />
@@ -168,6 +188,9 @@ export function Theme(): ReactNode {
           customChannelId="theme-demo"
           initMessages={initMessages}
           theme={layoutTheme}
+          // Deliberately not part of `key`: switching locale re-renders in place, so the thread keeps its
+          // scroll position and you can compare the same view across languages.
+          locale={locale}
         />
       </div>
     </DemoWrapper>
