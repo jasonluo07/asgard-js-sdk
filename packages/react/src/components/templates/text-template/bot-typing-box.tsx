@@ -35,7 +35,7 @@ export function BotTypingBox(props: BotTypingBoxProps): ReactNode {
     <TemplateBox className="asgard-text-template asgard-text-template--bot" type="bot" direction="horizontal">
       <Avatar avatar={avatar} />
       <TemplateBoxContent time={new Date()}>
-        <div className={clsx(classes.text, classes['text--bot'])} style={styles}>
+        <div className={clsx(classes.text, classes['text--bot'], classes['text--bot-default'])} style={styles}>
           <span>
             <StreamdownClient>{typingText}</StreamdownClient>
           </span>

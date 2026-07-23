@@ -1,0 +1,35 @@
+.controls {
+  display: flex;
+  align-items: flex-start;
+  align-self: flex-start;
+  flex: none;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  button {
+    padding: 8px 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+
+    &.active {
+      border-color: #4767eb;
+      color: #4767eb;
+      font-weight: 600;
+    }
+  }
+}
+
+.chatbotContainer {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  > div {
+    width: 100%;
+    max-width: 768px;
+    height: 600px;
+  }
+}
