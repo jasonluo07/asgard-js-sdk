@@ -36,6 +36,16 @@ This skill is the **per-issue orchestrator** for the asgard-js-sdk SDD process. 
 
 **Goal:** Locate and read the PM TASK spec for the given issue.
 
+### Step 1.0 — Refresh design references（每次開工先執行）
+
+在讀取任何 spec 之前，先把 PM spec 與 prototype/design submodule 更新到遠端最新，確保對到的是最新設計：
+
+```bash
+git submodule update --init --recursive --remote references
+```
+
+註：`--remote` 會把 submodule checkout 到遠端最新，父 repo 的 pin 會顯示為已變更。這個 pin bump commit 進 feature 分支**完全無妨、也不影響開發**——`references/` 只是背景參考（不被 app 編譯，實作以 distill 進 `requirements/` 的內容為準），且 CI 未開 `submodules: true`。因此就讓 pin 始終浮到最新、bump 自然留在分支即可，不必刻意避免 commit。
+
 ### Step 1.1 — Fetch the issue
 
 ```bash
@@ -48,13 +58,7 @@ Inspect the `body` field for a tracking reference — typically under "相關票
 
 Read `references/asgard-sdk-pm/<that-path>`.
 
-If the file is not present, the submodule may be behind its pin:
-
-```bash
-git submodule update --remote references/asgard-sdk-pm
-```
-
-Retry reading after updating. If still missing, search by number or title:
+If the file is still not present after Step 1.0's refresh, search by TASK number or title:
 
 ```bash
 find references/asgard-sdk-pm/tracking/asgard-js-sdk -name "*NNN*.md" 2>/dev/null
