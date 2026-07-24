@@ -45,13 +45,17 @@ export interface ToolCallGroupRendererProps {
 }
 
 /**
- * Args passed to the custom channel-title renderer (F-017). Return a node to replace the default
- * thread-top title row, or `null` to hide it entirely; `renderDefault()` renders the default row.
+ * Args passed to the custom title-area renderer. Since F-022 this takes over the unified `ChatHeader`'s
+ * title text area only (avatar + actions stay default); return a node to replace it or `null` to leave it
+ * empty. `renderDefault()` renders the default title area. (F-017 origin: it replaced the standalone
+ * channel-title row; the two bars are now one — see UC-043.)
  */
 export interface ChannelTitleRendererProps {
+  /** The bot name (main line), or `null` when there is no bot name. */
+  botName: string | null;
   /** The current channel title (`null` = unnamed). */
   title: string | null;
-  /** Renders the default channel-title row (for fallback inside a custom renderer). */
+  /** Renders the default title area (for fallback inside a custom renderer). */
   renderDefault: () => ReactNode;
 }
 

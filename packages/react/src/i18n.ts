@@ -38,6 +38,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.showLess': 'Show less',
     'sandbox.launching': 'Starting sandbox',
     'sandbox.ready': 'Sandbox ready',
+    'header.reset': 'Reset conversation',
+    'header.close': 'Close',
+    'header.fileExplorer': 'File Explorer',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -68,6 +71,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.showLess': '折りたたむ',
     'sandbox.launching': 'サンドボックス起動中',
     'sandbox.ready': 'サンドボックス準備完了',
+    'header.reset': '会話をリセット',
+    'header.close': '閉じる',
+    'header.fileExplorer': 'ファイルエクスプローラー',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -98,6 +104,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'thinking.showLess': '顯示較少',
     'sandbox.launching': 'Sandbox 啟動中',
     'sandbox.ready': 'Sandbox 就緒',
+    'header.reset': '重設對話',
+    'header.close': '關閉',
+    'header.fileExplorer': '檔案總管',
   },
 };
 

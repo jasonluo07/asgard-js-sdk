@@ -55,20 +55,3 @@
   flex-direction: column;
   overflow: hidden;
 }
-
-// The channel-title row + the folder toggle share one line (toggle sits to the right of the title).
-.chatbot__title_row {
-  display: flex;
-  align-items: stretch;
-}
-
-.chatbot__title_row > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.chatbot__title_toggle {
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem;
-}
