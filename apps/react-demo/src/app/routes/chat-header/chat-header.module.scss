@@ -1,0 +1,140 @@
+.legend {
+  width: 340px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.legend__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  button {
+    padding: 6px 10px;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .active {
+    border-color: #1677ff;
+    background: rgba(22, 119, 255, 0.12);
+  }
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 16px;
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}
+
+.narrow {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.narrow__label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.narrowContainer {
+  width: 360px;
+  height: 560px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #1677ff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+// L2 renderTitle demo (title area only).
+.customTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.customTitle__hash {
+  color: var(--asg-color-text-secondary, #8c8c8c);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.customTitle__text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--asg-color-text-primary, #fff);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// L3 renderHeader demo (whole bar).
+.customHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--asg-color-surface, #1f1f1f);
+  border-bottom: 1px solid var(--asg-color-border, #434343);
+}
+
+.customHeader__brand {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--asg-color-text-primary, #fff);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customHeader__cta {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #1677ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}

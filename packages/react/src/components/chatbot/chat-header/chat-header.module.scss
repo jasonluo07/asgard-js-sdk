@@ -1,0 +1,198 @@
+// F-022 — the unified chat heading bar. Ported from the pinned prototype `ChatHeader` (@ 7ad38e0):
+// flat / restrained, surface bg + border-b seam, 56px tall (app-shell header), bot main text in
+// foreground + channel title subtitle in muted, single-line truncate, Lucide glyphs. Tailwind design
+// re-expressed in this repo's SCSS-module + CSS-variable/theme-token conventions (as F-017 / F-018).
+
+.chat_header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--asg-color-surface, #1f1f1f);
+  border-bottom: 1px solid var(--asg-color-border, #434343);
+}
+
+// --- leading avatar ---
+
+.avatar_img {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar_initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--asg-color-primary, #4f46e5);
+  background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 15%, transparent);
+}
+
+.avatar_icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.avatar_slot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+// --- title area ---
+
+.title_area {
+  min-width: 0;
+  flex: 1;
+}
+
+.bot_name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--asg-color-text-primary, #ffffff);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtitle {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: chat_header_fade 200ms cubic-bezier(0, 0, 0.58, 1);
+}
+
+.subtitle--named {
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.subtitle--untitled {
+  color: color-mix(in srgb, var(--asg-color-text-secondary, #8c8c8c) 70%, transparent);
+}
+
+.single_title {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: chat_header_fade 200ms cubic-bezier(0, 0, 0.58, 1);
+}
+
+.single_title--named {
+  color: var(--asg-color-text-primary, #ffffff);
+}
+
+.single_title--untitled {
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+@keyframes chat_header_fade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subtitle,
+  .single_title {
+    animation: none;
+  }
+}
+
+// --- actions ---
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.action_slot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 8%, transparent);
+    color: var(--asg-color-text-primary, #ffffff);
+  }
+
+  > svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.action--active {
+  color: var(--asg-color-primary, #4f46e5);
+  background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 15%, transparent);
+
+  &:hover {
+    color: var(--asg-color-primary, #4f46e5);
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 15%, transparent);
+  }
+}
+
+.action--disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.spinner {
+  animation: chat_header_spin 1s linear infinite;
+}
+
+@keyframes chat_header_spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+}

@@ -24,19 +24,15 @@ import {
 import { AuthState } from '@asgard-js/core';
 import clsx from 'clsx';
 import { ApiKeyInput } from './api-key-input';
-import { ChatbotHeader } from './chatbot-header';
-import { ChannelTitle } from './channel-title';
+import { ChatHeaderHost } from './chat-header/chat-header-host';
+import { ChatHeaderAction } from './chat-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
 import { ServiceErrorState } from './service-error-state';
 import { DropZoneOverlay } from './drop-zone-overlay/drop-zone-overlay';
 import { SandboxLaunchHud } from './sandbox-launch-hud';
-import {
-  ChatbotFileExplorerAside,
-  FileExplorerArrivalBridge,
-  FileExplorerToggle,
-} from './file-explorer/chatbot-file-explorer';
+import { ChatbotFileExplorerAside, FileExplorerArrivalBridge } from './file-explorer/chatbot-file-explorer';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 import { ToolCallConsentGate } from '../tool-call-consent';
 import styles from './chatbot.module.scss';
@@ -44,8 +40,16 @@ import styles from './chatbot.module.scss';
 interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
   style?: CSSProperties;
+  /** The bot name. Since F-022 it is the unified `ChatHeader`'s main line; the channel title (F-016) is its subtitle. */
   title?: string;
+  /** Extra header nodes rendered as custom action cells on the unified `ChatHeader`, before reset / close. */
   customActions?: ReactNode[];
+  /**
+   * First-class header actions API (F-022 / UC-041). Rendered on the unified `ChatHeader` after the
+   * built-in File Explorer toggle + `customActions` and before reset / close. Each supports `active`
+   * (toggle highlight), `busy` (spinner), `disabled`, and `render()` for a fully custom cell.
+   */
+  headerActions?: ChatHeaderAction[];
   theme?: Partial<AsgardThemeContextValue>;
   config: ClientConfig;
   customChannelId: string;
@@ -139,13 +143,13 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   onChannelReady?: () => void;
 
   /**
-   * Custom header renderer. When provided, replaces the default `<ChatbotHeader />`
-   * entirely — `title`, `onReset`, `onClose`, `customActions`, and
-   * `maintainConnectionWhenClosed` are no longer applied automatically; the
-   * renderer owns the header area in full.
+   * Custom header renderer (F-022 L3 escape hatch). When provided, replaces the unified `<ChatHeader />`
+   * entirely — `title`, `onReset`, `onClose`, `customActions`, `headerActions`, and
+   * `maintainConnectionWhenClosed` are no longer applied automatically; the renderer owns the whole
+   * heading bar. Return `null` to hide the bar.
    *
    * Use `useAsgardContext()` inside the renderer to access runtime state
-   * (`resetChannel`, `isResetting`, `avatar`, `title`, etc.) and
+   * (`resetChannel`, `isResetting`, `avatar`, `title`, `channelTitle`, etc.) and
    * `useAsgardThemeContext()` for theme tokens.
    */
   renderHeader?: () => ReactNode;
@@ -224,6 +228,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
   const {
     title,
     customActions,
+    headerActions,
     theme,
     config,
     customChannelId,
@@ -440,23 +445,12 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             onSandboxOpenFile={handleSandboxOpenFile}
             sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
           >
-            {/* Group the channel-title row + scrollable thread into the grid's single `1fr` row, so
-                the footer stays pinned regardless of thread height or whether the title renders. The
-                title is fixed at the top; the body scrolls internally (its own `flex:1; overflow`).
-                F-021 — that row is a flex row so the built-in File Explorer aside sits to the right. */}
+            {/* F-022 — the unified ChatHeader now lives at the top of the container (bot main + channel
+                subtitle + right-side actions, incl. the built-in File Explorer toggle). The main row is the
+                scrollable thread plus, when built-in, the File Explorer aside to its right. The footer stays
+                pinned regardless of thread height; the body scrolls internally (`flex:1; overflow`). */}
             <div className={styles.chatbot__main_row}>
               <div className={styles.chatbot__thread_area}>
-                {/* Channel-title row + folder toggle — distinct from the bot-name ChatbotHeader (F-017/F-021). */}
-                {builtinFileExplorer ? (
-                  <div className={styles.chatbot__title_row}>
-                    <ChannelTitle />
-                    <span className={styles.chatbot__title_toggle}>
-                      <FileExplorerToggle controller={fileExplorerController} />
-                    </span>
-                  </div>
-                ) : (
-                  <ChannelTitle />
-                )}
                 <ChatbotBody hideRunChrome={hideRunChrome} />
               </div>
               {builtinFileExplorer && fileExplorerController.open && (
@@ -535,12 +529,19 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                 {renderHeader ? (
                   renderHeader()
                 ) : (
-                  <ChatbotHeader
+                  <ChatHeaderHost
                     title={title}
                     onReset={onReset}
                     onClose={onClose}
                     customActions={customActions}
+                    headerActions={headerActions}
                     maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+                    locale={locale}
+                    untitledLabel={untitledLabel}
+                    channelTitleHidden={channelTitleHidden}
+                    renderTitle={renderTitle}
+                    fileExplorerController={fileExplorerController}
+                    builtinFileExplorer={builtinFileExplorer}
                   />
                 )}
                 {renderContent()}
@@ -560,12 +561,19 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
         {renderHeader ? (
           renderHeader()
         ) : (
-          <ChatbotHeader
+          <ChatHeaderHost
             title={title}
             onReset={onReset}
             onClose={onClose}
             customActions={customActions}
+            headerActions={headerActions}
             maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+            locale={locale}
+            untitledLabel={untitledLabel}
+            channelTitleHidden={channelTitleHidden}
+            renderTitle={renderTitle}
+            fileExplorerController={fileExplorerController}
+            builtinFileExplorer={false}
           />
         )}
         {renderContent()}
