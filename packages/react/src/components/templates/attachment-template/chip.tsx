@@ -1,7 +1,8 @@
-import { CSSProperties, KeyboardEvent, MouseEvent, ReactNode, useCallback } from 'react';
-import { ButtonAction } from '@asgard-js/core';
+import { CSSProperties, KeyboardEvent, MouseEvent, ReactNode, useCallback, useMemo } from 'react';
+import { ButtonAction, resolveSandboxUri } from '@asgard-js/core';
 import DocumentSvg from '../../../icons/document.svg?react';
 import DownloadSvg from '../../../icons/download.svg?react';
+import GlobeSvg from '../../../icons/globe.svg?react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { isChannelHomeUri } from '../../../utils/channel-home-download';
@@ -100,6 +101,15 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
     [dispatchAction, downloadAction],
   );
 
+  // The glyph follows the action, not the template type (BUILD-029): a chip that opens the sandbox browser
+  // gets a globe, everything else keeps the file glyph. Same resolver `dispatchUriAction` routes on, so the
+  // icon and the side effect can never disagree.
+  const isOpenBrowser = useMemo(() => {
+    if (defaultAction.type !== 'uri' && defaultAction.type !== 'URI') return false;
+
+    return resolveSandboxUri(defaultAction.uri)?.kind === 'open-browser';
+  }, [defaultAction]);
+
   const isDownloadEmit =
     (downloadAction?.type === 'emit' || downloadAction?.type === 'EMIT') &&
     downloadAction.eventName === 'download_file';
@@ -117,7 +127,7 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
       style={customStyle?.style}
     >
       <span className={styles.icon_box} style={customStyle?.iconBox?.style}>
-        <DocumentSvg />
+        {isOpenBrowser ? <GlobeSvg /> : <DocumentSvg />}
       </span>
       <span className={styles.body}>
         <span className={styles.title} style={customStyle?.title?.style}>
