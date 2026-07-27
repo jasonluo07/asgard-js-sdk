@@ -58,6 +58,7 @@ const navItems = [
   { to: '/channel-title', label: 'Channel Title (F-016)' },
   { to: '/channel-title-ui', label: 'Channel Title UI (F-017)' },
   { to: '/chat-header', label: 'Chat Header (F-022)' },
+  { to: '/composer', label: 'Composer (BUILD-028)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

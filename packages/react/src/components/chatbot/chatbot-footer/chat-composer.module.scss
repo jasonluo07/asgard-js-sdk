@@ -1,0 +1,180 @@
+// BUILD-028 — the composer pill. One rounded container holds the attachment button, the auto-growing
+// textarea, the speech button and the send / stop button; the border and focus ring that used to sit on
+// the textarea belong to this container now.
+//
+// Border and background come from `--asg-color-border` / `--asg-color-surface`, which the theme context
+// already derives from the consumer's `borderColor` / `backgroundColor`. Only `--asg-composer-focus-color`
+// and `--asg-composer-placeholder-color` are set on the element (see chat-composer.tsx), because a
+// `:focus-within` or `::placeholder` colour cannot be expressed as an inline style.
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  padding: var(--asg-spacing-2, 8px) var(--asg-spacing-3, 12px);
+  background: var(--asg-color-surface);
+  border: 1px solid var(--asg-color-border);
+  border-radius: var(--asg-radius-lg, 12px);
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--asg-composer-focus-color, var(--asg-color-primary));
+  }
+}
+
+// Flex, not a fixed 3-column grid: the attachment button disappears entirely when both upload lanes are
+// off, and a `auto 1fr auto` template would then hand the `1fr` to the send zone and squeeze the textarea
+// into the `auto` column (its `cols` default of 20 characters). Flex is immune to the child count.
+.composer_row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--asg-spacing-2, 8px);
+}
+
+.file_input {
+  display: none;
+}
+
+.attachment_button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--asg-color-text-placeholder);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: var(--asg-radius-sm, 6px);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--asg-color-text);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  > svg {
+    width: 18px;
+    height: 18px;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+// iOS Safari auto-scrolls the page when an input takes focus; an opacity keyframe suppresses it.
+// @see https://gist.github.com/kiding/72721a0553fa93198ae2bb6eefaa3299
+@keyframes prevent_ios_focus_scroll {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.textarea {
+  font: inherit;
+  // `min-width: 0` lets it shrink below the intrinsic `cols` width instead of overflowing the pill.
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 32px;
+  max-height: 40vh;
+  padding: 6px 0;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--asg-color-text, #e0e0e0);
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+
+  &::placeholder {
+    color: var(--asg-composer-placeholder-color, var(--asg-color-text-placeholder));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.textarea--focused {
+  animation: prevent_ios_focus_scroll 0.01s;
+}
+
+.send_zone {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--asg-spacing-1, 6px);
+  align-items: center;
+}
+
+.speech_button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--asg-color-text-placeholder);
+  cursor: pointer;
+  border-radius: var(--asg-radius-sm, 6px);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--asg-color-text);
+  }
+
+  > svg {
+    width: 18px;
+    height: 18px;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+.speech_button__disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+// Solid primary square — the prototype's send affordance. Unlike the pre-BUILD-028 footer it is always
+// present: disabled when there is nothing to send, rather than swapped out for another control.
+//
+// The glyph is white because it sits on the primary fill and the palette exposes no contrast token;
+// the pre-BUILD-028 button used a literal `white` for the same reason. Both glyphs (send, stop) inherit
+// it via `currentColor`, so the stop square cannot clash with the fill the way the old stop icon —
+// which hardcoded its own red disc — did.
+.submit_button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #fff;
+  cursor: pointer;
+  background: var(--asg-color-primary);
+  border: none;
+  border-radius: var(--asg-radius-md, 8px);
+  transition: opacity 0.2s ease;
+
+  > svg {
+    width: 16px;
+    height: 16px;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+.submit_button__disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}

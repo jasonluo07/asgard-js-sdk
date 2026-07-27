@@ -19,10 +19,23 @@ interface SpeechInputButtonProps {
   style?: CSSProperties;
   /** When true (e.g. a run is streaming or the composer is in preview), voice input can't be started. */
   disabled?: boolean;
+  /** Accessible label — the button is icon-only. */
+  label?: string;
+}
+
+/**
+ * Whether the browser can do speech recognition at all. BUILD-028 made the mic a permanent part of the
+ * composer, so an unsupported browser must omit it rather than render a button that does nothing —
+ * previously the dead button was masked by disappearing as soon as the user typed.
+ */
+export function isSpeechRecognitionSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
 }
 
 export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
-  const { setValue, className, style, disabled = false } = props;
+  const { setValue, className, style, disabled = false, label = 'Voice input' } = props;
 
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -127,6 +140,7 @@ export function SpeechInputButton(props: SpeechInputButtonProps): ReactNode {
       className={className}
       style={style}
       role="button"
+      aria-label={label}
       aria-disabled={disabled}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
