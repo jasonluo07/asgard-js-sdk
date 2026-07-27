@@ -1,11 +1,11 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useCallback, useMemo } from 'react';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import { Locale, t } from '../../../i18n';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
 import { FolderTreeIcon } from '../file-explorer/icons';
 import { ChatHeader, ChatHeaderAction, ChatHeaderTitleRendererArgs } from './chat-header';
-import { RefreshIcon, XIcon } from './icons';
+import { DownloadIcon, RefreshIcon, XIcon } from './icons';
 
 // F-022 — the chatbot-internal bridge between runtime context and the pure `<ChatHeader>`. It reads the
 // service + init context (channel title, avatar, reset/close, annotations) and assembles the default
@@ -46,7 +46,16 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
     builtinFileExplorer,
   } = props;
 
-  const { avatar, channelTitle, isResetting, resetChannel, closeChannel } = useAsgardContext();
+  const {
+    avatar,
+    channelTitle,
+    isResetting,
+    resetChannel,
+    closeChannel,
+    messages,
+    customChannelId,
+    enableExport: enableExportProp,
+  } = useAsgardContext();
   const {
     data: { annotations },
   } = useAsgardAppInitializationContext();
@@ -54,6 +63,21 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
   // Main line = bot name (embed-config annotation wins, then the `title` prop). Blank → the channel title
   // becomes the main line (UC-040). The legacy 'Bot' literal fallback is dropped by design under F-022.
   const botName = annotations?.embedConfig?.title || title || null;
+
+  // BUILD-028 moved Export History out of the footer: the pill has room for one attachment button, and
+  // the header already owns a first-class actions API. Prop wins, then the bot provider's annotations.
+  const enableExport = enableExportProp ?? annotations?.embedConfig?.enableExport ?? false;
+
+  const handleExport = useCallback(async (): Promise<void> => {
+    if (!messages) return;
+
+    const { exportConversationToMarkdown, downloadMarkdown } = await import('../../../utils/export-conversation');
+    const exportName = botName ?? 'Bot';
+
+    downloadMarkdown(exportConversationToMarkdown(messages, { customChannelId, botName: exportName }), {
+      botName: exportName,
+    });
+  }, [messages, customChannelId, botName]);
 
   const actions = useMemo<ChatHeaderAction[]>(() => {
     const list: ChatHeaderAction[] = [];
@@ -65,6 +89,18 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
         label: t(locale, 'header.fileExplorer'),
         active: fileExplorerController.open,
         onClick: fileExplorerController.toggle,
+      });
+    }
+
+    if (enableExport) {
+      list.push({
+        id: 'export',
+        icon: <DownloadIcon size={18} />,
+        label: t(locale, 'header.export'),
+        disabled: !messages,
+        onClick: () => {
+          handleExport();
+        },
       });
     }
 
@@ -104,6 +140,9 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
     builtinFileExplorer,
     fileExplorerController.open,
     fileExplorerController.toggle,
+    enableExport,
+    messages,
+    handleExport,
     customActions,
     headerActions,
     locale,

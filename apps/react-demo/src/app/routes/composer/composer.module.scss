@@ -1,0 +1,118 @@
+.legend {
+  width: 340px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.legend__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  button {
+    padding: 6px 10px;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .active {
+    border-color: #1677ff;
+    background: rgba(22, 119, 255, 0.12);
+  }
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 16px;
+}
+
+.chatbotContainer {
+  flex: 1;
+  min-width: 0;
+  height: 560px;
+}
+
+.narrow {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.narrow__label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.narrowContainer {
+  width: 360px;
+  height: 560px;
+}
+
+// Consumer control row mounted through renderComposerAbove (stands in for Sindri's Model / @mention row).
+.controlRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.control {
+  padding: 6px 12px;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 8px;
+  background: var(--asg-color-surface, #1f1f1f);
+  color: var(--asg-color-text, #e0e0e0);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.controlDashed {
+  padding: 6px 12px;
+  border: 1px dashed var(--asg-color-border, #434343);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--asg-color-text-placeholder, #8c8c8c);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+// Consumer row mounted through renderComposerInline (inside the pill, below the input row).
+.inlineRow {
+  display: flex;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.inlineChip {
+  padding: 2px 8px;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 999px;
+  color: var(--asg-color-text-placeholder, #8c8c8c);
+  font-size: 11px;
+}
+
+.customFooter {
+  padding: 16px;
+  border-top: 1px dashed var(--asg-color-border, #434343);
+  color: var(--asg-color-text-placeholder, #8c8c8c);
+  font-size: 13px;
+  text-align: center;
+}

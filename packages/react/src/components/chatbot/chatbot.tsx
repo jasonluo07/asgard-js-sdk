@@ -173,10 +173,29 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   footerEndActions?: ReactNode[];
 
   /**
+   * Slot rendered in the footer between the run indicator and the composer pill —
+   * i.e. **above** the input box, outside its border. Intended for per-message
+   * control rows (model pickers, mention chips, mode switches) that belong with
+   * the input but should not sit inside it.
+   *
+   * Additive: the built-in composer keeps working unchanged. Use
+   * `useAsgardContext()` inside the renderer for runtime state.
+   */
+  renderComposerAbove?: () => ReactNode;
+
+  /**
+   * Slot rendered **inside** the composer pill, below the textarea row (the
+   * placement modern chat UIs use for model / tool selectors). Additive, same
+   * contract as `renderComposerAbove`.
+   */
+  renderComposerInline?: () => ReactNode;
+
+  /**
    * Custom footer renderer. When provided, replaces the default `<ChatbotFooter />`
    * entirely. The built-in textarea, send / mic button, image upload, document
-   * upload, export, IME composition guard, and `footerEndActions` are **not**
-   * rendered — the renderer fully owns the footer area.
+   * upload, IME composition guard, `footerEndActions`, `renderComposerAbove` and
+   * `renderComposerInline` are **not** rendered — the renderer fully owns the
+   * footer area.
    *
    * The container-level drag-and-drop overlay (`<DropZoneOverlay />`) still
    * appears when `enableUpload` or `enableDocumentUpload` is set, but the
@@ -271,6 +290,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     renderMenu,
     hideRunChrome,
     footerEndActions,
+    renderComposerAbove,
+    renderComposerInline,
     renderFooter,
     renderToolCallGroup,
     renderTitle,
@@ -464,7 +485,15 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             {renderMenu?.()}
             {/* Footer must live inside the template provider so its docked TaskList / SubagentList
                 panels read `locale` from the context (F-010 / F-012). */}
-            {renderFooter ? renderFooter() : <ChatbotFooter footerEndActions={footerEndActions} />}
+            {renderFooter ? (
+              renderFooter()
+            ) : (
+              <ChatbotFooter
+                footerEndActions={footerEndActions}
+                renderComposerAbove={renderComposerAbove}
+                renderComposerInline={renderComposerInline}
+              />
+            )}
             <ToolCallConsentGate />
             {/* F-018 — sandbox cold-start HUD. Inside the template provider so it reads `locale` for its
                 labels (like the docked panels); position:absolute anchors it to ChatbotContainer

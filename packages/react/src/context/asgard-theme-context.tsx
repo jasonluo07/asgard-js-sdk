@@ -548,10 +548,9 @@ export function AsgardThemeContextProvider(
           mergedTheme.chatbot.footer.style.borderTopColor = borderColor;
         }
 
-        // Apply to textarea
-        if (mergedTheme.chatbot.footer?.textArea?.style) {
-          mergedTheme.chatbot.footer.textArea.style.borderColor = borderColor;
-        }
+        // The textarea used to carry the composer's border; under BUILD-028 the border belongs to the
+        // pill around it, which reads `--asg-color-border` (derived from this same `borderColor` below).
+        // Writing it here too would draw a second, inner border.
 
         // Apply to quick reply buttons
         if (mergedTheme.template?.quickReplies?.button?.style) {
@@ -594,17 +593,10 @@ export function AsgardThemeContextProvider(
         }
       }
 
-      // Lift the textarea to the surface elevation derived from chatbot.backgroundColor (one step
-      // lighter), so it matches the bordered thread containers instead of blending into the base bg.
-      if (theme?.chatbot?.backgroundColor) {
-        const bgColor = theme.chatbot.backgroundColor;
-
-        if (mergedTheme.chatbot.footer?.textArea?.style) {
-          mergedTheme.chatbot.footer.textArea.style.backgroundColor = /^#[0-9a-fA-F]{6}$/.test(bgColor)
-            ? lightenColor(bgColor, 0.08)
-            : bgColor;
-        }
-      }
+      // The surface elevation that used to be painted onto the textarea now belongs to the composer pill,
+      // which reads `--asg-color-surface` — already derived from `chatbot.backgroundColor` further down.
+      // The textarea itself is transparent under BUILD-028, so an inline background would show as a
+      // mismatched block inside the pill.
 
       // Ensure prop-level chatbot.inactiveColor is also applied to time color
       if (theme?.chatbot?.inactiveColor) {

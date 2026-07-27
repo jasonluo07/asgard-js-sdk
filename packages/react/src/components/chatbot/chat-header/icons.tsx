@@ -48,6 +48,17 @@ export function RefreshIcon(props: IconProps): ReactNode {
   );
 }
 
+/** lucide `download` — the Export History action glyph (moved here from the footer under BUILD-028). */
+export function DownloadIcon(props: IconProps): ReactNode {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+  );
+}
+
 /** lucide `x` — the default close action glyph. */
 export function XIcon(props: IconProps): ReactNode {
   return (
