@@ -9,6 +9,17 @@ import { isChannelHomeUri } from '../../../utils/channel-home-download';
 import { dispatchUriAction } from '../../../utils/dispatch-uri-action';
 import styles from './attachment-template.module.scss';
 
+/** Whether an action's effect is "download this file" — an EMIT `download_file` or a `channel-home://` uri. */
+export function isDownloadAction(action: ButtonAction | undefined): boolean {
+  if (!action) return false;
+
+  if (action.type === 'emit' || action.type === 'EMIT') return action.eventName === 'download_file';
+
+  if (action.type === 'uri' || action.type === 'URI') return isChannelHomeUri(action.uri);
+
+  return false;
+}
+
 interface AttachmentChipProps {
   title: string;
   text: string;
@@ -110,20 +121,22 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
     return resolveSandboxUri(defaultAction.uri)?.kind === 'open-browser';
   }, [defaultAction]);
 
-  const isDownloadEmit =
-    (downloadAction?.type === 'emit' || downloadAction?.type === 'EMIT') &&
-    downloadAction.eventName === 'download_file';
-  const isDownloadChannelHome =
-    (downloadAction?.type === 'uri' || downloadAction?.type === 'URI') && isChannelHomeUri(downloadAction.uri);
-  const showDownloadIcon = isDownloadEmit || isDownloadChannelHome;
+  const showDownloadIcon = isDownloadAction(downloadAction);
+
+  // When the backend hands the same download intent to both actions (the channel-home file case: chip body and
+  // download button carry the identical `channel-home://` uri), clicking anywhere on the card downloaded the file —
+  // the whole card behaved as one big download button, and hosts could not put their own meaning on the card body.
+  // Downloading is now the download button's job alone. Only suppressed when that button is actually rendered, so a
+  // chip whose sole action is a download stays clickable; `open-browser` / `open-file` / plain links are untouched.
+  const bodyActsAsDownload = showDownloadIcon && isDownloadAction(defaultAction);
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      role={bodyActsAsDownload ? undefined : 'button'}
+      tabIndex={bodyActsAsDownload ? undefined : 0}
       className={styles.chip}
-      onClick={handleChipClick}
-      onKeyDown={handleChipKeyDown}
+      onClick={bodyActsAsDownload ? undefined : handleChipClick}
+      onKeyDown={bodyActsAsDownload ? undefined : handleChipKeyDown}
       style={customStyle?.style}
     >
       <span className={styles.icon_box} style={customStyle?.iconBox?.style}>
