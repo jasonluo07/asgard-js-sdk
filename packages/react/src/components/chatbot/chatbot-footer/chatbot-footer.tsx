@@ -61,8 +61,8 @@ export function ChatbotFooter({
       {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003) —
           minus the rejoin transcript replay, which is loading history rather than generating (F-023
           AC9 / UC-046), hence `isRunning` rather than the broader `isConnecting`.
-          The Subagent (F-012) / Task (F-010) live-state panels render at the tail of the thread
-          (ChatbotBody) so they scroll with the messages instead of being pinned here. */}
+          The Subagent (F-012) / Task (F-010) live-state panels sit immediately above this seam, in
+          ChatbotBody's fixed docked strip (outside the thread's scroll box). */}
       <RunningIndicator running={isRunning} />
 
       <div className={styles.chatbot_footer__content} style={contentStyles}>

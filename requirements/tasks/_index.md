@@ -61,61 +61,63 @@
 
 ## Task Queue
 
-| Task ID      | Title                                             | Priority | Status | Spec                                                                                               |
-| ------------ | ------------------------------------------------- | -------- | ------ | -------------------------------------------------------------------------------------------------- |
-| `BUILD-001`  | Message Stream Assembly Robustness                | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)               |
-| `REVIEW-001` | Review: Message Stream Assembly Robustness        | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md)             |
-| `BUILD-002`  | Last-Event-ID Resume                              | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)                           |
-| `REVIEW-002` | Review: Last-Event-ID Resume                      | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)                         |
-| `BUILD-003`  | Transcript Replay Kernel + message.user           | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)                   |
-| `REVIEW-003` | Review: Transcript Replay Kernel                  | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)                 |
-| `BUILD-004`  | Thinking Message Display                          | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)                   |
-| `REVIEW-004` | Review: Thinking Message Display                  | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)                 |
-| `BUILD-005`  | Run Indicator Bound to Connection at Seam         | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)                         |
-| `REVIEW-005` | Review: Run Indicator at Seam                     | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)                       |
-| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth         | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)               |
-| `REVIEW-006` | Review: Built-in Tool-Call Variants               | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md)             |
-| `BUILD-007`  | Tool-Call i18n Locale Prop                        | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)                         |
-| `REVIEW-007` | Review: Tool-Call i18n Locale Prop                | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)                       |
-| `BUILD-008`  | Tool-Call Grouping + Group Summary                | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)               |
-| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary        | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md)             |
-| `BUILD-009`  | Write/Edit Diff + Unified Status                  | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)                       |
-| `REVIEW-009` | Review: Write/Edit Diff + Unified Status          | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)                     |
-| `BUILD-010`  | Tool-Call Expanded Content + Localized Titles     | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)                 |
-| `REVIEW-010` | Review: Tool-Call Expanded Content                | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)               |
-| `BUILD-011`  | Tool-Call Failure Detection via isError           | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                                   |
-| `REVIEW-011` | Review: Tool-Call Failure Detection               | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                                 |
-| `BUILD-012`  | Task Check List Panel                             | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                                     |
-| `REVIEW-012` | Review: Task Check List Panel                     | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                                   |
-| `BUILD-013`  | Subagent List Panel                               | High     | done   | [BUILD-013-subagent-list.md](./BUILD-013-subagent-list.md)                                         |
-| `REVIEW-013` | Review: Subagent List Panel                       | —        | done   | [REVIEW-013-subagent-list.md](./REVIEW-013-subagent-list.md)                                       |
-| `BUILD-014`  | Derived-State Stores                              | High     | done   | [BUILD-014-derived-state-stores.md](./BUILD-014-derived-state-stores.md)                           |
-| `REVIEW-014` | Review: Derived-State Stores                      | —        | done   | [REVIEW-014-derived-state-stores.md](./REVIEW-014-derived-state-stores.md)                         |
-| `BUILD-015`  | Channel Title Store                               | Normal   | done   | [BUILD-015-channel-title-store.md](./BUILD-015-channel-title-store.md)                             |
-| `REVIEW-015` | Review: Channel Title Store                       | —        | done   | [REVIEW-015-channel-title-store.md](./REVIEW-015-channel-title-store.md)                           |
-| `BUILD-016`  | Channel Title UI                                  | High     | done   | [BUILD-016-channel-title-ui.md](./BUILD-016-channel-title-ui.md)                                   |
-| `REVIEW-016` | Review: Channel Title UI                          | —        | done   | [REVIEW-016-channel-title-ui.md](./REVIEW-016-channel-title-ui.md)                                 |
-| `BUILD-017`  | Join-Init Orchestration + metadata gate           | High     | done   | [BUILD-017-join-init-metadata-gate.md](./BUILD-017-join-init-metadata-gate.md)                     |
-| `REVIEW-017` | Review: Join-Init Orchestration                   | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)                   |
-| `BUILD-018`  | Channel Home Rename (cwd → channel-home)          | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                             |
-| `REVIEW-018` | Review: Channel Home Rename                       | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)                           |
-| `BUILD-019`  | Sandbox Launch HUD                                | High     | done   | [BUILD-019-sandbox-launch-hud.md](./BUILD-019-sandbox-launch-hud.md)                               |
-| `REVIEW-019` | Review: Sandbox Launch HUD                        | —        | done   | [REVIEW-019-sandbox-launch-hud.md](./REVIEW-019-sandbox-launch-hud.md)                             |
-| `BUILD-020`  | Hide Subagent Message / Thinking Frames           | High     | done   | [BUILD-020-hide-subagent-messages.md](./BUILD-020-hide-subagent-messages.md)                       |
-| `REVIEW-020` | Review: Hide Subagent Message / Thinking          | —        | done   | [REVIEW-020-hide-subagent-messages.md](./REVIEW-020-hide-subagent-messages.md)                     |
-| `BUILD-021`  | Consume launchedSandboxes + Rx Store              | High     | done   | [BUILD-021-launched-sandboxes-store.md](./BUILD-021-launched-sandboxes-store.md)                   |
-| `REVIEW-021` | Review: launchedSandboxes Rx Store                | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)                 |
-| `BUILD-022`  | sandbox:// Handoff Cards                          | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)                         |
-| `REVIEW-022` | Review: sandbox:// Handoff Cards                  | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)                       |
-| `BUILD-023`  | File Explorer Side Panel — Cycle 1                | High     | done   | [BUILD-023-file-explorer-panel.md](./BUILD-023-file-explorer-panel.md)                             |
-| `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1        | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)                           |
-| `BUILD-024`  | File Explorer Mutations + Context Menu + Nudge    | High     | done   | [BUILD-024-file-explorer-mutations.md](./BUILD-024-file-explorer-mutations.md)                     |
-| `REVIEW-024` | Review: File Explorer Mutations + Nudge           | —        | done   | [REVIEW-024-file-explorer-mutations.md](./REVIEW-024-file-explorer-mutations.md)                   |
-| `BUILD-025`  | Guard the File Explorer glyphs against drift      | Normal   | done   | [BUILD-025-file-explorer-icon-guard.md](./BUILD-025-file-explorer-icon-guard.md)                   |
-| `BUILD-026`  | Export bot text content renderer (BotMessageText) | Normal   | done   | [BUILD-026-export-bot-message-text.md](./BUILD-026-export-bot-message-text.md)                     |
-| `BUILD-027`  | Unified Chat Heading Bar (ChatHeader)             | High     | done   | [BUILD-027-unified-chat-header.md](./BUILD-027-unified-chat-header.md)                             |
-| `REVIEW-027` | Review: Unified Chat Heading Bar                  | —        | done   | [REVIEW-027-unified-chat-header.md](./REVIEW-027-unified-chat-header.md)                           |
-| `BUILD-028`  | Chat-kit Composer (SDK footer rewrite)            | High     | draft  | [BUILD-028-chat-kit-composer.md](./BUILD-028-chat-kit-composer.md)                                 |
-| `BUILD-029`  | File Explorer Cycle 3 — watch + lifecycle         | High     | done   | [BUILD-029-file-explorer-watch-and-lifecycle.md](./BUILD-029-file-explorer-watch-and-lifecycle.md) |
-| `BUILD-030`  | Stop generation suspends the background run       | High     | done   | [BUILD-030-stop-generation-suspend-run.md](./BUILD-030-stop-generation-suspend-run.md)             |
-| `REVIEW-030` | Review: Stop generation suspends background run   | —        | done   | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)           |
+| Task ID      | Title                                             | Priority | Status | Spec                                                                                                     |
+| ------------ | ------------------------------------------------- | -------- | ------ | -------------------------------------------------------------------------------------------------------- |
+| `BUILD-001`  | Message Stream Assembly Robustness                | High     | done   | [BUILD-001-stream-assembly-robustness.md](./BUILD-001-stream-assembly-robustness.md)                     |
+| `REVIEW-001` | Review: Message Stream Assembly Robustness        | —        | done   | [REVIEW-001-stream-assembly-robustness.md](./REVIEW-001-stream-assembly-robustness.md)                   |
+| `BUILD-002`  | Last-Event-ID Resume                              | High     | done   | [BUILD-002-last-event-id-resume.md](./BUILD-002-last-event-id-resume.md)                                 |
+| `REVIEW-002` | Review: Last-Event-ID Resume                      | —        | done   | [REVIEW-002-last-event-id-resume.md](./REVIEW-002-last-event-id-resume.md)                               |
+| `BUILD-003`  | Transcript Replay Kernel + message.user           | High     | done   | [BUILD-003-transcript-replay-kernel.md](./BUILD-003-transcript-replay-kernel.md)                         |
+| `REVIEW-003` | Review: Transcript Replay Kernel                  | —        | done   | [REVIEW-003-transcript-replay-kernel.md](./REVIEW-003-transcript-replay-kernel.md)                       |
+| `BUILD-004`  | Thinking Message Display                          | High     | done   | [BUILD-004-thinking-message-display.md](./BUILD-004-thinking-message-display.md)                         |
+| `REVIEW-004` | Review: Thinking Message Display                  | —        | done   | [REVIEW-004-thinking-message-display.md](./REVIEW-004-thinking-message-display.md)                       |
+| `BUILD-005`  | Run Indicator Bound to Connection at Seam         | High     | done   | [BUILD-005-run-indicator-at-seam.md](./BUILD-005-run-indicator-at-seam.md)                               |
+| `REVIEW-005` | Review: Run Indicator at Seam                     | —        | done   | [REVIEW-005-run-indicator-at-seam.md](./REVIEW-005-run-indicator-at-seam.md)                             |
+| `BUILD-006`  | Built-in Tool-Call Variants + Label Synth         | High     | done   | [BUILD-006-builtin-tool-call-variants.md](./BUILD-006-builtin-tool-call-variants.md)                     |
+| `REVIEW-006` | Review: Built-in Tool-Call Variants               | —        | done   | [REVIEW-006-builtin-tool-call-variants.md](./REVIEW-006-builtin-tool-call-variants.md)                   |
+| `BUILD-007`  | Tool-Call i18n Locale Prop                        | High     | done   | [BUILD-007-tool-call-i18n-locale.md](./BUILD-007-tool-call-i18n-locale.md)                               |
+| `REVIEW-007` | Review: Tool-Call i18n Locale Prop                | —        | done   | [REVIEW-007-tool-call-i18n-locale.md](./REVIEW-007-tool-call-i18n-locale.md)                             |
+| `BUILD-008`  | Tool-Call Grouping + Group Summary                | High     | done   | [BUILD-008-tool-call-grouping-summary.md](./BUILD-008-tool-call-grouping-summary.md)                     |
+| `REVIEW-008` | Review: Tool-Call Grouping + Group Summary        | —        | done   | [REVIEW-008-tool-call-grouping-summary.md](./REVIEW-008-tool-call-grouping-summary.md)                   |
+| `BUILD-009`  | Write/Edit Diff + Unified Status                  | High     | done   | [BUILD-009-write-edit-diff-status.md](./BUILD-009-write-edit-diff-status.md)                             |
+| `REVIEW-009` | Review: Write/Edit Diff + Unified Status          | —        | done   | [REVIEW-009-write-edit-diff-status.md](./REVIEW-009-write-edit-diff-status.md)                           |
+| `BUILD-010`  | Tool-Call Expanded Content + Localized Titles     | High     | done   | [BUILD-010-tool-call-expand-localize.md](./BUILD-010-tool-call-expand-localize.md)                       |
+| `REVIEW-010` | Review: Tool-Call Expanded Content                | —        | done   | [REVIEW-010-tool-call-expand-localize.md](./REVIEW-010-tool-call-expand-localize.md)                     |
+| `BUILD-011`  | Tool-Call Failure Detection via isError           | High     | done   | [BUILD-011-toolcall-iserror.md](./BUILD-011-toolcall-iserror.md)                                         |
+| `REVIEW-011` | Review: Tool-Call Failure Detection               | —        | done   | [REVIEW-011-toolcall-iserror.md](./REVIEW-011-toolcall-iserror.md)                                       |
+| `BUILD-012`  | Task Check List Panel                             | High     | done   | [BUILD-012-task-check-list.md](./BUILD-012-task-check-list.md)                                           |
+| `REVIEW-012` | Review: Task Check List Panel                     | —        | done   | [REVIEW-012-task-check-list.md](./REVIEW-012-task-check-list.md)                                         |
+| `BUILD-013`  | Subagent List Panel                               | High     | done   | [BUILD-013-subagent-list.md](./BUILD-013-subagent-list.md)                                               |
+| `REVIEW-013` | Review: Subagent List Panel                       | —        | done   | [REVIEW-013-subagent-list.md](./REVIEW-013-subagent-list.md)                                             |
+| `BUILD-014`  | Derived-State Stores                              | High     | done   | [BUILD-014-derived-state-stores.md](./BUILD-014-derived-state-stores.md)                                 |
+| `REVIEW-014` | Review: Derived-State Stores                      | —        | done   | [REVIEW-014-derived-state-stores.md](./REVIEW-014-derived-state-stores.md)                               |
+| `BUILD-015`  | Channel Title Store                               | Normal   | done   | [BUILD-015-channel-title-store.md](./BUILD-015-channel-title-store.md)                                   |
+| `REVIEW-015` | Review: Channel Title Store                       | —        | done   | [REVIEW-015-channel-title-store.md](./REVIEW-015-channel-title-store.md)                                 |
+| `BUILD-016`  | Channel Title UI                                  | High     | done   | [BUILD-016-channel-title-ui.md](./BUILD-016-channel-title-ui.md)                                         |
+| `REVIEW-016` | Review: Channel Title UI                          | —        | done   | [REVIEW-016-channel-title-ui.md](./REVIEW-016-channel-title-ui.md)                                       |
+| `BUILD-017`  | Join-Init Orchestration + metadata gate           | High     | done   | [BUILD-017-join-init-metadata-gate.md](./BUILD-017-join-init-metadata-gate.md)                           |
+| `REVIEW-017` | Review: Join-Init Orchestration                   | —        | done   | [REVIEW-017-join-init-metadata-gate.md](./REVIEW-017-join-init-metadata-gate.md)                         |
+| `BUILD-018`  | Channel Home Rename (cwd → channel-home)          | High     | done   | [BUILD-018-channel-home-rename.md](./BUILD-018-channel-home-rename.md)                                   |
+| `REVIEW-018` | Review: Channel Home Rename                       | —        | done   | [REVIEW-018-channel-home-rename.md](./REVIEW-018-channel-home-rename.md)                                 |
+| `BUILD-019`  | Sandbox Launch HUD                                | High     | done   | [BUILD-019-sandbox-launch-hud.md](./BUILD-019-sandbox-launch-hud.md)                                     |
+| `REVIEW-019` | Review: Sandbox Launch HUD                        | —        | done   | [REVIEW-019-sandbox-launch-hud.md](./REVIEW-019-sandbox-launch-hud.md)                                   |
+| `BUILD-020`  | Hide Subagent Message / Thinking Frames           | High     | done   | [BUILD-020-hide-subagent-messages.md](./BUILD-020-hide-subagent-messages.md)                             |
+| `REVIEW-020` | Review: Hide Subagent Message / Thinking          | —        | done   | [REVIEW-020-hide-subagent-messages.md](./REVIEW-020-hide-subagent-messages.md)                           |
+| `BUILD-021`  | Consume launchedSandboxes + Rx Store              | High     | done   | [BUILD-021-launched-sandboxes-store.md](./BUILD-021-launched-sandboxes-store.md)                         |
+| `REVIEW-021` | Review: launchedSandboxes Rx Store                | —        | done   | [REVIEW-021-launched-sandboxes-store.md](./REVIEW-021-launched-sandboxes-store.md)                       |
+| `BUILD-022`  | sandbox:// Handoff Cards                          | High     | done   | [BUILD-022-sandbox-handoff-cards.md](./BUILD-022-sandbox-handoff-cards.md)                               |
+| `REVIEW-022` | Review: sandbox:// Handoff Cards                  | —        | done   | [REVIEW-022-sandbox-handoff-cards.md](./REVIEW-022-sandbox-handoff-cards.md)                             |
+| `BUILD-023`  | File Explorer Side Panel — Cycle 1                | High     | done   | [BUILD-023-file-explorer-panel.md](./BUILD-023-file-explorer-panel.md)                                   |
+| `REVIEW-023` | Review: File Explorer Side Panel — Cycle 1        | —        | done   | [REVIEW-023-file-explorer-panel.md](./REVIEW-023-file-explorer-panel.md)                                 |
+| `BUILD-024`  | File Explorer Mutations + Context Menu + Nudge    | High     | done   | [BUILD-024-file-explorer-mutations.md](./BUILD-024-file-explorer-mutations.md)                           |
+| `REVIEW-024` | Review: File Explorer Mutations + Nudge           | —        | done   | [REVIEW-024-file-explorer-mutations.md](./REVIEW-024-file-explorer-mutations.md)                         |
+| `BUILD-025`  | Guard the File Explorer glyphs against drift      | Normal   | done   | [BUILD-025-file-explorer-icon-guard.md](./BUILD-025-file-explorer-icon-guard.md)                         |
+| `BUILD-026`  | Export bot text content renderer (BotMessageText) | Normal   | done   | [BUILD-026-export-bot-message-text.md](./BUILD-026-export-bot-message-text.md)                           |
+| `BUILD-027`  | Unified Chat Heading Bar (ChatHeader)             | High     | done   | [BUILD-027-unified-chat-header.md](./BUILD-027-unified-chat-header.md)                                   |
+| `REVIEW-027` | Review: Unified Chat Heading Bar                  | —        | done   | [REVIEW-027-unified-chat-header.md](./REVIEW-027-unified-chat-header.md)                                 |
+| `BUILD-028`  | Chat-kit Composer (SDK footer rewrite)            | High     | draft  | [BUILD-028-chat-kit-composer.md](./BUILD-028-chat-kit-composer.md)                                       |
+| `BUILD-029`  | File Explorer Cycle 3 — watch + lifecycle         | High     | done   | [BUILD-029-file-explorer-watch-and-lifecycle.md](./BUILD-029-file-explorer-watch-and-lifecycle.md)       |
+| `BUILD-030`  | Stop generation suspends the background run       | High     | done   | [BUILD-030-stop-generation-suspend-run.md](./BUILD-030-stop-generation-suspend-run.md)                   |
+| `REVIEW-030` | Review: Stop generation suspends background run   | —        | done   | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)                 |
+| `BUILD-031`  | Dock run-chrome panels outside thread scroll box  | High     | done   | [BUILD-031-docked-run-chrome-out-of-scroll-box.md](./BUILD-031-docked-run-chrome-out-of-scroll-box.md)   |
+| `REVIEW-031` | Review: Dock run-chrome outside thread scroll box | —        | ready  | [REVIEW-031-docked-run-chrome-out-of-scroll-box.md](./REVIEW-031-docked-run-chrome-out-of-scroll-box.md) |

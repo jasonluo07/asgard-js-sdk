@@ -17,23 +17,34 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    // 16px around, but only 12px below so the last block — a message or the docked panels — clears the
-    // footer by a consistent 12px (the scroll sentinel lives outside this padded content, adding no space).
+    // 16px around, but only 12px below so the last message clears whatever follows — the docked strip or
+    // the footer — by a consistent 12px (the scroll sentinel lives outside this padded content, adding no
+    // space).
     padding: 16px 16px 12px;
     gap: 16px;
     max-width: 1200px;
-    // Fill the scroll viewport so the docked panels below can be pushed to the bottom when the thread
-    // is short (border-box keeps the padding inside this 100%, so a short thread never scrolls).
-    min-height: 100%;
     box-sizing: border-box;
   }
+}
 
-  // F-010 / F-012 — the Subagent + Task live-state panels dock to the tail of the thread. `margin-top:
-  // auto` absorbs the free space above them, so they sink to just above the footer when the thread is
-  // short (à la Claude Code's activity line), yet they stay in the scroll flow and ride up with the
-  // messages once the thread grows tall enough to scroll. Empty (no panels) → this collapses to 0.
-  .chatbot_body__docked {
-    margin-top: auto;
+// F-010 / F-012 — the Subagent + Task live-state panels, docked where both features' AC put them: above
+// the thread↔composer seam. BUG-003 — this strip is a *sibling* of the scroll box above, not its last
+// child, so a streaming thread can no longer shove the panels around; `flex-shrink: 0` holds it at its
+// natural height while the scroll box absorbs the rest of the column. It is only mounted when populated,
+// so an empty strip contributes neither a border nor a gap.
+.chatbot_body__docked {
+  flex-shrink: 0;
+  // Marks the boundary between the (scrolling) thread and this (fixed) region — without it a message can
+  // sit flush against the panels and read as part of the thread.
+  border-top: 1px solid var(--asg-color-border, #434343);
+
+  .chatbot_body__docked_content {
+    margin: 0 auto;
+    // Matches the thread content's 16px horizontal inset; the 12px block padding keeps the clearance the
+    // panels already had from the footer.
+    padding: 12px 16px;
+    max-width: 1200px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     // Column layout → the visible vertical spacing between the Subagent and Task panels is the row-gap.

@@ -49,6 +49,7 @@ import { ToolCallExpand } from './routes/tool-call-expand';
 import { ToolCallIsError } from './routes/tool-call-iserror';
 import { TaskListRoute } from './routes/task-list';
 import { SubagentListRoute } from './routes/subagent-list';
+import { DockedRunChromeRoute } from './routes/docked-run-chrome';
 import { DerivedStateRoute } from './routes/derived-state';
 import { ChannelTitleRoute } from './routes/channel-title';
 import { ChannelTitleUiRoute } from './routes/channel-title-ui';
@@ -112,6 +113,7 @@ export function App(): React.ReactElement {
         <Route path="/tool-call-iserror" element={<ToolCallIsError />} />
         <Route path="/task-list" element={<TaskListRoute />} />
         <Route path="/subagent-list" element={<SubagentListRoute />} />
+        <Route path="/docked-run-chrome" element={<DockedRunChromeRoute />} />
         <Route path="/derived-state" element={<DerivedStateRoute />} />
         <Route path="/channel-title" element={<ChannelTitleRoute />} />
         <Route path="/channel-title-ui" element={<ChannelTitleUiRoute />} />
