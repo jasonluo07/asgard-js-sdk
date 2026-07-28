@@ -14,10 +14,12 @@ import {
   SandboxFsReadOptions,
   SandboxFsReadResult,
   SandboxFsStatResult,
+  SandboxFsWatchEvent,
   SandboxFsWriteOptions,
   SandboxFsWriteResult,
 } from '../types';
 import { HttpError } from '../types/http-error';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { createSseObservable } from './create-sse-observable';
 import { concatMap, delay, finalize, Observable, of, Subject, Subscription, takeUntil } from 'rxjs';
 import { EventType } from '../constants/enum';
@@ -620,6 +622,46 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     if (options?.overwrite) query.overwrite = 'true';
 
     await this.sandboxFsRequest(sandboxName, 'move', 'POST', query);
+  }
+
+  /**
+   * F-021 — watch a sandbox path for changes (`GET fs/watch?path=`, SSE). Each `event: change` frame is one
+   * `SandboxFsWatchEvent`. The backend probes the path first, so a missing path errors as HTTP rather than
+   * as a dead stream. Unsubscribing aborts the request, which ends the sandbox-side watcher.
+   */
+  sandboxFsWatch(sandboxName: string, path: string): Observable<SandboxFsWatchEvent> {
+    const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/watch`);
+    url.searchParams.set('path', path);
+
+    return new Observable<SandboxFsWatchEvent>(subscriber => {
+      const controller = new AbortController();
+
+      void fetchEventSource(url.toString(), {
+        headers: this.sandboxFsHeaders(),
+        signal: controller.signal,
+        openWhenHidden: true,
+        onopen: async response => {
+          if (!response.ok) {
+            const body = await response.text().catch(() => undefined);
+            subscriber.error(new HttpError(response.status, response.statusText, body));
+            controller.abort();
+          }
+        },
+        onmessage: esm => {
+          if (esm.event === 'change') subscriber.next(JSON.parse(esm.data) as SandboxFsWatchEvent);
+        },
+        onclose: () => subscriber.complete(),
+        onerror: err => {
+          // Unlike the run stream this one carries no `id:` cursor, so there is nothing to resume from —
+          // surface the failure instead of letting the library silently reconnect forever.
+          subscriber.error(err);
+          controller.abort();
+          throw err;
+        },
+      });
+
+      return (): void => controller.abort();
+    });
   }
 
   /**

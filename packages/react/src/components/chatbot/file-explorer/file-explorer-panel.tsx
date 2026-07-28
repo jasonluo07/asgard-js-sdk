@@ -3,7 +3,7 @@ import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
 import { FileView } from './file-view';
 import { ContextMenu, ContextMenuItem } from './context-menu';
-import { FsEntry, FsReadFile, FsSaveFile } from './types';
+import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -53,6 +53,8 @@ export interface FileExplorerPanelProps extends FileExplorerMutations {
   readFile?: FsReadFile;
   /** Save a file (≈ `PUT fs/file`). */
   saveFile?: FsSaveFile;
+  /** Watch the open file (≈ `fs/watch` SSE) for the FileView's watch-and-reload (AC3). */
+  watchFile?: FsWatchFile;
   /** Override the tree root (absolute path); the dropdown + cwd still show the real `workingDirectory` (AC2). */
   basePath?: string;
   /** Nudge an idle sandbox back to life (F-021 AC4); when provided, the empty state shows a Nudge button. */
@@ -255,6 +257,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     listDir,
     readFile,
     saveFile,
+    watchFile,
     basePath,
     mkdir,
     remove,
@@ -773,6 +776,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             file={openFile}
             readFile={readFile}
             onSaveFile={saveFile}
+            watchFile={watchFile}
             onDirtyChange={controller.setEditingDirty}
             onBack={() => {
               controller.setEditingDirty(false);
