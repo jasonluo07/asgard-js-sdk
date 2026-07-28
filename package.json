@@ -15,6 +15,7 @@
     "build:react": "nx run @asgard-js/react:build --skip-nx-cache --verbose",
     "watch:react": "nx build @asgard-js/react --watch",
     "lint:packages": "nx run-many --target=lint --projects=@asgard-js/core,@asgard-js/react",
+    "typecheck:packages": "nx run-many --target=typecheck --projects=@asgard-js/core,@asgard-js/react",
     "test:packages": "npm run test:core && npm run test:react",
     "release:core": "nx run @asgard-js/core:nx-release-publish",
     "release:react": "nx run @asgard-js/react:nx-release-publish",

@@ -1,0 +1,7 @@
+# Type errors do not fail `build:core` / `build:react` — vite-plugin-dts prints them and exits 0 — and
+# the CI workflow is disabled, so nothing else catches them. Ten of them once sat on `main` unnoticed
+# for that exact reason. This is the gate.
+#
+# Nx caches the result, so a re-push with nothing changed costs about a second.
+# Escape hatch, for a knowingly broken WIP branch: `git push --no-verify`.
+npm run typecheck:packages
