@@ -116,4 +116,4 @@
 | `BUILD-028`  | Chat-kit Composer (SDK footer rewrite)            | High     | draft  | [BUILD-028-chat-kit-composer.md](./BUILD-028-chat-kit-composer.md)                                 |
 | `BUILD-029`  | File Explorer Cycle 3 — watch + lifecycle         | High     | done   | [BUILD-029-file-explorer-watch-and-lifecycle.md](./BUILD-029-file-explorer-watch-and-lifecycle.md) |
 | `BUILD-030`  | Stop generation suspends the background run       | High     | done   | [BUILD-030-stop-generation-suspend-run.md](./BUILD-030-stop-generation-suspend-run.md)             |
-| `REVIEW-030` | Review: Stop generation suspends background run   | —        | ready  | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)           |
+| `REVIEW-030` | Review: Stop generation suspends background run   | —        | done   | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)           |
