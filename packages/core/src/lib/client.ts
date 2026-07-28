@@ -17,6 +17,7 @@ import {
   SandboxFsWatchEvent,
   SandboxFsWriteOptions,
   SandboxFsWriteResult,
+  StopGenerationOptions,
 } from '../types';
 import { HttpError } from '../types/http-error';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -216,6 +217,59 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
         browserEnabled: sandbox.browserEnabled,
       })),
     };
+  }
+
+  private deriveSuspendEndpoint(): string | null {
+    const baseEndpoint = this.getBaseEndpoint();
+
+    return baseEndpoint ? `${baseEndpoint}/message/suspend` : null;
+  }
+
+  /**
+   * Ask the backend to suspend this channel's background run (F-023 AC1):
+   * `POST {base}/message/suspend?custom_channel_id=…`. The six downstream relays expose this at the
+   * exact same shape as `GET {base}/message/sse`, so it is derived identically with no per-backend case.
+   *
+   * `custom_channel_id` is always sent — some backends take the channel from the path and ignore it,
+   * others require it, and sending it is correct for both (same rule as the GET rejoin).
+   *
+   * **Resolving means "accepted", not "stopped".** The run winds down on the server and declares itself
+   * finished through the terminal event on the already-open SSE stream (the same event a normal run
+   * ends with), so callers must keep that stream connected and wait for it.
+   *
+   * Success is **any 2xx** — relays variously answer `204 No Content` or `200` with an envelope, so no
+   * single status is hardcoded. `404` means the channel was never created, i.e. there is nothing to
+   * stop, which is a success rather than an error. Every other non-2xx throws {@link HttpError}.
+   */
+  async suspendChannel(
+    customChannelId: string,
+    options?: StopGenerationOptions & { requestId?: string },
+  ): Promise<void> {
+    const endpoint = this.deriveSuspendEndpoint();
+
+    if (!endpoint) {
+      throw new Error('Unable to derive channel suspend endpoint. Please provide botProviderEndpoint in config.');
+    }
+
+    const url = new URL(endpoint);
+    url.searchParams.set('custom_channel_id', customChannelId);
+
+    if (options?.requestId) {
+      url.searchParams.set('request_id', options.requestId);
+    }
+
+    if (options?.force) {
+      url.searchParams.set('force', 'true');
+    }
+
+    const response = await fetch(url.toString(), { method: 'POST', headers: this.apiHeaders() });
+
+    // 404 = the channel does not exist = nothing to stop. Not a failure the user should ever see.
+    if (response.ok || response.status === 404) {
+      return;
+    }
+
+    throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
   }
 
   private runSse(observable: Observable<SseResponse<EventType>>, options?: FetchSseOptions): Subscription {
@@ -448,7 +502,8 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     return `${baseEndpoint}/sandbox/${encodeURIComponent(sandboxName)}/fs`;
   }
 
-  private sandboxFsHeaders(): Record<string, string> {
+  /** The shared auth / custom headers for the client's plain-JSON REST calls (no SSE). */
+  private apiHeaders(): Record<string, string> {
     const headers: Record<string, string> = { ...this.customHeaders };
     if (this.apiKey) {
       headers['X-API-KEY'] = this.apiKey;
@@ -465,7 +520,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/list`);
     url.searchParams.set('path', path);
 
-    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.apiHeaders() });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
@@ -488,7 +543,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
 
     if (options?.limitBytes != null) url.searchParams.set('limit_bytes', String(options.limitBytes));
 
-    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.apiHeaders() });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
@@ -523,7 +578,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const form = new FormData();
     form.append('file', content instanceof Blob ? content : new Blob([content]));
 
-    const response = await fetch(url.toString(), { method: 'PUT', headers: this.sandboxFsHeaders(), body: form });
+    const response = await fetch(url.toString(), { method: 'PUT', headers: this.apiHeaders(), body: form });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
@@ -545,7 +600,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/${op}`);
     Object.entries(query).forEach(([k, v]) => url.searchParams.set(k, v));
 
-    const response = await fetch(url.toString(), { method, headers: this.sandboxFsHeaders() });
+    const response = await fetch(url.toString(), { method, headers: this.apiHeaders() });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
@@ -559,7 +614,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const url = new URL(`${this.deriveSandboxFsEndpoint(sandboxName)}/stat`);
     url.searchParams.set('path', path);
 
-    const response = await fetch(url.toString(), { method: 'GET', headers: this.sandboxFsHeaders() });
+    const response = await fetch(url.toString(), { method: 'GET', headers: this.apiHeaders() });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
@@ -637,7 +692,7 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
       const controller = new AbortController();
 
       void fetchEventSource(url.toString(), {
-        headers: this.sandboxFsHeaders(),
+        headers: this.apiHeaders(),
         signal: controller.signal,
         openWhenHidden: true,
         onopen: async response => {

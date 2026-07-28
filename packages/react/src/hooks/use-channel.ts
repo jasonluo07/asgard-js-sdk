@@ -4,15 +4,21 @@ import {
   ChannelMetadata,
   ChannelStates,
   Conversation,
+  ChannelRunState,
   ConversationMessage,
   EventType,
   FetchSsePayload,
   LaunchedSandbox,
+  RunStatus,
   SandboxPhase,
   SseResponse,
+  StopGenerationOptions,
   ToolCallConsentAnswer,
 } from '@asgard-js/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+/** Resting run status — nothing in flight, nothing stopping (F-023). */
+const IDLE_RUN_STATUS: RunStatus = { kind: null, stopPhase: 'idle' };
 
 export interface UseChannelProps {
   defaultIsOpen?: boolean;
@@ -59,14 +65,33 @@ export interface UseChannelReturn {
   channelTitle: string | null;
   /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
+  /**
+   * Which run holds the connection and where it is in the stop lifecycle (F-023). Unlike
+   * `isConnecting` — which is `true` for a user turn, a welcome run, a transcript replay and an
+   * invisible nudge alike — this says *which*, so only a user's own turn offers a stop control.
+   */
+  runStatus: RunStatus;
   sendMessage?: (
     payload: Pick<FetchSsePayload, 'text' | 'blobIds'> &
       Partial<Pick<FetchSsePayload, 'payload'>> & { filePreviewUrls?: string[]; documentNames?: string[] },
   ) => Promise<void>;
   resetChannel?: (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => void;
   closeChannel?: () => void;
-  /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
-  stopGeneration?: () => void;
+  /**
+   * User-initiated stop-generation (F-023). Asks the backend to suspend the background run and keeps
+   * the SSE stream connected — the stop is declared by that stream's terminal event, so resolving here
+   * means "accepted", not "stopped"; watch `runStatus.stopPhase` for the transition back to idle.
+   *
+   * Rejects when the suspend request fails, leaving `stopPhase` back at `idle` so the user can retry.
+   * Pass `{ force: true }` once `stopPhase` is `force-stoppable` to give up on an unresponsive run.
+   *
+   * No-op when idle, or when the run is not the user's own (welcome / transcript replay / nudge).
+   *
+   * @remarks Was a synchronous `() => void` before v0.3.26, when stopping only cut the local
+   * connection and never reached the backend. Existing `onClick={stopGeneration}` call sites keep
+   * working; callers that want to surface a failed stop should now await it.
+   */
+  stopGeneration?: (options?: StopGenerationOptions) => Promise<void>;
   replyToolCallConsents?: (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']) => Promise<void>;
   /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn, no reply rendered. */
   nudge?: () => Promise<void>;
@@ -99,6 +124,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [channelTitle, setChannelTitle] = useState<string | null>(channelTitleSeed ?? null);
   const [sandboxPhase, setSandboxPhase] = useState<SandboxPhase>('idle');
+  const [runStatus, setRunStatus] = useState<RunStatus>(IDLE_RUN_STATUS);
 
   // Preview mode: static conversation from initMessages
   const previewConversation = useMemo(
@@ -131,6 +157,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           channelTitle: channelTitleSeed,
           statesObserver: (states: ChannelStates): void => {
             setIsConnecting(states.isConnecting);
+            setRunStatus(states.runStatus);
             setConversation(states.conversation);
             setChannelTitle(states.channelTitle);
             setSandboxPhase(states.sandboxPhase);
@@ -207,6 +234,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       channelTitle: channelTitleSeed,
       statesObserver: (states: ChannelStates): void => {
         setIsConnecting(states.isConnecting);
+        setRunStatus(states.runStatus);
         setConversation(states.conversation);
         setChannelTitle(states.channelTitle);
       },
@@ -221,7 +249,11 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   // The live restore path uses the server transcript as the single source of truth, so it does NOT seed
   // from `initMessages` (which stays preview/offline-only — see the preview branch above).
   const restoreChannel = useCallback(
-    async (titleSeed: string | null, launchedSandboxesSeed?: LaunchedSandbox[]): Promise<void> => {
+    async (
+      titleSeed: string | null,
+      launchedSandboxesSeed?: LaunchedSandbox[],
+      runStateSeed?: ChannelRunState,
+    ): Promise<void> => {
       if (isPreviewMode || !client) return;
 
       const conversation = new Conversation({ messages: new Map() });
@@ -241,8 +273,12 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             // F-019/F-021 — seed the live-sandbox list from the same `/channel/metadata` fetch that gated
             // the restore, so the File Explorer dropdown is populated immediately on join.
             launchedSandboxes: launchedSandboxesSeed,
+            // F-023 AC9 / UC-046 — the metadata gate already knows whether a run is still live. Pass it
+            // through so replaying a finished conversation does not present as generation in progress.
+            runState: runStateSeed,
             statesObserver: (states: ChannelStates): void => {
               setIsConnecting(states.isConnecting);
+              setRunStatus(states.runStatus);
               setConversation(states.conversation);
               setChannelTitle(states.channelTitle);
             },
@@ -294,6 +330,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     setIsOpen(false);
     setIsResetting(false);
     setIsConnecting(false);
+    setRunStatus(IDLE_RUN_STATUS);
     setConversation(null);
     setSandboxPhase('idle');
   }, []);
@@ -333,11 +370,15 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, customMessageId, onSseMessage, onAuthError, onSseError, conversation],
   );
 
-  const stopGeneration = useCallback(() => {
-    // Abort the in-flight run; the channel flips isConnecting$ → false, which propagates to the
-    // isConnecting state via the states observer. The partial reply already received is kept.
-    channel?.stopGeneration();
-  }, [channel]);
+  const stopGeneration = useCallback(
+    async (options?: StopGenerationOptions): Promise<void> => {
+      // Asks the backend to suspend the background run and keeps the stream open — the channel only
+      // flips isConnecting$ → false once that stream's terminal event arrives (F-023 AC3). Until then
+      // `runStatus.stopPhase` is `stopping`, which is what gates the send entrances.
+      await channel?.stopGeneration(options);
+    },
+    [channel],
+  );
 
   const replyToolCallConsents = useCallback(
     async (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']): Promise<void> => {
@@ -414,7 +455,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
 
       if (metadata) {
         // R2 — channel exists: always restore, seed the title + live sandboxes from metadata, never RESET_CHANNEL.
-        restoreChannel(metadata.title, metadata.launchedSandboxes);
+        restoreChannel(metadata.title, metadata.launchedSandboxes, metadata.runState);
       } else if (autoResetChannel !== false) {
         // R3 — not exists + auto-reset (default): open via RESET_CHANNEL.
         resetChannel(resetPayload);
@@ -476,6 +517,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             conversation: previewConversation,
             channelTitle: channelTitleSeed ?? null,
             sandboxPhase: 'idle',
+            runStatus: IDLE_RUN_STATUS,
           }
         : {
             channel,
@@ -485,6 +527,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             conversation,
             channelTitle,
             sandboxPhase,
+            runStatus,
             sendMessage,
             resetChannel,
             closeChannel,
@@ -503,6 +546,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       channelTitle,
       channelTitleSeed,
       sandboxPhase,
+      runStatus,
       sendMessage,
       resetChannel,
       closeChannel,

@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 import { EventType, FetchSseAction } from '../constants/enum';
 import { SseResponse, ToolCallConsentAnswer } from './sse-response';
-import { ChannelMetadata } from './channel';
+import { ChannelMetadata, StopGenerationOptions } from './channel';
 import { EventHandler } from './event-emitter';
 import { BlobUploadResponse } from './blob';
 
@@ -24,6 +24,13 @@ export interface IAsgardServiceClient {
    * backward compatibility — a client without it skips the metadata gate.
    */
   channelMetadata?(customChannelId: string): Promise<ChannelMetadata | null>;
+  /**
+   * Ask the backend to suspend the channel's background run (F-023 AC1) via
+   * `POST {base}/message/suspend`. Resolving means **accepted**, not stopped — the stop is declared
+   * later by the terminal event on the already-open SSE stream, so the caller must keep that stream.
+   * Optional for backward compatibility — a client without it falls back to the legacy local abort.
+   */
+  suspendChannel?(customChannelId: string, options?: StopGenerationOptions & { requestId?: string }): Promise<void>;
   uploadFile?(file: File, customChannelId: string): Promise<BlobUploadResponse>;
   downloadChannelHomeFile?(relativePath: string, customChannelId: string): Promise<ChannelHomeDownloadResult>;
 }

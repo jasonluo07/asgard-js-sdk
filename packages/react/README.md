@@ -672,7 +672,12 @@ function MyCustomFooter() {
 | `customChannelId`          | `string \| undefined`                      | The active channel identifier.                                                                                                                                                |
 | `isOpen`                   | `boolean`                                  | Whether the chatbot is currently open/visible.                                                                                                                                |
 | `isResetting`              | `boolean`                                  | Whether a channel reset is in progress. Use to disable reset buttons during reset.                                                                                            |
-| `isConnecting`             | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button.                                                                                    |
+| `isConnecting`             | `boolean`                                  | Whether the SSE channel is currently processing a message. Use to disable the send button. Note this is true for four unrelated things — see `runStatus`.                     |
+| `runStatus`                | `RunStatus`                                | Which run holds the connection and where it is in the stop lifecycle. See [Stopping generation](#stopping-generation).                                                        |
+| `isRunning`                | `boolean`                                  | Whether something is actually being generated. Narrower than `isConnecting`, which is also true while a finished conversation is merely replayed on rejoin.                   |
+| `canStop`                  | `boolean`                                  | Whether a stop control belongs on screen — true only for the user's own turn, never the welcome run, a rejoin, or a nudge.                                                    |
+| `isStopping`               | `boolean`                                  | Whether a stop was requested and the terminal event has not arrived yet. **Gate every send entrance on this** as well as `isConnecting`.                                      |
+| `canForceStop`             | `boolean`                                  | Whether the stop has waited past the timeout and the control should escalate to force-stop. Implies `isStopping`.                                                             |
 | `messages`                 | `Map<string, ConversationMessage> \| null` | All messages in the current conversation. `null` before the channel is initialized.                                                                                           |
 | `conversation`             | `Conversation \| null`                     | The current `Conversation` instance (the derivation source for the Task / Subagent panels). `null` before the channel is initialized.                                         |
 | `channelTitle`             | `string \| null`                           | The current channel title, seeded from metadata and updated live by `title.update`. `null` = unnamed.                                                                         |
@@ -691,16 +696,17 @@ function MyCustomFooter() {
 
 **Actions**
 
-| Property                     | Type                                                            | Description                                                                                                                                       |
-| ---------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined`   | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`.                 |
-| `resetChannel`               | `(() => void) \| undefined`                                     | Reset the channel (triggers a new welcome message from the bot).                                                                                  |
-| `closeChannel`               | `(() => void) \| undefined`                                     | Close the SSE connection without resetting.                                                                                                       |
-| `replyToolCallConsents`      | `((answers, options?, payload?) => Promise<void>) \| undefined` | Reply to the pending tool-call consent prompt (see `pendingConsent`). Used to build a custom consent UI. `undefined` before the channel is ready. |
-| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                           | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                                     |
-| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                           | Scroll to bottom without affecting `isFollowingLatest`.                                                                                           |
-| `setFollowingLatest`         | `(value: boolean) => void`                                      | Manually set auto-scroll state.                                                                                                                   |
-| `setPendingInputValue`       | `(value: string \| null) => void`                               | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                                      |
+| Property                     | Type                                                              | Description                                                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined`     | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`.                 |
+| `resetChannel`               | `(() => void) \| undefined`                                       | Reset the channel (triggers a new welcome message from the bot).                                                                                  |
+| `closeChannel`               | `(() => void) \| undefined`                                       | Close the SSE connection without resetting.                                                                                                       |
+| `stopGeneration`             | `((options?: { force?: boolean }) => Promise<void>) \| undefined` | Ask the backend to stop the in-flight run. Resolving means _accepted_, not _stopped_; rejects if the request failed. Gate on `canStop`.           |
+| `replyToolCallConsents`      | `((answers, options?, payload?) => Promise<void>) \| undefined`   | Reply to the pending tool-call consent prompt (see `pendingConsent`). Used to build a custom consent UI. `undefined` before the channel is ready. |
+| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                             | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                                     |
+| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                             | Scroll to bottom without affecting `isFollowingLatest`.                                                                                           |
+| `setFollowingLatest`         | `(value: boolean) => void`                                        | Manually set auto-scroll state.                                                                                                                   |
+| `setPendingInputValue`       | `(value: string \| null) => void`                                 | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                                      |
 
 <a id="event-handlers"></a>
 <br/>
@@ -1513,6 +1519,8 @@ Use `useAsgardContext()` to access runtime state:
 
 - `sendMessage(params)` — submit a message (`undefined` in preview mode, e.g. while config is loading)
 - `isConnecting` — disable send while the channel is busy
+- `isStopping` — **also** disable send while a stop is pending; see [Stopping generation](#stopping-generation). Replacing the default footer means you own the stop button too
+- `canStop` / `canForceStop` / `stopGeneration` — render your own stop control
 - `pendingInputValue` / `setPendingInputValue` — receive values pushed in via `ChatbotRef.setInputValue` or `renderMenu` selection, then clear them
 - `inputPlaceholder`, `title`, `avatar`, `messages`, etc.
 
@@ -1690,6 +1698,68 @@ const AgentHub = () => {
   );
 };
 ```
+
+<a id="stopping-generation"></a>
+<br/>
+
+### Stopping generation
+
+The built-in footer already handles this — **if you use the default footer you get it for free**, and
+this section is only background. It matters if you replace the footer with `renderFooter`, or build
+send entrances of your own.
+
+Runs execute in the background on the server, so stopping is a request to the backend rather than a
+local disconnect, and it completes asynchronously. `stopGeneration()` resolving means the request was
+**accepted**; the run is only actually stopped when the SSE stream reaches its terminal event. Between
+those two moments the channel is in `isStopping`.
+
+**Two rules for a custom footer:**
+
+1. **Gate every send entrance on `isStopping`, not just `isConnecting`.** The old run has not finished
+   yet, and sending would leave two concurrent runs writing to the same transcript. Keep the user's
+   draft — do not clear it.
+2. **Only show a stop control when `canStop`.** `isConnecting` is true for four unrelated things: the
+   user's own turn, the `RESET_CHANNEL` welcome, a transcript rejoin, and an invisible nudge. Only the
+   first is stoppable. `canStop` encodes exactly that.
+
+```typescript
+function CustomFooter() {
+  const { sendMessage, isConnecting, isStopping, canStop, canForceStop, stopGeneration } = useAsgardContext();
+
+  const [value, setValue] = useState('');
+  const canSend = !isConnecting && !isStopping && value.trim().length > 0;
+
+  const onStop = (): void => {
+    // A DOM handler cannot reject. On failure the SDK rolls the phase back to idle, so the control
+    // simply becomes pressable again — await it instead if you want to surface the error yourself.
+    void stopGeneration?.({ force: canForceStop }).catch(() => undefined);
+  };
+
+  if (canStop || isStopping) {
+    return (
+      <button onClick={onStop} disabled={isStopping && !canForceStop}>
+        {canForceStop ? 'Force stop' : isStopping ? 'Stopping…' : 'Stop'}
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={() => sendMessage?.({ text: value })} disabled={!canSend}>
+      Send
+    </button>
+  );
+}
+```
+
+`canForceStop` turns on ~10s after an accepted stop whose terminal event never arrived; pressing again
+then passes `force: true`, telling the backend to abandon the run. Normal stops never reach this.
+
+As a backstop, `sendMessage()` rejects with `ChannelBusyError` if a run is in flight, and refuses before
+the optimistic user bubble is pushed — a rejected send leaves no trace in the thread.
+
+The conversation survives a stop: the transcript is kept, the suspended turn is rolled back, and the
+next message continues the same conversation. See the
+[core README](../core/README.md#stopping-generation) for the underlying lifecycle.
 
 <a id="development"></a>
 <br/>
