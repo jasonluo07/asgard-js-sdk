@@ -12,6 +12,9 @@ Asgard JS SDK is a TypeScript monorepo that provides React components and core s
 npm run build:core        # Build @asgard-js/core
 npm run build:react       # Build @asgard-js/react
 
+# Type check — the ONLY command that fails on a type error (see "Type checking" below)
+npm run typecheck:packages
+
 # Test
 npm run test:packages     # Vitest for both core and react
 npm run test:core         # Core only
@@ -34,6 +37,25 @@ npm run serve:react-demo  # react-demo dev server at http://localhost:4200
 # Release (manual; see CLAUDE.local.md)
 npm run release:core      # Publish @asgard-js/core to npm
 npm run release:react     # Publish @asgard-js/react to npm
+```
+
+### Type checking
+
+**`build:core` / `build:react` do not fail on type errors.** They are vite builds, and `vite-plugin-dts`
+reports type errors on stdout while still exiting `0`. The GitHub Actions workflow that would otherwise
+catch them is disabled (`.github/workflows/ci.yml`, `if: false`). Ten type errors once sat on `main`
+undetected for exactly this reason.
+
+`npm run typecheck:packages` (`tsc --build` over both packages) is the command that actually fails, and
+a husky `pre-push` hook runs it so a type error cannot reach the remote. Use `git push --no-verify` only
+to share a knowingly broken WIP branch.
+
+Run it alongside lint and format before calling a task done:
+
+```bash
+npm run lint:packages && npm run format:check && npm run typecheck:packages
+npm run build:core && npm run build:react
+npm run test:packages
 ```
 
 ## Tech Stack
