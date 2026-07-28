@@ -239,6 +239,21 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
+  // BUG-003 — a long run that keeps the thread growing for ~15s so the docked Task / Subagent strip can be
+  // watched while messages stream and the view auto-scrolls. Three variants: `-demo` (typical run chrome),
+  // `-tall-demo` (checklist past the strip's 50% cap) and `-empty-demo` (no run chrome at all).
+  if (customChannelId.startsWith('docked-run-chrome-')) {
+    const variant =
+      customChannelId === 'docked-run-chrome-empty-demo'
+        ? 'empty'
+        : customChannelId === 'docked-run-chrome-tall-demo'
+        ? 'tall'
+        : 'chrome';
+    await handleDockedRunChromeMock(res, payload, customChannelId, variant);
+
+    return;
+  }
+
   // F-021 AC4 — NUDGE: an invisible turn (empty text, no message frames). Wakes an idle sandbox: the mock
   // records the channel as nudged (so the next metadata refetch reports a live sandbox) and emits
   // sandbox.launch → ready. The SDK's launch handler auto-refetches metadata → the dropdown refills.
@@ -1865,6 +1880,192 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
   );
 
   // run.done → indicator off, input released.
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// BUG-003 — the docked Task / Subagent strip must hold a stable position while a run streams. This mock
+// keeps the thread growing for ~15s (paragraph after paragraph, well past the viewport, with auto-scroll
+// following) and mutates the strip mid-run, so any coupling between thread layout and strip position
+// shows up plainly. Three variants, all streaming the identical thread:
+//   'chrome' — a typical run (3 tasks + 1 subagent); the strip fits under its 50% cap.
+//   'tall'   — a long checklist that pushes the strip past the cap, so it scrolls internally and the
+//              thread keeps its half. Without this the route cannot exercise the cap at all.
+//   'empty'  — no run chrome, for the "no strip → no gap" case.
+const DOCKED_PARAGRAPHS = [
+  '先確認資料範圍：上週為 7/14（一）至 7/20（日），時區以系統設定為準，排除測試單與已取消單。',
+  '通路彙總結果：官網 1,280 筆、App 940 筆、LINE 610 筆、電話 210 筆，官網仍是主力通路。',
+  '接著看 Bolzen 法蘭螺栓急單 SO-TM-0455 的用料需求，主料為 SWRCH35K φ7.0 線材。',
+  '單件用料 0.32 kg，急單數量 50,000 件，加上 2% 製程損耗，總需求約 16,000 kg。',
+  '倉庫現有量 14,200 kg，其中 4,700 kg 已被既有工單分配，實際可用量為 9,500 kg。',
+  '因此短缺 6,500 kg，必須外購或改料，否則 7/16 的出貨日期無法達成。',
+  'SWRCH35K φ7.0 的標準採購前置為 30 天，從今天下單最快 8/28 才進料，明顯趕不上。',
+  '改查替代料號 SWRCH38K：強度等級相容，前置 15 天，供應商回覆現貨可支應 8,000 kg。',
+  '若改用 SWRCH38K，8/13 可進料，配合既有 9,500 kg 可用庫存，7/16 出貨仍有機會達成。',
+  '風險提醒：替代料號需先過工程變更審查，建議今天同步送出 ECR，避免卡在流程上。',
+  '成本影響：SWRCH38K 單價高約 4.2%，本批多出約 27,300 元，仍低於延遲出貨的違約金。',
+  '結論：建議走替代料號並立即開立採購單，同時保留原料號的長交期訂單作為後續補庫。',
+];
+
+type DockedRunChromeVariant = 'chrome' | 'tall' | 'empty';
+
+async function handleDockedRunChromeMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+  variant: DockedRunChromeVariant,
+): Promise<void> {
+  const withRunChrome = variant !== 'empty';
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+  const replyTo = payload.customMessageId ?? '';
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  // A later plain send just gets a short reply so the page stays interactive after the run.
+  if (payload.action !== 'RESET_CHANNEL') {
+    const mid = randomUUID();
+    writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+    const ack = '重整頁面即可重播這段長串流（進房 RESET 會重跑整段）。';
+    await sleep(120);
+    writeEvent(res, messageFrame(header, 'asgard.message.complete', mid, replyTo, ack, TEXT_TEMPLATE(ack)));
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
+  const proc = 'docked';
+  let seq = 0;
+  const next = (): number => seq++;
+  const emit = async (frame: object, ms = 180): Promise<void> => {
+    writeEvent(res, frame);
+    await sleep(ms);
+  };
+
+  // Task tools only land in the docked list once the message exists, so start must precede complete.
+  const task = async (
+    name: 'TaskCreate' | 'TaskUpdate',
+    parameter: Record<string, unknown>,
+    sidecar: Record<string, unknown>,
+  ): Promise<void> => {
+    const cs = next();
+    const tc = { toolsetName: '', toolName: name, parameter };
+    await emit(toolStartFrame(header, proc, cs, tc), 120);
+    await emit(toolCompleteFrame(header, proc, cs, tc, {}, { sidecar }), 160);
+  };
+
+  await emit({ ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await emit(titleUpdateFrame(header, 'BUG-003：docked 面板定位驗證'), 160);
+
+  if (withRunChrome) {
+    await task(
+      'TaskCreate',
+      { subject: '彙總上週各通路訂單', activeForm: '彙總通路訂單中', description: '排除測試單與已取消單。' },
+      { task: { id: '1' } },
+    );
+    await task(
+      'TaskUpdate',
+      { taskId: '1', status: 'completed' },
+      { statusChange: { from: 'pending', to: 'completed' }, taskId: '1' },
+    );
+    await task(
+      'TaskCreate',
+      { subject: '查詢 SWRCH35K φ7.0 庫存', activeForm: '查詢庫存中', description: '現有量、已分配量、可用量。' },
+      { task: { id: '2' } },
+    );
+    await task(
+      'TaskUpdate',
+      { taskId: '2', status: 'in_progress' },
+      { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '2' },
+    );
+
+    // 'tall' — enough extra tasks to push the strip past its 50% cap, so the internal scroll (and the
+    // thread keeping its half) is actually exercised rather than merely asserted.
+    if (variant === 'tall') {
+      for (let i = 0; i < 14; i++) {
+        const id = `t${i}`;
+        await task(
+          'TaskCreate',
+          { subject: `檢查第 ${i + 1} 批線材入庫紀錄`, activeForm: `檢查第 ${i + 1} 批入庫紀錄中` },
+          { task: { id } },
+        );
+      }
+    }
+
+    // A subagent that never completes — the panel stays expanded for the whole run.
+    await emit(
+      toolStartFrame(
+        header,
+        proc,
+        next(),
+        { toolsetName: '', toolName: 'Agent', parameter: { description: '查詢替代料號交期' } },
+        { toolUseId: 'toolu_docked' },
+      ),
+      140,
+    );
+    await emit(
+      subagentStartFrame(header, {
+        agentId: 'agent-docked',
+        parentToolUseId: 'toolu_docked',
+        subagentType: 'general-purpose',
+        description: '查詢替代料號交期',
+      }),
+      160,
+    );
+    await emit(
+      toolStartFrame(
+        header,
+        proc,
+        next(),
+        { toolsetName: '', toolName: 'execute_database_query', reason: '查詢 SWRCH38K 供應商交期', parameter: {} },
+        { parentToolUseId: 'toolu_docked' },
+      ),
+      160,
+    );
+  }
+
+  // The long part: one streamed paragraph per message, so the thread keeps outgrowing the viewport.
+  for (const [i, paragraph] of DOCKED_PARAGRAPHS.entries()) {
+    const mid = randomUUID();
+    await emit(messageFrame(header, 'asgard.message.start', mid, replyTo, '', TEXT_TEMPLATE('')), 220);
+    for (const piece of chunkText(paragraph, 3)) {
+      await emit(messageFrame(header, 'asgard.message.delta', mid, replyTo, piece, null), 45);
+    }
+
+    await emit(messageFrame(header, 'asgard.message.complete', mid, replyTo, paragraph, TEXT_TEMPLATE(paragraph)), 260);
+
+    // Mid-run strip mutations: the strip changes height while the thread streams underneath it.
+    if (withRunChrome && i === 4) {
+      await task(
+        'TaskCreate',
+        { subject: '評估替代料號 SWRCH38K', activeForm: '評估替代料號中', description: '強度相容性與交期。' },
+        { task: { id: '3' } },
+      );
+    }
+
+    if (withRunChrome && i === 8) {
+      await task(
+        'TaskUpdate',
+        { taskId: '2', status: 'completed' },
+        { statusChange: { from: 'in_progress', to: 'completed' }, taskId: '2' },
+      );
+      await task(
+        'TaskUpdate',
+        { taskId: '3', status: 'in_progress' },
+        { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '3' },
+      );
+    }
+  }
+
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }

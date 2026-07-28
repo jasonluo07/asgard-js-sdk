@@ -2,8 +2,8 @@
 // visual consistency); the amber in_progress accent matches the tool-call running state (§3.5 idiom).
 
 .task_list {
-  // A distinct rounded card. Rendered at the tail of the thread flow (ChatbotBody content), which
-  // already supplies the 16px horizontal inset + inter-block gap, so it carries no own margin.
+  // A distinct rounded card. Rendered in ChatbotBody's docked strip, which already supplies the 16px
+  // horizontal inset + the gap to the SubagentList above, so it carries no own margin.
   margin: 0;
   padding: 10px 12px;
   border: 1px solid var(--asgard-tool-call-border, #333);
