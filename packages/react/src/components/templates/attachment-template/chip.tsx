@@ -1,5 +1,6 @@
 import { CSSProperties, KeyboardEvent, MouseEvent, ReactNode, useCallback, useMemo } from 'react';
 import { ButtonAction, resolveSandboxUri } from '@asgard-js/core';
+import clsx from 'clsx';
 import DocumentSvg from '../../../icons/document.svg?react';
 import DownloadSvg from '../../../icons/download.svg?react';
 import GlobeSvg from '../../../icons/globe.svg?react';
@@ -134,7 +135,7 @@ export function AttachmentChip(props: AttachmentChipProps): ReactNode {
     <div
       role={bodyActsAsDownload ? undefined : 'button'}
       tabIndex={bodyActsAsDownload ? undefined : 0}
-      className={styles.chip}
+      className={clsx(styles.chip, !bodyActsAsDownload && styles['chip--interactive'])}
       onClick={bodyActsAsDownload ? undefined : handleChipClick}
       onKeyDown={bodyActsAsDownload ? undefined : handleChipKeyDown}
       style={customStyle?.style}

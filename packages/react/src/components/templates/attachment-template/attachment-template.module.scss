@@ -15,9 +15,15 @@
   background: rgba(51, 51, 51, 1);
   border: none;
   text-align: left;
-  cursor: pointer;
   color: inherit;
   font: inherit;
+}
+
+// Click affordances live here, not on `.chip`, so a body that does nothing never looks clickable.
+// `chip.tsx` withholds this class when the download button owns the action — then only that button
+// carries a pointer and a hover state.
+.chip--interactive {
+  cursor: pointer;
 
   &:hover {
     background: rgba(64, 64, 64, 1);
