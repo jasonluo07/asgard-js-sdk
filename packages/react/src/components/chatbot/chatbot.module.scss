@@ -33,9 +33,19 @@
   overflow: hidden;
 }
 
-// F-021 — the grid's single `1fr` row becomes a flex row so the built-in File Explorer aside can sit to
-// the right of the (flex:1) thread column inside the same position:relative chat shell (not fixed to the
-// viewport, not a message block). When the aside is closed this collapses to just the thread column.
+// The chat column: header / thread / menu / footer stacked vertically. This is the grid that used to be
+// the shell itself — the four rows still map to those children in order. It sits beside the File Explorer
+// aside (see `.chatbot_container`), so the header and composer narrow with the thread when the aside opens.
+.chatbot__chat_column {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: max-content 1fr max-content max-content;
+  overflow: hidden;
+}
+
+// The grid's single `1fr` row. The File Explorer used to split this row; it is now a sibling of the whole
+// column, so this just wraps the thread.
 .chatbot__main_row {
   min-height: 0;
   display: flex;
@@ -47,6 +57,8 @@
   min-width: 0;
 }
 
+// Sibling of `.chatbot__chat_column` — full height of the shell, with its own header (sandbox picker +
+// close) sitting level with the chat header.
 .chatbot__file_explorer_aside {
   flex: 0 0 20rem;
   max-width: 60%;
