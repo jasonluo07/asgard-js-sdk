@@ -1,0 +1,14 @@
+# `references/` holds git submodules (the PM spec repo and the chat-kit prototype) kept purely as
+# background material — nothing in there is built, tested or linted by this workspace.
+#
+# They ship their own `vite.config.ts` / `package.json`, and `references/asgard-sdk-pm` nests a second
+# copy of the prototype at `prototype/asgard-chat-kit-prototype`. Once `git submodule update --init
+# --recursive` checks those out, Nx's `@nx/vite` plugin tries to load their configs, fails to resolve
+# dependencies that were never installed here, and the whole project graph dies — taking every nx
+# target with it, including `build:core` / `build:react`.
+#
+# The leading slash anchors this to the workspace root. Unanchored, gitignore semantics match a
+# directory of that name at *any* depth, which would also swallow the shipped
+# `packages/react/src/components/templates/references/` component — hiding it from `nx affected`,
+# from lint, and from build-cache invalidation.
+/references

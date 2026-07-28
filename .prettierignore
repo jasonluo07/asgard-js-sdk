@@ -1,6 +1,15 @@
 # Dependencies
 node_modules/
 
+# Git submodules kept as background reference only — they are other repos with their own formatting,
+# so formatting them here dirties their working trees and makes `format:check` permanently red.
+# Anchored: an unanchored `references/` would also skip the shipped
+# `packages/react/src/components/templates/references/` component.
+/references/
+
+# Playwright MCP scratch output (screenshots / traces); already git-ignored.
+.playwright-mcp/
+
 # Build outputs
 dist/
 build/
