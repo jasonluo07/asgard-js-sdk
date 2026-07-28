@@ -441,10 +441,11 @@ export default class Channel {
     this.currentUserMessageId = undefined;
     this.currentRun = undefined;
 
-    // F-020 AC10 — a suspended turn is rolled back, so a tool-call that was still running gets no
-    // `tool_call.complete` of its own; converge it to `cancelled` rather than leaving it spinning.
+    // F-020 AC10 / F-023 — a suspended turn is rolled back, so whatever was mid-flight gets no closing
+    // frame of its own: a tool-call would spin as `running` forever and a thinking block would stay
+    // highlighted as "Thinking…". Settle both rather than leaving them advertising activity that stopped.
     if (wasStopping) {
-      this.conversation$.next(this.conversation$.value.cancelInFlightToolCalls());
+      this.conversation$.next(this.conversation$.value.settleInFlightMessages());
     }
   }
 
@@ -703,9 +704,9 @@ export default class Channel {
     this.isConnecting$.next(false);
     this.runStatusSubject.next(IDLE_RUN_STATUS);
     this.currentUserMessageId = undefined;
-    // F-020 AC10: converge any tool-call still in flight to `cancelled` — its `tool_call.complete` frame
-    // will never arrive now that the run is aborted, so it must not linger as `running`.
-    this.conversation$.next(this.conversation$.value.cancelInFlightToolCalls());
+    // F-020 AC10: settle whatever is still in flight — no closing frame will arrive now that the run is
+    // aborted, so a tool-call must not linger as `running` nor a thinking block as "Thinking…".
+    this.conversation$.next(this.conversation$.value.settleInFlightMessages());
   }
 
   public close(): void {

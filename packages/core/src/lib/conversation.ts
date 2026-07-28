@@ -38,13 +38,19 @@ export default class Conversation implements IConversation {
   }
 
   /**
-   * Converge every still-running tool-call to `cancelled` (F-020 AC10). Called when a user-initiated
-   * stop-generation aborts the run: an in-flight tool-call (`isComplete === false`) would otherwise
-   * linger as `running` forever, since its `tool_call.complete` frame never arrives. Already-settled
-   * calls and non-tool-call messages are left untouched; content is preserved (never rolled back).
-   * Returns the same instance when nothing is in flight.
+   * Converge everything the aborted run left mid-flight (F-020 AC10, F-023). A stopped run sends no
+   * closing frame for whatever was in progress, so without this those messages advertise activity that
+   * has ceased — and they persist in the transcript that way:
+   *
+   * - a tool-call with `isComplete === false` gets no `tool_call.complete`, and would render as
+   *   `running` forever, so it converges to `cancelled`;
+   * - a thinking block with `isThinking === true` gets no `message.thinking.complete`, and would keep
+   *   its highlighted "Thinking…" state forever, so it converges to the settled state.
+   *
+   * Content is preserved either way — never rolled back. Already-settled messages and every other
+   * message type are untouched, and the same instance is returned when nothing was in flight.
    */
-  cancelInFlightToolCalls(): Conversation {
+  settleInFlightMessages(): Conversation {
     if (!this.messages) return this;
 
     let changed = false;
@@ -54,11 +60,27 @@ export default class Conversation implements IConversation {
         messages.set(id, { ...message, isComplete: true, isCancelled: true });
         changed = true;
       }
+
+      // F-023 — found only by stopping a real run mid-thinking: the mock and the unit tests had always
+      // interrupted after the thinking block had already completed, so this path went unexercised.
+      if (message.type === 'thinking' && message.isThinking) {
+        messages.set(id, { ...message, isThinking: false });
+        changed = true;
+      }
     }
 
     if (!changed) return this;
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  /**
+   * @deprecated Renamed to {@link settleInFlightMessages} in 0.3.27 — it settles in-flight thinking
+   * blocks as well as tool-calls, which the old name no longer described. Behaviour is unchanged;
+   * this alias will be removed in a future major version.
+   */
+  cancelInFlightToolCalls(): Conversation {
+    return this.settleInFlightMessages();
   }
 
   onMessage(response: SseResponse<EventType>): Conversation {

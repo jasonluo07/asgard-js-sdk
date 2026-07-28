@@ -4,6 +4,7 @@ import { EventType } from '../constants/enum';
 import type {
   ConversationBotMessage,
   ConversationSubagentMessage,
+  ConversationThinkingMessage,
   ConversationToolCallMessage,
   SseResponse,
 } from '../types';
@@ -492,7 +493,7 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
       .pushMessage(toolCall('done', true))
       .pushMessage({ type: 'user', messageId: 'u1', text: 'hi', time: new Date() });
 
-    const settled = conv.cancelInFlightToolCalls();
+    const settled = conv.settleInFlightMessages();
 
     const running = settled.messages?.get('running') as ConversationToolCallMessage;
     expect(running.isComplete).toBe(true);
@@ -506,6 +507,46 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
 
   it('is a no-op (same instance) when nothing is in flight', () => {
     const conv = empty().pushMessage(toolCall('done', true));
-    expect(conv.cancelInFlightToolCalls()).toBe(conv);
+    expect(conv.settleInFlightMessages()).toBe(conv);
+  });
+
+  // F-023 — regression: stopping a real run *mid-thinking* left the block highlighted as "Thinking…"
+  // forever, because `message.thinking.complete` never arrives for a suspended turn. Every earlier
+  // test and the demo mock happened to interrupt after thinking had finished, so this path was blind.
+  it('settles a streaming thinking block, keeping its text', () => {
+    const conv = empty()
+      .pushMessage({ type: 'thinking', messageId: 't1', text: '想到一半', isThinking: true, time: new Date() })
+      .pushMessage({ type: 'thinking', messageId: 't2', text: '早就想完了', isThinking: false, time: new Date() });
+
+    const settled = conv.settleInFlightMessages();
+
+    const streaming = settled.messages?.get('t1') as ConversationThinkingMessage;
+    expect(streaming.isThinking).toBe(false);
+    expect(streaming.text).toBe('想到一半'); // content preserved, never rolled back
+
+    expect((settled.messages?.get('t2') as ConversationThinkingMessage).isThinking).toBe(false);
+  });
+
+  it('settles a thinking block and a running tool-call in the same pass', () => {
+    const conv = empty()
+      .pushMessage(toolCall('running', false))
+      .pushMessage({ type: 'thinking', messageId: 't1', text: '…', isThinking: true, time: new Date() });
+
+    const settled = conv.settleInFlightMessages();
+
+    expect((settled.messages?.get('running') as ConversationToolCallMessage).isCancelled).toBe(true);
+    expect((settled.messages?.get('t1') as ConversationThinkingMessage).isThinking).toBe(false);
+  });
+
+  it('keeps the deprecated cancelInFlightToolCalls alias behaving identically', () => {
+    const conv = empty().pushMessage({
+      type: 'thinking',
+      messageId: 't1',
+      text: '…',
+      isThinking: true,
+      time: new Date(),
+    });
+
+    expect((conv.cancelInFlightToolCalls().messages?.get('t1') as ConversationThinkingMessage).isThinking).toBe(false);
   });
 });
