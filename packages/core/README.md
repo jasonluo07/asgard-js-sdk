@@ -146,6 +146,7 @@ The main client class for interacting with the Asgard AI platform.
 - **downloadChannelHomeFile(relativePath, customChannelId)**: `Promise<ChannelHomeDownloadResult>` - Download a file from the channel's Channel Home file-exchange plane (backs `channel-home://` URI actions); resolves to `{ blob, filename }`
 - **rejoinSse(customChannelId, options?)**: Cold-start transcript rejoin — a `GET /message/sse` with an empty `Last-Event-ID` that replays the channel's collapsed history through the same reducer, so a returning user sees their prior conversation without re-POSTing. Optional on `IAsgardServiceClient` for backward compatibility
 - **channelMetadata(customChannelId)**: `Promise<ChannelMetadata | null>` - Join-init existence + restore gate — `GET /channel/metadata`; resolves to the metadata on `200`, `null` on `404` (channel does not exist), and rejects on any other error. `ChannelMetadata` is `{ title: string | null; runState: 'RUNNING' | 'IDLE'; lastActivityAt?: string }`. Optional on `IAsgardServiceClient` for backward compatibility
+- **suspendChannel(customChannelId, options?)**: `Promise<void>` - Ask the backend to stop the channel's background run — `POST /message/suspend?custom_channel_id=…`, with optional `requestId` (stop only that run) and `force` (abandon it rather than let it wind down). Resolves on any 2xx **and** on `404` (channel never created = nothing to stop); rejects with `HttpError` otherwise. Resolving means _accepted_, not _stopped_ — see [Stopping generation](#stopping-generation). Optional on `IAsgardServiceClient` for backward compatibility
 - **on(event, handler)**: Listen to a specific SSE event. `event` must be an `EventType` value (e.g. `EventType.MESSAGE`), not a plain string; registering a listener for an event replaces any previous one
 - **detach({ timeoutMs })**: Detach from the owning component without aborting in-flight runs — the connection stays open so the backend can finish the current run, then auto-closes once all runs settle (or after `timeoutMs` as a safety net). Backs the React `keepConnectionOnUnmount` prop
 - **close()**: Close the SSE connection and clean up resources (idempotent)
@@ -179,7 +180,8 @@ Higher-level abstraction for managing a conversation channel with reactive state
 
 - **sendMessage(payload, options?)**: `Promise<void>` - Send a message through the channel
 - **replyToolCallConsents(answers, options?, payload?)**: `Promise<void>` - Reply to a pending tool-call consent prompt. `answers` is an array of `ToolCallConsentAnswer` (each `{ toolCallId, result, denyReason }`, where `result` is a `ToolCallConsentResult` value)
-- **getTasks() / getSubagents() / getChannelTitle()**: `Task[]` / `Subagent[]` / `string | null` - Current immutable snapshots of the derived state (for `getSnapshot()`-style bridging; see [Derived State](#derived-state))
+- **stopGeneration(options?)**: `Promise<void>` - Ask the backend to stop the in-flight run. See [Stopping generation](#stopping-generation) — resolving means _accepted_, not _stopped_
+- **getTasks() / getSubagents() / getChannelTitle() / getRunStatus()**: `Task[]` / `Subagent[]` / `string | null` / `RunStatus` - Current immutable snapshots of the derived state (for `getSnapshot()`-style bridging; see [Derived State](#derived-state))
 - **setChannelTitle(title)**: `void` - Seed or override the reactive channel title (F-016)
 - **close()**: `void` - Close the channel and cleanup subscriptions
 
@@ -199,6 +201,7 @@ Higher-level abstraction for managing a conversation channel with reactive state
 - **tasks$**: `Observable<Task[]>` - Reactive Task Check List store; replays the current snapshot and emits only when the list changes (F-010 / F-013)
 - **subagents$**: `Observable<Subagent[]>` - Reactive Subagent List store; replays the current snapshot and emits only when the list changes (F-012 / F-013)
 - **channelTitle$**: `Observable<string | null>` - Reactive channel-title store; seeded from metadata, updated by `title.update` (F-016)
+- **runStatus$**: `Observable<RunStatus>` - Which run holds the connection and where it is in the stop lifecycle; see [Stopping generation](#stopping-generation) (F-023)
 
 #### Example Usage
 
@@ -225,6 +228,67 @@ const channel = await Channel.reset({
 // Send a message
 await channel.sendMessage({ text: 'Hello, bot!' });
 ```
+
+<a id="stopping-generation"></a>
+<br/>
+
+### Stopping generation
+
+Runs execute **in the background on the server**. Closing the SSE connection only stops _watching_ — the
+agent keeps going, keeps spending tokens and keeps writing the transcript. So stopping is a request to
+the backend, not a local disconnect, and it happens in two steps:
+
+1. `stopGeneration()` asks the backend to suspend the run. **Resolving means the request was accepted,
+   not that the run has stopped.** The SSE stream stays connected, because the stop is announced there.
+2. The run winds down and the stream emits its terminal event — the _same_ event a normal run ends
+   with. Only then does `isConnecting` go false and the input reopen. There is no new event type.
+
+`runStatus$` (and the `getRunStatus()` snapshot) exposes the lifecycle:
+
+```typescript
+interface RunStatus {
+  kind: 'user' | 'reset' | 'restore' | 'replay' | 'nudge' | null; // null = nothing in flight
+  stopPhase: 'idle' | 'stopping' | 'force-stoppable';
+  requestId?: string; // the backend's id for this run, captured from its first frame
+}
+```
+
+**Only a `user` run is stoppable.** `isConnecting` is true for four unrelated things — the user's own
+turn, the `RESET_CHANNEL` welcome, a transcript rejoin, and an invisible nudge — and `kind` is what
+tells them apart. `stopGeneration()` is a no-op for every kind but `user`. A `replay` (rejoining a
+channel whose run already finished) is loading history, not generating, so it should not show a
+run-in-progress indicator either.
+
+```typescript
+channel.runStatus$.subscribe(({ kind, stopPhase }) => {
+  const canStop = kind === 'user' && stopPhase === 'idle';
+  const isStopping = stopPhase !== 'idle';
+  // Gate every send entrance on `isStopping`: the old run has not finished, and starting a second
+  // one would leave two concurrent runs writing to the same transcript.
+});
+
+try {
+  await channel.stopGeneration();
+} catch (error) {
+  // The request failed (network error, or a non-2xx that is not 404). `stopPhase` has already been
+  // rolled back to `idle`, so the stop control is actionable again and the user can retry.
+}
+```
+
+**Timeout escape hatch.** If the terminal event has not arrived ~10s after an accepted stop,
+`stopPhase` becomes `force-stoppable`. Calling `stopGeneration({ force: true })` then tells the backend
+to abandon the run instead of letting it wind down. Normal stops should never reach this.
+
+**Sending while busy.** `sendMessage()` rejects with `ChannelBusyError` whenever a run is in flight,
+including while stopping, and refuses _before_ the optimistic user bubble is pushed — so a rejected
+send leaves no trace in the thread. Use `isChannelBusyError(error)` to detect it.
+
+The conversation itself is unharmed: the transcript is kept, the suspended turn is rolled back, and the
+next message continues the same conversation.
+
+> Requires a client implementing `suspendChannel()` (`AsgardServiceClient` does; it POSTs to
+> `${botProviderEndpoint}/message/suspend`). A custom `IAsgardServiceClient` without it falls back to
+> the old local-abort behavior.
 
 <a id="conversation"></a>
 <br/>
