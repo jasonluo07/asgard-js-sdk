@@ -20,6 +20,18 @@ function asgardSseMockPlugin(): Plugin {
         }
       });
 
+      // F-023 — stop-generation. `POST /message/suspend` is what "stop" actually calls; it only records
+      // that a stop was asked for, and the run's own stream is what declares it stopped.
+      server.middlewares.use('/mock-asgard/message/suspend', async (req, res, next) => {
+        try {
+          const { handleMockSuspend } = await import('./src/mock-server/sse-mock');
+
+          await handleMockSuspend(req, res);
+        } catch (err) {
+          next(err as Error);
+        }
+      });
+
       // F-015 — join-init existence gate. Must be mounted so `GET /channel/metadata` reaches the mock
       // (defaults to 404) instead of the SPA fallback, which would break every Chatbot's mount gate.
       server.middlewares.use('/mock-asgard/channel/metadata', async (req, res, next) => {

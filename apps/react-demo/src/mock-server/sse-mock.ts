@@ -204,6 +204,14 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // F-003 run-indicator demo — scoped channel. Streams a multi-message run with inter-message gaps
   // and a complete→done tail, so the seam indicator can be seen staying lit the whole run (bound to
   // the connection, not per-message) — no flicker, no disappearance in the gaps.
+  // F-023 — the stop-generation demo channels. The run keeps streaming until the suspend endpoint has
+  // been called, so pressing stop is visibly what ends it (and, on the timeout channel, only `force` is).
+  if (customChannelId.startsWith('stop-generation-')) {
+    await handleStopGenerationMock(res, payload, customChannelId);
+
+    return;
+  }
+
   if (customChannelId === 'run-indicator-demo') {
     await handleRunIndicatorMock(res, payload);
 
@@ -690,6 +698,119 @@ async function handleNudgeMock(res: ServerResponse, customChannelId: string): Pr
     fact: { ...emptyFact(), sandboxReady: { sandboxName: 'sbx-nudged', blueprintName: 'demo-workspace' } },
   });
   await sleep(200);
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-023 — stop-generation demo. This mock's whole point is that suspending and stopping are two
+// separate moments: `POST /message/suspend` only records that a stop was asked for, and the run keeps
+// streaming until it notices, then winds down and emits its terminal event. Nothing about that terminal
+// is special — it is the same `run.done` a normal run ends with.
+//
+// Three channels drive the three branches:
+//   stop-generation-demo          suspend is honoured → the run winds down shortly after
+//   stop-generation-fail-demo     suspend answers 500 → the SDK must roll out of `stopping` (AC4)
+//   stop-generation-timeout-demo  a plain suspend is IGNORED; only `force=true` ends the run (AC7)
+// ---------------------------------------------------------------------------------------------------
+
+const suspendRequests = new Map<string, { suspended: boolean; force: boolean }>();
+
+export async function handleMockSuspend(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (req.method !== 'POST') {
+    res.statusCode = 405;
+    res.end();
+
+    return;
+  }
+
+  const url = new URL(req.url ?? '', 'http://localhost');
+  const customChannelId = url.searchParams.get('custom_channel_id') ?? '';
+  const force = url.searchParams.get('force') === 'true';
+
+  // AC4 — a genuine failure (non-2xx that is not 404). The SDK must leave `stopping` and let the user
+  // retry rather than stranding the UI.
+  if (customChannelId === 'stop-generation-fail-demo') {
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ message: 'mock suspend failure' }));
+
+    return;
+  }
+
+  const previous = suspendRequests.get(customChannelId);
+  suspendRequests.set(customChannelId, { suspended: true, force: force || Boolean(previous?.force) });
+
+  // Relays answer either 204 or 200 + envelope; both mean accepted, and the SDK must not hardcode one.
+  res.statusCode = 204;
+  res.end();
+}
+
+const STOP_CHUNKS = [
+  '這段回覆會刻意慢慢長，',
+  '好讓你有時間按下停止。',
+  '重點是：按下去之後，',
+  '畫面不會立刻回到「等待輸入」——',
+  '而是停在 stopping，',
+  '因為後端只回報「已受理」，',
+  '真正停下來要等串流上的終止事件。',
+  '那個終止事件跟正常結束時是同一個，',
+  '沒有新的事件型別。',
+  '如果你看到這句，表示還沒按停止…',
+];
+
+async function handleStopGenerationMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+): Promise<void> {
+  // A new run starts with a clean slate — a stop asked for during the previous run must not end this one.
+  suspendRequests.delete(customChannelId);
+
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const messageId = randomUUID();
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(60);
+  writeEvent(res, messageFrame(header, 'asgard.message.start', messageId, replyTo, '', TEXT_TEMPLATE('')));
+
+  const emitted: string[] = [];
+
+  // Long enough (~60s) that the run never ends on its own during a demo — so whatever ends it is
+  // visibly the stop, not the run running out of things to say.
+  for (let tick = 0; tick < 120; tick += 1) {
+    await sleep(500);
+
+    const state = suspendRequests.get(customChannelId);
+    // The timeout channel plays an agent that ignores a polite stop: only `force` gets through (AC7).
+    const honoured = state?.suspended && (customChannelId !== 'stop-generation-timeout-demo' || Boolean(state.force));
+
+    if (honoured) {
+      // The backend takes a moment to wind the run down — this gap is the `stopping` state.
+      await sleep(1200);
+
+      break;
+    }
+
+    const chunk = STOP_CHUNKS[tick % STOP_CHUNKS.length];
+    emitted.push(chunk);
+    writeEvent(res, messageFrame(header, 'asgard.message.delta', messageId, replyTo, chunk, null));
+  }
+
+  const full = emitted.join('');
+  writeEvent(res, messageFrame(header, 'asgard.message.complete', messageId, replyTo, full, TEXT_TEMPLATE(full)));
+  await sleep(80);
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }

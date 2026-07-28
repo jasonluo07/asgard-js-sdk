@@ -55,6 +55,7 @@ import { ChannelTitleUiRoute } from './routes/channel-title-ui';
 import { ChatHeaderRoute } from './routes/chat-header';
 import { ComposerRoute } from './routes/composer';
 import { JoinInitRoute } from './routes/join-init';
+import { StopGenerationRoute } from './routes/stop-generation';
 import { AllFeaturesRoute } from './routes/all-features';
 import { AllFeaturesWideRoute } from './routes/all-features-wide';
 
@@ -117,6 +118,7 @@ export function App(): React.ReactElement {
         <Route path="/chat-header" element={<ChatHeaderRoute />} />
         <Route path="/composer" element={<ComposerRoute />} />
         <Route path="/join-init" element={<JoinInitRoute />} />
+        <Route path="/stop-generation" element={<StopGenerationRoute />} />
         <Route path="/all-features" element={<AllFeaturesRoute />} />
         <Route path="/all-features-wide" element={<AllFeaturesWideRoute />} />
       </Routes>
