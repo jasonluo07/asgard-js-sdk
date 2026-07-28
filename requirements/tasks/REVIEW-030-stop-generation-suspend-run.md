@@ -155,6 +155,21 @@ None.
 
 None.
 
+### Resolved during review
+
+1. **A stopped run left its thinking block highlighted as "Thinking…" forever.** Found by stopping a
+   real run against the dev backend (Heimdall, `heimdall-api.dev.asgard-ai.com`) _mid-thinking_ — a
+   suspended turn never emits `message.thinking.complete`, so `isThinking` stayed `true` and the block
+   advertised activity that had ceased, permanently, in the transcript.
+
+   Every earlier test and the demo mock happened to interrupt _after_ thinking had finished, so the
+   path was blind: a mock written to match my own reading of the contract cannot contradict it.
+   `Conversation.cancelInFlightToolCalls()` settled tool-calls but had no thinking equivalent.
+
+   Fixed by extending it to settle in-flight thinking blocks too, and renamed to
+   `settleInFlightMessages()` since the old name no longer described it — the old name is kept as a
+   `@deprecated` delegating alias per §1.7. Three regression cases added (core Vitest now 153).
+
 ### Minor (nice to have)
 
 1. **The demo app sits outside the type-check gate.** `npm run typecheck:packages` covers only
@@ -179,5 +194,10 @@ None.
   lint / format / typecheck / build green.
 - 2026-07-28: §3 functional validation — Vitest 150 core + 41 react passed; Playwright walkthrough of
   `/stop-generation` 15/15, re-run independently with identical results; 13 / 13 R# Pass.
-- 2026-07-28: 0 BLOCKERs; 2 Minor findings recorded, both pre-existing and out of scope
+- 2026-07-28: Real-backend verification against dev (Heimdall @ `localhost:8341` with the SDK installed
+  from `npm pack`, hitting `heimdall-api.dev.asgard-ai.com`). Contract confirmed: endpoint derivation,
+  `custom_channel_id` / `request_id`, **`200` rather than `204`** (which a hardcoded 204 would have
+  failed), the terminal event genuinely arriving, and the conversation continuing afterwards. Exposed
+  and fixed the thinking-block defect above.
+- 2026-07-28: 0 BLOCKERs; 1 finding fixed in-cycle, 2 Minor recorded as pre-existing and out of scope
   (Status: `ready → done`).
