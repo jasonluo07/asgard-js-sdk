@@ -25,6 +25,10 @@ export function createSseObservable(options: CreateSseObservableOptions): Observ
     // Whether a resumable cursor exists — set once any event carries an `id:`. `@microsoft/fetch-event-source`
     // tracks that `id:` and replays it as the `Last-Event-ID` header on its native reconnect (F-002).
     let hasCursor = false;
+    // Set by this observable's teardown: the consumer deliberately let go (unsubscribe on unmount,
+    // channel switch, or the legacy stop fallback). Distinguishes "we cut it" from "it broke" (F-023
+    // AC10) — an intentional abort must never be reported as an error nor trigger the reconnect below.
+    let disposed = false;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -93,6 +97,12 @@ export function createSseObservable(options: CreateSseObservableOptions): Observ
         subscriber.complete();
       },
       onerror: err => {
+        // The consumer aborted on purpose (F-023 AC10). The in-flight fetch rejects with an
+        // AbortError, which is not a failure of the stream — swallow it: no `subscriber.error`, and no
+        // reconnect (returning here would schedule a retry, resurrecting a connection we just dropped).
+        // Throwing is what tells @microsoft/fetch-event-source to stop for good.
+        if (disposed) throw err;
+
         // A cursor exists → let @microsoft/fetch-event-source run its native Last-Event-ID reconnect:
         // returning without throwing tells the library to retry (obeying the server `retry:`), and it
         // replays the last `id:` as `Last-Event-ID`, so the backend resumes from the cursor with no
@@ -108,6 +118,7 @@ export function createSseObservable(options: CreateSseObservableOptions): Observ
     });
 
     return (): void => {
+      disposed = true;
       controller.abort();
     };
   });

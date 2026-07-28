@@ -12,7 +12,7 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
   const { quickReplies } = props;
 
   const { template, botMessage } = useAsgardThemeContext();
-  const { sendMessage, isConnecting } = useAsgardContext();
+  const { sendMessage, isConnecting, isStopping } = useAsgardContext();
 
   const onClick = useCallback(
     (text: string) => {
@@ -36,7 +36,9 @@ export function QuickReplies(props: QuickRepliesProps): ReactNode {
             backgroundColor:
               botMessage?.quickReplyBackgroundColor || template?.quickReplies?.button?.style?.backgroundColor,
           }}
-          disabled={isConnecting}
+          // F-023 AC5 — quick replies are a send entrance too, so they stay closed while a stop is
+          // pending: the old run has not finished, and tapping one would open a second run (UC-045).
+          disabled={isConnecting || isStopping}
           onClick={() => onClick(quickReply.text)}
         >
           {quickReply.text}

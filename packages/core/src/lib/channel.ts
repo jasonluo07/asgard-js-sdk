@@ -2,30 +2,49 @@ import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, 
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChannelConfig,
+  ChannelRunState,
   ChannelStates,
   FetchSseOptions,
   FetchSsePayload,
   IAsgardServiceClient,
   LaunchedSandbox,
   ObserverOrNext,
+  RunKind,
+  RunStatus,
   SandboxPhase,
+  StopGenerationOptions,
   Subagent,
   SseResponse,
   Task,
   ToolCallConsentAnswer,
 } from '../types';
+import { ChannelBusyError } from '../types/channel-busy-error';
 import { FetchSseAction, EventType } from '../constants/enum';
 import Conversation from './conversation';
 import { createDerivedStores, DerivedStores } from './derived-stores';
 import { reconcileLaunched } from './launched-sandboxes';
+
+/** Nothing running, nothing stopping. */
+const IDLE_RUN_STATUS: RunStatus = { kind: null, stopPhase: 'idle' };
+
+/** How long an accepted stop waits for the terminal event before offering force-stop (F-023 AC7). */
+export const FORCE_STOP_TIMEOUT_MS = 10_000;
+
+function runStatusEqual(a: RunStatus, b: RunStatus): boolean {
+  return a.kind === b.kind && a.stopPhase === b.stopPhase && a.requestId === b.requestId;
+}
 
 export default class Channel {
   private client: IAsgardServiceClient;
 
   public customChannelId: string;
   public customMessageId?: string;
+  // Join-time run state from `GET /channel/metadata` (F-023 AC9): decides whether a rejoin is tailing a
+  // live run (`restore`) or replaying a finished transcript (`replay`).
+  private joinRunState: ChannelRunState;
 
   private isConnecting$: BehaviorSubject<boolean>;
+  private runStatusSubject: BehaviorSubject<RunStatus>;
   private conversation$: BehaviorSubject<Conversation>;
   private channelTitleSubject: BehaviorSubject<string | null>;
   private sandboxPhaseSubject: BehaviorSubject<SandboxPhase>;
@@ -47,16 +66,25 @@ export default class Channel {
   public readonly sandboxPhase$: Observable<SandboxPhase>;
   /** Reactive live-sandbox list store (F-019): authoritative from `/channel/metadata`, per-slice; replay-safe. */
   public readonly launchedSandboxes$: Observable<LaunchedSandbox[]>;
+  /** Reactive run identity + stop lifecycle store (F-023): who holds the connection, and is a stop pending. */
+  public readonly runStatus$: Observable<RunStatus>;
   private currentUserMessageId?: string;
   // The most-recently-sent user message id. Unlike currentUserMessageId (which
   // is cleared once a traceId is attached), this is kept across the SSE
   // lifecycle so RESPONSE_TOOL_CALL_CONSENT — fired after run.done — can echo
   // back the message id the bot is waiting on.
   private lastSentMessageId?: string;
-  // The in-flight SSE run's subscription. Held so a user-initiated stop-generation can abort the
-  // connection (unsubscribe → create-sse-observable teardown → AbortController.abort()). Cleared on
-  // every terminal (complete / error) and on stop.
+  // The in-flight SSE run's subscription. Held so the connection can be aborted locally (unsubscribe →
+  // create-sse-observable teardown → AbortController.abort()) on close, on channel switch, and on the
+  // legacy stop fallback. Cleared on every terminal (complete / error).
+  //
+  // NOTE (F-023): a user-initiated stop no longer unsubscribes this. Runs execute in the background on
+  // the server, so cutting the stream would only stop *watching* — the stop is requested through
+  // `client.suspendChannel()` and declared by this same stream's terminal event.
   private currentRun?: Subscription;
+  // Armed when a stop is accepted; fires after FORCE_STOP_TIMEOUT_MS to offer force-stop (F-023 AC7).
+  // Cleared on terminal, on suspend failure, and in close() (§1.5).
+  private forceStopTimer?: ReturnType<typeof setTimeout>;
 
   private constructor(config: ChannelConfig) {
     if (!config.client) {
@@ -70,8 +98,10 @@ export default class Channel {
     this.client = config.client;
     this.customChannelId = config.customChannelId;
     this.customMessageId = config.customMessageId;
+    this.joinRunState = config.runState ?? 'IDLE';
 
     this.isConnecting$ = new BehaviorSubject(false);
+    this.runStatusSubject = new BehaviorSubject<RunStatus>(IDLE_RUN_STATUS);
     this.conversation$ = new BehaviorSubject(config.conversation);
     this.channelTitleSubject = new BehaviorSubject<string | null>(config.channelTitle ?? null);
     this.sandboxPhaseSubject = new BehaviorSubject<SandboxPhase>('idle');
@@ -89,6 +119,9 @@ export default class Channel {
     // Per-slice: only `applyLaunchedSandboxes` / `dropSandbox` push here (never the conversation stream),
     // so high-frequency message deltas never re-emit the live-sandbox list (UC-032 ALT2).
     this.launchedSandboxes$ = this.launchedSandboxesSubject.pipe(distinctUntilChanged());
+    // Per-slice: `RunStatus` is a fresh object on every write, so compare by field — otherwise the
+    // states observer would re-notify on every identical write during a run (F-023).
+    this.runStatus$ = this.runStatusSubject.pipe(distinctUntilChanged(runStatusEqual));
     this.statesObserver = config.statesObserver;
   }
 
@@ -115,6 +148,11 @@ export default class Channel {
   /** Current live-sandbox snapshot (F-019) — for framework-agnostic `getSnapshot()` bridging. */
   public getLaunchedSandboxes(): LaunchedSandbox[] {
     return this.launchedSandboxesSubject.value;
+  }
+
+  /** Current run identity + stop lifecycle snapshot (F-023) — for framework-agnostic `getSnapshot()` bridging. */
+  public getRunStatus(): RunStatus {
+    return this.runStatusSubject.value;
   }
 
   /** Names hinted by `sandbox.launch` but not yet confirmed live by metadata (F-019) — "starting" placeholders. */
@@ -248,17 +286,30 @@ export default class Channel {
       this.channelTitle$,
       this.sandboxPhase$,
       this.launchedSandboxes$,
+      this.runStatus$,
     ])
       .pipe(
-        map(([isConnecting, conversation, tasks, subagents, channelTitle, sandboxPhase, launchedSandboxes]) => ({
-          isConnecting,
-          conversation,
-          tasks,
-          subagents,
-          channelTitle,
-          sandboxPhase,
-          launchedSandboxes,
-        })),
+        map(
+          ([
+            isConnecting,
+            conversation,
+            tasks,
+            subagents,
+            channelTitle,
+            sandboxPhase,
+            launchedSandboxes,
+            runStatus,
+          ]) => ({
+            isConnecting,
+            conversation,
+            tasks,
+            subagents,
+            channelTitle,
+            sandboxPhase,
+            launchedSandboxes,
+            runStatus,
+          }),
+        ),
       )
       .subscribe(this.statesObserver);
   }
@@ -322,6 +373,10 @@ export default class Channel {
       onSseMessage: (response: SseResponse<EventType>): void => {
         options?.onSseMessage?.(response);
 
+        // F-023 — remember which run this is so a stop can name it (`request_id`), stopping only this
+        // run rather than whatever happens to be live when the request lands.
+        this.captureRequestId(response.requestId);
+
         // F-016 — the channel title is run-level state, not a message; keep it out of the conversation
         // (it is ephemeral and must survive rejoin replays, which don't carry this event).
         if (response.eventType === EventType.CHANNEL_TITLE_UPDATE) {
@@ -361,24 +416,58 @@ export default class Channel {
       },
       onSseError: (err: unknown): void => {
         options?.onSseError?.(err);
-        this.isConnecting$.next(false);
-        this.currentUserMessageId = undefined;
-        this.currentRun = undefined;
+        this.settleRun();
         reject(err);
       },
       onSseCompleted: (): void => {
         options?.onSseCompleted?.();
-        this.isConnecting$.next(false);
-        this.currentUserMessageId = undefined;
-        this.currentRun = undefined;
+        this.settleRun();
         resolve();
       },
     };
   }
 
-  private fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
+  /**
+   * The terminal of a run, whichever way it ended. For a stop in flight this is the moment the backend
+   * declares the run actually finished (F-023 AC3) — the same event a normal run ends with — so it is
+   * the only place `stopping` is released back to "waiting for input".
+   */
+  private settleRun(): void {
+    const wasStopping = this.runStatusSubject.value.stopPhase !== 'idle';
+
+    this.clearForceStopTimer();
+    this.isConnecting$.next(false);
+    this.runStatusSubject.next(IDLE_RUN_STATUS);
+    this.currentUserMessageId = undefined;
+    this.currentRun = undefined;
+
+    // F-020 AC10 — a suspended turn is rolled back, so a tool-call that was still running gets no
+    // `tool_call.complete` of its own; converge it to `cancelled` rather than leaving it spinning.
+    if (wasStopping) {
+      this.conversation$.next(this.conversation$.value.cancelInFlightToolCalls());
+    }
+  }
+
+  /** Record the backend run id from the first frame that carries one; later frames must not overwrite it. */
+  private captureRequestId(requestId: string | undefined): void {
+    const current = this.runStatusSubject.value;
+
+    if (!requestId || current.requestId || !current.kind) return;
+
+    this.runStatusSubject.next({ ...current, requestId });
+  }
+
+  private clearForceStopTimer(): void {
+    if (!this.forceStopTimer) return;
+
+    clearTimeout(this.forceStopTimer);
+    this.forceStopTimer = undefined;
+  }
+
+  private fetchSse(kind: RunKind, payload: FetchSsePayload, options?: FetchSseOptions): Promise<void> {
     return new Promise((resolve, reject) => {
       this.isConnecting$.next(true);
+      this.runStatusSubject.next({ kind, stopPhase: 'idle' });
       this.currentRun = this.client.fetchSse(payload, this.buildRunHandlers(options, resolve, reject));
     });
   }
@@ -398,12 +487,21 @@ export default class Channel {
       }
 
       this.isConnecting$.next(true);
+      // Never stoppable either way — a rejoin is not a turn the user just dispatched (F-023 AC8). But
+      // the two cases must not look alike on screen (AC9 / UC-046): `restore` is tailing a run the
+      // server says is still RUNNING, whereas `replay` is only loading a finished conversation and must
+      // not show a run-in-progress indicator.
+      this.runStatusSubject.next({
+        kind: this.joinRunState === 'RUNNING' ? 'restore' : 'replay',
+        stopPhase: 'idle',
+      });
       this.currentRun = this.client.rejoinSse(this.customChannelId, this.buildRunHandlers(options, resolve, reject));
     });
   }
 
   private resetChannel(payload?: Pick<FetchSsePayload, 'text' | 'payload'>, options?: FetchSseOptions): Promise<void> {
     return this.fetchSse(
+      'reset',
       {
         action: FetchSseAction.RESET_CHANNEL,
         customChannelId: this.customChannelId,
@@ -422,6 +520,17 @@ export default class Channel {
     },
     options?: FetchSseOptions,
   ): Promise<void> {
+    // F-023 AC6 / UC-045 — a channel may only ever hold one run. Runs execute in the background on the
+    // server, so dispatching a second would leave two of them writing to the same transcript. Refuse
+    // *before* the optimistic user bubble is pushed, so a rejected send leaves no trace in the thread.
+    //
+    // A rejected promise, not a synchronous throw: this method's contract is `Promise<void>`, and
+    // fire-and-forget callers (`sendMessage(...)` inside a DOM handler) must not have it explode
+    // underneath them.
+    const busyWith = this.runStatusSubject.value.kind;
+
+    if (busyWith) return Promise.reject(new ChannelBusyError(busyWith));
+
     const text = payload.text.trim();
     const messageId = payload.customMessageId ?? uuidv4();
 
@@ -441,6 +550,7 @@ export default class Channel {
     );
 
     return this.fetchSse(
+      'user',
       {
         action: FetchSseAction.NONE,
         customChannelId: this.customChannelId,
@@ -460,7 +570,9 @@ export default class Channel {
   ): Promise<void> {
     this.conversation$.next(this.conversation$.value.clearPendingConsent());
 
+    // `user` — answering a consent prompt resumes the user's own turn, so it stays stoppable (F-023 AC8).
     return this.fetchSse(
+      'user',
       {
         action: FetchSseAction.RESPONSE_TOOL_CALL_CONSENT,
         customChannelId: this.customChannelId,
@@ -480,7 +592,9 @@ export default class Channel {
    * refetch) to refill `launchedSandboxes$`. An invisible turn, unlike `sendMessage`.
    */
   public nudge(options?: FetchSseOptions): Promise<void> {
+    // `nudge` — invisible to the user, so it must never surface a stop control (F-023 AC8).
     return this.fetchSse(
+      'nudge',
       {
         action: FetchSseAction.NUDGE,
         customChannelId: this.customChannelId,
@@ -492,17 +606,102 @@ export default class Channel {
   }
 
   /**
-   * User-initiated stop-generation: abort the in-flight SSE run (if any) and release the input.
-   * Unsubscribing tears down the SSE observable → AbortController.abort() cuts the HTTP stream. The
-   * partial assistant message already received stays in the conversation (frozen, not deleted). A no-op
-   * when nothing is running.
+   * User-initiated stop-generation (F-023).
+   *
+   * Runs execute in the **background on the server**, so aborting the local SSE connection would only
+   * stop *watching*: the agent would keep running, keep spending tokens and keep writing the
+   * transcript. Instead this asks the backend to suspend the run and **keeps the stream open**, because
+   * the stop is declared by that stream's terminal event — the same event a normal run ends with.
+   *
+   * The call is therefore asynchronous in two stages:
+   * 1. resolving here means the backend **accepted** the request, not that the run has stopped;
+   * 2. `isConnecting` / `runStatus` only return to idle when the terminal event arrives (AC3).
+   *
+   * While waiting, `runStatus.stopPhase` is `stopping` and every send entrance must stay gated (AC5).
+   * If the terminal event has not arrived within {@link FORCE_STOP_TIMEOUT_MS} the phase becomes
+   * `force-stoppable`, and calling again with `{ force: true }` tells the backend to give up on the run
+   * rather than let it wind down (AC7).
+   *
+   * No-ops (resolving) when nothing is running, when the run is not the user's own — a `RESET_CHANNEL`
+   * welcome, a transcript replay or an invisible nudge must never be stopped (AC8) — or when a stop is
+   * already pending and this is not a force.
+   *
+   * **Rejects** when the suspend request fails (network error, or a non-2xx that is not `404`). The
+   * stop phase is rolled back to `idle` first, so the caller can retry and the UI can never be stuck in
+   * `stopping` (AC4).
+   *
+   * A client that predates the suspend endpoint (a custom `IAsgardServiceClient`) falls back to the old
+   * local-abort behavior, so existing integrations keep working.
    */
-  public stopGeneration(): void {
+  public async stopGeneration(options?: StopGenerationOptions): Promise<void> {
+    const status = this.runStatusSubject.value;
+
+    if (!this.currentRun || status.kind !== 'user') return;
+
+    // A second press while stopping does nothing; only an explicit force re-issues the request (AC2).
+    if (status.stopPhase !== 'idle' && !options?.force) return;
+
+    if (!this.client.suspendChannel) {
+      this.abortConnection();
+
+      return;
+    }
+
+    this.clearForceStopTimer();
+    this.runStatusSubject.next({ ...status, stopPhase: 'stopping' });
+
+    try {
+      await this.client.suspendChannel(this.customChannelId, {
+        requestId: status.requestId,
+        force: options?.force,
+      });
+    } catch (error) {
+      // AC4 — never strand the UI in `stopping`; hand the stop control back so the user can retry.
+      this.clearForceStopTimer();
+      this.runStatusSubject.next({ ...this.runStatusSubject.value, stopPhase: 'idle' });
+
+      throw error;
+    }
+
+    // Accepted. The stream stays connected; `settleRun()` releases the input when the terminal arrives.
+    this.armForceStopTimer();
+  }
+
+  /**
+   * Escalate to `force-stoppable` once an accepted stop has waited too long for the terminal event
+   * (F-023 AC7 / UC-044) — the escape hatch for an agent that never winds down. Re-armed on a force
+   * retry, so a second timeout offers the same way out again.
+   */
+  private armForceStopTimer(): void {
+    this.clearForceStopTimer();
+
+    this.forceStopTimer = setTimeout(() => {
+      this.forceStopTimer = undefined;
+
+      const current = this.runStatusSubject.value;
+
+      if (current.stopPhase !== 'stopping') return;
+
+      this.runStatusSubject.next({ ...current, stopPhase: 'force-stoppable' });
+    }, FORCE_STOP_TIMEOUT_MS);
+  }
+
+  /**
+   * Cut the local SSE connection without telling the backend. This is *not* stop-generation (see
+   * {@link stopGeneration}) — the server-side run keeps going. Used when there is nothing to stop
+   * remotely: a client without suspend support, and channel teardown.
+   *
+   * The deliberate abort must never be read as a transport failure — `create-sse-observable` marks the
+   * stream disposed so no reconnect is attempted (F-023 AC10).
+   */
+  private abortConnection(): void {
     if (!this.currentRun) return;
 
     this.currentRun.unsubscribe();
+    this.clearForceStopTimer();
     this.currentRun = undefined;
     this.isConnecting$.next(false);
+    this.runStatusSubject.next(IDLE_RUN_STATUS);
     this.currentUserMessageId = undefined;
     // F-020 AC10: converge any tool-call still in flight to `cancelled` — its `tool_call.complete` frame
     // will never arrive now that the run is aborted, so it must not linger as `running`.
@@ -512,7 +711,9 @@ export default class Channel {
   public close(): void {
     this.currentRun?.unsubscribe();
     this.currentRun = undefined;
+    this.clearForceStopTimer();
     this.isConnecting$.complete();
+    this.runStatusSubject.complete();
     this.conversation$.complete();
     this.channelTitleSubject.complete();
     this.sandboxPhaseSubject.complete();

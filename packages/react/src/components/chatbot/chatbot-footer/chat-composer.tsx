@@ -56,6 +56,9 @@ export function ChatComposer({
     sendMessage,
     isConnecting,
     stopGeneration,
+    canStop,
+    isStopping,
+    canForceStop,
     inputPlaceholder,
     client,
     customChannelId,
@@ -103,7 +106,10 @@ export function ChatComposer({
   } = attachments;
 
   const hasContent = value.trim().length > 0 || hasAttachment;
-  const canSend = !isPreviewMode && !isConnecting && !isUploading && hasContent;
+  // F-023 AC5 — `isStopping` also closes the send gate: the old run is suspended but not finished, and
+  // starting a second one would leave two runs on the channel. The draft is untouched, so the user's
+  // text survives the wait (UC-045).
+  const canSend = !isPreviewMode && !isConnecting && !isStopping && !isUploading && hasContent;
 
   // Textarea max height tracks the chatbot container (40% of it, floor 96px); beyond that it scrolls.
   const adjustTextareaHeight = useCallback(
@@ -149,7 +155,7 @@ export function ChatComposer({
   }, [adjustTextareaHeight, footerRef]);
 
   const onSubmit = useCallback((): void => {
-    if (isComposing || isConnecting) return;
+    if (isComposing || isConnecting || isStopping) return;
 
     const text = value.trim();
 
@@ -168,6 +174,7 @@ export function ChatComposer({
   }, [
     isComposing,
     isConnecting,
+    isStopping,
     value,
     blobIds,
     imagePreviewUrls,
@@ -261,6 +268,19 @@ export function ChatComposer({
 
   const showSpeech = useMemo(() => isSpeechRecognitionSupported(), []);
 
+  // F-023 — the stop control replaces send for the user's own run, and stays put through the wait for
+  // the terminal event. `canStop` → press to stop; `isStopping` → inert while the backend winds the run
+  // down (AC2); `canForceStop` → the wait timed out, press again to give up on the run (AC7).
+  const showStopControl = canStop || isStopping;
+  const stopLabel = canForceStop ? 'composer.forceStop' : isStopping ? 'composer.stopping' : 'composer.stop';
+
+  const onStopClick = useCallback((): void => {
+    // A DOM handler cannot reject, so the failure is absorbed here — the recovery the user sees is the
+    // control becoming pressable again, which core does by rolling `stopPhase` back to `idle` (AC4).
+    // The public `stopGeneration` still rejects, so consumers awaiting it can surface the failure.
+    void stopGeneration?.({ force: canForceStop }).catch(() => undefined);
+  }, [stopGeneration, canForceStop]);
+
   return (
     <div ref={pillRef} className={clsx('asgard-composer', styles.composer)}>
       <AttachmentPreview
@@ -326,13 +346,15 @@ export function ChatComposer({
             />
           )}
 
-          {isConnecting && stopGeneration ? (
+          {showStopControl ? (
             <button
               type="button"
-              className={styles.submit_button}
+              className={clsx(styles.submit_button, isStopping && !canForceStop && styles.submit_button__disabled)}
               style={chatbot.footer?.submitButton?.style}
-              aria-label={t(locale, 'composer.stop')}
-              onClick={stopGeneration}
+              aria-label={t(locale, stopLabel)}
+              title={t(locale, stopLabel)}
+              disabled={isStopping && !canForceStop}
+              onClick={onStopClick}
             >
               <StopSvg />
             </button>

@@ -4,6 +4,7 @@ import {
   ClientConfig,
   Conversation,
   ConversationMessage,
+  RunStatus,
   SandboxPhase,
   ToolCallConsentEventData,
 } from '@asgard-js/core';
@@ -20,6 +21,9 @@ import {
   useState,
 } from 'react';
 import { useAsgardServiceClient, useChannel, UseChannelProps, UseChannelReturn } from '../hooks';
+
+/** Resting run status — nothing in flight, nothing stopping (F-023). */
+const IDLE_RUN_STATUS: RunStatus = { kind: null, stopPhase: 'idle' };
 
 /** Parameters for sending a message */
 export interface SendMessageParams {
@@ -47,11 +51,35 @@ export interface AsgardServiceContextValue {
   channelTitle: string | null;
   /** The current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
+  /** Which run holds the connection and where it is in the stop lifecycle (F-023). */
+  runStatus: RunStatus;
+  /**
+   * Whether something is actually being generated right now (F-023 AC9). Narrower than `isConnecting`,
+   * which is also `true` while a finished conversation is merely being replayed on rejoin — that must
+   * not show a run-in-progress indicator.
+   */
+  isRunning: boolean;
+  /**
+   * Whether a stop control belongs on screen (F-023 AC8): only the user's own turn is stoppable, never
+   * the welcome run, a transcript rejoin, or an invisible nudge.
+   */
+  canStop: boolean;
+  /** Whether a stop has been requested and the terminal event has not arrived yet (F-023 AC2/AC5). */
+  isStopping: boolean;
+  /**
+   * Whether the accepted stop has waited past the timeout and the control should escalate to force-stop
+   * (F-023 AC7). Implies {@link isStopping}.
+   */
+  canForceStop: boolean;
   messageBoxBottomRef: RefObject<HTMLDivElement | null>;
   sendMessage?: UseChannelReturn['sendMessage'];
   resetChannel?: UseChannelReturn['resetChannel'];
   closeChannel?: UseChannelReturn['closeChannel'];
-  /** User-initiated stop-generation: abort the in-flight run and release the input. No-op when idle. */
+  /**
+   * User-initiated stop-generation (F-023): asks the backend to suspend the background run, then waits
+   * for the stream's terminal event. Resolving means "accepted", not "stopped"; rejects if the request
+   * failed. Gate its visibility on {@link canStop}. No-op when idle or on a non-user run.
+   */
   stopGeneration?: UseChannelReturn['stopGeneration'];
   replyToolCallConsents?: UseChannelReturn['replyToolCallConsents'];
   /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn. */
@@ -101,6 +129,11 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   conversation: null,
   channelTitle: null,
   sandboxPhase: 'idle',
+  runStatus: IDLE_RUN_STATUS,
+  isRunning: false,
+  canStop: false,
+  isStopping: false,
+  canForceStop: false,
   messageBoxBottomRef: { current: null },
   botTypingPlaceholder: undefined,
   inputPlaceholder: undefined,
@@ -243,6 +276,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     conversation,
     channelTitle,
     sandboxPhase,
+    runStatus,
     sendMessage,
     resetChannel,
     closeChannel,
@@ -308,6 +342,20 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     };
   }, [replyToolCallConsents, onBeforeSendMessage]);
 
+  // F-023 — the four questions components actually ask about the run, derived once here so each of
+  // them (composer, quick replies, running indicator) does not re-derive the same conditions.
+  const { isRunning, canStop, isStopping, canForceStop } = useMemo(
+    () => ({
+      // A rejoin `replay` is loading history, not generating — no run-in-progress indicator (AC9).
+      isRunning: runStatus.kind !== null && runStatus.kind !== 'replay',
+      // Only the user's own turn is stoppable (AC8), and only while the stop has not been requested yet.
+      canStop: runStatus.kind === 'user' && runStatus.stopPhase === 'idle' && Boolean(stopGeneration),
+      isStopping: runStatus.stopPhase !== 'idle',
+      canForceStop: runStatus.stopPhase === 'force-stoppable',
+    }),
+    [runStatus, stopGeneration],
+  );
+
   const contextValue = useMemo(
     () => ({
       avatar,
@@ -322,6 +370,11 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       conversation: conversation ?? null,
       channelTitle,
       sandboxPhase,
+      runStatus,
+      isRunning,
+      canStop,
+      isStopping,
+      canForceStop,
       sendMessage: wrappedSendMessage,
       resetChannel,
       closeChannel,
@@ -357,6 +410,11 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       conversation,
       channelTitle,
       sandboxPhase,
+      runStatus,
+      isRunning,
+      canStop,
+      isStopping,
+      canForceStop,
       wrappedSendMessage,
       resetChannel,
       closeChannel,

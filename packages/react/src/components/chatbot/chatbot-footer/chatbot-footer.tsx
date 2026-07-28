@@ -26,7 +26,7 @@ export function ChatbotFooter({
   renderComposerInline,
 }: ChatbotFooterProps = {}): ReactNode {
   const {
-    isConnecting,
+    isRunning,
     enableUpload: enableUploadProp,
     enableDocumentUpload: enableDocumentUploadProp,
   } = useAsgardContext();
@@ -58,10 +58,12 @@ export function ChatbotFooter({
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
-      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003).
+      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003) —
+          minus the rejoin transcript replay, which is loading history rather than generating (F-023
+          AC9 / UC-046), hence `isRunning` rather than the broader `isConnecting`.
           The Subagent (F-012) / Task (F-010) live-state panels render at the tail of the thread
           (ChatbotBody) so they scroll with the messages instead of being pinned here. */}
-      <RunningIndicator running={isConnecting} />
+      <RunningIndicator running={isRunning} />
 
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         {renderComposerAbove?.()}

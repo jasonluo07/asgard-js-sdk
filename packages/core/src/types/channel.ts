@@ -34,8 +34,57 @@ export interface LaunchedSandbox {
   browserEnabled: boolean;
 }
 
+/**
+ * Which kind of run is currently holding the connection (F-023 AC8). `isConnecting` alone conflates
+ * four unrelated sources, and only the first is the user's own turn — stop-generation must never fire
+ * against a welcome message, a transcript replay, or an invisible nudge.
+ *
+ * - `user` — a turn the user dispatched (`sendMessage`, or a `tool_call.consent` reply continuing it).
+ * - `reset` — the `RESET_CHANNEL` opening / welcome run.
+ * - `restore` — a GET rejoin that is tailing a run still `RUNNING` on the server (F-014 / F-015).
+ * - `replay` — a GET rejoin of a channel whose run has already finished: history is being loaded, but
+ *   nothing is being generated, so no run-in-progress indicator belongs on screen (UC-046).
+ * - `nudge` — the invisible `action=NUDGE` turn that wakes a recycled sandbox (F-021 AC4).
+ */
+export type RunKind = 'user' | 'reset' | 'restore' | 'replay' | 'nudge';
+
+/**
+ * The stop-generation lifecycle for the current run (F-023, UC-044). Stopping is asynchronous: the
+ * suspend endpoint only reports "accepted", and the stop is declared later by the terminal event on
+ * the already-open SSE stream.
+ *
+ * - `idle` — no stop requested.
+ * - `stopping` — suspend accepted; waiting for the stream's terminal event. Send entrances are gated.
+ * - `force-stoppable` — the terminal event has not arrived within `FORCE_STOP_TIMEOUT_MS`;
+ *   the control becomes actionable again and re-calls the endpoint with `force=true`.
+ */
+export type StopPhase = 'idle' | 'stopping' | 'force-stoppable';
+
+/**
+ * The current run's identity and stop lifecycle (F-023) — the finer-grained companion to
+ * `isConnecting`, exposed per-slice as `Channel.runStatus$`.
+ */
+export interface RunStatus {
+  /** `null` when nothing is in flight. */
+  kind: RunKind | null;
+  stopPhase: StopPhase;
+  /** The backend's id for this run, captured from its first frame; sent as `request_id` on suspend. */
+  requestId?: string;
+}
+
+/** Options for {@link IAsgardServiceClient.suspendChannel} / `Channel.stopGeneration` (F-023). */
+export interface StopGenerationOptions {
+  /**
+   * Give up on the run instead of letting it wind down (F-023 AC7). Only meant for the timeout
+   * escape hatch — a normal stop lets the backend roll the turn back cleanly.
+   */
+  force?: boolean;
+}
+
 export interface ChannelStates {
   isConnecting: boolean;
+  /** Which run holds the connection and where it is in the stop lifecycle (F-023). */
+  runStatus: RunStatus;
   conversation: Conversation;
   /** Current Task Check List derived from the conversation (F-010; exposed as a store in F-013). */
   tasks: Task[];
@@ -58,6 +107,12 @@ export interface ChannelConfig {
   channelTitle?: string | null;
   /** Seed for the launchedSandboxes store (F-019) — from `GET /channel/metadata` at join. Reconciled on set. */
   launchedSandboxes?: LaunchedSandbox[];
+  /**
+   * The channel's run state from `GET /channel/metadata` at join (F-023 AC9 / UC-046). Decides whether
+   * a `restore()` is tailing a live run or merely replaying a finished transcript — the latter must not
+   * present as generation in progress. Defaults to `IDLE`.
+   */
+  runState?: ChannelRunState;
   statesObserver?: ObserverOrNext<ChannelStates>;
 }
 
