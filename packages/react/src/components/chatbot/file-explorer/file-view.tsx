@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { StreamdownClient } from '../../templates/text-template/streamdown-client';
-import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon } from './icons';
+import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon, RefreshIcon } from './icons';
+import { CodeEditor } from './code-editor';
 import { FsEntry, FsReadFile, FsSaveFile } from './types';
 import styles from './file-view.module.scss';
 
@@ -37,9 +38,10 @@ function kindOf(ext: string): FileKind {
 }
 
 /**
- * Single-panel two-mode file view (F-021, Cycle 1): preview ↔ edit for text (`.md` preview renders
- * markdown via `streamdown`; edit is a lightweight textarea — CodeMirror syntax highlighting is Cycle 2),
- * preview-only for images. Save debounces to `onSaveFile` (≈ `PUT fs/file`). Reports dirty state (AC10).
+ * Single-panel two-mode file view (F-021 AC3). Text and code run through CodeMirror 6 with the grammar
+ * picked by extension — read-only in preview, editable in edit, so both modes share one highlighted
+ * rendering. `.md` previews as rendered markdown and edits as source; images preview only. Save debounces
+ * to `onSaveFile` (≈ `PUT fs/file`), and a manual refresh re-reads from disk. Reports dirty state (AC10).
  */
 export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChange, onBack }: FileViewProps): ReactNode {
   const ext = extOf(file.name);
@@ -50,6 +52,8 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
   const [content, setContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  // AC3 keeps a manual refresh alongside any watch-driven reload; bumping this re-reads from disk.
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Load content. Keyed by sandbox + path, so switching files re-runs this.
   useEffect(() => {
@@ -69,7 +73,7 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
     return (): void => {
       cancelled = true;
     };
-  }, [sandboxName, file.path, readFile]);
+  }, [sandboxName, file.path, readFile, reloadKey]);
 
   // Surface dirty state to the host (AC10) and clean it up on unmount.
   useEffect(() => {
@@ -130,20 +134,18 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
     }
 
     return (
-      <textarea
-        className={styles.editor}
+      <CodeEditor
+        ext={ext}
         value={content ?? ''}
-        readOnly={mode !== 'edit'}
-        spellCheck={false}
-        onChange={e => {
-          const val = e.target.value;
+        editable={mode === 'edit'}
+        onChange={val => {
           setContent(val);
           setDirty(true);
           scheduleSave(val);
         }}
       />
     );
-  }, [content, error, kind, mode, file.name]);
+  }, [content, error, kind, mode, file.name, ext]);
 
   return (
     <div className={styles.root}>
@@ -154,6 +156,15 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
         </button>
         {dirty && <span className={styles.dirty}>●</span>}
         <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={() => setReloadKey(k => k + 1)}
+            aria-label="重新載入檔案"
+            title="重新載入"
+            className={styles.actionBtn}
+          >
+            <RefreshIcon size={15} />
+          </button>
           {canToggle && (
             <button
               type="button"
