@@ -120,4 +120,4 @@
 | `BUILD-030`  | Stop generation suspends the background run       | High     | done   | [BUILD-030-stop-generation-suspend-run.md](./BUILD-030-stop-generation-suspend-run.md)                   |
 | `REVIEW-030` | Review: Stop generation suspends background run   | —        | done   | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)                 |
 | `BUILD-031`  | Dock run-chrome panels outside thread scroll box  | High     | done   | [BUILD-031-docked-run-chrome-out-of-scroll-box.md](./BUILD-031-docked-run-chrome-out-of-scroll-box.md)   |
-| `REVIEW-031` | Review: Dock run-chrome outside thread scroll box | —        | ready  | [REVIEW-031-docked-run-chrome-out-of-scroll-box.md](./REVIEW-031-docked-run-chrome-out-of-scroll-box.md) |
+| `REVIEW-031` | Review: Dock run-chrome outside thread scroll box | —        | done   | [REVIEW-031-docked-run-chrome-out-of-scroll-box.md](./REVIEW-031-docked-run-chrome-out-of-scroll-box.md) |
