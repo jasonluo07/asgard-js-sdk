@@ -58,3 +58,6 @@ test-output
 !.claude/skills/
 .mcp.json
 .playwright-mcp
+
+# local npm pack artifacts (see CLAUDE.local.md — consumer-side testing)
+*.tgz
