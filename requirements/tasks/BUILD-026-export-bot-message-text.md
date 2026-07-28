@@ -85,8 +85,8 @@ Run in order; each maps to the R# it satisfies.
 - [x] T2 (R1, R3): Add `packages/react/src/components/templates/text-template/bot-message-text.tsx` —
       props `{ children: string }` (exported `BotMessageTextProps`), explicit `ReactNode` return; read theme
       via `useAsgardThemeContext`, apply `{ color: theme?.botMessage?.color, backgroundColor:
-    theme?.botMessage?.backgroundColor }`; render `<div className={clsx(classes.text,
-    classes['text--bot'])} style={…}><StreamdownClient>{children}</StreamdownClient></div>` reusing the
+theme?.botMessage?.backgroundColor }`; render `<div className={clsx(classes.text,
+classes['text--bot'])} style={…}><StreamdownClient>{children}</StreamdownClient></div>` reusing the
       existing `text-template.module.scss`.
 - [x] T1 (R2): In `text-template.tsx`, replace the bot branch's inner content
       (`<StreamdownClient>` inside the themed div) with `<BotMessageText>{messageText}</BotMessageText>`;
