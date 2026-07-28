@@ -93,8 +93,14 @@ export interface UseChannelReturn {
    */
   stopGeneration?: (options?: StopGenerationOptions) => Promise<void>;
   replyToolCallConsents?: (answers: ToolCallConsentAnswer[], payload?: FetchSsePayload['payload']) => Promise<void>;
-  /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn, no reply rendered. */
-  nudge?: () => Promise<void>;
+  /**
+   * Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn, no reply rendered.
+   *
+   * Takes `payload` because the woken sandbox is configured from *this* turn's payload (BUG-004); the
+   * backend never carries the previous turn's over. Consumers on `AsgardServiceContext` get it filled in
+   * from `onBeforeSendMessage` and can leave the argument out.
+   */
+  nudge?: (payload?: FetchSsePayload['payload']) => Promise<void>;
 }
 
 export function useChannel(props: UseChannelProps): UseChannelReturn {
@@ -404,13 +410,19 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, client, onSseMessage, conversation],
   );
 
-  const nudge = useCallback(async (): Promise<void> => {
-    await channel?.nudge({
-      onSseMessage(response: SseResponse<EventType>) {
-        onSseMessage?.(response, { conversation });
-      },
-    });
-  }, [channel, onSseMessage, conversation]);
+  const nudge = useCallback(
+    async (payload?: FetchSsePayload['payload']): Promise<void> => {
+      await channel?.nudge(
+        {
+          onSseMessage(response: SseResponse<EventType>) {
+            onSseMessage?.(response, { conversation });
+          },
+        },
+        payload,
+      );
+    },
+    [channel, onSseMessage, conversation],
+  );
 
   // F-015 — metadata-gated join-init. On mount, gate on `GET /channel/metadata` instead of unconditionally
   // resetting: an existing channel is always restored (never reset → no history loss); a non-existent one

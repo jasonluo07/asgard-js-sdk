@@ -525,7 +525,7 @@ describe('Channel — launchedSandboxes store (F-019)', () => {
 });
 
 describe('Channel — nudge (F-021 AC4)', () => {
-  it('sends action=NUDGE with empty text and renders no message', async () => {
+  function nudgeChannel(): { channel: Channel; sent: FetchSsePayload[]; messageCount: () => number } {
     const sent: FetchSsePayload[] = [];
     const client = {
       fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
@@ -542,14 +542,45 @@ describe('Channel — nudge (F-021 AC4)', () => {
       statesObserver: (s: ChannelStates) => (lastMessageCount = s.conversation.messages?.size ?? 0),
     });
 
+    return { channel, sent, messageCount: (): number => lastMessageCount };
+  }
+
+  it('sends action=NUDGE with empty text and renders no message', async () => {
+    const { channel, sent, messageCount } = nudgeChannel();
+
     await channel.nudge();
 
     expect(sent).toHaveLength(1);
     expect(sent[0].action).toBe(FetchSseAction.NUDGE);
     expect(sent[0].customChannelId).toBe('ch');
     expect(sent[0].text).toBe('');
+    // Nothing was asked for, so nothing goes on the wire — the pre-BUG-004 body shape is unchanged.
+    expect(sent[0].payload).toBeUndefined();
     // Invisible turn: nudge does not push a user message into the conversation (unlike sendMessage).
-    expect(lastMessageCount).toBe(0);
+    expect(messageCount()).toBe(0);
+    channel.close();
+  });
+
+  // BUG-004 — nudge was the only outbound that skipped `resolvePayload()`, so a consumer had no way at
+  // all to attach payload to it. That matters because the backend rebuilds `prevPayload` from *this*
+  // turn's incoming payload and never carries the previous turn's over: a payload-less NUDGE wakes a
+  // sandbox with no subagents, no source-set mounts and the default working directory — and does so
+  // silently, because every one of those blueprint expressions has a falsy fallback.
+  it('sends the payload it is given', async () => {
+    const { channel, sent } = nudgeChannel();
+
+    await channel.nudge(undefined, { agent_hub: { agent_names: ['writer'] } });
+
+    expect(sent[0].payload).toEqual({ agent_hub: { agent_names: ['writer'] } });
+    channel.close();
+  });
+
+  it('resolves a function payload, like the other three outbounds', async () => {
+    const { channel, sent } = nudgeChannel();
+
+    await channel.nudge(undefined, () => ({ agent_hub: { working_directory: '/work/proj' } }));
+
+    expect(sent[0].payload).toEqual({ agent_hub: { working_directory: '/work/proj' } });
     channel.close();
   });
 });

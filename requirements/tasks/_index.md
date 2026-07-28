@@ -127,3 +127,5 @@
 | `REVIEW-030` | Review: Stop generation suspends background run   | —        | done   | [REVIEW-030-stop-generation-suspend-run.md](./REVIEW-030-stop-generation-suspend-run.md)                 |
 | `BUILD-031`  | Dock run-chrome panels outside thread scroll box  | High     | done   | [BUILD-031-docked-run-chrome-out-of-scroll-box.md](./BUILD-031-docked-run-chrome-out-of-scroll-box.md)   |
 | `REVIEW-031` | Review: Dock run-chrome outside thread scroll box | —        | done   | [REVIEW-031-docked-run-chrome-out-of-scroll-box.md](./REVIEW-031-docked-run-chrome-out-of-scroll-box.md) |
+| `BUILD-032`  | Carry payload on the NUDGE outbound               | High     | done   | [BUILD-032-nudge-payload.md](./BUILD-032-nudge-payload.md)                                               |
+| `REVIEW-032` | Review: Carry payload on the NUDGE outbound       | —        | ready  | [REVIEW-032-nudge-payload.md](./REVIEW-032-nudge-payload.md)                                             |

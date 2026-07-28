@@ -591,8 +591,19 @@ export default class Channel {
    * text — the backend suppresses `message.*` and writes no transcript, so nothing renders in the
    * conversation; the FE simply waits for the resulting `sandbox.launch`/`ready` frames (and a metadata
    * refetch) to refill `launchedSandboxes$`. An invisible turn, unlike `sendMessage`.
+   *
+   * Invisible, but still a real turn — so it needs `payload` exactly like the other three outbounds
+   * (BUG-004). The backend rebuilds `prevPayload` from *this* turn's incoming payload and never carries
+   * the previous turn's over, and the sandbox blueprint reads its subagents / source-set mounts /
+   * working directory straight out of it. Omitting payload therefore wakes an empty sandbox rather than
+   * the one the channel was working in, and every one of those expressions has a falsy fallback, so it
+   * fails silently.
+   *
+   * @param payload Turn-level payload, resolved through the same path as `sendMessage` — pass a
+   * function to compute it at send time. In `@asgard-js/react` this is filled in automatically from
+   * `onBeforeSendMessage`.
    */
-  public nudge(options?: FetchSseOptions): Promise<void> {
+  public nudge(options?: FetchSseOptions, payload?: FetchSsePayload['payload']): Promise<void> {
     // `nudge` — invisible to the user, so it must never surface a stop control (F-023 AC8).
     return this.fetchSse(
       'nudge',
@@ -600,6 +611,7 @@ export default class Channel {
         action: FetchSseAction.NUDGE,
         customChannelId: this.customChannelId,
         customMessageId: this.lastSentMessageId ?? this.customMessageId,
+        payload: this.resolvePayload(payload),
         text: '',
       },
       options,
