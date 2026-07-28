@@ -101,9 +101,10 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   sandboxBrowserOpenTarget?: '_blank' | '_self' | '_parent' | '_top';
 
   /**
-   * Built-in File Explorer side panel (F-021). `'builtin'` renders a header folder toggle + a right-side
-   * aside; `'off'` (default) renders nothing built-in — the consumer places the exported `<FileExplorerPanel>`
-   * itself. Either way an `open-file` card hits the panel via the shared controller.
+   * Built-in File Explorer side panel (F-021). `'builtin'` (default) is the stock layout of AC6 — a folder
+   * toggle on the header, opening a right-side aside. `'off'` opts out of both so the consumer can place the
+   * exported `<FileExplorerPanel>` wherever it likes (AC7). Either way an `open-file` card hits the panel via
+   * the shared controller.
    */
   fileExplorer?: 'builtin' | 'off';
   /** Whether an arriving `open-file` card auto-reveals the built-in aside (F-021 AC9). Defaults to true; a mid-edit dirty file suppresses the yank (AC10). */
@@ -300,7 +301,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
     onSandboxOpenBrowser,
     onSandboxOpenFile,
     sandboxBrowserOpenTarget,
-    fileExplorer = 'off',
+    fileExplorer = 'builtin',
     autoRevealOnOpenFileCard = true,
     fileExplorerBasePath,
     autoResetChannel,
