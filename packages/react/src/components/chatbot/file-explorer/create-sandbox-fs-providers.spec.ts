@@ -76,7 +76,10 @@ describe('createSandboxFsProviders — sandbox lifecycle (F-021 AC5)', () => {
 describe('createSandboxFsProviders — watchFile (F-021 AC3)', () => {
   it('reports each change and unsubscribes the stream on teardown', () => {
     const unsubscribed = vi.fn();
-    let emit: (() => void) | null = null;
+    // Seeded with a no-op rather than `null`: TypeScript's control-flow analysis cannot see the
+    // assignment inside the Observable's subscribe callback, so a `| null` union would still be
+    // narrowed to `null` at the call sites below and refuse to be invoked.
+    let emit: () => void = () => undefined;
     const client = makeClient({
       sandboxFsWatch: vi.fn().mockReturnValue(
         new Observable(subscriber => {
@@ -89,8 +92,8 @@ describe('createSandboxFsProviders — watchFile (F-021 AC3)', () => {
     const onChange = vi.fn();
 
     const stop = createSandboxFsProviders(client).watchFile('sb', '/work/a.ts', onChange);
-    emit?.();
-    emit?.();
+    emit();
+    emit();
     expect(onChange).toHaveBeenCalledTimes(2);
 
     stop();
