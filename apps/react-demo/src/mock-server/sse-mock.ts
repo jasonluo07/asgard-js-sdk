@@ -1004,8 +1004,8 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
 // F-021 — in-memory sandbox fs mock for the /file-explorer demo. Cycle 1: GET fs/list (JSON), GET fs/file
 // (octet-stream + X-Total-Bytes/X-Truncated), PUT fs/file (multipart → { data: { bytesWritten } }).
 // Cycle 2: GET fs/stat, POST fs/mkdir, DELETE fs/item (file), DELETE fs/all (dir, recursive),
-// POST fs/copy?src=&dst=, POST fs/move?src=&dst=. The tree is now *mutable* so mutations reflect on
-// re-list — reset to the seed on server restart.
+// POST fs/copy?src=&dst=, POST fs/move?src=&dst=, GET fs/watch (SSE `event: change`). The tree is now
+// *mutable* so mutations reflect on re-list — reset to the seed on server restart.
 // ---------------------------------------------------------------------------------------------------
 
 interface FsDirEntry {
@@ -1093,6 +1093,31 @@ function fsRemoveTree(path: string): void {
   fsRemoveEntry(fsParentOf(path), fsBaseOf(path));
 }
 
+/**
+ * Open `fs/watch` streams, keyed by the watched path. Real `fsnotify` would also report a parent
+ * directory's children; the demo only ever watches a single open file, so exact-path is enough.
+ */
+const FS_WATCHERS = new Map<string, Set<ServerResponse>>();
+
+function fsNotify(path: string, op: 'CREATE' | 'WRITE' | 'REMOVE'): void {
+  const payload = JSON.stringify({ op, path, mtimeUnix: Math.floor(Date.now() / 1000) });
+  FS_WATCHERS.get(path)?.forEach(res => res.write(`event: change\ndata: ${payload}\n\n`));
+}
+
+/**
+ * Pull the file part out of a `multipart/form-data` body. The real edge server parses this properly; the
+ * demo just needs the bytes between the part headers and the closing boundary so a save round-trips.
+ */
+function fsMultipartContent(body: Buffer): string {
+  const text = body.toString('utf-8');
+  const start = text.indexOf('\r\n\r\n');
+  if (start === -1) return '';
+
+  const end = text.lastIndexOf('\r\n--');
+
+  return text.slice(start + 4, end === -1 ? undefined : end);
+}
+
 function fsJson(res: ServerResponse, data: unknown, status = 200): void {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ data }));
@@ -1102,6 +1127,24 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
   const url = new URL(req.url ?? '', 'http://localhost');
   const path = url.searchParams.get('path') ?? '';
   const op = url.pathname.split('/fs/')[1] ?? '';
+
+  if (op === 'watch') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+
+    const watchers = FS_WATCHERS.get(path) ?? new Set<ServerResponse>();
+    watchers.add(res);
+    FS_WATCHERS.set(path, watchers);
+    req.on('close', () => {
+      watchers.delete(res);
+      if (watchers.size === 0) FS_WATCHERS.delete(path);
+    });
+
+    return;
+  }
 
   if (op === 'list') {
     const entries = (FS_DIRS[path] ?? []).map(e => ({
@@ -1134,6 +1177,7 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
     if (!(path in FS_DIRS)) FS_DIRS[path] = [];
 
     fsAddEntry(fsParentOf(path), fsBaseOf(path), true, 0);
+    fsNotify(path, 'CREATE');
     fsJson(res, null);
 
     return;
@@ -1141,6 +1185,7 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
 
   if (op === 'item' || op === 'all') {
     fsRemoveTree(path);
+    fsNotify(path, 'REMOVE');
     fsJson(res, null);
 
     return;
@@ -1153,6 +1198,9 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
     fsCopyTree(src, dst);
     if (op === 'move') fsRemoveTree(src);
 
+    fsNotify(dst, 'CREATE');
+    if (op === 'move') fsNotify(src, 'REMOVE');
+
     fsJson(res, op === 'copy' ? { bytesCopied } : null);
 
     return;
@@ -1160,16 +1208,17 @@ export async function handleMockSandboxFs(req: IncomingMessage, res: ServerRespo
 
   // fs/file
   if (req.method === 'PUT') {
-    // Drain the multipart body; the path comes from the query param, so persist an entry (new-file /
-    // upload show up on re-list). Content is not extracted from multipart — persisted as empty for demo.
     const chunks: Buffer[] = [];
     req.on('data', c => chunks.push(c));
     await new Promise<void>(resolve => req.on('end', () => resolve()));
-    const bytesWritten = Buffer.concat(chunks).length;
-    if (!(path in FS_FILES)) FS_FILES[path] = '';
+
+    const body = Buffer.concat(chunks);
+    const existed = path in FS_FILES;
+    FS_FILES[path] = fsMultipartContent(body);
 
     fsAddEntry(fsParentOf(path), fsBaseOf(path), false, Buffer.byteLength(FS_FILES[path], 'utf-8'));
-    fsJson(res, { bytesWritten });
+    fsNotify(path, existed ? 'WRITE' : 'CREATE');
+    fsJson(res, { bytesWritten: body.length });
 
     return;
   }

@@ -121,20 +121,18 @@
   padding: 0.75rem;
 }
 
-.editor {
-  width: 100%;
+// CodeMirror brings its own theme; this only sizes it and hands over the panel's text colour so the
+// gutter and selection sit on the same surface as the rest of the explorer.
+.codemirror {
   height: 100%;
   min-height: 16rem;
-  box-sizing: border-box;
-  padding: 0.75rem;
-  border: none;
-  outline: none;
-  resize: none;
-  background: transparent;
-  color: var(--asg-color-text-primary, inherit);
-  font-family: var(--asg-font-family-mono, ui-monospace, monospace);
   font-size: 0.75rem;
-  line-height: 1.55;
-  white-space: pre;
-  tab-size: 2;
+
+  :global(.cm-editor) {
+    height: 100%;
+  }
+
+  :global(.cm-scroller) {
+    line-height: 1.55;
+  }
 }

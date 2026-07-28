@@ -1,6 +1,5 @@
-// F-021 — sandbox filesystem edge-API types (Cycle 1: list / read / write). Aligned to the asgard-core
-// edgeserver contract (`internal/models/sandbox.go`). Mutations (mkdir / copy / move / delete) and
-// `fs/watch` are Cycle 2, gated on backend endpoints that do not exist yet.
+// F-021 — sandbox filesystem edge-API types. Aligned to the asgard-core edgeserver contract
+// (`internal/models/sandbox.go`).
 
 /** One directory entry from `fs/list`. */
 export interface SandboxFsDirEntry {
@@ -68,4 +67,14 @@ export interface SandboxFsCopyMoveOptions {
 /** `POST fs/copy` result: `{ data: { bytesCopied } }` (F-021 Cycle 2). */
 export interface SandboxFsCopyResult {
   bytesCopied: number;
+}
+
+/** One filesystem change streamed by `fs/watch` (F-021 AC3). */
+export interface SandboxFsWatchEvent {
+  /** What happened to `path`. */
+  op: 'CREATE' | 'WRITE' | 'REMOVE' | 'RENAME' | 'CHMOD';
+  /** Absolute path of the changed entry. */
+  path: string;
+  /** Modification time, unix seconds. */
+  mtimeUnix: number;
 }

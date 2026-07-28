@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { StreamdownClient } from '../../templates/text-template/streamdown-client';
-import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon } from './icons';
-import { FsEntry, FsReadFile, FsSaveFile } from './types';
+import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon, RefreshIcon } from './icons';
+import { CodeEditor } from './code-editor';
+import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
 import styles from './file-view.module.scss';
 
 type FileKind = 'markdown' | 'image' | 'text';
@@ -16,6 +17,8 @@ export interface FileViewProps {
   readFile?: FsReadFile;
   /** Save content (≈ `PUT fs/file`); debounced by this component. */
   onSaveFile?: FsSaveFile;
+  /** Watch this file (≈ `fs/watch` SSE) so an agent-side write reloads the view (AC3). */
+  watchFile?: FsWatchFile;
   /** Report editing / unsaved-changes state so the host can guard mid-edit panel yanks (F-021 AC10). */
   onDirtyChange?: (dirty: boolean) => void;
   /** Back to the file tree. */
@@ -37,11 +40,14 @@ function kindOf(ext: string): FileKind {
 }
 
 /**
- * Single-panel two-mode file view (F-021, Cycle 1): preview ↔ edit for text (`.md` preview renders
- * markdown via `streamdown`; edit is a lightweight textarea — CodeMirror syntax highlighting is Cycle 2),
- * preview-only for images. Save debounces to `onSaveFile` (≈ `PUT fs/file`). Reports dirty state (AC10).
+ * Single-panel two-mode file view (F-021 AC3). Text and code run through CodeMirror 6 with the grammar
+ * picked by extension — read-only in preview, editable in edit, so both modes share one highlighted
+ * rendering. `.md` previews as rendered markdown and edits as source; images preview only. Save debounces
+ * to `onSaveFile` (≈ `PUT fs/file`); `fs/watch` reloads on an agent-side write and a manual refresh stays
+ * available alongside it. Reports dirty state (AC10).
  */
-export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChange, onBack }: FileViewProps): ReactNode {
+export function FileView(props: FileViewProps): ReactNode {
+  const { sandboxName, file, readFile, onSaveFile, watchFile, onDirtyChange, onBack } = props;
   const ext = extOf(file.name);
   const kind = kindOf(ext);
   const canToggle = kind !== 'image';
@@ -50,6 +56,8 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
   const [content, setContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  // AC3 keeps a manual refresh alongside any watch-driven reload; bumping this re-reads from disk.
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Load content. Keyed by sandbox + path, so switching files re-runs this.
   useEffect(() => {
@@ -69,7 +77,7 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
     return (): void => {
       cancelled = true;
     };
-  }, [sandboxName, file.path, readFile]);
+  }, [sandboxName, file.path, readFile, reloadKey]);
 
   // Surface dirty state to the host (AC10) and clean it up on unmount.
   useEffect(() => {
@@ -79,6 +87,25 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
   useEffect(() => {
     return (): void => onDirtyChange?.(false);
   }, [onDirtyChange]);
+
+  // Watch-and-reload (AC3). Read through a ref so a change in dirty state doesn't tear down the stream.
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+
+  useEffect(() => {
+    if (!watchFile || !readFile) return;
+
+    return watchFile(sandboxName, file.path, () => {
+      // Never clobber an unsaved buffer; the manual refresh is there when the user does want to discard.
+      if (dirtyRef.current) return;
+
+      // Re-read in place rather than via `reloadKey`: no loading flash, and our own save echoing back as
+      // a WRITE event settles on the identical string, which React bails out of.
+      void Promise.resolve(readFile(sandboxName, file.path))
+        .then(setContent)
+        .catch(() => undefined);
+    });
+  }, [watchFile, readFile, sandboxName, file.path]);
 
   // Edit → debounced save (≈ PUT fs/file).
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -130,20 +157,18 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
     }
 
     return (
-      <textarea
-        className={styles.editor}
+      <CodeEditor
+        ext={ext}
         value={content ?? ''}
-        readOnly={mode !== 'edit'}
-        spellCheck={false}
-        onChange={e => {
-          const val = e.target.value;
+        editable={mode === 'edit'}
+        onChange={val => {
           setContent(val);
           setDirty(true);
           scheduleSave(val);
         }}
       />
     );
-  }, [content, error, kind, mode, file.name]);
+  }, [content, error, kind, mode, file.name, ext]);
 
   return (
     <div className={styles.root}>
@@ -154,6 +179,15 @@ export function FileView({ sandboxName, file, readFile, onSaveFile, onDirtyChang
         </button>
         {dirty && <span className={styles.dirty}>●</span>}
         <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={() => setReloadKey(k => k + 1)}
+            aria-label="重新載入檔案"
+            title="重新載入"
+            className={styles.actionBtn}
+          >
+            <RefreshIcon size={15} />
+          </button>
           {canToggle && (
             <button
               type="button"

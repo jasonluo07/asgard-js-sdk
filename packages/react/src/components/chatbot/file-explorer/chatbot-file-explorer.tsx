@@ -111,7 +111,12 @@ export function ChatbotFileExplorerAside({
 }): ReactNode {
   const { client, channel, nudge } = useAsgardContext();
   const sandboxes = useLaunchedSandboxes(channel);
-  const providers = useMemo(() => (client ? createSandboxFsProviders(client) : null), [client]);
+  // A sandbox whose fs calls keep failing is dropped from the dropdown (AC5); metadata stays authoritative.
+  const providers = useMemo(
+    () =>
+      client ? createSandboxFsProviders(client, { onSandboxUnreachable: name => channel?.dropSandbox(name) }) : null,
+    [client, channel],
+  );
 
   if (!providers) return null;
 
@@ -122,6 +127,7 @@ export function ChatbotFileExplorerAside({
       listDir={providers.listDir}
       readFile={providers.readFile}
       saveFile={providers.saveFile}
+      watchFile={providers.watchFile}
       mkdir={providers.mkdir}
       remove={providers.remove}
       copy={providers.copy}

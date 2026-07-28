@@ -100,6 +100,21 @@ function removeTree(path: string): void {
   removeEntry(parentOf(path), baseOf(path));
 }
 
+/**
+ * Write to the mock sandbox fs from *outside* the panel, the way an agent would. Deliberately a raw
+ * `PUT fs/file` rather than the panel's own save, so the reload we observe can only have come from
+ * `fs/watch` (F-021 AC3).
+ */
+async function writeExternally(path: string): Promise<void> {
+  const form = new FormData();
+  form.append('file', new Blob([`agent 在 ${new Date().toLocaleTimeString()} 改寫了這個檔案。`]));
+
+  await fetch(`${MOCK_ENDPOINT}/sandbox/sbx-demo/fs/file?path=${encodeURIComponent(path)}`, {
+    method: 'PUT',
+    body: form,
+  });
+}
+
 export function FileExplorer(): ReactNode {
   const controller = useFileExplorerController({ open: true });
 
@@ -201,6 +216,22 @@ export function FileExplorer(): ReactNode {
             theme={WIDE_CHATBOT_THEME}
           />
         </div>
+
+        <h4 style={{ marginTop: '1rem' }}>watch-and-reload（F-021 AC3）</h4>
+        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+          在上面的 builtin aside 裡開啟 <code>notes.txt</code> 的預覽，然後按這顆鈕：它繞過面板、直接對 mock 端點
+          <code>PUT fs/file</code>（等同 agent 在 sandbox 裡改檔）。mock 的 <code>fs/watch</code> SSE 推一則
+          <code>change</code>，FileView 隨即重讀、內容就地換掉——不必按重新整理。編輯中（右上有未存圓點）時會
+          <strong>跳過</strong>重載，不會蓋掉還沒存的內容。
+        </p>
+        <button
+          type="button"
+          data-testid="simulate-agent-write"
+          onClick={() => void writeExternally('/home/user/project/notes.txt')}
+          style={{ padding: '0.4rem 0.75rem', cursor: 'pointer' }}
+        >
+          模擬 agent 寫入 notes.txt
+        </button>
 
         <h3 style={{ marginTop: '1.5rem' }}>空狀態 Nudge（F-021 AC4）</h3>
         <p style={{ fontSize: '0.85rem', color: '#666' }}>

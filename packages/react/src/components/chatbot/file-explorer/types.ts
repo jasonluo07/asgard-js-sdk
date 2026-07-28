@@ -14,3 +14,10 @@ export type FsReadFile = (sandboxName: string, path: string) => Promise<string>;
 
 /** Persist a file's content (≈ `PUT fs/file`). */
 export type FsSaveFile = (sandboxName: string, path: string, content: string) => Promise<void> | void;
+
+/**
+ * Subscribe to changes on one path (≈ `GET fs/watch` SSE) and return an unsubscribe (F-021 AC3). The
+ * event payload is deliberately not surfaced: the view reloads from disk either way, so all a caller
+ * needs is "it changed".
+ */
+export type FsWatchFile = (sandboxName: string, path: string, onChange: () => void) => () => void;
