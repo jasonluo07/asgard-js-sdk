@@ -97,16 +97,17 @@ test:packages:      PASS — core 全數通過；react 4 files / 41 tests 全過
 
 ### R# Result Matrix
 
-| R#  | 驗收條件                                                   | 結果 | 佐證                                                                                                                                                                                                                                         |
-| --- | ---------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | strip 是 scroll 匡的兄弟節點、位於 thread 與 composer 之間 | Pass | `scroller.contains(strip) === false`；`strip.parentElement` = `.chatbot_body_wrapper`；`strip.previousElementSibling` = `.chatbot_body`（`[data-scrollable="true"]`）；strip `top` 431 === scroller `bottom` 431                             |
-| R2  | 使用者捲動 thread 時 strip 位置不動                        | Pass | `scrollTop` 1266 → 0 → 762 三態下，strip `top` 恆為 431、`left` 恆為 492                                                                                                                                                                     |
-| R3  | 串流中 thread 高度變動時 strip 位置穩定                    | Pass | 90 取樣 / 250ms：thread `scrollHeight` 604 → 1524（28 次成長事件）；strip 高度 223 → `top` 只有 455、高度 246 → `top` 只有 431，**每個高度對應唯一 top**。對照修復前同樣取樣：`top` 出現 12 個值（444–522），且高度固定 221 時仍飄過 10 個值 |
-| R4  | tasks / subagents 皆空 → 不 render、不占位                 | Pass | `stripExists false`；wrapper `children.length === 1`；scroller `bottom` === footer `top`（661 / 677 兩情境）；最後一則訊息與 footer 間距 12px（與改動前一致）；`/task-list` 切「無任務」後短對話不觸發捲動                                   |
-| R5  | `hideRunChrome: true` → 不 render 內建面板                 | Pass | strip / `task_list` / `subagent_list` 三者皆不存在；scroller `bottom` === footer `top`                                                                                                                                                       |
-| R6  | 長對話下 footer 固定在底、thread 內部捲動                  | Pass | footer `bottom` 757 === container `bottom` 757 且 `scrollHeight > clientHeight`；`/templates`（無 strip）footer `bottom` 741 === container `bottom` 741                                                                                      |
-| R7  | strip 內容與 thread 內容、composer 對齊                    | Pass | 窄版三者 `left/right` 皆 492 / 867；`/all-features-wide` 三者皆 142 / 1342（max-width 1200 置中生效）                                                                                                                                        |
-| R8  | build 綠燈 + demo 走查                                     | Pass | build / lint / format / typecheck / test 全綠（見 §1.3）；`/docked-run-chrome`、`/task-list`、`/subagent-list`、`/templates`、`/all-features-wide`（Crazy 主題）皆走查通過，無視覺回歸                                                       |
+| R#  | 驗收條件                                                   | 結果 | 佐證                                                                                                                                                                                                                                                                                  |
+| --- | ---------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | strip 是 scroll 匡的兄弟節點、位於 thread 與 composer 之間 | Pass | `scroller.contains(strip) === false`；`strip.parentElement` = `.chatbot_body_wrapper`；`strip.previousElementSibling` = `.chatbot_body`（`[data-scrollable="true"]`）；strip `top` 431 === scroller `bottom` 431                                                                      |
+| R2  | 使用者捲動 thread 時 strip 位置不動                        | Pass | `scrollTop` 1266 → 0 → 762 三態下，strip `top` 恆為 431、`left` 恆為 492                                                                                                                                                                                                              |
+| R3  | 串流中 thread 高度變動時 strip 位置穩定                    | Pass | 90 取樣 / 250ms：thread `scrollHeight` 604 → 1524（28 次成長事件）；strip 高度 223 → `top` 只有 455、高度 246 → `top` 只有 431，**每個高度對應唯一 top**。對照修復前同樣取樣：`top` 出現 12 個值（444–522），且高度固定 221 時仍飄過 10 個值                                          |
+| R4  | tasks / subagents 皆空 → 不 render、不占位                 | Pass | `stripExists false`；wrapper `children.length === 1`；scroller `bottom` === footer `top`（661 / 677 兩情境）；最後一則訊息與 footer 間距 12px（與改動前一致）；`/task-list` 切「無任務」後短對話不觸發捲動                                                                            |
+| R5  | `hideRunChrome: true` → 不 render 內建面板                 | Pass | strip / `task_list` / `subagent_list` 三者皆不存在；scroller `bottom` === footer `top`                                                                                                                                                                                                |
+| R6  | 長對話下 footer 固定在底、thread 內部捲動                  | Pass | footer `bottom` 757 === container `bottom` 757 且 `scrollHeight > clientHeight`；`/templates`（無 strip）footer `bottom` 741 === container `bottom` 741                                                                                                                               |
+| R7  | strip 內容與 thread 內容、composer 對齊                    | Pass | 窄版三者 `left/right` 皆 492 / 867；`/all-features-wide` 三者皆 142 / 1342（max-width 1200 置中生效）                                                                                                                                                                                 |
+| R9  | 面板超過 body 區一半時封頂並內部捲動                       | Pass | body 504 → strip 封頂 252（`ratio` 0.500）、`scrollHeight` 574、底部可達（餘 0）、`clipped` 0、thread 保住 252 且仍可捲、footer 釘底；`/all-features-wide` body 484→242、縮視窗 body 344→172，比例恆為 0.5；滾輪事件未被 `ChatbotContainer` `preventDefault`（`wheelBlocked: false`） |
+| R8  | build 綠燈 + demo 走查                                     | Pass | build / lint / format / typecheck / test 全綠（見 §1.3）；`/docked-run-chrome`、`/task-list`、`/subagent-list`、`/templates`、`/all-features-wide`（Crazy 主題）皆走查通過，無視覺回歸                                                                                                |
 
 ### 邊界條件
 
@@ -138,6 +139,16 @@ None.
 
 None.
 
+### 第二輪（獨立 subagent 覆查，PR #365 開出後）
+
+第一輪 §1/§3 只驗到「面板保持穩定」，沒有問「面板可以長到多高」。獨立覆查補上這一刀：
+
+1. **BLOCKER（已修）** —— `.chatbot_body__docked` 只有 `flex-shrink: 0`、無 `max-height`，`TaskList` / `SubagentList` 自身也不設高度上限。任務一多，strip 就把 `flex: 1; min-height: 0` 的 scroll 匡壓成 0px，接著自己溢出 `.chatbot__thread_area` 的 `overflow: hidden` —— 對話完全消失，且面板下半截**沒有捲軸可達**。自行複測確認：DOM 灌 +6 / +12 / +20 列 task → thread 恆 0px、裁掉 213 / 1155 / 2725px；`-tall-` 情境（17 任務）→ thread 0px、裁掉 71px。**這相對 `main` 是回歸**：舊版面板在 scroll 匡內，再長也只是讓 thread 變長、兩邊都捲得到。修法見 BUILD-031 `R9` / `T8`（經使用者裁示後納入本 PR）。
+2. **未能複現** —— 覆查另指「strip 高度變動會改 scroll 匡的 `clientHeight`，使 `distanceFromBottom` 跳動且無人校正，把使用者踢出 following 狀態」。實測收合／展開兩個面板 header（strip 246↔117、thread 258↔387），`scrollTop` 均由瀏覽器 scroll anchoring 同步調整（1266↔1137），`distanceFromBottom` 兩個方向都維持 0。覆查是以展開個別 task description 觀察到 dfb=72；我這邊的路徑無法重現。**列為待觀察，不視為已確認缺陷**。
+3. **已修（小項）** —— `chatbot.tsx` 的 `hideRunChrome` 公開 JSDoc（會進 `.d.ts`）與 footer 註解仍寫舊定位（BUILD-031 T3 漏掉）；demo 文案「約 40 秒」與實際約 15 秒不符；`-tall-` demo 情境補上後，route 才真的能逼出高度上限（原本最多 3 任務，永遠碰不到失敗點）。
+
+第二輪重驗：R1–R8 行為不變（一般 run 的 strip 246px < 252px 上限，不觸發內捲，畫面與第一輪相同）；R9 新增並通過。lint / format / typecheck / build / test 全數重跑綠燈。
+
 ### 附註（非本票缺陷、不需處理）
 
 1. `task-list.module.scss:93`、`subagent-list.module.scss:98/106` 有裸 hex（`#faad14` 琥珀、`#ff4d4f` 紅）未走 token。屬 F-010 / F-012 既有寫法，本票未觸及該區塊，且已登記於 theme 系統技術債（另案 spec）。
@@ -149,4 +160,5 @@ None.
 
 - 2026-07-28: REVIEW task created, paired with BUILD-031 (Status: `draft`).
 - 2026-07-29: BUILD-031 完成，REVIEW 轉 `ready`；§1 靜態審查開始 (Status: `ready → in-progress`).
-- 2026-07-29: §1 完成 —— 19 ✅ / 0 ❌，8 條 grep 全空，lint / format / typecheck / build / test 全綠。§3 完成 —— R1–R8 全數 Pass（含修復前後的取樣對照數據）。0 BLOCKER (Status: `in-progress → done`).
+- 2026-07-29: §1 完成 —— 19 ✅ / 0 ❌，8 條 grep 全空，lint / format / typecheck / build / test 全綠。§3 完成 —— R1–R8 全數 Pass（含修復前後的取樣對照數據）(Status: `in-progress → done`).
+- 2026-07-29: 第二輪獨立 subagent 覆查找到 1 個 BLOCKER（固定區無高度上限 → thread 被擠成 0px 且面板被裁切捲不到，相對 main 屬回歸）＋ 3 個小項。BLOCKER 經使用者裁示納入本 PR 修正（BUILD-031 R9 / T8），小項一併修完；另有 1 項覆查指控無法複現，列為待觀察。重驗 R1–R9 全數 Pass、靜態閘門全綠，0 BLOCKER (Status: `done`).

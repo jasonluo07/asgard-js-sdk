@@ -110,9 +110,9 @@ function toolCallToItemData(toolCall: ConversationToolCallMessage, locale: Local
 const BOTTOM_THRESHOLD = 50;
 
 /**
- * @param hideRunChrome When true, the internal docked SubagentList / TaskList are not rendered — the
- *   consumer takes over placing the run-chrome (e.g. pinned between the thread and the composer via
- *   `renderMenu`), deriving from the same `conversation` with `deriveTasks` / `deriveSubagents`.
+ * @param hideRunChrome When true, the built-in docked strip below is not rendered — the consumer takes
+ *   over placing and styling the run-chrome, deriving it from the same `conversation` with
+ *   `deriveTasks` / `deriveSubagents`.
  */
 export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean } = {}): ReactNode {
   const { chatbot } = useAsgardThemeContext();
@@ -286,7 +286,9 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
           scroll nor feed the thread's auto-scroll ResizeObserver. Rendered only when populated, so an
           empty strip never adds a gap and a lone last message keeps its clearance to the footer. */}
       {!hideRunChrome && (subagents.length > 0 || tasks.length > 0) && (
-        <div className={styles.chatbot_body__docked}>
+        // `data-scrollable` — the strip scrolls itself once it hits its 50% cap, and ChatbotContainer's
+        // wheel/touch handler preventDefaults on anything without this marker.
+        <div className={styles.chatbot_body__docked} data-scrollable="true">
           <div className={styles.chatbot_body__docked_content} style={contentStyles}>
             <SubagentList subagents={subagents} locale={locale} />
             <TaskList tasks={tasks} locale={locale} />

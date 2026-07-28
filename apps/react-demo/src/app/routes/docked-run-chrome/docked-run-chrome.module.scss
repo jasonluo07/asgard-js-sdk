@@ -24,6 +24,22 @@
   margin-top: 12px;
 }
 
+.scenarioLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.select {
+  padding: 6px 8px;
+  border: 1px solid #888;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+}
+
 .toggle {
   padding: 6px 10px;
   border: 1px solid #888;

@@ -239,11 +239,17 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
-  // BUG-003 — a long run that keeps the thread growing for ~40s so the docked Task / Subagent strip can be
-  // watched while messages stream and the view auto-scrolls. `docked-run-chrome-demo` emits run chrome;
-  // `docked-run-chrome-empty-demo` streams the same thread with none, for the "no strip, no gap" case.
+  // BUG-003 — a long run that keeps the thread growing for ~15s so the docked Task / Subagent strip can be
+  // watched while messages stream and the view auto-scrolls. Three variants: `-demo` (typical run chrome),
+  // `-tall-demo` (checklist past the strip's 50% cap) and `-empty-demo` (no run chrome at all).
   if (customChannelId.startsWith('docked-run-chrome-')) {
-    await handleDockedRunChromeMock(res, payload, customChannelId, customChannelId === 'docked-run-chrome-demo');
+    const variant =
+      customChannelId === 'docked-run-chrome-empty-demo'
+        ? 'empty'
+        : customChannelId === 'docked-run-chrome-tall-demo'
+        ? 'tall'
+        : 'chrome';
+    await handleDockedRunChromeMock(res, payload, customChannelId, variant);
 
     return;
   }
@@ -1879,9 +1885,13 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
 }
 
 // BUG-003 — the docked Task / Subagent strip must hold a stable position while a run streams. This mock
-// keeps the thread growing for ~40s (paragraph after paragraph, well past the viewport, with auto-scroll
+// keeps the thread growing for ~15s (paragraph after paragraph, well past the viewport, with auto-scroll
 // following) and mutates the strip mid-run, so any coupling between thread layout and strip position
-// shows up plainly. `withRunChrome` false streams the identical thread with no tasks / subagents.
+// shows up plainly. Three variants, all streaming the identical thread:
+//   'chrome' — a typical run (3 tasks + 1 subagent); the strip fits under its 50% cap.
+//   'tall'   — a long checklist that pushes the strip past the cap, so it scrolls internally and the
+//              thread keeps its half. Without this the route cannot exercise the cap at all.
+//   'empty'  — no run chrome, for the "no strip → no gap" case.
 const DOCKED_PARAGRAPHS = [
   '先確認資料範圍：上週為 7/14（一）至 7/20（日），時區以系統設定為準，排除測試單與已取消單。',
   '通路彙總結果：官網 1,280 筆、App 940 筆、LINE 610 筆、電話 210 筆，官網仍是主力通路。',
@@ -1897,12 +1907,15 @@ const DOCKED_PARAGRAPHS = [
   '結論：建議走替代料號並立即開立採購單，同時保留原料號的長交期訂單作為後續補庫。',
 ];
 
+type DockedRunChromeVariant = 'chrome' | 'tall' | 'empty';
+
 async function handleDockedRunChromeMock(
   res: ServerResponse,
   payload: ParsedPayload,
   customChannelId: string,
-  withRunChrome: boolean,
+  variant: DockedRunChromeVariant,
 ): Promise<void> {
+  const withRunChrome = variant !== 'empty';
   const header: CommonHeader = {
     requestId: randomUUID(),
     namespace: NAMESPACE,
@@ -1974,6 +1987,19 @@ async function handleDockedRunChromeMock(
       { taskId: '2', status: 'in_progress' },
       { statusChange: { from: 'pending', to: 'in_progress' }, taskId: '2' },
     );
+
+    // 'tall' — enough extra tasks to push the strip past its 50% cap, so the internal scroll (and the
+    // thread keeping its half) is actually exercised rather than merely asserted.
+    if (variant === 'tall') {
+      for (let i = 0; i < 14; i++) {
+        const id = `t${i}`;
+        await task(
+          'TaskCreate',
+          { subject: `檢查第 ${i + 1} 批線材入庫紀錄`, activeForm: `檢查第 ${i + 1} 批入庫紀錄中` },
+          { task: { id } },
+        );
+      }
+    }
 
     // A subagent that never completes — the panel stays expanded for the whole run.
     await emit(

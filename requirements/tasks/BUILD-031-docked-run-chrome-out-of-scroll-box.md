@@ -63,6 +63,7 @@ EARS form: `When <event/condition>[, while <state>], the system shall <observabl
 - `R6` When a thread long enough to overflow is rendered, while the strip is visible, the system shall keep the footer pinned at the bottom of the container and scroll the thread internally (no `.chatbot__chat_column` grid row regression). → T2
 - `R7` When the strip is rendered, the system shall align its content with the thread content and the composer — same horizontal inset and the same `chatbot.contentMaxWidth`-driven max width. → T1, T2
 - `R8` (Smoke check) When the developer runs `npm run build:core && npm run build:react` and exercises the docked panels in the react-demo (`npm run serve:react-demo`, http://localhost:4200) on `/task-list`, `/subagent-list`, `/all-features-wide` and the new BUG-003 route, the system shall show a stationary strip above the seam through scrolling and streaming, with no build errors. → T6, T7
+- `R9` When the tasks / subagents make the strip taller than half the body area, the system shall cap the strip at 50% of that area and scroll it internally, so the thread always keeps the other half and no part of the strip is clipped beyond reach. → T8
 
 ---
 
@@ -75,6 +76,7 @@ EARS form: `When <event/condition>[, while <state>], the system shall <observabl
 - [x] T5: Run `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` + `npm run build:core && npm run build:react`.
 - [x] T6 (R8): Smoke check in the react-demo — walk `/task-list`, `/subagent-list`, `/all-features-wide` (Crazy theme, wide) and the new route; verify R1–R7.
 - [x] T7 (R8): Capture before / after screenshots to `.github/screenshots/`.
+- [x] T8 (R9): Cap the strip at `max-height: 50%` + `overflow-y: auto` (+ `data-scrollable="true"` so `ChatbotContainer`'s wheel handler does not preventDefault on it, and `overscroll-behavior-y: contain`); add a `-tall-` demo scenario that actually pushes the strip past the cap.
 
 ---
 
@@ -84,8 +86,9 @@ Use Cases: `R1`–`R8`（BUG-003；連帶覆蓋 F-010 / F-012 的「docked 在 s
 
 Files:
 
-- `packages/react/src/components/chatbot/chatbot-body/chatbot-body.tsx`（react）— docked 區塊移出 scroll 匡、成為 `.chatbot_body_wrapper` 的第二個子元素；新增 `.chatbot_body__docked_content` 內層（帶 `contentStyles`）；更新註解
-- `packages/react/src/components/chatbot/chatbot-body/chatbot-body.module.scss`（react）— `.chatbot_body__docked` 由 scroll flow 內的 `margin-top: auto` 改為 `flex-shrink: 0` 固定區 + `border-top`；新增 `.chatbot_body__docked_content`；移除 `.chatbot_body__content` 已無用途的 `min-height: 100%`
+- `packages/react/src/components/chatbot/chatbot-body/chatbot-body.tsx`（react）— docked 區塊移出 scroll 匡、成為 `.chatbot_body_wrapper` 的第二個子元素；新增 `.chatbot_body__docked_content` 內層（帶 `contentStyles`）；strip 標 `data-scrollable="true"`；更新註解與 `hideRunChrome` JSDoc
+- `packages/react/src/components/chatbot/chatbot-body/chatbot-body.module.scss`（react）— `.chatbot_body__docked` 由 scroll flow 內的 `margin-top: auto` 改為 `flex-shrink: 0` 固定區 + `border-top` + `max-height: 50%` / `overflow-y: auto` / `overscroll-behavior-y: contain`；新增 `.chatbot_body__docked_content`；移除 `.chatbot_body__content` 已無用途的 `min-height: 100%`
+- `packages/react/src/components/chatbot/chatbot.tsx`（react）— 僅更新 `hideRunChrome` 的公開 JSDoc（會進 `.d.ts`）與 footer 的過時註解
 - `packages/react/src/components/chatbot/chatbot-footer/chatbot-footer.tsx`（react）— 僅更新描述舊定位的註解
 - `packages/react/src/components/chatbot/task-list/task-list.module.scss`（react）— 僅更新註解
 - `packages/react/src/components/chatbot/subagent-list/subagent-list.module.scss`（react）— 僅更新註解
@@ -109,7 +112,17 @@ Files:
 
 其餘：footer `bottom` 恆等於 container `bottom`（R6）；strip 內層與 thread 內容、composer 內容的 `left`/`right` 三者完全相同（窄版 492/867、`/all-features-wide` 142/1342，R7）；Crazy 主題下 `border-top` 取到 `--asg-color-border`（`#92ff8c`），非寫死（§4.2）；兩者皆空時 wrapper 只剩 1 個子元素、最後一則訊息與 footer 維持原本 12px（R4）；`hideRunChrome: true` 下 strip / TaskList / SubagentList 皆不存在（R5）。回歸：`/task-list`、`/subagent-list`、`/templates`、`/all-features-wide` 皆正常，`min-height: 100%` 移除後短對話不捲動、訊息仍靠頂、footer 仍釘底。
 
-Screenshots：`.github/screenshots/bug-003-{before-docked-strip-in-scroll-flow,before-scrolled-up-panels-gone,after-docked-strip-fixed,after-scrolled-up-panels-stay,after-wide-crazy-theme}.png`
+**R9 —— 高度上限**（`/docked-run-chrome` 的「長清單」情境，body 區 504px）：
+
+| 情境                     | 無上限（第一版）                                                                                  | 加上限後                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 一般 run（3 任務）       | thread 258 / strip 246                                                                            | 不變（246 < 252 上限，不觸發內捲）                                  |
+| 長清單（17 任務）        | thread **0** / strip 575，被 `.chatbot__thread_area` 的 `overflow: hidden` **裁掉 71px 且捲不到** | thread 252 / strip 252（= 50%）、內部可捲、`clipped: 0`、底部捲得到 |
+| DOM 灌 +6 / +12 / +20 列 | thread 皆 0、裁掉 213 / 1155 / 2725px                                                             | thread 恆 252、strip 恆 252、`clipped: 0`                           |
+
+上限隨 body 高度等比縮放（`/all-features-wide`：body 484 → strip 242；縮視窗後 body 344 → strip 172，皆 `ratio 0.500`），且 footer 仍釘底。滾輪實測未被 `ChatbotContainer` 的 wheel handler `preventDefault`（`data-scrollable` 標記生效）。
+
+Screenshots：`.github/screenshots/bug-003-{before-docked-strip-in-scroll-flow,before-scrolled-up-panels-gone,after-docked-strip-fixed,after-scrolled-up-panels-stay,after-wide-crazy-theme,tall-strip-without-cap,after-tall-strip-capped}.png`
 
 ---
 
@@ -117,4 +130,5 @@ Screenshots：`.github/screenshots/bug-003-{before-docked-strip-in-scroll-flow,b
 
 - 2026-07-28: BUILD task created from https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/32 (Status: `draft`).
 - 2026-07-29: 使用者確認計畫並選定固定區加 `border-top` 分隔線（prototype 作法）；Status: `draft → ready → in-progress`，開分支 `fix/32-docked-run-chrome-out-of-scroll-box`。
+- 2026-07-29: 獨立 subagent 覆查（PR #365 開出後）找到 BLOCKER —— 固定區無高度上限，任務一多就把 thread 擠成 0px、面板自身被 `.chatbot__thread_area` 的 `overflow: hidden` 裁掉且捲不到，相對 `main` 屬回歸。已自行複測確認（DOM 灌 6 列 → thread 0px、裁掉 213px）。因 BUG-003 修復方向只寫 `shrink-0` 固定區、prototype 亦無上限，屬超出規格的新增行為，經使用者裁示後於本票補 `R9` / `T8`。同輪順修：`chatbot.tsx` 的 `hideRunChrome` 公開 JSDoc 與 footer 註解仍描述舊定位（T3 漏掉）、demo 文案誤寫「約 40 秒」（實測約 15 秒）。
 - 2026-07-29: T1–T7 完成。lint 0 error（1 個既有 `file-view.tsx` warning，與本票無關）、`format:check` 全綠、`typecheck:packages` 通過、`build:core` + `build:react` 成功、`test:packages` 41 + core 全數通過。R1–R8 於瀏覽器實測通過（證據見上）(Status: `in-progress → done`).

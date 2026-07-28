@@ -34,6 +34,16 @@
 // so an empty strip contributes neither a border nor a gap.
 .chatbot_body__docked {
   flex-shrink: 0;
+  // Never let the strip starve the thread. It sizes to its content, but only up to half the body area —
+  // past that it scrolls internally. Without this cap a long checklist squeezes the scroll box above to
+  // 0px and then overflows `.chatbot__thread_area`'s `overflow: hidden`, so the conversation disappears
+  // *and* the bottom of the panel becomes unreachable (measured: +6 task rows → thread 0px, 213px of the
+  // strip clipped away). A tall thread still cannot shrink the strip — `flex-shrink: 0` bounds only its
+  // own content.
+  max-height: 50%;
+  overflow-y: auto;
+  // Keep a wheel/touch overscroll inside the strip instead of chaining out to the thread or the host page.
+  overscroll-behavior-y: contain;
   // Marks the boundary between the (scrolling) thread and this (fixed) region — without it a message can
   // sit flush against the panels and read as part of the thread.
   border-top: 1px solid var(--asg-color-border, #434343);

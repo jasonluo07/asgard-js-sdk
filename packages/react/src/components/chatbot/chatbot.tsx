@@ -159,9 +159,10 @@ interface ChatbotProps extends AsgardTemplateContextValue {
   renderMenu?: () => ReactNode;
 
   /**
-   * When true, the built-in docked SubagentList / TaskList inside the thread are not rendered, letting
-   * the consumer place the run-chrome itself (e.g. pinned above the composer via `renderMenu`), derived
-   * from the same conversation with `deriveTasks` / `deriveSubagents`. Defaults to false.
+   * When true, the built-in docked SubagentList / TaskList are not rendered, letting the consumer
+   * render the run-chrome itself — anywhere it likes, and styled its own way — derived from the same
+   * conversation with `deriveTasks` / `deriveSubagents`. Defaults to false, which docks them in a fixed
+   * strip between the thread and the composer.
    */
   hideRunChrome?: boolean;
 
@@ -479,8 +480,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             {/* F-021 AC9 — fire the open-file intent on card arrival (not only on click). */}
             {builtinFileExplorer && <FileExplorerArrivalBridge onIntent={handleSandboxOpenFile} />}
             {renderMenu?.()}
-            {/* Footer must live inside the template provider so its docked TaskList / SubagentList
-                panels read `locale` from the context (F-010 / F-012). */}
+            {/* Footer must live inside the template provider so it reads `locale` from the context —
+                as does ChatbotBody's docked TaskList / SubagentList strip above it (F-010 / F-012). */}
             {renderFooter ? (
               renderFooter()
             ) : (
