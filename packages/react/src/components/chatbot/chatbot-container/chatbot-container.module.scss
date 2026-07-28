@@ -35,9 +35,12 @@
   }
 }
 
+// F-021 AC6 — the shell lays its children out horizontally: the chat column (which owns the vertical
+// header / thread / menu / footer stack) and, when open, the File Explorer aside beside it. The vertical
+// stack moved into `.chatbot__chat_column`, so opening the aside narrows the *whole* column — header and
+// composer included — instead of splitting only the thread row underneath a full-width header.
 .chatbot_container {
-  display: grid;
-  grid-template-rows: max-content 1fr max-content max-content;
+  display: flex;
   background-color: var(--asg-color-bg);
   overflow: hidden;
   overscroll-behavior: contain;

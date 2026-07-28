@@ -467,19 +467,14 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             onSandboxOpenFile={handleSandboxOpenFile}
             sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
           >
-            {/* F-022 — the unified ChatHeader now lives at the top of the container (bot main + channel
-                subtitle + right-side actions, incl. the built-in File Explorer toggle). The main row is the
-                scrollable thread plus, when built-in, the File Explorer aside to its right. The footer stays
-                pinned regardless of thread height; the body scrolls internally (`flex:1; overflow`). */}
+            {/* The chat column's `1fr` row: the scrollable thread. The File Explorer is no longer in here —
+                it is a sibling of the whole column (see ChatbotContainer below), so opening it narrows the
+                header and composer too. The footer stays pinned regardless of thread height; the body
+                scrolls internally (`flex:1; overflow`). */}
             <div className={styles.chatbot__main_row}>
               <div className={styles.chatbot__thread_area}>
                 <ChatbotBody hideRunChrome={hideRunChrome} />
               </div>
-              {builtinFileExplorer && fileExplorerController.open && (
-                <aside className={styles.chatbot__file_explorer_aside}>
-                  <ChatbotFileExplorerAside controller={fileExplorerController} basePath={fileExplorerBasePath} />
-                </aside>
-              )}
             </div>
             {/* F-021 AC9 — fire the open-file intent on card arrival (not only on click). */}
             {builtinFileExplorer && <FileExplorerArrivalBridge onIntent={handleSandboxOpenFile} />}
@@ -556,25 +551,34 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                {renderHeader ? (
-                  renderHeader()
-                ) : (
-                  <ChatHeaderHost
-                    title={title}
-                    onReset={onReset}
-                    onClose={onClose}
-                    customActions={customActions}
-                    headerActions={headerActions}
-                    maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-                    locale={locale}
-                    untitledLabel={untitledLabel}
-                    channelTitleHidden={channelTitleHidden}
-                    renderTitle={renderTitle}
-                    fileExplorerController={fileExplorerController}
-                    builtinFileExplorer={builtinFileExplorer}
-                  />
+                {/* The chat column owns the whole vertical stack; the File Explorer aside is its sibling,
+                    so opening the aside narrows header and composer along with the thread (F-021 AC6). */}
+                <div className={styles.chatbot__chat_column}>
+                  {renderHeader ? (
+                    renderHeader()
+                  ) : (
+                    <ChatHeaderHost
+                      title={title}
+                      onReset={onReset}
+                      onClose={onClose}
+                      customActions={customActions}
+                      headerActions={headerActions}
+                      maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+                      locale={locale}
+                      untitledLabel={untitledLabel}
+                      channelTitleHidden={channelTitleHidden}
+                      renderTitle={renderTitle}
+                      fileExplorerController={fileExplorerController}
+                      builtinFileExplorer={builtinFileExplorer}
+                    />
+                  )}
+                  {renderContent()}
+                </div>
+                {builtinFileExplorer && fileExplorerController.open && (
+                  <aside className={styles.chatbot__file_explorer_aside}>
+                    <ChatbotFileExplorerAside controller={fileExplorerController} basePath={fileExplorerBasePath} />
+                  </aside>
                 )}
-                {renderContent()}
                 <DropZoneOverlay />
               </ChatbotContainer>
             </FileDropContextProvider>
@@ -588,25 +592,29 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
   return (
     <AsgardThemeContextProvider theme={theme}>
       <ChatbotContainer fullScreen={fullScreen} className={className} style={style}>
-        {renderHeader ? (
-          renderHeader()
-        ) : (
-          <ChatHeaderHost
-            title={title}
-            onReset={onReset}
-            onClose={onClose}
-            customActions={customActions}
-            headerActions={headerActions}
-            maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-            locale={locale}
-            untitledLabel={untitledLabel}
-            channelTitleHidden={channelTitleHidden}
-            renderTitle={renderTitle}
-            fileExplorerController={fileExplorerController}
-            builtinFileExplorer={false}
-          />
-        )}
-        {renderContent()}
+        {/* No File Explorer on this path, but the column still owns the vertical stack — the shell itself
+            is a horizontal flex container now. */}
+        <div className={styles.chatbot__chat_column}>
+          {renderHeader ? (
+            renderHeader()
+          ) : (
+            <ChatHeaderHost
+              title={title}
+              onReset={onReset}
+              onClose={onClose}
+              customActions={customActions}
+              headerActions={headerActions}
+              maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+              locale={locale}
+              untitledLabel={untitledLabel}
+              channelTitleHidden={channelTitleHidden}
+              renderTitle={renderTitle}
+              fileExplorerController={fileExplorerController}
+              builtinFileExplorer={false}
+            />
+          )}
+          {renderContent()}
+        </div>
       </ChatbotContainer>
     </AsgardThemeContextProvider>
   );
