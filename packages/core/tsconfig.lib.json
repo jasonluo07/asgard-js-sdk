@@ -5,7 +5,14 @@
     "paths": {
       "src/*": ["src/*"]
     },
-    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    // Keep `tsc --build` output away from the sources. Without an `outDir` it writes the emitted
+    // declarations next to each input, littering `src/` with ~62 untracked `.d.ts` / `.d.ts.map` files
+    // every time the `typecheck` target runs. `out-tsc/` is git-ignored and matches the react package.
+    //
+    // The build info lived under `dist/` before, which vite wipes on every build (`emptyOutDir: true`),
+    // so incremental type-checking never actually carried over between runs.
+    "outDir": "out-tsc/core",
+    "tsBuildInfoFile": "out-tsc/core/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
     "types": ["node", "vite/client"]
   },
