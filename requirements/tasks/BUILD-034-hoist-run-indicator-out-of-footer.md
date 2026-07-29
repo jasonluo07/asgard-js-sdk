@@ -113,7 +113,7 @@ EARS form: `When <event/condition>[, while <state>], the system shall <observabl
       (it currently has a send path but no scripted long run) — this route is the durable regression case for
       the heimdall-pm#200 class of bug.
 - [x] T6 (R4, R6, R7): Smoke check the routes listed in R7, before and after.
-- [ ] T7 (R7): Capture before / after screenshots to `.github/screenshots/`.
+- [x] T7 (R7): Capture before / after screenshots to `.github/screenshots/`.
 - [x] T8: Run `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` +
       `npm run test:packages` + `npm run build:core && npm run build:react`.
 
@@ -204,8 +204,16 @@ Files:
 `apps/react-demo` 的 `tsc` 有 8 個**既有**型別錯（`ChatbotTheme` 未匯出等），本票新增/修改的
 `render-footer.tsx` 不在其中。
 
-**未完成**：T7 的截圖。playwright MCP 的輸出目錄在其沙箱內、本機取不到檔，故以上表的量測數值取代截圖作為
-證據；若 review 需要圖檔，需另以可寫入路徑的方式補拍。
+**截圖**（T7）：`.github/screenshots/heimdall-pm-200-render-footer-{before,after}.png` —— `/render-footer`
+**run 進行中**的交界特寫。
+
+第一版拍整頁，結果兩張看起來一模一樣：2px 的線在頁面尺度下根本分辨不出來，等於沒有傳達任何資訊。改成
+貼齊 footer 上緣裁切（±14px、`deviceScaleFactor: 3`）後才看得出差異 —— before 只有一條靜態灰線（此時
+run 正在進行），after 同一條線上有 primary 色漸層掃過。
+
+兩張都在 run 進行中拍攝，且**只有 `packages/` 被還原**（`git checkout HEAD~1 -- packages`），demo route
+保持一致，所以兩圖差異僅來自 SDK 本身。截圖腳本同時斷言了 DOM 狀態：before `segmentPresent: false`、
+after `segmentPresent: true` 且 `transform: matrix(1,0,0,1,240.2,0)`（掃動中段）。
 
 ---
 
