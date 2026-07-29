@@ -1,9 +1,10 @@
-// BUILD-028 — the footer is now an assembly layer: seam, content width, footer-level theme.
+// BUILD-028 — the footer is now an assembly layer: content width and footer-level theme.
 // The input itself (pill, attachments, send / stop) lives in chat-composer.module.scss.
 
 .chatbot_footer {
-  // The body↔footer seam is drawn by <RunningIndicator> at the footer's top edge (F-003),
-  // which also becomes the run-in-progress progress line — so no static border-top here.
+  // No static border-top here: the body↔footer seam is drawn by <RunningIndicator> in the grid row
+  // directly above this one (F-003, hoisted out of the footer by BUILD-034), and it doubles as the
+  // run-in-progress progress line.
 
   .chatbot_footer__content {
     display: flex;

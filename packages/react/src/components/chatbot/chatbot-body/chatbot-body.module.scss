@@ -45,8 +45,8 @@
   // Keep a wheel/touch overscroll inside the strip instead of chaining out to the thread or the host page.
   overscroll-behavior-y: contain;
   // No border here. The strip used to draw one on its top edge to keep the last message from reading as
-  // part of the panels, but the seam below it — <RunningIndicator> at the footer's top edge (F-003) —
-  // already marks that boundary, so the two together drew one boundary twice. The chat-kit prototype puts
+  // part of the panels, but the seam below it — <RunningIndicator>, its own chat-column row since
+  // BUILD-034 (F-003) — already marks that boundary, so the two together drew one boundary twice. The chat-kit prototype puts
   // the single line under the strip for the same reason (`ConversationPage.tsx`: the run-chrome wrapper is
   // borderless, the composer block carries `border-t`). Separation is still there without a rule: 12px of
   // strip padding on top of the thread's own 12px bottom padding, and each panel is a bordered card.

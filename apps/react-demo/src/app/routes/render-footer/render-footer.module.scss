@@ -87,3 +87,22 @@
     cursor: not-allowed;
   }
 }
+
+// BUILD-034 — trigger for the scripted ~10s run, so the seam above the custom footer is observable.
+.controls {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.startButton {
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+
+  &:hover {
+    border-color: var(--asg-color-primary);
+  }
+}

@@ -33,14 +33,16 @@
   overflow: hidden;
 }
 
-// The chat column: header / thread / menu / footer stacked vertically. This is the grid that used to be
-// the shell itself — the four rows still map to those children in order. It sits beside the File Explorer
-// aside (see `.chatbot_container`), so the header and composer narrow with the thread when the aside opens.
+// The chat column: header / thread / menu / run seam / footer stacked vertically. This is the grid that
+// used to be the shell itself — the five rows still map to those children in order. BUILD-034 added the
+// seam row: the run indicator moved out of `ChatbotFooter` so a consumer's `renderFooter` cannot take it
+// away with the footer. It sits beside the File Explorer aside (see `.chatbot_container`), so the header
+// and composer narrow with the thread when the aside opens.
 .chatbot__chat_column {
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-rows: max-content 1fr max-content max-content;
+  grid-template-rows: max-content 1fr max-content max-content max-content;
   overflow: hidden;
 }
 
