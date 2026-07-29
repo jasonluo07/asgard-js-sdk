@@ -602,8 +602,19 @@ export default class Channel {
    * @param payload Turn-level payload, resolved through the same path as `sendMessage` — pass a
    * function to compute it at send time. In `@asgard-js/react` this is filled in automatically from
    * `onBeforeSendMessage`.
+   *
+   * Rejects with `ChannelBusyError` when a run already holds the channel, exactly like `sendMessage`.
    */
   public nudge(options?: FetchSseOptions, payload?: FetchSsePayload['payload']): Promise<void> {
+    // F-023 AC6 / UC-045 — one run per channel. Invisible or not, a nudge is a turn, so it queues
+    // behind whatever is running instead of displacing it. Without this the damage went past a
+    // duplicate run: `fetchSse` replaces `currentRun` without unsubscribing the old one and stamps
+    // `runStatus.kind` with `nudge`, and a stop control is only offered while that is `user` — so the
+    // user's own turn quietly lost its stop button and could never be stopped again.
+    const busyWith = this.runStatusSubject.value.kind;
+
+    if (busyWith) return Promise.reject(new ChannelBusyError(busyWith));
+
     // `nudge` — invisible to the user, so it must never surface a stop control (F-023 AC8).
     return this.fetchSse(
       'nudge',
