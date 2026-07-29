@@ -109,7 +109,7 @@ export function ChatbotFileExplorerAside({
   controller: FileExplorerController;
   basePath?: string;
 }): ReactNode {
-  const { client, channel, nudge } = useAsgardContext();
+  const { client, channel, nudge, isRunning } = useAsgardContext();
   const sandboxes = useLaunchedSandboxes(channel);
   // A sandbox whose fs calls keep failing is dropped from the dropdown (AC5); metadata stays authoritative.
   const providers = useMemo(
@@ -135,6 +135,9 @@ export function ChatbotFileExplorerAside({
       upload={providers.upload}
       download={providers.download}
       onNudge={nudge}
+      // A nudge is a turn, so the channel refuses one while a run holds it (F-023 AC6) — and this
+      // empty state is on screen during exactly that window, between the send and the sandbox coming up.
+      nudgeDisabled={isRunning}
       onClose={controller.closeExplorer}
       chrome="flush"
       basePath={basePath}

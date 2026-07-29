@@ -215,6 +215,57 @@ describe('stopGeneration — a failed request must not strand the UI (F-023 AC4)
   });
 });
 
+// A nudge is invisible, but it is still a turn — and `sendMessage` already refuses to dispatch a second
+// one because a channel may only ever hold one run (AC6 / UC-045). Nudge skipped that check, and the
+// damage was not just a duplicate run: `fetchSse` overwrites `currentRun` without unsubscribing the old
+// one, and stamps `runStatus.kind` with `nudge`. Since a stop control is only offered for `kind ===
+// 'user'`, the user's own turn silently lost its stop button and could never be stopped again. The
+// window is real — between sending a message and the sandbox coming up, the File Explorer shows its
+// empty state with the Nudge button live.
+describe('nudge — one run at a time (F-023 AC6 / UC-045)', () => {
+  it('refuses to dispatch while a run is in flight', async () => {
+    const harness = makeHarness();
+    const { channel } = startUserRun(harness);
+
+    await expect(channel.nudge()).rejects.toBeInstanceOf(ChannelBusyError);
+    expect(harness.runs).toHaveLength(1);
+  });
+
+  it('leaves the in-flight run stoppable — its identity is not overwritten', async () => {
+    const harness = makeHarness();
+    const { channel } = startUserRun(harness);
+
+    await expect(channel.nudge()).rejects.toBeInstanceOf(ChannelBusyError);
+
+    expect(statusOf(channel).kind).toBe('user');
+    expect(statusOf(channel).requestId).toBe('req-42');
+  });
+
+  it('does not strand the in-flight run by replacing its subscription', async () => {
+    const harness = makeHarness();
+    const { channel } = startUserRun(harness);
+
+    await expect(channel.nudge()).rejects.toBeInstanceOf(ChannelBusyError);
+    channel.close();
+
+    // Only reachable through `currentRun`; a nudge that replaced it would leave this one open forever.
+    expect(harness.runs[0].unsubscribed).toBe(true);
+  });
+
+  it('still dispatches once the run has settled', () => {
+    const harness = makeHarness();
+    const { channel } = startUserRun(harness);
+
+    harness.current().options.onSseCompleted?.();
+    // Left in flight on purpose — the harness never settles a run on its own; settled below.
+    void channel.nudge();
+
+    expect(harness.runs).toHaveLength(2);
+    expect(harness.runs[1].payload?.action).toBe(FetchSseAction.NUDGE);
+    harness.current().options.onSseCompleted?.();
+  });
+});
+
 describe('sendMessage — one run at a time (F-023 AC6 / UC-045)', () => {
   it('rejects with ChannelBusyError while a run is in flight', async () => {
     const harness = makeHarness();

@@ -59,6 +59,12 @@ export interface FileExplorerPanelProps extends FileExplorerMutations {
   basePath?: string;
   /** Nudge an idle sandbox back to life (F-021 AC4); when provided, the empty state shows a Nudge button. */
   onNudge?: () => void | Promise<void>;
+  /**
+   * Greys out the Nudge button. Pass the host's "a run already holds the channel" state: a nudge is a
+   * turn, so it is refused outright while one is in flight (F-023 AC6), and the empty state is on
+   * screen during exactly that window — between the send and the sandbox coming up.
+   */
+  nudgeDisabled?: boolean;
   /** When provided, the header shows a close (X) button (the built-in aside passes `controller.closeExplorer`). */
   onClose?: () => void;
   /**
@@ -266,6 +272,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     upload,
     download,
     onNudge,
+    nudgeDisabled,
     onClose,
     chrome = 'card',
   } = props;
@@ -435,15 +442,19 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
   );
 
   const handleNudge = useCallback(async (): Promise<void> => {
-    if (!onNudge || nudging) return;
+    if (!onNudge || nudging || nudgeDisabled) return;
 
     setNudging(true);
     try {
       await onNudge();
+    } catch {
+      // A nudge is refused outright while a run holds the channel (F-023 AC6), and the host may reject
+      // for its own reasons. Nothing here can act on that, and this runs from a click handler — an
+      // uncaught rejection would surface as an unhandled promise rejection rather than anything useful.
     } finally {
       setNudging(false);
     }
-  }, [onNudge, nudging]);
+  }, [onNudge, nudging, nudgeDisabled]);
 
   const openContext = useCallback((e: ReactMouseEvent, target: MenuTarget): void => {
     e.preventDefault();
@@ -471,7 +482,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
           <div className={styles.emptyTitle}>目前沒有執行中的 sandbox</div>
           <div className={styles.emptyDesc}>sandbox 可能因閒置已被回收。可推一則訊息喚醒一台來繼續作業。</div>
           {onNudge && (
-            <button type="button" className={styles.nudgeBtn} onClick={handleNudge} disabled={nudging}>
+            <button type="button" className={styles.nudgeBtn} onClick={handleNudge} disabled={nudging || nudgeDisabled}>
               {nudging ? (
                 <>
                   <LoaderCircleIcon size={15} className={styles.spin} /> 喚醒中…
