@@ -97,8 +97,15 @@ export interface UseChannelReturn {
    * Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn, no reply rendered.
    *
    * Takes `payload` because the woken sandbox is configured from *this* turn's payload (BUG-004); the
-   * backend never carries the previous turn's over. Consumers on `AsgardServiceContext` get it filled in
-   * from `onBeforeSendMessage` and can leave the argument out.
+   * backend never carries the previous turn's over.
+   *
+   * This hook sends the argument straight through — unlike `resetChannel`, it does **not** run it past
+   * this hook's `onBeforeSendMessage`, so a direct `useChannel` consumer must supply payload here. It is
+   * `AsgardServiceContextProvider` that wires nudge to `onBeforeSendMessage`; consumers on that context
+   * can leave the argument out.
+   *
+   * Takes a parameter, so it cannot be bound straight to an event handler:
+   * `onClick={() => nudge()}`, not `onClick={nudge}` (which would send the event as payload).
    */
   nudge?: (payload?: FetchSsePayload['payload']) => Promise<void>;
 }
