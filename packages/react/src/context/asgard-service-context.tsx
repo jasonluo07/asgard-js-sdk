@@ -82,7 +82,11 @@ export interface AsgardServiceContextValue {
    */
   stopGeneration?: UseChannelReturn['stopGeneration'];
   replyToolCallConsents?: UseChannelReturn['replyToolCallConsents'];
-  /** Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn. */
+  /**
+   * Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn. Runs through
+   * `onBeforeSendMessage` like the other outbounds, so a session-level payload attaches on its own
+   * (BUG-004); pass `payload` only to override it for this one turn.
+   */
   nudge?: UseChannelReturn['nudge'];
   pendingConsent: ToolCallConsentEventData | null;
   botTypingPlaceholder?: string;
@@ -177,10 +181,11 @@ export interface AsgardServiceContextProviderProps {
   onSseError?: (error: unknown) => void;
   /**
    * Callback to modify outbound params before they hit the wire. Fires for
-   * both regular `sendMessage` and tool-call consent reply (Allow / Deny on
-   * the consent modal). For consent reply, `params.text` is always `''` and
-   * `params.blobIds` is `undefined` — only the resulting `payload` is
-   * forwarded; `text` / `blobIds` from the return are dropped on that path.
+   * regular `sendMessage`, tool-call consent reply (Allow / Deny on the
+   * consent modal) and the invisible sandbox nudge alike. On the latter two,
+   * `params.text` is always `''` and `params.blobIds` is `undefined` — only
+   * the resulting `payload` is forwarded; `text` / `blobIds` from the return
+   * are dropped on those paths.
    */
   onBeforeSendMessage?: (params: SendMessageParams) => SendMessageParams;
   /** Callback fired after a message has been sent */
@@ -317,14 +322,20 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     };
   }, [sendMessage, onBeforeSendMessage, onMessageSent]);
 
-  // Consent reply runs through onBeforeSendMessage too, so consumers can use a
-  // single hook to attach session-level payload (e.g. interaction_mode) on
-  // every outbound. The callback is invoked with `text: ''` and the
-  // caller-supplied payload (if any) — only the resulting `payload` is
-  // forwarded; `text`/`blobIds` from the return are ignored on this path.
-  // Side effects inside the callback fire on this path too — branch on
-  // intent (e.g. inspect `params.text === ''`) if they should not.
-  //
+  // The textless outbounds — consent reply and the invisible sandbox nudge —
+  // run through onBeforeSendMessage too, so consumers can use a single hook to
+  // attach session-level payload (e.g. interaction_mode) on *every* outbound.
+  // The callback is invoked with `text: ''` and the caller-supplied payload (if
+  // any); only the resulting `payload` is forwarded — `text`/`blobIds` from the
+  // return are ignored on these paths. Side effects inside the callback fire
+  // here too — branch on intent (e.g. inspect `params.text === ''`) if they
+  // should not.
+  const resolveOutboundPayload = useCallback(
+    (payload?: SendMessageParams['payload']): SendMessageParams['payload'] =>
+      onBeforeSendMessage ? onBeforeSendMessage({ text: '', payload }).payload : payload,
+    [onBeforeSendMessage],
+  );
+
   // Differences from `wrappedSendMessage`:
   //   - No `onMessageSent` fire: consent reply isn't a user message, so the
   //     sent-message lifecycle hook should not fire here.
@@ -335,12 +346,18 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
   const wrappedReplyToolCallConsents: UseChannelReturn['replyToolCallConsents'] = useMemo(() => {
     if (!replyToolCallConsents) return undefined;
 
-    return async (answers, payload) => {
-      const resolved = onBeforeSendMessage ? onBeforeSendMessage({ text: '', payload }) : { text: '', payload };
+    return async (answers, payload) => replyToolCallConsents(answers, resolveOutboundPayload(payload));
+  }, [replyToolCallConsents, resolveOutboundPayload]);
 
-      return replyToolCallConsents(answers, resolved.payload);
-    };
-  }, [replyToolCallConsents, onBeforeSendMessage]);
+  // BUG-004 — the nudge turn configures the sandbox it wakes from its own payload (the backend rebuilds
+  // `prevPayload` per turn and never carries the previous one over), so it has to collect payload the
+  // same way. Without this a consumer had no way to get payload onto a nudge at all, and the sandbox
+  // came back empty with no error to show for it.
+  const wrappedNudge: UseChannelReturn['nudge'] = useMemo(() => {
+    if (!nudge) return undefined;
+
+    return async payload => nudge(resolveOutboundPayload(payload));
+  }, [nudge, resolveOutboundPayload]);
 
   // F-023 — the four questions components actually ask about the run, derived once here so each of
   // them (composer, quick replies, running indicator) does not re-derive the same conditions.
@@ -380,7 +397,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       closeChannel,
       stopGeneration,
       replyToolCallConsents: wrappedReplyToolCallConsents,
-      nudge,
+      nudge: wrappedNudge,
       pendingConsent: conversation?.pendingConsent ?? null,
       botTypingPlaceholder,
       inputPlaceholder,
@@ -420,7 +437,7 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       closeChannel,
       stopGeneration,
       wrappedReplyToolCallConsents,
-      nudge,
+      wrappedNudge,
       botTypingPlaceholder,
       inputPlaceholder,
       enableUpload,
