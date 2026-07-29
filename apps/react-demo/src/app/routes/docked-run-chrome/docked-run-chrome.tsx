@@ -18,11 +18,11 @@ const EXPECTED = [
   'run 一開始就出現 docked 面板：Subagent 疊在 Task List 之上，釘在輸入交界（RunningIndicator seam）上方',
   '串流持續進行、thread 不斷長高並自動捲到底時，面板位置完全不動（不閃爍、不位移）',
   '手動往上捲對話：只有訊息在捲，面板固定不動（面板在 scroll 匡之外）',
-  '面板與 thread 之間有一條分隔線，標出「這裡開始是固定區」',
+  '固定區只有下方一條線（RunningIndicator seam），面板上緣不另外畫線；面板下緣與該線之間留 12px，不貼死',
   '面板內容中途變動（新增 task、狀態轉換）時，thread 的自動捲動不被牽動',
   '長對話下 footer 仍固定在底、thread 內部捲動（版面無回歸）',
   '切「長清單」→ 固定區封頂在 body 區的 50%、自己內部可捲，對話區永遠保住另一半，面板底部捲得到、不被裁掉',
-  '切「無 run chrome」→ 整條固定區不存在、不占位、無分隔線，composer 貼齊最後一則訊息',
+  '切「無 run chrome」→ 整條固定區不存在、不占位，composer 貼齊最後一則訊息（seam 仍在，那是 footer 的）',
   '切 hideRunChrome → 同樣不 render 內建面板（consumer 自行擺放的逃生口不變）',
 ];
 

@@ -31,7 +31,7 @@
 // the thread↔composer seam. BUG-003 — this strip is a *sibling* of the scroll box above, not its last
 // child, so a streaming thread can no longer shove the panels around; `flex-shrink: 0` holds it at its
 // natural height while the scroll box absorbs the rest of the column. It is only mounted when populated,
-// so an empty strip contributes neither a border nor a gap.
+// so an empty strip contributes no padding or gap of its own.
 .chatbot_body__docked {
   flex-shrink: 0;
   // Never let the strip starve the thread. It sizes to its content, but only up to half the body area —
@@ -44,9 +44,12 @@
   overflow-y: auto;
   // Keep a wheel/touch overscroll inside the strip instead of chaining out to the thread or the host page.
   overscroll-behavior-y: contain;
-  // Marks the boundary between the (scrolling) thread and this (fixed) region — without it a message can
-  // sit flush against the panels and read as part of the thread.
-  border-top: 1px solid var(--asg-color-border, #434343);
+  // No border here. The strip used to draw one on its top edge to keep the last message from reading as
+  // part of the panels, but the seam below it — <RunningIndicator> at the footer's top edge (F-003) —
+  // already marks that boundary, so the two together drew one boundary twice. The chat-kit prototype puts
+  // the single line under the strip for the same reason (`ConversationPage.tsx`: the run-chrome wrapper is
+  // borderless, the composer block carries `border-t`). Separation is still there without a rule: 12px of
+  // strip padding on top of the thread's own 12px bottom padding, and each panel is a bordered card.
 
   .chatbot_body__docked_content {
     margin: 0 auto;
