@@ -29,6 +29,7 @@ import { ChatHeaderAction } from './chat-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
+import { RunIndicatorSlot } from './running-indicator';
 import { ServiceErrorState } from './service-error-state';
 import { DropZoneOverlay } from './drop-zone-overlay/drop-zone-overlay';
 import { SandboxLaunchHud } from './sandbox-launch-hud';
@@ -480,8 +481,13 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             {/* F-021 AC9 — fire the open-file intent on card arrival (not only on click). */}
             {builtinFileExplorer && <FileExplorerArrivalBridge onIntent={handleSandboxOpenFile} />}
             {renderMenu?.()}
-            {/* Footer must live inside the template provider so it reads `locale` from the context —
-                as does ChatbotBody's docked TaskList / SubagentList strip above it (F-010 / F-012). */}
+            {/* BUILD-034 — the thread↔input seam, bound to the whole connection (F-003). It sits here, as a
+                sibling of the footer slot, rather than inside `ChatbotFooter`, so that a consumer-supplied
+                `renderFooter` keeps it: that prop replaces the footer component outright, and while the seam
+                lived inside it the run indicator silently disappeared (heimdall-pm#200). The docked
+                TaskList / SubagentList strip (F-010 / F-012) sits directly above this. */}
+            <RunIndicatorSlot />
+            {/* Footer must live inside the template provider so it reads `locale` from the context. */}
             {renderFooter ? (
               renderFooter()
             ) : (

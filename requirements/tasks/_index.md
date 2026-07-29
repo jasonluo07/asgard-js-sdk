@@ -135,3 +135,4 @@
 | `REVIEW-032` | Review: Carry payload on the NUDGE outbound       | —        | done   | [REVIEW-032-nudge-payload.md](./REVIEW-032-nudge-payload.md)                                             |
 | `BUILD-033`  | Refuse a nudge while a run holds the channel      | High     | done   | [BUILD-033-nudge-busy-guard.md](./BUILD-033-nudge-busy-guard.md)                                         |
 | `REVIEW-033` | Review: Refuse a nudge while a run holds channel  | —        | done   | [REVIEW-033-nudge-busy-guard.md](./REVIEW-033-nudge-busy-guard.md)                                       |
+| `BUILD-034`  | Hoist the run indicator out of the footer         | High     | done   | [BUILD-034-hoist-run-indicator-out-of-footer.md](./BUILD-034-hoist-run-indicator-out-of-footer.md)       |

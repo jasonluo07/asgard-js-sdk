@@ -3,33 +3,31 @@ import clsx from 'clsx';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
-import { RunningIndicator } from '../running-indicator';
 import { ChatComposer } from './chat-composer';
 import styles from './chatbot-footer.module.scss';
 
 interface ChatbotFooterProps {
   footerEndActions?: ReactNode[];
-  /** Slot between the RunningIndicator and the pill (outside it). */
+  /** Slot above the pill (outside it), directly below the seam. */
   renderComposerAbove?: () => ReactNode;
   /** Slot inside the pill, below the input row. */
   renderComposerInline?: () => ReactNode;
 }
 
 /**
- * Footer assembly layer (BUILD-028). It owns the seam, the content width and the footer-level theme,
- * and delegates the input itself to `<ChatComposer>`. Everything about attachments, sending and the
- * pill's layout lives in the composer — this file should stay small.
+ * Footer assembly layer (BUILD-028). It owns the content width and the footer-level theme, and delegates
+ * the input itself to `<ChatComposer>`. Everything about attachments, sending and the pill's layout lives
+ * in the composer — this file should stay small.
+ *
+ * The run seam is **not** here: BUILD-034 moved it up to the chat column (`<RunIndicatorSlot>`), so that a
+ * consumer-supplied `renderFooter` — which replaces this whole component — keeps the run indicator.
  */
 export function ChatbotFooter({
   footerEndActions,
   renderComposerAbove,
   renderComposerInline,
 }: ChatbotFooterProps = {}): ReactNode {
-  const {
-    isRunning,
-    enableUpload: enableUploadProp,
-    enableDocumentUpload: enableDocumentUploadProp,
-  } = useAsgardContext();
+  const { enableUpload: enableUploadProp, enableDocumentUpload: enableDocumentUploadProp } = useAsgardContext();
   const { data } = useAsgardAppInitializationContext();
   const { chatbot } = useAsgardThemeContext();
 
@@ -58,13 +56,6 @@ export function ChatbotFooter({
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
-      {/* Thread↔input seam: the run-in-progress indicator, bound to the whole connection (F-003) —
-          minus the rejoin transcript replay, which is loading history rather than generating (F-023
-          AC9 / UC-046), hence `isRunning` rather than the broader `isConnecting`.
-          The Subagent (F-012) / Task (F-010) live-state panels sit immediately above this seam, in
-          ChatbotBody's fixed docked strip (outside the thread's scroll box). */}
-      <RunningIndicator running={isRunning} />
-
       <div className={styles.chatbot_footer__content} style={contentStyles}>
         {renderComposerAbove?.()}
         <ChatComposer
