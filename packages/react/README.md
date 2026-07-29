@@ -696,17 +696,18 @@ function MyCustomFooter() {
 
 **Actions**
 
-| Property                     | Type                                                              | Description                                                                                                                                       |
-| ---------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined`     | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`.                 |
-| `resetChannel`               | `(() => void) \| undefined`                                       | Reset the channel (triggers a new welcome message from the bot).                                                                                  |
-| `closeChannel`               | `(() => void) \| undefined`                                       | Close the SSE connection without resetting.                                                                                                       |
-| `stopGeneration`             | `((options?: { force?: boolean }) => Promise<void>) \| undefined` | Ask the backend to stop the in-flight run. Resolving means _accepted_, not _stopped_; rejects if the request failed. Gate on `canStop`.           |
-| `replyToolCallConsents`      | `((answers, options?, payload?) => Promise<void>) \| undefined`   | Reply to the pending tool-call consent prompt (see `pendingConsent`). Used to build a custom consent UI. `undefined` before the channel is ready. |
-| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                             | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                                     |
-| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                             | Scroll to bottom without affecting `isFollowingLatest`.                                                                                           |
-| `setFollowingLatest`         | `(value: boolean) => void`                                        | Manually set auto-scroll state.                                                                                                                   |
-| `setPendingInputValue`       | `(value: string \| null) => void`                                 | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                                      |
+| Property                     | Type                                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sendMessage`                | `((params: SendMessageParams) => Promise<void>) \| undefined`     | Send a message through the channel. `undefined` while the channel is not yet ready or in preview mode — always guard with `?.()`.                                                                                                                                                                                                                                                                                           |
+| `resetChannel`               | `(() => void) \| undefined`                                       | Reset the channel (triggers a new welcome message from the bot).                                                                                                                                                                                                                                                                                                                                                            |
+| `closeChannel`               | `(() => void) \| undefined`                                       | Close the SSE connection without resetting.                                                                                                                                                                                                                                                                                                                                                                                 |
+| `stopGeneration`             | `((options?: { force?: boolean }) => Promise<void>) \| undefined` | Ask the backend to stop the in-flight run. Resolving means _accepted_, not _stopped_; rejects if the request failed. Gate on `canStop`.                                                                                                                                                                                                                                                                                     |
+| `replyToolCallConsents`      | `((answers, payload?) => Promise<void>) \| undefined`             | Reply to the pending tool-call consent prompt (see `pendingConsent`). Used to build a custom consent UI. `undefined` before the channel is ready.                                                                                                                                                                                                                                                                           |
+| `nudge`                      | `((payload?) => Promise<void>) \| undefined`                      | Wake an idle / recycled sandbox with an invisible `action=NUDGE` turn — nothing is rendered in the thread; watch `sandboxPhase` and `useLaunchedSandboxes()` for the result. Runs through `onBeforeSendMessage`, so a session-level payload attaches on its own; the argument is an extra the callback receives as `params.payload`. Takes a parameter, so bind it as `onClick={() => nudge?.()}`, never `onClick={nudge}`. |
+| `scrollToBottom`             | `(behavior?: ScrollBehavior) => void`                             | Scroll the message list to the bottom. Also resumes auto-scroll (`isFollowingLatest → true`).                                                                                                                                                                                                                                                                                                                               |
+| `programmaticScrollToBottom` | `(behavior?: ScrollBehavior) => void`                             | Scroll to bottom without affecting `isFollowingLatest`.                                                                                                                                                                                                                                                                                                                                                                     |
+| `setFollowingLatest`         | `(value: boolean) => void`                                        | Manually set auto-scroll state.                                                                                                                                                                                                                                                                                                                                                                                             |
+| `setPendingInputValue`       | `(value: string \| null) => void`                                 | Push text into the textarea from outside. Clear it (`null`) after reading in `renderFooter`.                                                                                                                                                                                                                                                                                                                                |
 
 <a id="event-handlers"></a>
 <br/>
@@ -1310,7 +1311,25 @@ renderMessageContent={(props) => {
 
 ### Before Send Message Hook
 
-The `onBeforeSendMessage` prop allows you to modify message parameters before they are sent. This is useful for injecting contextual data from parent components into every message.
+The `onBeforeSendMessage` prop allows you to modify outbound parameters before they are sent. This is useful for injecting contextual data from parent components into every outbound turn.
+
+#### When it fires
+
+It is not only user sends. The callback runs on **four** paths:
+
+| Path                                       | `params.text`   | Notes                                                                        |
+| ------------------------------------------ | --------------- | ---------------------------------------------------------------------------- |
+| `sendMessage`                              | the user's text | The only path carrying real user input.                                      |
+| `resetChannel`                             | `''`            | Includes the automatic reset on mount — `autoResetChannel` defaults to true. |
+| Tool-call consent reply (Allow / Deny)     | `''`            |                                                                              |
+| `nudge` — wake an idle sandbox (invisible) | `''`            |                                                                              |
+
+On the three textless paths `params.blobIds` is `undefined` and **only the returned `payload` is used** — `text` / `blobIds` from your return value are dropped there. They are not distinguishable from one another inside the callback.
+
+Two consequences worth designing for:
+
+- **Side effects fire on all four.** Analytics calls, one-shot flags consumed on invocation, or state resets inside the callback will run on a sandbox nudge and on the mount-time reset, not just when the user presses send. Branch on intent (e.g. `if (!params.text && !params.blobIds?.length) return params;`) if that is not what you want.
+- **Your return value replaces the payload wholesale.** Spread `params.payload` if a caller may have supplied one (`serviceContext.nudge(payload)` does); otherwise it is silently discarded.
 
 #### SendMessageParams Interface
 

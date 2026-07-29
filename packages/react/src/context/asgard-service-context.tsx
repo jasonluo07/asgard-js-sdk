@@ -85,7 +85,15 @@ export interface AsgardServiceContextValue {
   /**
    * Nudge an idle sandbox back to life (F-021 AC4) — invisible `action=NUDGE` turn. Runs through
    * `onBeforeSendMessage` like the other outbounds, so a session-level payload attaches on its own
-   * (BUG-004); pass `payload` only to override it for this one turn.
+   * (BUG-004).
+   *
+   * A `payload` passed here does **not** override the callback's: it is handed to
+   * `onBeforeSendMessage` as `params.payload`, and whatever the callback returns wins wholesale. A
+   * callback that builds a fresh payload without spreading `params.payload` silently drops it —
+   * merging is the callback's job. With no callback configured the argument is sent as-is.
+   *
+   * Takes a parameter, so it cannot be bound straight to an event handler:
+   * `onClick={() => nudge()}`, not `onClick={nudge}` (which would send the event as payload).
    */
   nudge?: UseChannelReturn['nudge'];
   pendingConsent: ToolCallConsentEventData | null;
@@ -180,12 +188,21 @@ export interface AsgardServiceContextProviderProps {
   /** Callback fired when SSE connection encounters an error */
   onSseError?: (error: unknown) => void;
   /**
-   * Callback to modify outbound params before they hit the wire. Fires for
-   * regular `sendMessage`, tool-call consent reply (Allow / Deny on the
-   * consent modal) and the invisible sandbox nudge alike. On the latter two,
-   * `params.text` is always `''` and `params.blobIds` is `undefined` — only
-   * the resulting `payload` is forwarded; `text` / `blobIds` from the return
-   * are dropped on those paths.
+   * Callback to modify outbound params before they hit the wire. It fires on
+   * **four** paths, not just user sends:
+   *
+   * 1. `sendMessage` — the only one carrying real user text.
+   * 2. `resetChannel` — including the automatic one on mount, since
+   *    `autoResetChannel` defaults to `true`. Expect a call before the user
+   *    has done anything at all.
+   * 3. Tool-call consent reply (Allow / Deny on the consent modal).
+   * 4. The invisible sandbox nudge (F-021 AC4).
+   *
+   * On 2–4 `params.text` is `''` and `params.blobIds` is `undefined`, and only
+   * the returned `payload` is forwarded — `text` / `blobIds` from the return
+   * are dropped on those paths. Side effects inside the callback therefore fire
+   * on all four; branch on intent (e.g. `params.text === ''`) if they should
+   * not. Note the textless paths are not distinguishable from each other here.
    */
   onBeforeSendMessage?: (params: SendMessageParams) => SendMessageParams;
   /** Callback fired after a message has been sent */

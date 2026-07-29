@@ -25,7 +25,7 @@ Scope = `BUILD-032 ## Coverage` 的 8 個檔案（core 2 / react 3 / demo 3）�
 | RxJS 訂閱 / EventSource / timer 是否都有 teardown                | FRONTEND_RULE_COMMON §1.5      | ✅   |
 | `@asgard-js/react` 只從 `@asgard-js/core` 公開進入點 import      | FRONTEND_RULE_COMMON §1.6      | ✅   |
 | `@asgard-js/core` 無 import `react` / `react-dom` / DOM API      | FRONTEND_RULE_COMMON §1.6 §2.1 | ✅   |
-| 公開 API 變更經 `@deprecated` 過渡（無未標示的 breaking change） | FRONTEND_RULE_COMMON §1.7      | ✅   |
+| 公開 API 變更經 `@deprecated` 過渡（無未標示的 breaking change） | FRONTEND_RULE_COMMON §1.7      | ⚠️   |
 | 新增公開型別 / 函式 / 元件從 package 進入點導出                  | FRONTEND_RULE_COMMON §2.2      | ✅   |
 | 新增 message template 的前置依賴齊備                             | FRONTEND_RULE_COMMON §2.3      | N/A  |
 | 使用 `botProviderEndpoint`（非 deprecated 的 `endpoint`）        | FRONTEND_RULE_COMMON §2.4      | ✅   |
@@ -40,10 +40,32 @@ Scope = `BUILD-032 ## Coverage` 的 8 個檔案（core 2 / react 3 / demo 3）�
 
 補充說明：
 
-- **§1.7**：`Channel.nudge` 由 `(options?)` 變成 `(options?, payload?)`，新參數 optional 且**加在尾端**，既有
-  `nudge()` / `nudge({ onSseMessage })` 呼叫端不受影響；`UseChannelReturn['nudge']` 由 `() => Promise<void>` 放寬成
-  `(payload?) => Promise<void>`，對呼叫端與 `onNudge={nudge}` 這類賦值皆為相容加寬。無 breaking change，不需
-  `@deprecated`。BUG-004 spec 原寫 `nudge(payload?, options?)`，實作刻意偏離為尾端追加，理由見 BUILD-032 `## Brief`。
+- **§1.7 —— ⚠️ 本項原判定為 ✅「無 breaking change」，2026-07-29 覆查後更正為「有一處型別回歸，已知並接受」。**
+  `Channel.nudge` 由 `(options?)` 變成 `(options?, payload?)`，新參數 optional 且加在尾端，既有
+  `nudge()` / `nudge({ onSseMessage })` 呼叫端不受影響 —— 這部分成立。
+  但 `UseChannelReturn['nudge']` 由 `() => Promise<void>` 變成 `(payload?) => Promise<void>`，**原判定「皆為相容加寬」
+  是錯的**：對呼叫端是放寬，對**賦值**是收窄（函式參數逆變）。凡是目標型別會傳參數進來的插槽都會編譯失敗，實測：
+
+  ```
+  TS2322: Type '(payload?: Record<string, unknown> | …) => Promise<void>'
+          is not assignable to type 'MouseEventHandler<HTMLButtonElement>'.
+    Types of parameters 'payload' and 'event' are incompatible.
+  ```
+
+  也就是 `onClick={nudge}` 會壞（同一次編譯下 0.3.28 的 `() => Promise<void>` 沒有錯，故確為回歸）。SDK 裡唯一的 nudge
+  觸發點就是一顆按鈕（`file-explorer-panel.tsx:473-474`），消費端自製喚醒鈕綁 `onClick` 是可預期的寫法。
+  仍相容的有：`onNudge={nudge}`（目標 `() => void | Promise<void>`）、`nudge?.()`、
+  `const f: () => Promise<void> = ctx.nudge`、自行實作 `Pick<UseChannelReturn,'nudge'>` 為零參數；
+  `IAsgardServiceClient` 不含 `nudge`，自訂 client 實作者不受影響。
+
+  **決議（使用者 2026-07-29）**：維持 patch `0.3.29`，不改簽章也不退回參數。理由：本 repo 無 breaking-change policy
+  （`CLAUDE.local.md`「minor 和 patch 自行判斷」）；這個 break 是**編譯期**的、不是靜默的，修法一行
+  （`onClick={() => nudge()}`）；且該編譯錯誤反而擋掉一個 runtime 風險 —— 沒有它的話 JS 消費端會把 SyntheticEvent
+  當 payload 送進 `JSON.stringify` 而炸在 circular structure。保留呼叫端 payload 也是下游（Sindri）能一行修好的關鍵。
+  已在 `use-channel.ts` / `asgard-service-context.tsx` 的 JSDoc 與 `packages/react/README.md` 明寫綁定方式。
+
+  BUG-004 spec 原寫 `nudge(payload?, options?)`，實作刻意偏離為尾端追加，理由見 BUILD-032 `## Brief`。
+
 - **§6**：consent 回覆與 nudge 都要「以 `text: ''` 過 `onBeforeSendMessage`、只取回傳 payload」，已抽成
   `resolveOutboundPayload`（`asgard-service-context.tsx`），兩處共用。
 - **§2.2**：本票無新增公開型別 / 函式；`nudge` 的型別變更透過既有的 `UseChannelReturn` /
@@ -189,6 +211,13 @@ None.
 
 ### Minor (nice to have)
 
+0. **`Channel.nudge` 沒有 `ChannelBusyError` 守衛（既有缺陷，非本票造成，值得另開票）** ——
+   `sendMessage` 在 `runStatus.kind` 非 null 時會 reject（`channel.ts:531-533`），`nudge` 沒有這道守衛，改動前後皆然
+   （本票的 diff 只加了 `payload:` 那一行）。實測：使用者 turn 串流中呼叫 `nudge()`，`fetchSse` 會覆寫 `this.currentRun`
+   **而不 unsubscribe 舊的**（訂閱洩漏），並把 `runStatusSubject` 改成 `{ kind: 'nudge' }`、丟掉該 run 的 `requestId`。
+   後果：`canStop` 要求 `kind === 'user'`，停止鈕當場消失，那個 run 從此停不掉，且兩個 run 同時寫同一份 transcript。
+   觸發路徑真實存在 —— File Explorer 空狀態的 Nudge 鈕在 run 進行中並未 disabled（`file-explorer-panel.tsx:474`）。
+
 1. **Sindri 端還吃不到這個修復（跨 repo，需另開票，不屬本 cycle）** ——
    `asgard-ai-agent-hub-web` 的 `src/components/conversation/conversation-view.tsx` 在 `onBeforeSendMessage` 開頭有
    `const hasContent = !!params.text || (params.blobIds?.length ?? 0) > 0; if (!hasContent) return params;`。
@@ -208,3 +237,9 @@ None.
 - 2026-07-29: BUILD-032 完成、`## Coverage` 已填 (Status: `draft → ready`).
 - 2026-07-29: §1 完成 —— 18 項 ✅ / 1 項 N/A / 0 ❌；§3 完成 —— R1–R7 全 Pass。2 則 Minor 皆為跨 repo 追蹤事項，
   不阻擋本 cycle (Status: `ready → done`).
+- 2026-07-29: **發版前以兩個獨立 subagent 做對抗式覆查，推翻了 §1.7 的原判定。** 兩者各自查出
+  `UseChannelReturn['nudge']` 的參數新增會讓 `onClick={nudge}` 編譯失敗（函式參數逆變），已自行以 build 產物的 `.d.ts`
+  實測復現、並確認 0.3.28 的形狀在同一次編譯下無錯 —— 確為回歸。另查出兩處我方撰寫的註解不實（payload「override」
+  的說法、`onBeforeSendMessage` 觸發路徑漏列 `resetChannel`）與 README 兩處過時。§1.7 已改標 ⚠️ 並補上決議；
+  註解與 README 於後續 PR 修正。覆查同時確認：consent 路徑的重構行為完全等價、新增測試對舊實作確實會 red
+  （core 2/3、react 3/5 fail）、無 payload 時 wire body 與 0.3.28 位元相同。
