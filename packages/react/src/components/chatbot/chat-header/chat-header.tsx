@@ -86,7 +86,7 @@ function isBlank(value: string | null | undefined): boolean {
 }
 
 function Avatar({ avatar, botName }: { avatar?: string | ReactNode; botName: string | null }): ReactNode {
-  if (typeof avatar === 'string') {
+  if (typeof avatar === 'string' && !isBlank(avatar)) {
     return <img src={avatar} alt="" className={styles.avatar_img} />;
   }
 
