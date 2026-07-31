@@ -223,7 +223,16 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // on ready; a "warm" send reaches ready <1s so the HUD stays silent. The run seam indicator lights the
   // whole time, demonstrating the two are independent and can coexist.
   if (customChannelId === 'sandbox-hud-demo') {
-    await handleSandboxHudMock(res, payload);
+    await handleSandboxHudMock(res, payload, customChannelId);
+
+    return;
+  }
+
+  // BUG-006 — the /join-init route's ① restore and ③ init scenarios, extended with the same
+  // sandbox.launch → (gap) → sandbox.ready timeline as sandbox-hud-demo, so the Launch HUD fix on the
+  // non-reset join paths (F-015 R2 / R4) is visible in the browser, not just in Vitest.
+  if (customChannelId === 'join-existing-demo' || customChannelId === 'join-new-noreset-demo') {
+    await handleSandboxHudMock(res, payload, customChannelId);
 
     return;
   }
@@ -633,12 +642,18 @@ function sandboxFact(kind: 'launch' | 'ready'): Record<string, unknown> {
 // F-018 sandbox launch HUD demo. `launch` → gap → `ready` wrapped around a normal message run. A "warm"
 // send (text contains 熱 / warm) reaches ready in ~300ms so the HUD never crosses the 1s threshold and
 // stays silent; any other ("cold") send holds launch ~2.6s so the HUD floats in, then rings out on ready.
-async function handleSandboxHudMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+// Reused (BUG-006) by the /join-init route's restore/init scenarios — `customChannelId` is a parameter so
+// the emitted frames carry whichever channel actually made the request.
+async function handleSandboxHudMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+): Promise<void> {
   const header: CommonHeader = {
     requestId: randomUUID(),
     namespace: NAMESPACE,
     botProviderName: BOT_PROVIDER_NAME,
-    customChannelId: 'sandbox-hud-demo',
+    customChannelId,
   };
   const replyTo = payload.customMessageId ?? '';
   const text = payload.text ?? '';
