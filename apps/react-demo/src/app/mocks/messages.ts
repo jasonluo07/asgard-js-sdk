@@ -62,6 +62,37 @@ export function createTextTemplateExample(): ConversationMessage {
   });
 }
 
+export function createStreamingTextTemplateExample(): ConversationMessage {
+  const message = createTextTemplateExample();
+
+  if (message.type !== 'bot') return message;
+
+  return {
+    ...message,
+    isTyping: true,
+    typingText: '這是一段正在串流中的 bot 純文字，用來確認串流狀態同樣沒有頭像、時間戳或泡泡。',
+  };
+}
+
+export function createTextAuxiliaryTemplateExample(): ConversationMessage {
+  const messageId = nanoid();
+
+  return createBaseTemplateExample({
+    text: '',
+    template: {
+      type: MessageTemplateType.TEXT,
+      text: '',
+      references: [{ title: 'Asgard documentation', uri: 'https://docs.asgard-ai.com' }],
+      quickReplies: [{ text: '繼續閱讀' }, { text: '顯示更多' }],
+    },
+    messageId,
+    replyToCustomMessageId: '',
+    payload: undefined,
+    isDebug: false,
+    idx: 0,
+  });
+}
+
 export function createHintTemplateExample(): ConversationMessage {
   const messageId = nanoid();
 
@@ -388,6 +419,66 @@ export function createImageTemplateExample(width = 400, height = 400): Conversat
       type: MessageTemplateType.IMAGE,
       originalContentUrl: `https://dummyimage.com/${width}x${height}/000/fff&text=Hello+World`,
       previewImageUrl: `https://dummyimage.com/${width}x${height}/000/fff`,
+      quickReplies,
+    },
+  });
+}
+
+export function createVideoTemplateExample(): ConversationMessage {
+  const messageId = nanoid();
+
+  return createBaseTemplateExample({
+    messageId,
+    replyToCustomMessageId: '',
+    text: 'Chat-kit video template preview',
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.VIDEO,
+      originalContentUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      previewImageUrl: 'https://dummyimage.com/640x360/1f1f1f/ffffff&text=Video+Preview',
+      duration: 212_000,
+      quickReplies,
+    },
+  });
+}
+
+export function createAudioTemplateExample(): ConversationMessage {
+  const messageId = nanoid();
+
+  return createBaseTemplateExample({
+    messageId,
+    replyToCustomMessageId: '',
+    text: 'Chat-kit audio template preview',
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.AUDIO,
+      originalContentUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+      duration: 60_000,
+      quickReplies,
+    },
+  });
+}
+
+export function createLocationTemplateExample(): ConversationMessage {
+  const messageId = nanoid();
+
+  return createBaseTemplateExample({
+    messageId,
+    replyToCustomMessageId: '',
+    text: 'Chat-kit location template preview',
+    payload: null,
+    isDebug: false,
+    idx: 0,
+    template: {
+      type: MessageTemplateType.LOCATION,
+      title: '台北 101',
+      text: '台北市信義區信義路五段 7 號',
+      latitude: 25.033964,
+      longitude: 121.564468,
       quickReplies,
     },
   });
