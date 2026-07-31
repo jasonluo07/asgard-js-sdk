@@ -27,7 +27,7 @@ export interface AsgardThemeContextValue {
       secondaryColor?: CSSProperties['color'];
       /**
        * Foreground color for content sitting *on top of* `mainColor` — card/carousel button labels,
-       * quick reply text, the attachment icon glyph and the composer's submit icon.
+       * the attachment icon glyph and the composer's submit icon.
        *
        * Defaults to `secondaryColor`, which is also the primary text tier (header title, input text,
        * `--asg-color-text-primary`). Those two only agree while `mainColor` is dark: a light `mainColor`
@@ -450,7 +450,8 @@ export function AsgardThemeContextProvider(
           quickReplies: {
             button: {
               style: {
-                color: onMainFromAnnotations, // Button text (#FFFFFF)
+                // Quick replies sit on the translucent bot-message surface, not on the primary accent.
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
                 borderColor: themeFromAnnotations.chatbot?.borderColor,
                 backgroundColor: themeFromAnnotations.botMessage?.backgroundColor
                   ? `${themeFromAnnotations.botMessage.backgroundColor}33`
@@ -753,15 +754,16 @@ export function AsgardThemeContextProvider(
           mergedTheme.template.CarouselMessageTemplate.card.button.style.color = buttonTextColor;
         }
 
-        // Apply to quick reply button text color
-        if (mergedTheme.template?.quickReplies?.button?.style) {
-          mergedTheme.template.quickReplies.button.style.color = buttonTextColor;
-        }
-
         // Apply to attachment chip icon box color (the icon glyph color)
         if (mergedTheme.template?.AttachmentMessageTemplate?.iconBox?.style) {
           mergedTheme.template.AttachmentMessageTemplate.iconBox.style.color = buttonTextColor;
         }
+      }
+
+      // Quick replies sit on the translucent bot-message surface rather than on `mainColor`, so they
+      // stay on the primary text tier even when accent-backed controls use a contrasting on-main color.
+      if (theme?.chatbot?.primaryComponent?.secondaryColor && mergedTheme.template?.quickReplies?.button?.style) {
+        mergedTheme.template.quickReplies.button.style.color = theme.chatbot.primaryComponent.secondaryColor;
       }
 
       // Ensure prop-level botMessage.backgroundColor is also applied to quick reply button background

@@ -48,7 +48,7 @@ describe('primaryComponent.onMainColor', () => {
     expect(theme.template?.AttachmentMessageTemplate?.iconBox?.style.color).toBe('#ffffff');
   });
 
-  it('colors accent-backed surfaces when set, without moving the primary text tier', () => {
+  it('colors accent-backed surfaces when set, without moving text on non-accent surfaces', () => {
     const theme = resolveTheme({
       chatbot: {
         primaryComponent: { mainColor: '#f6c814', secondaryColor: '#ffffff', onMainColor: '#000000' },
@@ -57,7 +57,8 @@ describe('primaryComponent.onMainColor', () => {
 
     expect(theme.template?.ButtonMessageTemplate?.button?.style.color).toBe('#000000');
     expect(theme.template?.CarouselMessageTemplate?.card?.button?.style.color).toBe('#000000');
-    expect(theme.template?.quickReplies?.button?.style.color).toBe('#000000');
+    // Quick replies sit on the translucent bot-message surface, not on mainColor.
+    expect(theme.template?.quickReplies?.button?.style.color).toBe('#ffffff');
     expect(theme.template?.AttachmentMessageTemplate?.iconBox?.style.color).toBe('#000000');
 
     // The text tier stays on secondaryColor — that is the whole point of the split.
