@@ -145,6 +145,23 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [isPreviewMode, initMessages],
   );
 
+  // BUG-006 — one shared observer for all three creation paths below. Before this, each path wrote its
+  // own copy and `resetChannel`'s was the only one that forwarded `sandboxPhase`, so a channel created
+  // via `initChannel` or `restoreChannel` never left the Launch HUD's `idle` state. A single factory
+  // makes that class of bug structurally impossible: there is only one place a `ChannelStates` field can
+  // be wired up, and every path uses it.
+  const makeStatesObserver = useCallback(
+    () =>
+      (states: ChannelStates): void => {
+        setIsConnecting(states.isConnecting);
+        setRunStatus(states.runStatus);
+        setConversation(states.conversation);
+        setChannelTitle(states.channelTitle);
+        setSandboxPhase(states.sandboxPhase);
+      },
+    [],
+  );
+
   const resetChannel = useCallback(
     async (payload?: Pick<FetchSsePayload, 'text'> & Partial<Pick<FetchSsePayload, 'payload'>>) => {
       if (isPreviewMode || !client) return;
@@ -168,13 +185,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
           customMessageId,
           conversation,
           channelTitle: channelTitleSeed,
-          statesObserver: (states: ChannelStates): void => {
-            setIsConnecting(states.isConnecting);
-            setRunStatus(states.runStatus);
-            setConversation(states.conversation);
-            setChannelTitle(states.channelTitle);
-            setSandboxPhase(states.sandboxPhase);
-          },
+          statesObserver: makeStatesObserver(),
         },
         resolvedPayload,
         {
@@ -227,6 +238,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       onAuthError,
       onSseError,
       onBeforeSendMessage,
+      makeStatesObserver,
     ],
   );
 
@@ -245,17 +257,12 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       customMessageId,
       conversation,
       channelTitle: channelTitleSeed,
-      statesObserver: (states: ChannelStates): void => {
-        setIsConnecting(states.isConnecting);
-        setRunStatus(states.runStatus);
-        setConversation(states.conversation);
-        setChannelTitle(states.channelTitle);
-      },
+      statesObserver: makeStatesObserver(),
     });
 
     setIsOpen(true);
     setChannel(channel);
-  }, [isPreviewMode, client, customChannelId, customMessageId, initMessages, channelTitleSeed]);
+  }, [isPreviewMode, client, customChannelId, customMessageId, initMessages, channelTitleSeed, makeStatesObserver]);
 
   // F-015 — join an existing channel: replay the server transcript (F-014) and seed the title from
   // metadata (F-016) without ever sending RESET_CHANNEL. `titleSeed` comes from `GET /channel/metadata`.
@@ -289,12 +296,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             // F-023 AC9 / UC-046 — the metadata gate already knows whether a run is still live. Pass it
             // through so replaying a finished conversation does not present as generation in progress.
             runState: runStateSeed,
-            statesObserver: (states: ChannelStates): void => {
-              setIsConnecting(states.isConnecting);
-              setRunStatus(states.runStatus);
-              setConversation(states.conversation);
-              setChannelTitle(states.channelTitle);
-            },
+            statesObserver: makeStatesObserver(),
           },
           {
             onSseError(error) {
@@ -331,7 +333,16 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         // to do here (kept out of the unhandled-rejection path).
       }
     },
-    [isPreviewMode, client, customChannelId, customMessageId, onSseMessage, onAuthError, onSseError],
+    [
+      isPreviewMode,
+      client,
+      customChannelId,
+      customMessageId,
+      onSseMessage,
+      onAuthError,
+      onSseError,
+      makeStatesObserver,
+    ],
   );
 
   const closeChannel = useCallback(() => {
