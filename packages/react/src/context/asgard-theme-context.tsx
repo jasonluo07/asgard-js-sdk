@@ -25,6 +25,16 @@ export interface AsgardThemeContextValue {
     primaryComponent?: {
       mainColor?: CSSProperties['color'];
       secondaryColor?: CSSProperties['color'];
+      /**
+       * Foreground color for content sitting *on top of* `mainColor` — card/carousel button labels,
+       * the attachment icon glyph and the composer's submit icon.
+       *
+       * Defaults to `secondaryColor`, which is also the primary text tier (header title, input text,
+       * `--asg-color-text-primary`). Those two only agree while `mainColor` is dark: a light `mainColor`
+       * (a gold brand accent, say) needs dark text on the accent but light text everywhere else, and one
+       * field cannot be both. Set this when `mainColor` is light.
+       */
+      onMainColor?: CSSProperties['color'];
     };
     style?: CSSProperties;
     header?: Partial<{
@@ -353,6 +363,12 @@ export function AsgardThemeContextProvider(
         userMessage: {},
       };
 
+      // Content that sits on the `mainColor` accent takes `onMainColor`, falling back to `secondaryColor`
+      // (the primary text tier) so an annotation set that predates this field keeps its current colors.
+      const onMainFromAnnotations =
+        themeFromAnnotations.chatbot?.primaryComponent?.onMainColor ??
+        themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor;
+
       const tempTheme = deepMerge(defaultAsgardThemeContextValue as unknown as Record<string, unknown>, {
         chatbot: {
           backgroundColor: themeFromAnnotations.chatbot?.backgroundColor,
@@ -402,7 +418,8 @@ export function AsgardThemeContextProvider(
             },
             submitButton: {
               style: {
-                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+                // Sits on the `--asg-color-primary` pill, so it follows the accent's foreground.
+                color: onMainFromAnnotations,
               },
             },
             speechInputButton: {
@@ -433,7 +450,8 @@ export function AsgardThemeContextProvider(
           quickReplies: {
             button: {
               style: {
-                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor, // Button text (#FFFFFF)
+                // Quick replies sit on the translucent bot-message surface, not on the primary accent.
+                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
                 borderColor: themeFromAnnotations.chatbot?.borderColor,
                 backgroundColor: themeFromAnnotations.botMessage?.backgroundColor
                   ? `${themeFromAnnotations.botMessage.backgroundColor}33`
@@ -475,7 +493,7 @@ export function AsgardThemeContextProvider(
               style: {
                 borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                 backgroundColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+                color: onMainFromAnnotations,
               },
             },
           },
@@ -498,7 +516,7 @@ export function AsgardThemeContextProvider(
                 style: {
                   borderColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
                   backgroundColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                  color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+                  color: onMainFromAnnotations,
                 },
               },
             },
@@ -520,7 +538,7 @@ export function AsgardThemeContextProvider(
             iconBox: {
               style: {
                 backgroundColor: themeFromAnnotations.chatbot?.primaryComponent?.mainColor,
-                color: themeFromAnnotations.chatbot?.primaryComponent?.secondaryColor,
+                color: onMainFromAnnotations,
               },
             },
             downloadButton: {
@@ -720,9 +738,12 @@ export function AsgardThemeContextProvider(
         }
       }
 
-      if (theme?.chatbot?.primaryComponent?.secondaryColor) {
-        const buttonTextColor = theme.chatbot.primaryComponent.secondaryColor;
+      // Everything below sits on the `mainColor` accent, so it takes `onMainColor` and falls back to
+      // `secondaryColor` — the pre-`onMainColor` behavior, kept so existing consumers don't shift.
+      const buttonTextColor =
+        theme?.chatbot?.primaryComponent?.onMainColor ?? theme?.chatbot?.primaryComponent?.secondaryColor;
 
+      if (buttonTextColor) {
         // Apply to button template button text color
         if (mergedTheme.template?.ButtonMessageTemplate?.button?.style) {
           mergedTheme.template.ButtonMessageTemplate.button.style.color = buttonTextColor;
@@ -733,15 +754,16 @@ export function AsgardThemeContextProvider(
           mergedTheme.template.CarouselMessageTemplate.card.button.style.color = buttonTextColor;
         }
 
-        // Apply to quick reply button text color
-        if (mergedTheme.template?.quickReplies?.button?.style) {
-          mergedTheme.template.quickReplies.button.style.color = buttonTextColor;
-        }
-
         // Apply to attachment chip icon box color (the icon glyph color)
         if (mergedTheme.template?.AttachmentMessageTemplate?.iconBox?.style) {
           mergedTheme.template.AttachmentMessageTemplate.iconBox.style.color = buttonTextColor;
         }
+      }
+
+      // Quick replies sit on the translucent bot-message surface rather than on `mainColor`, so they
+      // stay on the primary text tier even when accent-backed controls use a contrasting on-main color.
+      if (theme?.chatbot?.primaryComponent?.secondaryColor && mergedTheme.template?.quickReplies?.button?.style) {
+        mergedTheme.template.quickReplies.button.style.color = theme.chatbot.primaryComponent.secondaryColor;
       }
 
       // Ensure prop-level botMessage.backgroundColor is also applied to quick reply button background
@@ -779,6 +801,15 @@ export function AsgardThemeContextProvider(
       if (effectivePrimary) {
         themeVars['--asg-color-primary'] = effectivePrimary;
         themeVars['--asg-color-primary-dark'] = darker(effectivePrimary);
+      }
+
+      // On-primary → the foreground of the surfaces painted with the accent above (the composer's submit
+      // icon, card/carousel button labels, the attachment icon glyph). The palette generates this token
+      // as a fixed `#ffffff`, which only works while the accent is dark; wiring it here lets a light
+      // accent state its own contrasting foreground.
+      const effectiveOnPrimary = mergedTheme.chatbot?.primaryComponent?.onMainColor;
+      if (typeof effectiveOnPrimary === 'string' && effectiveOnPrimary) {
+        themeVars['--asg-color-primary-on-primary'] = effectiveOnPrimary;
       }
 
       // Background → the base bg + a `surface` one step lighter (cards / channel-title / tool-call rows /

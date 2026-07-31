@@ -30,6 +30,8 @@ export interface Annotations {
         primaryComponent?: {
           mainColor?: string;
           secondaryColor?: string;
+          /** Foreground on top of `mainColor` (button labels, icon glyphs); defaults to `secondaryColor`. */
+          onMainColor?: string;
         };
       };
       botMessage: {
