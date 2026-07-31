@@ -159,7 +159,7 @@
   width: 32px;
   height: 32px;
   padding: 0;
-  color: #fff;
+  color: var(--asg-color-primary-on-primary, #fff);
   cursor: pointer;
   background: var(--asg-color-primary);
   border: none;

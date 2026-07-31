@@ -41,7 +41,7 @@
   height: 36px;
   border-radius: 8px;
   background: rgba(71, 103, 235, 1);
-  color: white;
+  color: var(--asg-color-primary-on-primary, white);
   display: flex;
   align-items: center;
   justify-content: center;
