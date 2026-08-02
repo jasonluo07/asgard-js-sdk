@@ -134,6 +134,16 @@ export default class Conversation implements IConversation {
     return message?.type === 'thinking' && !message.isThinking;
   }
 
+  /**
+   * A tool-call is terminal once it has completed (`isComplete === true`), whether that came from a
+   * live `tool_call.complete` or from one materialized on GET rejoin. Same policy as the bot and
+   * thinking guards (F-011): a late / out-of-order `tool_call.start` must not roll it back to
+   * running, which would also drop the result and hide it from the Task list.
+   */
+  private isTerminalToolCall(message: ConversationMessage | undefined): boolean {
+    return message?.type === 'tool-call' && message.isComplete === true;
+  }
+
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
     const message = response.fact.messageStart.message;
 
@@ -343,6 +353,14 @@ export default class Conversation implements IConversation {
     const messages = new Map(this.messages);
     const toolCallKey = `${toolCallStart.processId}-${toolCallStart.callSeq}`;
 
+    // Terminal guard, mirroring `isTerminalBot` / `isTerminalThinking` (F-011): a tool-call that has
+    // already completed must never regress to running. This became reachable once a replayed
+    // `tool_call.complete` can materialize the message on its own — a late or out-of-order `start`
+    // would otherwise overwrite it back to `isComplete: false` and drop `result` / `isError` /
+    // `sidecar`, with no further `complete` coming to repair it. `isComplete` is also what the Task
+    // list folds on (`derived-stores.ts`), so the regression would silently empty that list too.
+    if (this.isTerminalToolCall(this.messages?.get(toolCallKey))) return this;
+
     const toolCallMessage: ConversationToolCallMessage = {
       type: 'tool-call',
       eventType: EventType.TOOL_CALL_START,
@@ -383,6 +401,32 @@ export default class Conversation implements IConversation {
         traceId: response.traceId ?? existingMessage.traceId,
       };
       messages.set(toolCallKey, updatedMessage);
+    } else {
+      // Replay-safety (BUG-009): a GET rejoin only replays terminal frames, so `tool_call.complete`
+      // arrives with no preceding `tool_call.start`. Dropping it here made every tool-call block
+      // vanish when re-entering a conversation. The complete frame extends the same base payload as
+      // the start frame (`toolCall.*` plus the correlation ids), so it can stand alone as a finished
+      // call — the only thing lost is the original start timestamp.
+      const replayedMessage: ConversationToolCallMessage = {
+        type: 'tool-call',
+        eventType: EventType.TOOL_CALL_COMPLETE,
+        messageId: toolCallKey,
+        processId: toolCallComplete.processId,
+        callSeq: toolCallComplete.callSeq,
+        toolName: toolCallComplete.toolCall.toolName,
+        reason: toolCallComplete.toolCall.reason,
+        toolsetName: toolCallComplete.toolCall.toolsetName,
+        parameter: toolCallComplete.toolCall.parameter,
+        toolUseId: toolCallComplete.toolUseId,
+        parentToolUseId: toolCallComplete.parentToolUseId,
+        result: toolCallComplete.toolCallResult,
+        isError: toolCallComplete.isError,
+        sidecar: toolCallComplete.toolUseResultSidecar,
+        isComplete: true,
+        time: new Date(),
+        traceId: response.traceId,
+      };
+      messages.set(toolCallKey, replayedMessage);
     }
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
