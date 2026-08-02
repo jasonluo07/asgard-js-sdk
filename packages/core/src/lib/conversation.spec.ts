@@ -304,6 +304,7 @@ function toolCallCompleteEvent(
   toolCallResult: Record<string, unknown>,
   isError?: boolean,
   toolUseResultSidecar?: Record<string, unknown>,
+  ids?: { toolUseId?: string; parentToolUseId?: string },
 ): SseResponse<EventType> {
   return {
     eventType: EventType.TOOL_CALL_COMPLETE,
@@ -316,6 +317,8 @@ function toolCallCompleteEvent(
       toolCallComplete: {
         processId,
         callSeq,
+        ...(ids?.toolUseId === undefined ? {} : { toolUseId: ids.toolUseId }),
+        ...(ids?.parentToolUseId === undefined ? {} : { parentToolUseId: ids.parentToolUseId }),
         toolCall: { toolsetName: '', toolName: 'Read', parameter: { file_path: '/a.ts' } },
         toolCallResult,
         ...(isError === undefined ? {} : { isError }),
@@ -548,5 +551,61 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
     });
 
     expect((conv.cancelInFlightToolCalls().messages?.get('t1') as ConversationThinkingMessage).isThinking).toBe(false);
+  });
+});
+
+// BUG-009 / sdk-pm#48 — GET rejoin 只回放終局事件：`tool_call.complete` 到達時**沒有**先前的
+// `tool_call.start`。reducer 原本只在既有訊息存在時才更新，於是整筆被靜默丟棄，重進對話後所有工具
+// 呼叫區塊消失。complete 事件本身帶著 `toolCall.*` 與關聯 id（`ToolCallCompleteEventData extends
+// ToolCallBaseEventData`），足以獨立成一筆完整訊息。
+describe('Conversation — tool-call replay without a preceding start (BUG-009)', () => {
+  const empty = (): Conversation => new Conversation({ messages: new Map() });
+
+  it('creates a completed tool-call when only the complete frame arrives', () => {
+    const conv = empty().onMessage(toolCallCompleteEvent('p', 0, { text: 'file contents' }));
+    const toolCall = getToolCall(conv, 'p-0');
+
+    expect(toolCall).toBeDefined();
+    expect(toolCall?.isComplete).toBe(true);
+    expect(toolCall?.eventType).toBe(EventType.TOOL_CALL_COMPLETE);
+    expect(toolCall?.toolName).toBe('Read');
+    expect(toolCall?.parameter).toEqual({ file_path: '/a.ts' });
+    expect(toolCall?.result).toEqual({ text: 'file contents' });
+  });
+
+  it('carries the failure flag through on a replayed complete', () => {
+    const conv = empty().onMessage(toolCallCompleteEvent('p', 1, { text: 'permission denied' }, true));
+
+    expect(getToolCall(conv, 'p-1')?.isError).toBe(true);
+  });
+
+  it('keeps the structured sidecar on a replayed complete', () => {
+    const sidecar = { task: { id: 't-1', subject: 'do it' } };
+    const conv = empty().onMessage(toolCallCompleteEvent('p', 2, { text: 'ok' }, undefined, sidecar));
+
+    expect(getToolCall(conv, 'p-2')?.sidecar).toEqual(sidecar);
+  });
+
+  // 子代理的工具呼叫靠 `parentToolUseId` 掛回 Agent（F-012）；補建時丟掉它，重播後的 subagent 樹會散掉。
+  it('preserves the correlation ids so replayed subagent tool-calls still group', () => {
+    const conv = empty().onMessage(
+      toolCallCompleteEvent('p', 3, { text: 'ok' }, undefined, undefined, {
+        toolUseId: 'tu-9',
+        parentToolUseId: 'tu-parent',
+      }),
+    );
+    const toolCall = getToolCall(conv, 'p-3');
+
+    expect(toolCall?.toolUseId).toBe('tu-9');
+    expect(toolCall?.parentToolUseId).toBe('tu-parent');
+  });
+
+  it('still updates in place when the start frame did arrive (live run unchanged)', () => {
+    const conv = empty()
+      .onMessage(toolCallStartEvent('p', 4))
+      .onMessage(toolCallCompleteEvent('p', 4, { text: 'ok' }));
+
+    expect(conv.messages?.size).toBe(1);
+    expect(getToolCall(conv, 'p-4')?.isComplete).toBe(true);
   });
 });

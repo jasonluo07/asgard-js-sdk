@@ -383,6 +383,32 @@ export default class Conversation implements IConversation {
         traceId: response.traceId ?? existingMessage.traceId,
       };
       messages.set(toolCallKey, updatedMessage);
+    } else {
+      // Replay-safety (BUG-009): a GET rejoin only replays terminal frames, so `tool_call.complete`
+      // arrives with no preceding `tool_call.start`. Dropping it here made every tool-call block
+      // vanish when re-entering a conversation. The complete frame extends the same base payload as
+      // the start frame (`toolCall.*` plus the correlation ids), so it can stand alone as a finished
+      // call — the only thing lost is the original start timestamp.
+      const replayedMessage: ConversationToolCallMessage = {
+        type: 'tool-call',
+        eventType: EventType.TOOL_CALL_COMPLETE,
+        messageId: toolCallKey,
+        processId: toolCallComplete.processId,
+        callSeq: toolCallComplete.callSeq,
+        toolName: toolCallComplete.toolCall.toolName,
+        reason: toolCallComplete.toolCall.reason,
+        toolsetName: toolCallComplete.toolCall.toolsetName,
+        parameter: toolCallComplete.toolCall.parameter,
+        toolUseId: toolCallComplete.toolUseId,
+        parentToolUseId: toolCallComplete.parentToolUseId,
+        result: toolCallComplete.toolCallResult,
+        isError: toolCallComplete.isError,
+        sidecar: toolCallComplete.toolUseResultSidecar,
+        isComplete: true,
+        time: new Date(),
+        traceId: response.traceId,
+      };
+      messages.set(toolCallKey, replayedMessage);
     }
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
