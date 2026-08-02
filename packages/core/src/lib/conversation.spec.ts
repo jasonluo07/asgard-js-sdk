@@ -600,6 +600,21 @@ describe('Conversation — tool-call replay without a preceding start (BUG-009)'
     expect(toolCall?.parentToolUseId).toBe('tu-parent');
   });
 
+  // 反例守衛：complete 先補建出完成態之後，一個遲到／亂序的 start 不得把它打回執行中——那會同時丟掉
+  // result/isError/sidecar，而且 `isComplete` 正是 Task 清單（derived-stores）的折疊條件，倒退會讓
+  // 那筆任務從清單消失，且不會再有 complete 來修復。
+  it('ignores a late start frame after the tool-call already completed', () => {
+    const conv = empty()
+      .onMessage(toolCallCompleteEvent('p', 5, { text: 'done' }))
+      .onMessage(toolCallStartEvent('p', 5));
+    const toolCall = getToolCall(conv, 'p-5');
+
+    expect(conv.messages?.size).toBe(1);
+    expect(toolCall?.isComplete).toBe(true);
+    expect(toolCall?.result).toEqual({ text: 'done' });
+    expect(toolCall?.eventType).toBe(EventType.TOOL_CALL_COMPLETE);
+  });
+
   it('still updates in place when the start frame did arrive (live run unchanged)', () => {
     const conv = empty()
       .onMessage(toolCallStartEvent('p', 4))

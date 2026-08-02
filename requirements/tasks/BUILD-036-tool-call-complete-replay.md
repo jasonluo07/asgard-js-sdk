@@ -31,10 +31,10 @@ The fix is to materialize the message from the complete frame itself. `ToolCallC
 
 ## Coverage
 
-| File                                         | Change                                                                                                                          |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/core/src/lib/conversation.ts`      | `onToolCallComplete` gains an `else` branch that builds a complete `ConversationToolCallMessage` from the complete frame        |
-| `packages/core/src/lib/conversation.spec.ts` | New `describe` with 5 cases; `toolCallCompleteEvent` helper gains an optional `ids` argument so correlation ids can be asserted |
+| File                                         | Change                                                                                                                                                                                    |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/core/src/lib/conversation.ts`      | `onToolCallComplete` gains an `else` branch that builds a complete `ConversationToolCallMessage` from the complete frame; `onToolCallStart` gains a terminal guard (`isTerminalToolCall`) |
+| `packages/core/src/lib/conversation.spec.ts` | New `describe` with 5 cases; `toolCallCompleteEvent` helper gains an optional `ids` argument so correlation ids can be asserted                                                           |
 
 Core only — no React change, no public API change, no new type.
 
@@ -49,6 +49,7 @@ Core only — no React change, no public API change, no new type.
 | R3  | `toolUseResultSidecar` survives on a replayed complete                                                                               |
 | R4  | `toolUseId` / `parentToolUseId` survive, so replayed subagent tool-calls still group under their spawning `Agent` (F-012)            |
 | R5  | The live path (`start` → `complete`) is unchanged: still updates in place, still one message                                         |
+| R6  | A late / out-of-order `tool_call.start` never rolls a completed tool-call back to running                                            |
 
 ---
 
@@ -57,6 +58,7 @@ Core only — no React change, no public API change, no new type.
 - [x] T1 Confirm from the type definitions that the complete frame carries the base tool-call payload
 - [x] T2 Write the failing tests first
 - [x] T3 Add the materialize branch
+- [x] T3b Add the terminal guard on `onToolCallStart` (found while hunting for counter-examples — see below)
 - [x] T4 Static checks + full test suite
 - [x] T5 End-to-end verification in a real product against a real backend
 
@@ -74,3 +76,16 @@ Core only — no React change, no public API change, no new type.
 ### Scope note
 
 This fixes the tool-call half only. The Mimir report on the same issue (**whole transcript blank + Send permanently disabled**) is a different, more severe symptom and is **not** explained by this change — the open lead there is `run.init` arriving second-to-last in the replay stream. Re-verify Mimir after this ships before assuming it is covered.
+
+### Counter-example found during review (why T3b exists)
+
+The first cut of this change was incomplete. Materializing on `complete` makes a state reachable that
+never existed before: **a completed tool-call with no `start` yet seen**. `onToolCallStart` had no
+terminal guard (unlike `onMessageStart` / `onThinkingStart`, which do) — it unconditionally
+`messages.set(...)`. So a late or out-of-order `start` would overwrite the materialized message back to
+`isComplete: false` and drop `result` / `isError` / `sidecar`, with **no further `complete` coming to
+repair it**. Worse, `isComplete` is exactly what the Task list folds on
+(`derived-stores.ts:93`), so that entry would silently vanish from the Task list too.
+
+Fixed by adding `isTerminalToolCall`, mirroring the two guards that already existed. The regression
+test was verified to fail without the guard (`expected false to be true`) before being accepted.

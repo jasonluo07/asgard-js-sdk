@@ -134,6 +134,16 @@ export default class Conversation implements IConversation {
     return message?.type === 'thinking' && !message.isThinking;
   }
 
+  /**
+   * A tool-call is terminal once it has completed (`isComplete === true`), whether that came from a
+   * live `tool_call.complete` or from one materialized on GET rejoin. Same policy as the bot and
+   * thinking guards (F-011): a late / out-of-order `tool_call.start` must not roll it back to
+   * running, which would also drop the result and hide it from the Task list.
+   */
+  private isTerminalToolCall(message: ConversationMessage | undefined): boolean {
+    return message?.type === 'tool-call' && message.isComplete === true;
+  }
+
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
     const message = response.fact.messageStart.message;
 
@@ -342,6 +352,14 @@ export default class Conversation implements IConversation {
     const toolCallStart = response.fact.toolCallStart;
     const messages = new Map(this.messages);
     const toolCallKey = `${toolCallStart.processId}-${toolCallStart.callSeq}`;
+
+    // Terminal guard, mirroring `isTerminalBot` / `isTerminalThinking` (F-011): a tool-call that has
+    // already completed must never regress to running. This became reachable once a replayed
+    // `tool_call.complete` can materialize the message on its own — a late or out-of-order `start`
+    // would otherwise overwrite it back to `isComplete: false` and drop `result` / `isError` /
+    // `sidecar`, with no further `complete` coming to repair it. `isComplete` is also what the Task
+    // list folds on (`derived-stores.ts`), so the regression would silently empty that list too.
+    if (this.isTerminalToolCall(this.messages?.get(toolCallKey))) return this;
 
     const toolCallMessage: ConversationToolCallMessage = {
       type: 'tool-call',

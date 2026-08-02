@@ -38,13 +38,14 @@
 
 Verified end-to-end in a real product against the real dev backend (rather than only in unit tests), because the failing condition — a rejoin stream that replays terminal frames only — is a backend behaviour that no mock in this repo reproduces.
 
-| R#  | Description                                  | Result  | Evidence                                                                                                                                                                       |
-| --- | -------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| R1  | Lone complete → materialized, correct fields | ✅ Pass | Unit test + live: re-entering the conversation shows `1 個步驟 · 處理 1 個檔案`; expanded it reads `讀取 bug010-verify.txt` (toolName `Read` + `parameter.file_path` survived) |
-| R2  | `isError` preserved                          | ✅ Pass | Unit test                                                                                                                                                                      |
-| R3  | Sidecar preserved                            | ✅ Pass | Unit test                                                                                                                                                                      |
-| R4  | Correlation ids preserved                    | ✅ Pass | Unit test                                                                                                                                                                      |
-| R5  | Live path unchanged                          | ✅ Pass | Unit test (single message, completed) + live: sending a fresh tool-using turn still renders one block                                                                          |
+| R#  | Description                                    | Result  | Evidence                                                                                                                                                                       |
+| --- | ---------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R1  | Lone complete → materialized, correct fields   | ✅ Pass | Unit test + live: re-entering the conversation shows `1 個步驟 · 處理 1 個檔案`; expanded it reads `讀取 bug010-verify.txt` (toolName `Read` + `parameter.file_path` survived) |
+| R2  | `isError` preserved                            | ✅ Pass | Unit test                                                                                                                                                                      |
+| R3  | Sidecar preserved                              | ✅ Pass | Unit test                                                                                                                                                                      |
+| R4  | Correlation ids preserved                      | ✅ Pass | Unit test                                                                                                                                                                      |
+| R5  | Live path unchanged                            | ✅ Pass | Unit test + live: after the fix, sending `list the files in the working directory` rendered `2 個步驟 · 處理 1 個檔案` and the correct answer                                  |
+| R6  | Late `start` cannot roll back a completed call | ✅ Pass | Unit test, **validated by temporarily removing the guard** and confirming the test fails (`expected false to be true`)                                                         |
 
 Before/after on the same conversation id, same backend data: tool-call block absent → present.
 
@@ -54,7 +55,11 @@ Before/after on the same conversation id, same backend data: tool-call block abs
 
 ### Critical / Important
 
-None.
+None outstanding. One was found and fixed during this review: materializing on `complete` made
+"completed tool-call with no `start` seen" reachable, and `onToolCallStart` had no terminal guard, so a
+late `start` could roll it back to running (dropping the result, and removing the entry from the Task
+list, which folds on `isComplete`). Added `isTerminalToolCall` alongside the existing bot / thinking
+guards; R6 pins it.
 
 ### Minor
 
