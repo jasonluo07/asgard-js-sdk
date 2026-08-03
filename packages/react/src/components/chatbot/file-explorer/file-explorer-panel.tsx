@@ -1,6 +1,9 @@
 import { MouseEvent as ReactMouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
+import { useFileExplorerDialog } from './file-explorer-dialog';
 import { FileView } from './file-view';
 import { ContextMenu, ContextMenuItem } from './context-menu';
 import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
@@ -139,6 +142,7 @@ interface DirChildrenProps {
 /** One directory level; lazily lists its children, sorted dirs-first then by name. */
 function DirChildren(props: DirChildrenProps): ReactNode {
   const { sandboxName, dirPath, depth, listDir, refreshKey } = props;
+  const { locale = 'en-US' } = useAsgardTemplateContext();
   const [entries, setEntries] = useState<FsEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +175,7 @@ function DirChildren(props: DirChildrenProps): ReactNode {
   if (loading) {
     return (
       <div className={styles.status} style={pad}>
-        <LoaderCircleIcon size={12} className={styles.spin} /> 載入中…
+        <LoaderCircleIcon size={12} className={styles.spin} /> {t(locale, 'fileExplorer.loading')}
       </div>
     );
   }
@@ -187,7 +191,7 @@ function DirChildren(props: DirChildrenProps): ReactNode {
   if (!entries || entries.length === 0) {
     return (
       <div className={styles.emptyDir} style={pad}>
-        （空目錄）
+        {t(locale, 'fileExplorer.emptyDir')}
       </div>
     );
   }
@@ -277,6 +281,9 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     chrome = 'card',
   } = props;
 
+  const { locale = 'en-US' } = useAsgardTemplateContext();
+  const { dialog, requestInput, requestConfirm } = useFileExplorerDialog(locale);
+
   const rootClass = `${styles.root} ${chrome === 'flush' ? styles.flush : ''}`;
 
   const activeSandboxName = controller.activeSandboxName ?? sandboxes[0]?.sandboxName ?? null;
@@ -363,47 +370,52 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
   );
 
   const actNewFile = useCallback(
-    (dir: string): void => {
+    async (dir: string): Promise<void> => {
       if (!sandboxName || !saveFile) return;
 
-      const name = window.prompt('新檔名', 'untitled.txt');
+      const name = await requestInput({ title: t(locale, 'fileExplorer.newFilePrompt'), defaultValue: 'untitled.txt' });
       if (!name) return;
 
       void run(saveFile(sandboxName, joinPath(dir, name), ''), dir);
     },
-    [sandboxName, saveFile, run],
+    [sandboxName, saveFile, run, requestInput, locale],
   );
   const actNewFolder = useCallback(
-    (dir: string): void => {
+    async (dir: string): Promise<void> => {
       if (!sandboxName || !mkdir) return;
 
-      const name = window.prompt('新資料夾名稱', 'new-folder');
+      const name = await requestInput({ title: t(locale, 'fileExplorer.newFolderPrompt'), defaultValue: 'new-folder' });
       if (!name) return;
 
       void run(mkdir(sandboxName, joinPath(dir, name)), dir);
     },
-    [sandboxName, mkdir, run],
+    [sandboxName, mkdir, run, requestInput, locale],
   );
   const actRename = useCallback(
-    (entry: FsEntry): void => {
+    async (entry: FsEntry): Promise<void> => {
       if (!sandboxName || !move) return;
 
-      const name = window.prompt('重新命名', entry.name);
+      const name = await requestInput({ title: t(locale, 'fileExplorer.renamePrompt'), defaultValue: entry.name });
       if (!name || name === entry.name) return;
 
       void run(move(sandboxName, entry.path, joinPath(parentDir(entry.path), name)), parentDir(entry.path));
     },
-    [sandboxName, move, run],
+    [sandboxName, move, run, requestInput, locale],
   );
   const actDelete = useCallback(
-    (entry: FsEntry): void => {
+    async (entry: FsEntry): Promise<void> => {
       if (!sandboxName || !remove) return;
 
-      if (!window.confirm(`確定刪除「${entry.name}」?${entry.isDir ? '（含目錄下所有內容）' : ''}`)) return;
+      const confirmed = await requestConfirm({
+        title: t(locale, entry.isDir ? 'fileExplorer.confirmDeleteDir' : 'fileExplorer.confirmDelete', {
+          name: entry.name,
+        }),
+      });
+      if (!confirmed) return;
 
       void run(remove(sandboxName, entry.path, entry.isDir), parentDir(entry.path));
     },
-    [sandboxName, remove, run],
+    [sandboxName, remove, run, requestConfirm, locale],
   );
   const actPaste = useCallback(
     (dstDir: string): void => {
@@ -472,24 +484,30 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
       <div className={rootClass} ref={rootRef}>
         {onClose && (
           <div className={styles.emptyClose}>
-            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="關閉檔案總管" title="關閉">
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label={t(locale, 'fileExplorer.close')}
+              title={t(locale, 'header.close')}
+            >
               <XIcon size={16} />
             </button>
           </div>
         )}
         <div className={styles.emptyState}>
           <PackageOpenIcon size={30} className={styles.emptyIcon} />
-          <div className={styles.emptyTitle}>目前沒有執行中的 sandbox</div>
-          <div className={styles.emptyDesc}>sandbox 可能因閒置已被回收。可推一則訊息喚醒一台來繼續作業。</div>
+          <div className={styles.emptyTitle}>{t(locale, 'fileExplorer.noSandboxTitle')}</div>
+          <div className={styles.emptyDesc}>{t(locale, 'fileExplorer.noSandboxDesc')}</div>
           {onNudge && (
             <button type="button" className={styles.nudgeBtn} onClick={handleNudge} disabled={nudging || nudgeDisabled}>
               {nudging ? (
                 <>
-                  <LoaderCircleIcon size={15} className={styles.spin} /> 喚醒中…
+                  <LoaderCircleIcon size={15} className={styles.spin} /> {t(locale, 'fileExplorer.waking')}
                 </>
               ) : (
                 <>
-                  <ZapIcon size={15} /> 喚醒 sandbox
+                  <ZapIcon size={15} /> {t(locale, 'fileExplorer.wakeSandbox')}
                 </>
               )}
             </button>
@@ -502,10 +520,20 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
   const root = rootPath as string;
   const targetDir = selectedEntry?.isDir ? selectedEntry.path : root;
 
+  // Shared by the context menu (both variants) and the toolbar button, so the clipboard hint reads
+  // identically wherever paste is offered.
+  const pasteLabel = clipboard
+    ? t(locale, 'fileExplorer.pasteNamed', { name: clipboard.entry.name })
+    : t(locale, 'fileExplorer.paste');
+
   function buildSections(target: MenuTarget): ContextMenuItem[][] {
-    const pasteLabel = clipboard ? `貼上「${clipboard.entry.name}」` : '貼上';
     const refreshSec: ContextMenuItem[] = [
-      { key: 'refresh', label: '重新整理', icon: <RefreshIcon size={15} />, onSelect: bumpRefresh },
+      {
+        key: 'refresh',
+        label: t(locale, 'fileExplorer.refresh'),
+        icon: <RefreshIcon size={15} />,
+        onSelect: bumpRefresh,
+      },
     ];
 
     if (target.kind === 'file') {
@@ -515,20 +543,20 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'open',
-            label: '開啟',
+            label: t(locale, 'fileExplorer.open'),
             icon: <EyeIcon size={15} />,
             onSelect: () => setOpenFile(e),
           },
           {
             key: 'download',
-            label: '下載',
+            label: t(locale, 'fileExplorer.download'),
             icon: <DownloadIcon size={15} />,
             onSelect: () => actDownload(e),
             disabled: !download,
           },
           {
             key: 'rename',
-            label: '重新命名',
+            label: t(locale, 'fileExplorer.rename'),
             icon: <PencilIcon size={15} />,
             onSelect: () => actRename(e),
             disabled: !move,
@@ -537,13 +565,13 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'copy',
-            label: '複製',
+            label: t(locale, 'fileExplorer.copy'),
             icon: <CopyIcon size={15} />,
             onSelect: () => setClipboard({ op: 'copy', entry: e }),
           },
           {
             key: 'cut',
-            label: '剪下',
+            label: t(locale, 'fileExplorer.cut'),
             icon: <ScissorsIcon size={15} />,
             onSelect: () => setClipboard({ op: 'cut', entry: e }),
           },
@@ -551,7 +579,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'delete',
-            label: '刪除',
+            label: t(locale, 'fileExplorer.delete'),
             icon: <TrashIcon size={15} />,
             danger: true,
             onSelect: () => actDelete(e),
@@ -570,7 +598,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'toggle',
-            label: isExpanded ? '收合' : '展開',
+            label: t(locale, isExpanded ? 'fileExplorer.collapse' : 'fileExplorer.expand'),
             icon: isExpanded ? <ChevronDownIcon size={15} /> : <ChevronRightIcon size={15} />,
             onSelect: () => toggleExpand(e.path),
           },
@@ -578,21 +606,21 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'newfile',
-            label: '新增檔案',
+            label: t(locale, 'fileExplorer.newFile'),
             icon: <FilePlusIcon size={15} />,
             onSelect: () => actNewFile(e.path),
             disabled: !saveFile,
           },
           {
             key: 'newfolder',
-            label: '新增資料夾',
+            label: t(locale, 'fileExplorer.newFolder'),
             icon: <FolderPlusIcon size={15} />,
             onSelect: () => actNewFolder(e.path),
             disabled: !mkdir,
           },
           {
             key: 'upload',
-            label: '上傳',
+            label: t(locale, 'fileExplorer.upload'),
             icon: <UploadIcon size={15} />,
             onSelect: () => actUpload(e.path),
             disabled: !upload,
@@ -608,20 +636,20 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'rename',
-            label: '重新命名',
+            label: t(locale, 'fileExplorer.rename'),
             icon: <PencilIcon size={15} />,
             onSelect: () => actRename(e),
             disabled: !move,
           },
           {
             key: 'copy',
-            label: '複製',
+            label: t(locale, 'fileExplorer.copy'),
             icon: <CopyIcon size={15} />,
             onSelect: () => setClipboard({ op: 'copy', entry: e }),
           },
           {
             key: 'cut',
-            label: '剪下',
+            label: t(locale, 'fileExplorer.cut'),
             icon: <ScissorsIcon size={15} />,
             onSelect: () => setClipboard({ op: 'cut', entry: e }),
           },
@@ -629,7 +657,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
         [
           {
             key: 'delete',
-            label: '刪除',
+            label: t(locale, 'fileExplorer.delete'),
             icon: <TrashIcon size={15} />,
             danger: true,
             onSelect: () => actDelete(e),
@@ -644,14 +672,14 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
       [
         {
           key: 'newfile',
-          label: '新增檔案',
+          label: t(locale, 'fileExplorer.newFile'),
           icon: <FilePlusIcon size={15} />,
           onSelect: () => actNewFile(root),
           disabled: !saveFile,
         },
         {
           key: 'newfolder',
-          label: '新增資料夾',
+          label: t(locale, 'fileExplorer.newFolder'),
           icon: <FolderPlusIcon size={15} />,
           onSelect: () => actNewFolder(root),
           disabled: !mkdir,
@@ -680,7 +708,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
               className={styles.select}
               value={activeSandboxName ?? ''}
               onChange={e => controller.selectSandbox(e.target.value)}
-              aria-label="選擇 sandbox"
+              aria-label={t(locale, 'fileExplorer.selectSandbox')}
             >
               {sandboxes.map(s => (
                 <option key={s.sandboxName} value={s.sandboxName}>
@@ -690,7 +718,13 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             </select>
           </label>
           {onClose && (
-            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="關閉檔案總管" title="關閉">
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label={t(locale, 'fileExplorer.close')}
+              title={t(locale, 'header.close')}
+            >
               <XIcon size={16} />
             </button>
           )}
@@ -701,14 +735,14 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
       </div>
 
       {!openFile && (
-        <div className={styles.toolbar} role="toolbar" aria-label="檔案操作">
+        <div className={styles.toolbar} role="toolbar" aria-label={t(locale, 'fileExplorer.toolbar')}>
           <button
             type="button"
             className={styles.toolBtn}
             onClick={() => actNewFolder(targetDir)}
             disabled={!mkdir}
-            aria-label="新增資料夾"
-            title="新增資料夾"
+            aria-label={t(locale, 'fileExplorer.newFolder')}
+            title={t(locale, 'fileExplorer.newFolder')}
           >
             <FolderPlusIcon size={16} />
           </button>
@@ -717,8 +751,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={styles.toolBtn}
             onClick={() => actUpload(targetDir)}
             disabled={!upload}
-            aria-label="上傳"
-            title="上傳"
+            aria-label={t(locale, 'fileExplorer.upload')}
+            title={t(locale, 'fileExplorer.upload')}
           >
             <UploadIcon size={16} />
           </button>
@@ -727,8 +761,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={styles.toolBtn}
             onClick={() => selectedEntry && actDownload(selectedEntry)}
             disabled={!download || !selectedEntry || selectedEntry.isDir}
-            aria-label="下載"
-            title="下載"
+            aria-label={t(locale, 'fileExplorer.download')}
+            title={t(locale, 'fileExplorer.download')}
           >
             <DownloadIcon size={16} />
           </button>
@@ -738,8 +772,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={styles.toolBtn}
             onClick={() => selectedEntry && setClipboard({ op: 'copy', entry: selectedEntry })}
             disabled={!selectedEntry}
-            aria-label="複製"
-            title="複製"
+            aria-label={t(locale, 'fileExplorer.copy')}
+            title={t(locale, 'fileExplorer.copy')}
           >
             <CopyIcon size={16} />
           </button>
@@ -748,8 +782,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={styles.toolBtn}
             onClick={() => selectedEntry && setClipboard({ op: 'cut', entry: selectedEntry })}
             disabled={!selectedEntry}
-            aria-label="剪下"
-            title="剪下"
+            aria-label={t(locale, 'fileExplorer.cut')}
+            title={t(locale, 'fileExplorer.cut')}
           >
             <ScissorsIcon size={16} />
           </button>
@@ -758,8 +792,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={styles.toolBtn}
             onClick={() => actPaste(targetDir)}
             disabled={!clipboard}
-            aria-label="貼上"
-            title={clipboard ? `貼上「${clipboard.entry.name}」` : '貼上'}
+            aria-label={t(locale, 'fileExplorer.paste')}
+            title={pasteLabel}
           >
             <ClipboardPasteIcon size={16} />
           </button>
@@ -768,13 +802,19 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             className={`${styles.toolBtn} ${styles.toolDanger}`}
             onClick={() => selectedEntry && actDelete(selectedEntry)}
             disabled={!remove || !selectedEntry}
-            aria-label="刪除"
-            title="刪除"
+            aria-label={t(locale, 'fileExplorer.delete')}
+            title={t(locale, 'fileExplorer.delete')}
           >
             <TrashIcon size={16} />
           </button>
           <span className={styles.toolSpacer} />
-          <button type="button" className={styles.toolBtn} onClick={bumpRefresh} aria-label="重新整理" title="重新整理">
+          <button
+            type="button"
+            className={styles.toolBtn}
+            onClick={bumpRefresh}
+            aria-label={t(locale, 'fileExplorer.refresh')}
+            title={t(locale, 'fileExplorer.refresh')}
+          >
             <RefreshIcon size={16} />
           </button>
         </div>
@@ -820,6 +860,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
       )}
 
       <input ref={uploadInputRef} type="file" hidden onChange={onUploadPicked} />
+
+      {dialog}
     </div>
   );
 }

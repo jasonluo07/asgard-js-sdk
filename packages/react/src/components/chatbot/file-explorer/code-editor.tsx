@@ -1,5 +1,7 @@
 import { lazy, ReactNode, Suspense, useEffect, useState } from 'react';
 import type { Extension } from '@codemirror/state';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import { LoaderCircleIcon } from './icons';
 import styles from './file-view.module.scss';
 
@@ -68,9 +70,11 @@ function extensionsFor(ext: string): Promise<Extension[]> {
 }
 
 function Loading(): ReactNode {
+  const { locale = 'en-US' } = useAsgardTemplateContext();
+
   return (
     <div className={styles.status}>
-      <LoaderCircleIcon size={14} className={styles.spin} /> 載入編輯器…
+      <LoaderCircleIcon size={14} className={styles.spin} /> {t(locale, 'fileExplorer.loadingEditor')}
     </div>
   );
 }
