@@ -1,5 +1,5 @@
 import { ClientConfig, AsgardServiceClient, EventType } from '@asgard-js/core';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Safety timeout (ms) for a connection kept alive past unmount. If the run
@@ -27,15 +27,36 @@ export function useAsgardServiceClient(props: UseAsgardServiceClientProps): Asga
 
   const clientRef = useRef<AsgardServiceClient | null>(null);
 
-  // Read the latest flag inside the unmount-only cleanup without re-running it.
+  // Read the latest values inside the mount-only effect without re-running it.
   const keepConnectionOnUnmountRef = useRef(keepConnectionOnUnmount);
   keepConnectionOnUnmountRef.current = keepConnectionOnUnmount;
+  const configRef = useRef(config);
+  configRef.current = config;
+  const isPreviewModeRef = useRef(isPreviewMode);
+  isPreviewModeRef.current = isPreviewMode;
 
+  // Built during render so the first paint already has a client (no null frame for consumers).
   if (!clientRef.current && !isPreviewMode) {
     clientRef.current = new AsgardServiceClient(config);
   }
 
+  // The instance actually handed out. Held in state, not read straight off the ref, so that
+  // rebuilding after a cleanup re-renders consumers onto the new instance.
+  const [client, setClient] = useState<AsgardServiceClient | null>(clientRef.current);
+
   useEffect(() => {
+    // React runs setup → cleanup → setup on the same element (StrictMode in dev, and any remount
+    // that reuses this hook instance). The cleanup below disposes the client and clears the ref,
+    // and nothing else rebuilds it — so without this the consumer keeps the *disposed* instance.
+    // That fails silently and severely: `runSse` drops every frame while detached and skips
+    // `onSseCompleted`, so a rejoin replays the transcript into a dead client and never settles the
+    // run — empty conversation plus a permanently disabled composer (asgard-sdk-pm#48).
+    if (!clientRef.current && !isPreviewModeRef.current) {
+      clientRef.current = new AsgardServiceClient(configRef.current);
+    }
+
+    setClient(clientRef.current);
+
     return (): void => {
       if (clientRef.current) {
         if (keepConnectionOnUnmountRef.current) {
@@ -51,41 +72,44 @@ export function useAsgardServiceClient(props: UseAsgardServiceClientProps): Asga
     };
   }, []);
 
+  // Registrations follow the `client` instance: a rebuild re-registers onto the new one instead of
+  // leaving every callback attached to a client that was disposed. Re-running on a new instance
+  // cannot double-register, because each instance carries its own (empty) emitter.
   useEffect(() => {
-    if (!clientRef.current || !onRunInit) return;
+    if (!client || !onRunInit) return;
 
-    clientRef.current.on(EventType.INIT, onRunInit);
-  }, [onRunInit]);
-
-  useEffect(() => {
-    if (!clientRef.current || !onProcess) return;
-
-    clientRef.current.on(EventType.PROCESS, onProcess);
-  }, [onProcess]);
+    client.on(EventType.INIT, onRunInit);
+  }, [client, onRunInit]);
 
   useEffect(() => {
-    if (!clientRef.current || !onMessage) return;
+    if (!client || !onProcess) return;
 
-    clientRef.current.on(EventType.MESSAGE, onMessage);
-  }, [onMessage]);
-
-  useEffect(() => {
-    if (!clientRef.current || !onToolCall) return;
-
-    clientRef.current.on(EventType.TOOL_CALL, onToolCall);
-  }, [onToolCall]);
+    client.on(EventType.PROCESS, onProcess);
+  }, [client, onProcess]);
 
   useEffect(() => {
-    if (!clientRef.current || !onRunDone) return;
+    if (!client || !onMessage) return;
 
-    clientRef.current.on(EventType.DONE, onRunDone);
-  }, [onRunDone]);
+    client.on(EventType.MESSAGE, onMessage);
+  }, [client, onMessage]);
 
   useEffect(() => {
-    if (!clientRef.current || !onRunError) return;
+    if (!client || !onToolCall) return;
 
-    clientRef.current.on(EventType.ERROR, onRunError);
-  }, [onRunError]);
+    client.on(EventType.TOOL_CALL, onToolCall);
+  }, [client, onToolCall]);
 
-  return clientRef.current;
+  useEffect(() => {
+    if (!client || !onRunDone) return;
+
+    client.on(EventType.DONE, onRunDone);
+  }, [client, onRunDone]);
+
+  useEffect(() => {
+    if (!client || !onRunError) return;
+
+    client.on(EventType.ERROR, onRunError);
+  }, [client, onRunError]);
+
+  return client;
 }

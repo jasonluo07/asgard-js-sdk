@@ -140,3 +140,6 @@
 | `BUILD-034`  | Hoist the run indicator out of the footer         | High     | done   | [BUILD-034-hoist-run-indicator-out-of-footer.md](./BUILD-034-hoist-run-indicator-out-of-footer.md)       |
 | `BUILD-035`  | Wire sandboxPhase into init/restore join paths    | High     | done   | [BUILD-035-sandbox-phase-join-paths.md](./BUILD-035-sandbox-phase-join-paths.md)                         |
 | `REVIEW-035` | Review: sandboxPhase into init/restore join paths | —        | done   | [REVIEW-035-sandbox-phase-join-paths.md](./REVIEW-035-sandbox-phase-join-paths.md)                       |
+| `BUILD-036`  | Materialize a replayed tool-call from complete    | High     | done   | [BUILD-036-tool-call-complete-replay.md](./BUILD-036-tool-call-complete-replay.md)                       |
+| `REVIEW-036` | Review: Materialize replayed tool-call            | —        | done   | [REVIEW-036-tool-call-complete-replay.md](./REVIEW-036-tool-call-complete-replay.md)                     |
+| `BUILD-037`  | Rebuild the client on a StrictMode remount        | High     | done   | [BUILD-037-strictmode-client-detach.md](./BUILD-037-strictmode-client-detach.md)                         |
