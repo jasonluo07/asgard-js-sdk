@@ -144,4 +144,4 @@
 | `REVIEW-036` | Review: Materialize replayed tool-call            | —        | done   | [REVIEW-036-tool-call-complete-replay.md](./REVIEW-036-tool-call-complete-replay.md)                     |
 | `BUILD-037`  | Rebuild the client on a StrictMode remount        | High     | done   | [BUILD-037-strictmode-client-detach.md](./BUILD-037-strictmode-client-detach.md)                         |
 | `BUILD-038`  | Localize File Explorer, replace native prompts    | High     | done   | [BUILD-038-file-explorer-i18n.md](./BUILD-038-file-explorer-i18n.md)                                     |
-| `REVIEW-038` | Review: Localize File Explorer, replace prompts   | —        | ready  | [REVIEW-038-file-explorer-i18n.md](./REVIEW-038-file-explorer-i18n.md)                                   |
+| `REVIEW-038` | Review: Localize File Explorer, replace prompts   | —        | done   | [REVIEW-038-file-explorer-i18n.md](./REVIEW-038-file-explorer-i18n.md)                                   |

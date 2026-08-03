@@ -3,127 +3,132 @@
 ## Meta
 
 - Task ID: `REVIEW-038`
-- Status: `ready`
+- Status: `done`
 - BUILD Task: `BUILD-038`
-- Reviewed commit: `<git commit SHA>`
-- Reviewed branch: `<branch-name>`
+- Reviewed commit: `613d554`
+- Reviewed branch: `fix/49-file-explorer-i18n`
 
 ---
 
 ## §1 Static Code Review
 
-Scan BUILD task `## Coverage` files against `FRONTEND_RULE_COMMON.md`. No server needed.
+Scope for greps: `packages/react/src/components/chatbot/file-explorer/`, `packages/react/src/i18n.ts`
+(per `BUILD-038 ## Coverage`). `tsc` / `eslint` run project-wide.
+
+> Note on the procedure: `.claude/skills/review/REVIEW_RULE.md` referenced by the skill does not exist
+> in this repo (the skill directory holds only `SKILL.md`), and there is no `lint:check` script. The
+> checklist and grep list below are taken from `_review_template.md`; lint was run as read-only
+> `npx eslint .` rather than `npm run lint`, which auto-fixes.
 
 ### §1.1 Checklist
 
-| Check item                                                                                                    | Rule                           | Result  |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------- |
-| SVG path strings inlined into components                                                                      | FRONTEND_RULE_COMMON §1.1      | ✅ / ❌ |
-| Inline style magic numbers (e.g., `minHeight: 'calc(...)'`)                                                   | FRONTEND_RULE_COMMON §1.2      | ✅ / ❌ |
-| Hardcoded color values (hex / rgba / oklch literal)                                                           | FRONTEND_RULE_COMMON §1.3      | ✅ / ❌ |
-| `<style>` tag injected into JSX                                                                               | FRONTEND_RULE_COMMON §1.4      | ✅ / ❌ |
-| Module-level mutable ID counters                                                                              | FRONTEND_RULE_COMMON §1.5      | ✅ / ❌ |
-| Login backdoor outside `NODE_ENV === 'development'` guard                                                     | FRONTEND_RULE_COMMON §1.6      | ✅ / ❌ |
-| Sensitive data passed through URL query strings                                                               | FRONTEND_RULE_COMMON §1.7      | ✅ / ❌ |
-| `page.tsx` is thin (params + navigation only; no main UI JSX)                                                 | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| Feature components in `src/components/{feature}/`; no `screens/` dir                                          | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| TypeScript type (`src/types/`) and API module (`src/api/`) exist before first use                             | FRONTEND_RULE_COMMON §2.2      | ✅ / ❌ |
-| API calls routed through `src/api/` domain module; no direct axios in components                              | FRONTEND_RULE_COMMON §3.2      | ✅ / ❌ |
-| Server state via TanStack Query; `isLoading` / `isError` both handled                                         | FRONTEND_RULE_COMMON §3.3 §3.4 | ✅ / ❌ |
-| Forms use RHF + Zod; no bare `useState` fields; field-level error messages                                    | FRONTEND_RULE_COMMON §3.5      | ✅ / ❌ |
-| Zustand store does not hold server data                                                                       | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| No `as any`; no `eslint-disable` / `@ts-ignore` to bypass type errors                                         | FRONTEND_RULE_COMMON §4.1 §4.2 | ✅ / ❌ |
-| Shared types centralized in `src/types/`; no duplicate interfaces across files                                | FRONTEND_RULE_COMMON §4.3 §4.4 | ✅ / ❌ |
-| Size magic numbers repeated ≥3× extracted to `src/constants/layout.ts`                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| Dates use dayjs + `src/constants/formats.ts` constants                                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| All user-facing text via `useTranslations()` / `t()`; synced to `messages/zh-TW.json` + `messages/en-US.json` | FRONTEND_RULE_COMMON §5.3      | ✅ / ❌ |
-| Repeated Tailwind class groups (≥3×), JSX fragments (≥3×), logic (≥2×) extracted                              | FRONTEND_RULE_COMMON §6        | ✅ / ❌ |
-| No `setTimeout` mock delays                                                                                   | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No `console.log` (except error boundary logging)                                                              | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No untracked TODO / FIXME                                                                                     | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
+Rows marked **N/A** target a Next.js application; this repo is a TypeScript SDK library (no routes,
+TanStack Query, Zustand, RHF, Tailwind or dayjs). They are recorded rather than silently skipped.
+
+| Check item                                        | Result                                                         |
+| ------------------------------------------------- | -------------------------------------------------------------- |
+| SVG path strings inlined into components          | ✅ icons live in `icons.tsx`; no new inline SVG                |
+| Inline style magic numbers                        | ✅ only `paddingLeft` computed from tree depth (pre-existing)  |
+| Hardcoded color values (hex / rgba / oklch)       | ✅ none in `.ts` / `.tsx` — see §1.2a                          |
+| `<style>` tag injected into JSX                   | ✅ none                                                        |
+| Module-level mutable ID counters                  | ✅ none                                                        |
+| Login backdoor outside dev guard                  | ✅ none                                                        |
+| Sensitive data in URL query strings               | ✅ none                                                        |
+| `page.tsx` thin / feature component layout        | N/A — library, no routes                                       |
+| Types exist before first use                      | ✅ `FileExplorerDialogApi` declared and exported with the hook |
+| API calls routed through a domain module          | N/A — fs access arrives via injected callbacks                 |
+| Server state via TanStack Query                   | N/A                                                            |
+| Forms use RHF + Zod                               | N/A — single controlled input in the dialog                    |
+| Zustand store does not hold server data           | N/A                                                            |
+| No `as any`; no `eslint-disable` / `@ts-ignore`   | ✅ none — see §1.2c / §1.2d                                    |
+| Shared types centralized; no duplicate interfaces | ✅ dialog types declared once, in the dialog module            |
+| Size magic numbers (≥3×) extracted                | ✅ none introduced                                             |
+| Dates via dayjs + format constants                | N/A — no dates                                                 |
+| All user-facing text via `t()`                    | ✅ **the point of this task** — zero CJK remains (§1.2e)       |
+| Repeated logic (≥2×) / JSX (≥3×) extracted        | ✅ `pasteLabel` hoisted so context menu + toolbar share one    |
+| No `setTimeout` mock delays                       | ✅ the 2 hits are a real debounce autosave, cleared on unmount |
+| No `console.log`                                  | ✅ none                                                        |
+| No untracked TODO / FIXME                         | ✅ none                                                        |
 
 ### §1.2 Mechanical Grep
 
-Run the commands below against directories listed in BUILD task `## Coverage`. Empty output = ✅, any output = ❌.
-
-```bash
-# §1.3 hardcoded color values
-grep -rn --include="*.tsx" --include="*.ts" '#[0-9a-fA-F]\{3,6\}\|rgba(\|oklch(' <coverage-dirs>
-
-# §1.4 <style> tag injection
-grep -rn --include="*.tsx" '<style>' <coverage-dirs>
-
-# §1.7 sensitive data in URL query strings
-grep -rn --include="*.tsx" --include="*.ts" 'router\.push.*email=\|router\.push.*token=\|router\.push.*password=\|searchParams.*token' <coverage-dirs>
-
-# §4.1 as any
-grep -rn --include="*.tsx" --include="*.ts" 'as any' <coverage-dirs>
-
-# §4.2 eslint-disable / ts-ignore
-grep -rn --include="*.tsx" --include="*.ts" 'eslint-disable\|@ts-ignore' <coverage-dirs>
-
-# §5.3 hardcoded Chinese or common UI strings in JSX
-grep -rn --include="*.tsx" '>[^\{<]*[一-鿿][^\{<]*<' <coverage-dirs>
-
-# §7 console.log
-grep -rn --include="*.tsx" --include="*.ts" 'console\.log' <coverage-dirs>
-
-# §7 setTimeout mock
-grep -rn --include="*.tsx" --include="*.ts" 'setTimeout' <coverage-dirs>
-```
-
-Grep results:
+`grep` exit 1 = no match = clean.
 
 ```
-<paste output here>
+a. hardcoded colors (.ts/.tsx)      exit=1  (clean)
+b. <style> injection                exit=1  (clean)
+c. as any                           exit=1  (clean)
+d. eslint-disable / @ts-ignore      exit=1  (clean)
+e. CJK in JSX text                  exit=1  (clean)
+f. console.log                      exit=1  (clean)
+g. setTimeout                       exit=0  → 2 hits, both pre-existing:
+     file-view.tsx:114  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+     file-view.tsx:118  saveTimer.current = setTimeout(() => { … }, 400);
+     Verdict: NOT a violation. This is the debounced autosave, not a mock delay, and it is
+     cleared both before rescheduling (line 116) and on unmount (line 125) — §1.5 satisfied.
+h. TODO / FIXME                     exit=1  (clean)
 ```
+
+> Method note: the first run of these greps passed a shell variable holding two paths unquoted. zsh
+> does not word-split unquoted variables, so `grep` received one bogus path, failed with
+> "No such file or directory", and the `|| echo "(empty ✅)"` fallback printed a **false pass for every
+> check**. The results above are from the corrected run with both paths expanded explicitly.
 
 ### §1.3 TypeScript and Lint
 
-```bash
-npx tsc --noEmit
-npm run lint:check （唯讀審查用 lint:check；REVIEW_RULE §1.4 對應的 npm run lint 為含 auto-fix 的變體）
+```
+tsc --build packages/core packages/react : PASS (exit 0)
+eslint (read-only, project-wide)         : 0 errors, 1 warning
+  packages/react/src/components/chatbot/file-explorer/file-view.tsx
+    174:6  warning  React Hook useMemo has a missing dependency: 'scheduleSave'  react-hooks/exhaustive-deps
 ```
 
-Results:
-
-```
-tsc:  PASS / FAIL — <paste output if any errors>
-lint: PASS / FAIL — <paste output if any errors>
-```
+The remaining warning is **pre-existing** and deliberately untouched: `scheduleSave` is recreated every
+render, so adding it would re-run the memo constantly and change save behaviour — out of scope here.
+The `locale` dependency on that same hook _was_ added, because BUILD-038 is what introduced that
+reference.
 
 ### §1.4 Static Review Acceptance
 
-- [ ] All §1.1 items checked and marked ✅/❌
-- [ ] All ❌ violations listed with file path and line number
-- [ ] All §1.2 grep commands run and output pasted
-- [ ] `npx tsc --noEmit` run — no TypeScript errors
-- [ ] `npm run lint:check` run — no ESLint errors
-
-Any ❌ violation → report BLOCKER to BUILD task; re-run §1 after fix.
+- [x] All §1.1 items checked, with N/A rows justified
+- [x] No ❌ violations
+- [x] All §1.2 greps run and output pasted (after correcting the shell-quoting fault)
+- [x] `tsc` run — no TypeScript errors
+- [x] `eslint` run read-only — no errors
 
 ---
 
 ## §3 Functional Validation
 
-Validate each R# from BUILD task against the running app (`npm run dev -- -p <本地 dev port，見 CLAUDE.local.md>`).
+Harness: no e2e spec covers this area, so validation ran against the react-demo
+(`npm run serve:react-demo`, `/file-explorer`) in a real browser, plus Vitest for the locale matrix.
 
 ### R# Result Matrix
 
-| R#  | Description                           | Result                | Note                               |
-| --- | ------------------------------------- | --------------------- | ---------------------------------- |
-| R1  | `<criterion summary from BUILD task>` | Pass / Fail / Blocked | `<actual vs expected if not Pass>` |
-| R2  | `<criterion summary>`                 | Pass / Fail / Blocked |                                    |
-| RN  | (Browser smoke test) `<summary>`      | Pass / Fail / Blocked |                                    |
+| R#  | Description                                               | Result | Note                                                                                                                 |
+| --- | --------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| R1  | locale from `useAsgardTemplateContext()`, default `en-US` | Pass   | Demo mounts the panel with no provider and renders English — the context default resolved                            |
+| R2  | All strings via `t()`; zero CJK in source                 | Pass   | grep §1.2e clean; guard test reads the directory and asserts the same                                                |
+| R3  | Keys resolve in all three catalogs                        | Pass   | Vitest asserts each sampled key differs from the key itself in en/ja/zh (79 keys per locale, aligned)                |
+| R4  | Missing key falls back to en-US                           | Pass   | Vitest covers both a missing key and a present one                                                                   |
+| R5  | create / rename via in-SDK modal, not `window.prompt`     | Pass   | Created `smoke-test-dir` through the modal; tree updated                                                             |
+| R6  | delete confirms via the same modal, not `window.confirm`  | Pass   | Delete opened confirm mode: "Delete “smoke-test-dir” and everything inside it?", no input field                      |
+| R7  | Tab stays responsive; styling from theme not OS           | Pass   | Page JS ran to completion while the dialog was open (a native dialog would have hung it); themed via `--asg-color-*` |
+| R8  | Empty name / dismiss performs no mutation                 | Pass   | Cancel left the entry in place; OK stays disabled while the field is empty                                           |
+| R9  | Build + demo smoke                                        | Pass   | `build:core` + `build:react` succeeded; both dialog modes exercised in the browser                                   |
 
 ### §3.1 Acceptance
 
-- [ ] All R# in BUILD task `## Coverage` executed (Step 1 static read + Step 2 browser operation + Step 3 boundary conditions)
-- [ ] Each R# marked Pass / Fail / Blocked with explanation
-- [ ] If e2e spec exists for changed routes: `npm run test:e2e` run and passed
-- [ ] Loading, error, and empty-state boundary conditions confirmed
+- [x] All R# executed (static read + browser operation + boundary conditions)
+- [x] Each R# marked Pass
+- [ ] e2e spec — none exists for this area (not applicable)
+- [x] Boundary conditions confirmed: empty name disables confirm; cancel is a no-op; a dialog still
+      open at unmount resolves as dismissed rather than leaving its caller awaiting forever
 
-Any Fail → BLOCKER to BUILD task; describe [actual behavior] vs [expected behavior].
+**Coverage gap recorded:** ja-JP / zh-TW were **not** verified visually. The demo route mounts
+`FileExplorerPanel` without a template-context provider, so it always resolves the `en-US` default;
+those two locales rest on unit tests (R3/R4) only. Verifying them in a browser would need either a
+locale switch on the demo route or a consumer that sets one.
 
 ---
 
@@ -139,12 +144,15 @@ None.
 
 ### Minor (nice to have)
 
-None.
+1. `file-view.tsx:174` still warns about the missing `scheduleSave` dependency (pre-existing; fixing it
+   would alter save behaviour and belongs in its own change).
+2. No browser-level verification of ja-JP / zh-TW — see the coverage gap above.
 
 ---
 
 ## Execution Log
 
 - 2026-08-03: REVIEW task created, paired with BUILD-038 (Status: `draft`).
-- YYYY-MM-DD: §1 Static review started (Status: `draft → in-progress`).
-- YYYY-MM-DD: §1 complete — N ✅ / N ❌; §3 Functional validation complete — all R# Pass (Status: `in-progress → done`).
+- 2026-08-03: §1 static review — 22 checklist rows (16 ✅, 6 N/A), 8 greps (7 clean, 1 benign hit),
+  tsc PASS, eslint 0 errors / 1 pre-existing warning. §3 functional — 9/9 R# Pass. Zero BLOCKERs
+  (Status: `ready → in-progress → done`).
