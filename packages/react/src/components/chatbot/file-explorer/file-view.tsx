@@ -1,4 +1,6 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import { StreamdownClient } from '../../templates/text-template/streamdown-client';
 import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon, RefreshIcon } from './icons';
 import { CodeEditor } from './code-editor';
@@ -47,6 +49,7 @@ function kindOf(ext: string): FileKind {
  * available alongside it. Reports dirty state (AC10).
  */
 export function FileView(props: FileViewProps): ReactNode {
+  const { locale = 'en-US' } = useAsgardTemplateContext();
   const { sandboxName, file, readFile, onSaveFile, watchFile, onDirtyChange, onBack } = props;
   const ext = extOf(file.name);
   const kind = kindOf(ext);
@@ -127,7 +130,7 @@ export function FileView(props: FileViewProps): ReactNode {
     if (content === null && !error) {
       return (
         <div className={styles.status}>
-          <LoaderCircleIcon size={14} className={styles.spin} /> 載入中…
+          <LoaderCircleIcon size={14} className={styles.spin} /> {t(locale, 'fileExplorer.loading')}
         </div>
       );
     }
@@ -135,7 +138,7 @@ export function FileView(props: FileViewProps): ReactNode {
     if (error) {
       return (
         <div className={`${styles.status} ${styles.error}`}>
-          <CircleAlertIcon size={14} /> 無法載入：{error}
+          <CircleAlertIcon size={14} /> {t(locale, 'fileExplorer.loadError', { error })}
         </div>
       );
     }
@@ -168,12 +171,12 @@ export function FileView(props: FileViewProps): ReactNode {
         }}
       />
     );
-  }, [content, error, kind, mode, file.name, ext]);
+  }, [content, error, kind, mode, file.name, ext, locale]);
 
   return (
     <div className={styles.root}>
       <div className={styles.header}>
-        <button type="button" onClick={onBack} className={styles.back} title="返回檔案樹">
+        <button type="button" onClick={onBack} className={styles.back} title={t(locale, 'fileExplorer.backToTree')}>
           <ArrowLeftIcon size={15} />
           <span className={styles.name}>{file.name}</span>
         </button>
@@ -182,8 +185,8 @@ export function FileView(props: FileViewProps): ReactNode {
           <button
             type="button"
             onClick={() => setReloadKey(k => k + 1)}
-            aria-label="重新載入檔案"
-            title="重新載入"
+            aria-label={t(locale, 'fileExplorer.reloadFile')}
+            title={t(locale, 'fileExplorer.reload')}
             className={styles.actionBtn}
           >
             <RefreshIcon size={15} />
@@ -192,8 +195,8 @@ export function FileView(props: FileViewProps): ReactNode {
             <button
               type="button"
               onClick={() => setMode(m => (m === 'preview' ? 'edit' : 'preview'))}
-              aria-label={mode === 'preview' ? '切換為編輯' : '切換為預覽'}
-              title={mode === 'preview' ? '編輯' : '預覽'}
+              aria-label={t(locale, mode === 'preview' ? 'fileExplorer.switchToEdit' : 'fileExplorer.switchToPreview')}
+              title={t(locale, mode === 'preview' ? 'fileExplorer.edit' : 'fileExplorer.preview')}
               className={styles.actionBtn}
             >
               {mode === 'preview' ? <CodeIcon size={15} /> : <EyeIcon size={15} />}

@@ -3,6 +3,8 @@ import { ConversationMessage, resolveSandboxUri } from '@asgard-js/core';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useLaunchedSandboxes } from '../../../hooks/use-derived-state';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import { FileExplorerPanel } from './file-explorer-panel';
 import { createSandboxFsProviders } from './create-sandbox-fs-providers';
 import { FolderTreeIcon } from './icons';
@@ -84,14 +86,16 @@ export function FileExplorerArrivalBridge({
 
 /** Header folder toggle (F-021 AC6) — sits right of the ChannelTitle; toggles the built-in aside. */
 export function FileExplorerToggle({ controller }: { controller: FileExplorerController }): ReactNode {
+  const { locale = 'en-US' } = useAsgardTemplateContext();
+
   return (
     <button
       type="button"
       className={`${styles.toggle} ${controller.open ? styles.toggleActive : ''}`}
       onClick={controller.toggle}
-      aria-label="檔案總管"
+      aria-label={t(locale, 'header.fileExplorer')}
       aria-pressed={controller.open}
-      title="檔案總管"
+      title={t(locale, 'header.fileExplorer')}
     >
       <FolderTreeIcon size={18} />
     </button>

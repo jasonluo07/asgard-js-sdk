@@ -63,7 +63,13 @@
 
 ## ▶ Next Task
 
-**None — awaiting task selection.** 截至 2026-07-29，本 repo 沒有 open PR，下列所有 cycle 皆已 merged 進 `main`（最新 merge commit `c4b053f`）。已發版至 **`0.3.30`**（`0.3.29` = BUG-004 的 nudge payload；`0.3.30` = nudge 的 busy 守衛）。以下段落保留各 cycle 的脈絡與 backlog；接下一張票時從這裡挑。
+**None — awaiting task selection.** 截至 2026-08-03，已發版至 **`0.3.39`**。以下段落保留各 cycle 的脈絡與 backlog；接下一張票時從這裡挑。
+
+**最近兩個 cycle（asgard-sdk-pm#48 / #49）**：
+
+- `BUILD-037` / `REVIEW-037` —— StrictMode remount 後 client 被 dispose 卻未重建，導致 rejoin 的每個 frame 被丟棄且 run 永不 settle（畫面空白 + 輸入框卡死，同一根因、且 console 無錯）。已 merged via PR #379，發版 `0.3.39`，Mimir 已升版驗證，#48 已關閉。
+- `BUILD-038` / `REVIEW-038` —— File Explorer 未接 i18n（57 則硬寫繁中）＋ 3 處 `window.prompt` / 1 處 `window.confirm` 換成 SDK modal。**尚未 merge、尚未發版**。
+  - 已知缺口：ja-JP / zh-TW 未做瀏覽器驗證（demo route 掛載 panel 時未包 template-context provider，永遠解析成 `en-US`），僅靠單元測試。若要補，需在 demo 加 locale 切換或獨立 route。
 
 **Backlog（尚未開票）**：(1) demo app 不在 typecheck 閘門內（`apps/react-demo` 目前有 8 個既有型別錯誤），建議與「重啟 `ci.yml`」一併處理；(2) **F-021 Cycle 2** 的剩餘項；(3) **F-020 sandbox 動作卡視覺**（port prototype 的 `SandboxBrowserHandoffCard` / `SandboxOpenFileCard`）；(4) BUG-003 衍生 —— `TaskList` 在任務全部完成後不會自動收合（`SubagentList` 會），docked 後會持續佔住半個版面直到頻道重置，已於 asgard-sdk-pm#32 留言告知 PM，待其決定是否開票。
 
@@ -143,3 +149,5 @@
 | `BUILD-036`  | Materialize a replayed tool-call from complete    | High     | done   | [BUILD-036-tool-call-complete-replay.md](./BUILD-036-tool-call-complete-replay.md)                       |
 | `REVIEW-036` | Review: Materialize replayed tool-call            | —        | done   | [REVIEW-036-tool-call-complete-replay.md](./REVIEW-036-tool-call-complete-replay.md)                     |
 | `BUILD-037`  | Rebuild the client on a StrictMode remount        | High     | done   | [BUILD-037-strictmode-client-detach.md](./BUILD-037-strictmode-client-detach.md)                         |
+| `BUILD-038`  | Localize File Explorer, replace native prompts    | High     | done   | [BUILD-038-file-explorer-i18n.md](./BUILD-038-file-explorer-i18n.md)                                     |
+| `REVIEW-038` | Review: Localize File Explorer, replace prompts   | —        | done   | [REVIEW-038-file-explorer-i18n.md](./REVIEW-038-file-explorer-i18n.md)                                   |
