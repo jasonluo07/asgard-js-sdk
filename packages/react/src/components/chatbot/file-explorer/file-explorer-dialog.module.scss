@@ -61,8 +61,8 @@
 
 .confirm {
   border: 1px solid transparent;
-  background: var(--asg-color-primary, #2563eb);
-  color: var(--asg-color-primary-foreground, #fff);
+  background: var(--asg-color-primary, #4f46e5);
+  color: var(--asg-color-primary-on-primary, #fff);
 }
 
 .confirm:disabled {

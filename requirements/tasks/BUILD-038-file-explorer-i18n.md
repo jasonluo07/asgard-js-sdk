@@ -146,6 +146,7 @@ Files:
   Created `smoke-test-dir` through the input modal (tree updated). Delete opened the **confirm** mode
   with the directory variant, "Delete “smoke-test-dir” and everything inside it?", no input field;
   cancelling left the entry in place (R8).
+
   - **R7 evidence:** the JS that inspected the open dialog ran to completion and returned. Under
     `window.confirm` that call would have hung — which is exactly the e2e freeze the issue reports.
   - Screenshots: `.github/screenshots/49-file-explorer-input-dialog-en.jpg`,
@@ -153,3 +154,47 @@ Files:
   - Not covered by the demo: ja-JP / zh-TW rendering, because the demo route mounts
     `FileExplorerPanel` without a template-context provider, so it always resolves the `en-US` default.
     Those locales are covered by unit tests instead (R3/R4).
+
+- 2026-08-03 (post-review, three independent subagent audits): **11 real defects found in the first cut**;
+  all fixed on this branch. The audits were adversarial — each verified by breaking behaviour and
+  observing the result, not by reading the diff.
+  - **Ghost confirm dialog (worst).** `{dialog}` was rendered only on the panel's main return, not on
+    the empty-sandbox early return. The sandbox list is repolled every 15s and drops idle-recycled
+    entries, so an open delete-confirm could be unmounted from the DOM _without_ unmounting the hook:
+    the awaiting `requestConfirm` never settled, and the same prompt reappeared unbidden when a sandbox
+    returned — one click away from a destructive op. Under `window.confirm` this interleaving was
+    impossible because the native dialog blocked the thread. Fixed by rendering `{dialog}` on both branches.
+  - **Enter on Cancel confirmed instead of cancelling.** The keydown handler sits on the backdrop and
+    sees the event before the button's click; it did not check the target, so Enter while Cancel held
+    focus resolved the name and ran the rename. Now requires `event.target === inputRef.current`.
+  - **Concurrent request dropped the first resolve.** A second request overwrote state without settling
+    the first, stranding its caller forever. Reachable because there is no focus trap (Shift+Tab to the
+    toolbar, Enter). Now settles the previous request first.
+  - **`aria-modal=true` was a false claim** — the backdrop is absolutely positioned inside the panel,
+    so the page stays reachable. Removed; the dialog is now labelled via `aria-labelledby` on the visible
+    title, and the input got its own `aria-label` (it previously had no accessible name at all).
+  - **No keyboard escape once focus left the dialog.** Added backdrop-click-to-dismiss, matching the
+    tool-call consent modal precedent.
+  - **`--asg-color-primary-foreground` is a token the theme never emits** (it emits
+    `--asg-color-primary-on-primary`), so the confirm button's text was permanently the hardcoded
+    `#fff` regardless of theme. Also corrected the `--asg-color-primary` fallback from an
+    invented `#2563eb` to `#4f46e5`, matching the other 21 occurrences in this directory.
+  - **One string was still unlocalized** — the directory-tree load error rendered raw `{error}` while
+    `fileExplorer.loadError` existed and was already used by `file-view.tsx`.
+  - **Four of the eleven original tests could not fail.** The catalog test asserted through `t()`, which
+    falls back to en-US, so a key deleted from ja-JP still passed; the fallback test survived deleting
+    the fallback from `t()` entirely; the CJK guard was ideographs-only and let kana and fullwidth
+    punctuation through; the native-dialog guard had a dead lookbehind and missed the bare `confirm(`
+    form (the most likely regression, since it is a global).
+  - Tests: 11 → 23. Verified by **mutation testing** — five deliberate regressions (drop a ja-JP key,
+    remove the Enter target check, remove the concurrent settle, remove `{dialog}` from the empty
+    branch, plant a katakana literal) each turned exactly one test red. The earlier suite caught
+    neither the first nor the last.
+  - Re-verified after the fixes: core 165 / react 84 green, `tsc --build` exit 0, eslint 0 errors,
+    prettier clean, both packages build.
+  - **Not fixed, recorded instead:** no focus trap and no focus restore (the existing
+    `tool-call-consent-modal` has neither either, so this is not a regression); no body scroll lock;
+    `FileExplorerPanel` used outside `<Chatbot>` still resolves `en-US` because there is no locale
+    analogue of `AsgardThemeScope`; and hardcoded Chinese remains elsewhere in the package (consent
+    modal, upload errors, export, speech button, `chat-header`'s `'新對話'`) — an en-US consumer is
+    still not fully localized.

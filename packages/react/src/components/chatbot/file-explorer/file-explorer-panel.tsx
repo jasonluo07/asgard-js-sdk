@@ -183,7 +183,7 @@ function DirChildren(props: DirChildrenProps): ReactNode {
   if (error) {
     return (
       <div className={`${styles.status} ${styles.error}`} style={pad}>
-        <CircleAlertIcon size={12} /> {error}
+        <CircleAlertIcon size={12} /> {t(locale, 'fileExplorer.loadError', { error })}
       </div>
     );
   }
@@ -513,6 +513,14 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             </button>
           )}
         </div>
+
+        {/*
+          The dialog must render on this branch too. The sandbox list is repolled every 15s and drops
+          idle-recycled entries, so a pending confirm can land here mid-flight; if the dialog only
+          existed on the main branch it would vanish without unmounting the hook, leaving the awaiting
+          action pending forever and re-appearing unprompted when a sandbox returns.
+        */}
+        {dialog}
       </div>
     );
   }

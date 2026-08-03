@@ -5,7 +5,7 @@
 - Task ID: `REVIEW-038`
 - Status: `done`
 - BUILD Task: `BUILD-038`
-- Reviewed commit: `613d554`
+- Reviewed commit: `613d554`, re-reviewed after fixes
 - Reviewed branch: `fix/49-file-explorer-i18n`
 
 ---
@@ -141,6 +141,30 @@ None.
 ### Important (should fix in this cycle)
 
 None.
+
+### Resolved after an independent second review
+
+The first pass of this review missed all of the following; three adversarial subagent audits found
+them, each verified by breaking behaviour rather than reading the diff. All are fixed on this branch —
+see BUILD-038's execution log for detail.
+
+| Severity | Defect                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------- |
+| Critical | `{dialog}` missing from the panel's empty-state branch → stranded promise + ghost confirm reappearing unprompted |
+| Critical | Enter on the Cancel button confirmed the rename instead of cancelling                                            |
+| High     | A second dialog request silently dropped the first `resolve`                                                     |
+| High     | Four of the eleven tests could not fail (2 × catalog, CJK guard, native-dialog guard)                            |
+| Medium   | `aria-modal=true` falsely claimed modality; the input had no accessible name                                     |
+| Medium   | `--asg-color-primary-foreground` is never emitted → confirm button text locked to `#fff`                         |
+| Medium   | No keyboard exit once focus left the dialog (no backdrop-click dismiss)                                          |
+| Low      | Load-error row in the tree still rendered raw `{error}`, unlocalized                                             |
+| Low      | `#2563eb` fallback inconsistent with the directory's 21 other `#4f46e5`                                          |
+
+**Why §1/§3 passed anyway:** every check here is either a static grep or an R#-level behavioural
+assertion. None of them exercised a second dialog, a keypress on a non-input target, or an unmount of
+one render branch while another held state — and the R# matrix was validated against tests that, for
+four of them, could not fail. Mutation testing (five injected regressions, each turning exactly one
+test red) is what now backs the suite.
 
 ### Minor (nice to have)
 
