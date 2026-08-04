@@ -65,7 +65,7 @@
 
 ## ▶ Next Task
 
-**`BUILD-039`** — Theme audit 第一階段（asgard-sdk-pm#31）。截至 2026-08-04，已發版至 **`0.3.40`**。以下段落保留各 cycle 的脈絡與 backlog。BUILD-041 / REVIEW-041（`asgard-js-sdk#382` resume 後的 subagent 卡片）已於 2026-08-04 收尾，未發版。
+**`BUILD-039`** — Theme audit 第一階段（asgard-sdk-pm#31）。截至 2026-08-04，已發版至 **`0.3.40`**。以下段落保留各 cycle 的脈絡與 backlog。BUILD-041 / REVIEW-041（`asgard-js-sdk#382` resume 後的 subagent 卡片）已於 2026-08-04 收尾，未發版。BUILD-042 / REVIEW-042（`asgard-sdk-pm#53` 匯出 `UserMessageText`）已於 2026-08-05 收尾，**未發版** —— Sindri 要吃到需先升版。
 
 **Theme audit cycle（asgard-sdk-pm#31）**：稽核票 2026-07-23 開出（對 0.3.14），PM 2026-07-23 回覆接受三階段框架、並把第三階段方向改為「SDK 直接採用 `asgard-design-system` 當 token 層」，承諾第一、二階段照清單開票——但**至今未開**（`asgard-sdk-pm` @ `7b917ca` 的 `features/` 只有 F-001~F-023、`tasks/` 只有 TASK-001 / TASK-003）。經使用者授權**不等 PM 開票、先行動工**，以 issue 本體為 source spec。
 
