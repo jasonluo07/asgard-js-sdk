@@ -1713,6 +1713,14 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
 
   // Subagent panel (F-012) — Agent spawn + subagent.start + child tool + subagent.complete (status is
   // driven by subagent.complete, not the Agent tool-call). Agent + child tools filtered into the panel.
+  const subagentChildCall = async (parent: string, toolName: string, reason: string, delay: number): Promise<void> => {
+    const cs = next();
+    const call = { toolsetName: '', toolName, reason, parameter: {} };
+
+    await emit(toolStartFrame(header, proc, cs, call, { parentToolUseId: parent }), delay);
+    await emit(toolCompleteFrame(header, proc, cs, call, { ok: true }, { ids: { parentToolUseId: parent } }));
+  };
+
   const spawnSubagent = async (
     parent: string,
     agentId: string,
@@ -1739,27 +1747,7 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
       }),
       150,
     );
-    const cs = next();
-    await emit(
-      toolStartFrame(
-        header,
-        proc,
-        cs,
-        { toolsetName: '', toolName: childTool, reason: childReason, parameter: {} },
-        { parentToolUseId: parent },
-      ),
-      800,
-    );
-    await emit(
-      toolCompleteFrame(
-        header,
-        proc,
-        cs,
-        { toolsetName: '', toolName: childTool, reason: childReason, parameter: {} },
-        { ok: true },
-        { ids: { parentToolUseId: parent } },
-      ),
-    );
+    await subagentChildCall(parent, childTool, childReason, 800);
     // BUG-001 — the subagent emits its own thinking + message (parentToolUseId set). Both must stay hidden
     // from the main chat view; the panel keeps showing the subagent, and only its summary surfaces there.
     await emit(subagentThinkingCompleteFrame(header, parent, `（子代理內部推理）${desc}`), 150);
@@ -1799,6 +1787,36 @@ async function handleAllFeaturesMock(res: ServerResponse, payload: ParsedPayload
     'execute_database_query',
     '查詢可用庫存',
     '可用庫存 9,500 kg',
+  );
+
+  // Issue #382 — a subagent is not one-shot; the orchestrator can resume an existing one. Both cards
+  // above are terminal by now, and each is resumed in one of the two shapes the backend produces.
+  //
+  // Shape B (the common case, a later-turn resume): NO lifecycle event is emitted at all, so the child
+  // tool-call landing on the finished card is the only signal that toolu_A is working again.
+  await subagentChildCall('toolu_A', 'execute_database_query', '重查用料明細（追加急單）', 900);
+
+  // Shape A (a same-turn resume): a second subagent.start arrives for toolu_B, which works again and
+  // then settles back to terminal on its own subagent.complete.
+  await emit(
+    subagentStartFrame(header, {
+      agentId: 'a8c6caab',
+      parentToolUseId: 'toolu_B',
+      subagentType: 'general-purpose',
+      description: '補查替代料號 SWRCH38K 庫存',
+    }),
+    900,
+  );
+  await subagentChildCall('toolu_B', 'execute_database_query', '查詢替代料號庫存', 700);
+  await emit(
+    subagentCompleteFrame(header, {
+      agentId: 'a8c6caab',
+      parentToolUseId: 'toolu_B',
+      subagentType: 'general-purpose',
+      status: 'completed',
+      summary: '替代料號 SWRCH38K 可用 12,000 kg',
+    }),
+    900,
   );
 
   // Live title update (F-016) — the topic drifts, the title bar fades to the new value.
