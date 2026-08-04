@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { Fragment, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ConversationMessage,
   ConversationToolCallMessage,
@@ -216,12 +216,52 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
     [chatbot],
   );
 
+  // BUG-003 `R9` capped the docked strip at 50% of the body and let it scroll itself, which keeps a long
+  // checklist from starving the thread — but leaves nothing on screen saying "there is more below". The
+  // strip's own 12px bottom padding scrolls away with the content, and overlay scrollbars (the macOS
+  // default) are invisible at rest, so a row clipped at the strip's edge reads as occluded by the composer
+  // rather than scrollable. Track whether anything is still below the fold so the wrapper can fade its
+  // bottom edge; the fade goes away as soon as the strip is scrolled to the end.
+  const dockedRef = useRef<HTMLDivElement>(null);
+  const [isDockedOverflowing, setDockedOverflowing] = useState<boolean>(false);
+  const hasDockedStrip = !hideRunChrome && (subagents.length > 0 || tasks.length > 0);
+
+  useEffect(() => {
+    const strip = dockedRef.current;
+
+    if (!strip) {
+      setDockedOverflowing(false);
+
+      return;
+    }
+
+    const sync = (): void => {
+      setDockedOverflowing(strip.scrollHeight - strip.scrollTop - strip.clientHeight > 1);
+    };
+
+    sync();
+    strip.addEventListener('scroll', sync, { passive: true });
+
+    // The panels grow and collapse *inside* the strip without resizing its own box (it is already at the
+    // cap), so watch the content element too — the strip alone would report no change.
+    const observer = new ResizeObserver(sync);
+
+    observer.observe(strip);
+
+    if (strip.firstElementChild) observer.observe(strip.firstElementChild);
+
+    return (): void => {
+      strip.removeEventListener('scroll', sync);
+      observer.disconnect();
+    };
+  }, [hasDockedStrip, subagents.length, tasks.length]);
+
   // Grouped once per render so each tool-call group can tell whether later content has sealed it
   // (anything after it → the assistant moved on → the finished group may auto-collapse).
   const messageGroups = groupMessages(Array.from(messages?.values() ?? []));
 
   return (
-    <div className={styles.chatbot_body_wrapper}>
+    <div className={styles.chatbot_body_wrapper} data-docked-overflow={isDockedOverflowing || undefined}>
       <div
         ref={scrollContainerRef}
         className={clsx('asgard-chatbot-body', styles.chatbot_body)}
@@ -285,10 +325,10 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
           streamed chunk (thread growth + auto-scroll follow) shoved them around; out here they neither
           scroll nor feed the thread's auto-scroll ResizeObserver. Rendered only when populated, so an
           empty strip never adds a gap and a lone last message keeps its clearance to the footer. */}
-      {!hideRunChrome && (subagents.length > 0 || tasks.length > 0) && (
+      {hasDockedStrip && (
         // `data-scrollable` — the strip scrolls itself once it hits its 50% cap, and ChatbotContainer's
         // wheel/touch handler preventDefaults on anything without this marker.
-        <div className={styles.chatbot_body__docked} data-scrollable="true">
+        <div ref={dockedRef} className={styles.chatbot_body__docked} data-scrollable="true">
           <div className={styles.chatbot_body__docked_content} style={contentStyles}>
             <SubagentList subagents={subagents} locale={locale} />
             <TaskList tasks={tasks} locale={locale} />

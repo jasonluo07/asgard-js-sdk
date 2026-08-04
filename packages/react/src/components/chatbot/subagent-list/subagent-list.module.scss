@@ -9,10 +9,17 @@
   border: 1px solid var(--asgard-tool-call-border, #333);
   border-radius: 8px;
   background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
+  // The docked strip caps its own height, so this card has to be able to give ground rather than push
+  // the panel below it out of view. `min-height: 0` lifts the flex-item content floor; the header does
+  // not shrink (below), so the card can never collapse past its own title row.
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 6px;
   width: 100%;
@@ -62,6 +69,14 @@
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
+  // The card shrinks inside the capped strip; the header holds its size and this list absorbs the
+  // difference, scrolling itself. `data-scrollable` (set in the TSX) is what lets ChatbotContainer's
+  // wheel/touch handler hand the gesture to *this* box — without it `closest()` stops at the strip,
+  // which no longer scrolls, and the handler would preventDefault the wheel instead.
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 .row {

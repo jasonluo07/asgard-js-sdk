@@ -4,6 +4,24 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+
+  // Scroll affordance for the docked strip below (see `.chatbot_body__docked`). Once the strip hits its
+  // 50% cap it scrolls internally, but nothing says so: overlay scrollbars are invisible at rest and the
+  // strip's 12px bottom padding scrolls away with the content, so the last visible row ends on a hard edge
+  // flush against the seam — which reads as "the composer is covering it", not "scroll for more". This
+  // fade restores the cue. It hangs off the wrapper, whose bottom edge *is* the strip's bottom edge (the
+  // strip is the last child), so no extra element is needed; ChatbotBody sets the attribute only while
+  // content remains below the fold, so it disappears at the end of the scroll and never shows when the
+  // strip is absent or fits.
+  &[data-docked-overflow]::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 24px;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--asg-color-bg), transparent);
+  }
 }
 
 .chatbot_body {
@@ -41,6 +59,15 @@
   // strip clipped away). A tall thread still cannot shrink the strip — `flex-shrink: 0` bounds only its
   // own content.
   max-height: 50%;
+  // Flex column so the cap propagates *into* the panels: each one shrinks and scrolls its own list
+  // instead of the first one eating the space and pushing the second out of sight. Before this, the
+  // strip was the only scroll box, so a two-panel run (measured: subagent 153px + task 119px against a
+  // 240px cap) left the Task list showing its header and one row — its other two rows were only
+  // reachable by scrolling a strip that gave no sign it could scroll.
+  display: flex;
+  flex-direction: column;
+  // Safety net only. The panels now fit by shrinking, so this no longer fires in normal use — it still
+  // catches the degenerate case where even the collapsed headers exceed the cap (a very short body).
   overflow-y: auto;
   // Keep a wheel/touch overscroll inside the strip instead of chaining out to the thread or the host page.
   overscroll-behavior-y: contain;
@@ -60,6 +87,8 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    // Let the panels below shrink: a flex item's default `min-height: auto` floors it at its content.
+    min-height: 0;
     // Column layout → the visible vertical spacing between the Subagent and Task panels is the row-gap.
     // 12px to match the chat-kit prototype (both panels carry `mb-3`). (`gap` shorthand would also set an
     // unused `column-gap`; use `row-gap` so only the axis that matters is styled.)
