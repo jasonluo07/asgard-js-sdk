@@ -38,7 +38,7 @@ import { useFileExplorerController } from '../../hooks/use-file-explorer-control
 import { ToolCallConsentGate } from '../tool-call-consent';
 import styles from './chatbot.module.scss';
 
-interface ChatbotProps extends AsgardTemplateContextValue {
+export interface ChatbotProps extends AsgardTemplateContextValue {
   className?: string;
   style?: CSSProperties;
   /** The bot name. Since F-022 it is the unified `ChatHeader`'s main line; the channel title (F-016) is its subtitle. */

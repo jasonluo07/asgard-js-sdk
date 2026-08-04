@@ -50,7 +50,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: var(--asg-color-text);
+    color: var(--asg-color-text-primary);
   }
 
   &:disabled {
@@ -89,7 +89,7 @@
   overflow: hidden;
   font-size: 16px;
   line-height: 1.35;
-  color: var(--asg-color-text, #e0e0e0);
+  color: var(--asg-color-text-primary, #e0e0e0);
   resize: none;
   background: transparent;
   border: none;
@@ -128,7 +128,7 @@
   transition: color 0.2s ease;
 
   &:hover {
-    color: var(--asg-color-text);
+    color: var(--asg-color-text-primary);
   }
 
   > svg {
