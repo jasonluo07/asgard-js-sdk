@@ -166,3 +166,5 @@
 | `REVIEW-040` | Review: Explicit chat column rows                 | —        | draft  | [REVIEW-040-explicit-grid-rows.md](./REVIEW-040-explicit-grid-rows.md)                                   |
 | `BUILD-041`  | Let a resumed subagent read as running again      | High     | done   | [BUILD-041-resumed-subagent-reads-running.md](./BUILD-041-resumed-subagent-reads-running.md)             |
 | `REVIEW-041` | Review: Resumed subagent reads as running         | —        | done   | [REVIEW-041-resumed-subagent-reads-running.md](./REVIEW-041-resumed-subagent-reads-running.md)           |
+| `BUILD-042`  | Export user text renderer (UserMessageText)       | Normal   | done   | [BUILD-042-export-user-message-text.md](./BUILD-042-export-user-message-text.md)                         |
+| `REVIEW-042` | Review: Export user text content renderer         | —        | done   | [REVIEW-042-export-user-message-text.md](./REVIEW-042-export-user-message-text.md)                       |

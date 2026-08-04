@@ -28,7 +28,12 @@ export interface MessageContentRendererProps {
   message: ConversationMessage;
   /** Function to render the default message content */
   renderDefaultContent: () => ReactNode;
-  /** Container component that wraps custom content in the default chrome-free bot message layout. */
+  /**
+   * Container component that wraps custom content in the default chrome-free shell matching `message.type`:
+   * the bot message layout for a bot message, the right-aligned row for a user message, and the children
+   * untouched for any other type. It supplies alignment only — for the default bubble / text styling, wrap
+   * the content in `UserMessageText` (user) or `BotMessageText` (bot).
+   */
   MessageContainer: FC<MessageContainerProps>;
 }
 

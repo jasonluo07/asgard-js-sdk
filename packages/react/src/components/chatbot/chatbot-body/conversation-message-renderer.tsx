@@ -28,8 +28,8 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
   const { message } = props;
   const { renderMessageContent } = useAsgardTemplateContext();
 
-  // Create MessageContainer component that wraps custom content in the SDK's
-  // chrome-free bot message layout.
+  // Create MessageContainer component that wraps custom content in the SDK's chrome-free shell for this
+  // message type — the bot message layout, the right-aligned user row, or the children as-is.
   const MessageContainer = useMemo(() => {
     return function Container({ children }: MessageContainerProps): ReactNode {
       if (message.type === 'bot') {
