@@ -6,16 +6,14 @@ import { useAsgardAppInitializationContext, Annotations } from './asgard-app-ini
 export interface AsgardThemeContextValue {
   chatbot: Pick<
     CSSProperties,
-    | 'width'
-    | 'height'
-    | 'maxWidth'
-    | 'minWidth'
-    | 'maxHeight'
-    | 'minHeight'
-    | 'backgroundColor'
-    | 'borderColor'
-    | 'borderRadius'
+    'width' | 'height' | 'maxWidth' | 'minWidth' | 'maxHeight' | 'minHeight' | 'backgroundColor' | 'borderColor'
   > & {
+    /**
+     * @deprecated Not applied to any element — setting it has no effect. It carries a default of
+     * `var(--asg-radius-md)` that nothing reads. Override the `--asg-radius-*` custom properties on
+     * `.chatbot_root` until a rounded-corner API lands.
+     */
+    borderRadius?: CSSProperties['borderRadius'];
     contentMaxWidth?: CSSProperties['maxWidth'];
     backgroundColor?: CSSProperties['backgroundColor'];
     borderColor?: CSSProperties['borderColor'];
@@ -68,6 +66,14 @@ export interface AsgardThemeContextValue {
   };
   botMessage: Pick<CSSProperties, 'color' | 'backgroundColor'> & {
     carouselButtonBackgroundColor?: CSSProperties['backgroundColor'];
+    /**
+     * @deprecated Never read by any component — setting it has no effect. It was also derived
+     * incorrectly (`darkenColor(bubbleBackground, 0.2)`, which is low-contrast against the very
+     * background it darkens); that derivation is gone as of BUILD-039.
+     *
+     * Style markdown links through the `--asgard-markdown-link` / `--asgard-markdown-link-hover`
+     * custom properties instead — they follow `chatbot.primaryComponent.mainColor`.
+     */
     linkColor?: CSSProperties['color'];
     unsentBackgroundColor?: CSSProperties['backgroundColor'];
     quickReplyBackgroundColor?: CSSProperties['backgroundColor'];
@@ -89,6 +95,11 @@ export interface AsgardThemeContextValue {
       title?: {
         style: CSSProperties;
       };
+      /**
+       * @deprecated Not read by `references.tsx`, which only applies `references.style` and
+       * `references.title.style` — setting it has no effect. Style the list container through
+       * `references.style` instead.
+       */
       item?: {
         style: CSSProperties;
       };
@@ -190,6 +201,19 @@ export interface AsgardThemeContextValue {
   }>;
 }
 
+/**
+ * The type of the `theme` prop on `<Chatbot />` — annotate theme objects with this.
+ *
+ * It is `Partial<AsgardThemeContextValue>` because every section is optional at the call site: a theme
+ * that only sets `chatbot` is valid, and the provider merges it over the defaults. `AsgardThemeContextValue`
+ * itself stays the *resolved* shape — what `useAsgardThemeContext()` returns, with every section present.
+ *
+ * ```ts
+ * const theme: ChatbotTheme = { chatbot: { backgroundColor: '#141414' } };
+ * ```
+ */
+export type ChatbotTheme = Partial<AsgardThemeContextValue>;
+
 export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
   chatbot: {
     width: '375px',
@@ -231,11 +255,14 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     },
   },
   botMessage: {
-    color: 'var(--asg-color-text)',
+    // `--asg-color-text` was never emitted by the palette (it generates `-text-primary` /
+    // `-text-secondary` / `-text-disabled` / `-text-placeholder`, no bare `-text`), so bubble text
+    // silently inherited the host page's color and the token consumers reach for had no effect.
+    color: 'var(--asg-color-text-primary)',
     backgroundColor: 'var(--asg-color-secondary)',
   },
   userMessage: {
-    color: 'var(--asg-color-text)',
+    color: 'var(--asg-color-text-primary)',
     backgroundColor: 'var(--asg-color-primary)',
   },
   template: {
@@ -432,9 +459,6 @@ export function AsgardThemeContextProvider(
         botMessage: {
           backgroundColor: themeFromAnnotations.botMessage?.backgroundColor, // #585858
           color: themeFromAnnotations.botMessage?.color,
-          linkColor: themeFromAnnotations.botMessage?.backgroundColor
-            ? darkenColor(themeFromAnnotations.botMessage.backgroundColor, 0.2)
-            : undefined,
           unsentBackgroundColor: themeFromAnnotations.botMessage?.backgroundColor
             ? `color-mix(in srgb, ${themeFromAnnotations.botMessage.backgroundColor} 20%, transparent)`
             : undefined,
@@ -801,6 +825,11 @@ export function AsgardThemeContextProvider(
       if (effectivePrimary) {
         themeVars['--asg-color-primary'] = effectivePrimary;
         themeVars['--asg-color-primary-dark'] = darker(effectivePrimary);
+        // Markdown links were stuck on a fixed `#3b82f6` / `#2563eb` pair that no theme could reach —
+        // the one bot-facing surface most likely to clash with a brand accent. They follow the accent
+        // and its darkened hover shade, the same pair the run indicator and buttons already use.
+        themeVars['--asgard-markdown-link'] = effectivePrimary;
+        themeVars['--asgard-markdown-link-hover'] = darker(effectivePrimary);
       }
 
       // On-primary → the foreground of the surfaces painted with the accent above (the composer's submit
@@ -810,6 +839,9 @@ export function AsgardThemeContextProvider(
       const effectiveOnPrimary = mergedTheme.chatbot?.primaryComponent?.onMainColor;
       if (typeof effectiveOnPrimary === 'string' && effectiveOnPrimary) {
         themeVars['--asg-color-primary-on-primary'] = effectiveOnPrimary;
+        // The consent modal's confirm button is painted with the accent, so its label belongs to the
+        // same on-accent tier. It had been pinned to `#000000`, unreadable on a dark accent.
+        themeVars['--asgard-consent-modal-primary-fg'] = effectiveOnPrimary;
       }
 
       // Background → the base bg + a `surface` one step lighter (cards / channel-title / tool-call rows /
@@ -832,6 +864,9 @@ export function AsgardThemeContextProvider(
         // would otherwise repaint code blocks in a chatbot that was never themed.
         if (!effectiveBg.startsWith('var(')) {
           themeVars['--asgard-markdown-pre-bg'] = effectiveBg;
+          // The consent modal's command block is the same kind of inset code surface, and its fixed
+          // `#0f172a` is likewise unrelated to the palette — so it takes the same concrete-color gate.
+          themeVars['--asgard-consent-modal-code-bg'] = effectiveBg;
         }
       }
 
@@ -843,6 +878,13 @@ export function AsgardThemeContextProvider(
         themeVars['--asg-color-divider'] = effectiveBorder;
         themeVars['--asgard-tool-call-border'] = effectiveBorder;
         themeVars['--asgard-thinking-border'] = effectiveBorder;
+        // The consent modal's command block outline. Unlike the two above — whose fallbacks are already
+        // the shared border chain — this one falls back to a fixed `#1e293b` unrelated to the palette,
+        // so it takes the same concrete-color gate as its `code-bg` companion: the default
+        // `var(--asg-color-border)` passthrough would otherwise repaint the block in an unthemed chatbot.
+        if (!effectiveBorder.startsWith('var(')) {
+          themeVars['--asgard-consent-modal-code-border'] = effectiveBorder;
+        }
       }
 
       // Inactive → the muted text/icon tier (tool-call & thinking headers, chevrons, the Task/Subagent
@@ -873,6 +915,13 @@ export function AsgardThemeContextProvider(
         themeVars['--asgard-markdown-code-bg'] = wash(effectiveForeground, 10);
         themeVars['--asgard-markdown-table-header-bg'] = wash(effectiveForeground, 5);
         themeVars['--asgard-markdown-table-row-alt'] = wash(effectiveForeground, 2);
+
+        // Three more surfaces whose fixed fallbacks are washes of white for the same reason, and break
+        // the same way under a light theme: the expanded tool-call JSON body text (`#d4d4d4` ≈ 83% white),
+        // the thinking block's reasoning text (80%), and the tool-call row hover tint (10%).
+        themeVars['--asgard-json-viewer-text'] = wash(effectiveForeground, 83);
+        themeVars['--asgard-thinking-reasoning'] = wash(effectiveForeground, 80);
+        themeVars['--asgard-tool-call-hover'] = wash(effectiveForeground, 10);
       }
 
       if (Object.keys(themeVars).length > 0 && mergedTheme.chatbot) {
