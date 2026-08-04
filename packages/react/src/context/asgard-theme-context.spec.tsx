@@ -112,11 +112,12 @@ describe('phantom --asgard-* tokens', () => {
           borderColor: '#2a2a33',
           primaryComponent: { mainColor: '#f6c814', secondaryColor: '#ffffff', onMainColor: '#000000' },
         },
+        botMessage: { linkColor: '#6767eb' },
       }),
     );
 
-    expect(vars['--asgard-markdown-link']).toBe('#f6c814');
-    expect(vars['--asgard-markdown-link-hover']).not.toBe('#f6c814');
+    expect(vars['--asgard-markdown-link']).toBe('#6767eb');
+    expect(vars['--asgard-markdown-link-hover']).not.toBe('#6767eb');
     expect(vars['--asgard-consent-modal-primary-fg']).toBe('#000000');
     expect(vars['--asgard-consent-modal-code-bg']).toBe('#101014');
     expect(vars['--asgard-consent-modal-code-border']).toBe('#2a2a33');
@@ -140,6 +141,44 @@ describe('phantom --asgard-* tokens', () => {
     ]) {
       expect(vars).not.toHaveProperty(token);
     }
+  });
+
+  /**
+   * Regression lock. An earlier revision derived the link tokens from `primaryComponent.mainColor`.
+   * That field colors button backgrounds; reusing it as link foreground silently moved the links of
+   * every consumer that sets an accent, and measurement against their own thread backgrounds put two
+   * of them under WCAG AA (Sindri dark 5.01:1 -> 4.14:1, sdk-demo 5.01:1 -> 3.87:1). Links must move
+   * only when a consumer names a link color.
+   */
+  it('leaves the link tokens alone for a theme that sets an accent but no linkColor', () => {
+    const vars = chatbotVars(
+      resolveTheme({
+        chatbot: { primaryComponent: { mainColor: '#6767eb', secondaryColor: '#ffffff' } },
+      }),
+    );
+
+    expect(vars['--asg-color-primary']).toBe('#6767eb');
+    expect(vars).not.toHaveProperty('--asgard-markdown-link');
+    expect(vars).not.toHaveProperty('--asgard-markdown-link-hover');
+  });
+
+  /**
+   * The consent block's fill and outline are all-or-nothing. Mimir sets only `backgroundColor`, and the
+   * embed has a `?bgColor=` param with no border equivalent — gating them separately would give those
+   * two a themed fill inside the fixed near-black `#1e293b` ring.
+   */
+  it('keeps the inset pair off when only one of background/border is a concrete color', () => {
+    const bgOnly = chatbotVars(resolveTheme({ chatbot: { backgroundColor: '#101014' } }));
+    const borderOnly = chatbotVars(resolveTheme({ chatbot: { borderColor: '#2a2a33' } }));
+
+    for (const vars of [bgOnly, borderOnly]) {
+      expect(vars).not.toHaveProperty('--asgard-consent-modal-code-bg');
+      expect(vars).not.toHaveProperty('--asgard-consent-modal-code-border');
+    }
+
+    // The rest of the background wiring is unaffected by the pairing rule.
+    expect(bgOnly['--asg-color-bg']).toBe('#101014');
+    expect(bgOnly['--asgard-markdown-pre-bg']).toBe('#101014');
   });
 
   it('keeps the two inset tokens off when the theme passes a var() through, not a concrete color', () => {

@@ -126,11 +126,21 @@ None.
 
 None.
 
+### Important (should fix in this cycle)
+
+_All three were fixed during the downstream audit; recorded here for traceability._
+
+1. **`chatbot.borderRadius` 被錯誤標記為 `@deprecated`**（本 review 的 §1.7 一度判為合規）。實際有效，且 Sindri / Odin / Mimir 都在用。**已撤回 deprecation。**
+2. **連結色由 `primaryComponent.mainColor` 推導，使兩個消費端跌破 WCAG AA**（Sindri 暗色 4.14:1、sdk-demo 3.87:1）。**已改由 `botMessage.linkColor` 驅動**，並加回歸鎖。
+3. **consent inset 兩個 token 各自 gate，會產生半套外觀**（Mimir 只設 `backgroundColor`；embed-frontend 只有 `?bgColor=`）。**已改為成對寫入。**
+
 ### Minor (nice to have)
 
 1. **`--asgard-consent-modal-primary-fg` 只有單元測試覆蓋，無瀏覽器實證。** react-demo 三個 theme preset（Default / Crazy / Heimdall）都沒有設定 `chatbot.primaryComponent.onMainColor`，該 token 因此在瀏覽器上永遠不會被寫入；consent modal 本身也需要真實 consent bot（`VITE_CONSENT_BOT_PROVIDER_ENDPOINT`）才會出現。要補瀏覽器驗證需在 demo 加一個帶 `onMainColor` 的 preset。
 2. **`botMessage.linkColor` 的推導值移除屬可觀察的行為變更（極窄）。** 直接讀 `useAsgardThemeContext().botMessage.linkColor` 的消費端會從「錯誤的 darken 值」變成 `undefined`。已標 `@deprecated` 並在註解指明替代（`--asgard-markdown-link`）；`~/Asgard` 下 7 個消費端無一讀取此欄位。
 3. **`out-tsc` 使 lint 失敗**（既有工具鏈問題，非本票造成）：跑過 `typecheck:packages` 後直接跑 `lint:packages` 會因編譯產物被掃到而 exit 1。建議把 `packages/*/out-tsc` 加進 ESLint ignore。
+4. **`deepMerge` 對 `undefined` 無條件覆蓋，使 `botMessage.color` / `userMessage.color` 兩個 provider 預設永遠不可達**（`deep-merge.ts:13-16` + `asgard-theme-context.tsx` annotations pass）。非本票造成、也非本票修正範圍，但它讓一整組 theme 預設變成裝飾品，值得另開票。
+5. **Sindri 產品畫面未實測** —— 需 dev IAM 互動登入。已改以「用 Sindri 真實 theme 物件 probe provider」取代，能精確涵蓋 provider 端，但涵蓋不到 SCSS 端在該產品的實際渲染。
 
 ---
 
@@ -139,3 +149,9 @@ None.
 - 2026-08-04: REVIEW task created, paired with BUILD-039 (Status: `draft`).
 - 2026-08-04: §1 Static review — 19 項 checklist 全 ✅ / 0 ❌；grep 全空；lint / format / typecheck / build 全綠 (Status: `draft → in-progress`).
 - 2026-08-04: §3 Functional validation — R1–R9 全 Pass（R1/R2 以編譯探針實證，R4/R5 以單元測試 + 瀏覽器量測雙重確認）。0 BLOCKER，3 項 Minor (Status: `in-progress → done`).
+- 2026-08-04: **下游影響稽核後重審（R10）**。七個消費端的稽核推翻本次 review 的三項判定，實作已修正並重跑：
+  - §1.7「3 處 `@deprecated` 皆保留型別與可設定性」的判定 **對其中一項是錯的**：`chatbot.borderRadius` 根本不該 deprecate（`chatbot-container.tsx:22` rest-spread → `:100` inline style，圓角有效；Sindri / Odin / Mimir 都設 `.5rem`）。已還原，現在只有 `template.references.item` 標 deprecated，`linkColor` 則改為**真正接線**。
+  - R4 的 token 來源變更：連結改由 `botMessage.linkColor` 驅動（原本 `primaryComponent.mainColor` 會使 Sindri 暗色 4.14:1、sdk-demo 3.87:1 跌破 WCAG AA）。新增回歸鎖測試禁止再從 accent 推導連結。
+  - R5 的 inset gate 改為成對，避免 Mimir / embed-frontend 出現半套。
+  - R6 的範圍縮小：2 個 provider 預設不可達（`deepMerge` 的 `undefined` 覆蓋），真正生效的只有 5 個 SCSS 引用。
+  - 重跑後：lint / format / typecheck / build 全綠，測試 core 165 / react 89（新增 5）。0 BLOCKER。
