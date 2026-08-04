@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import Conversation from './conversation';
 import { createDerivedStores, deriveSubagents, deriveTasks, subagentsEqual, tasksEqual } from './derived-stores';
 import { EventType } from '../constants/enum';
-import type { ConversationMessage, Subagent, Task } from '../types';
+import type { ConversationMessage, Subagent, SubagentTerminalStatus, Task } from '../types';
 
 // F-013 — derived-state stores. `deriveTasks` / `deriveSubagents` are pure folds over the conversation;
 // `createDerivedStores` exposes per-slice `BehaviorSubject`s that emit only when the slice structurally
@@ -74,6 +74,41 @@ function subagentStart(id: string, parentToolUseId: string): ConversationMessage
   };
 }
 
+function subagentComplete(
+  parentToolUseId: string,
+  status: SubagentTerminalStatus,
+  summary: string,
+): ConversationMessage {
+  return {
+    type: 'subagent',
+    messageId: `sub-complete-${parentToolUseId}`,
+    kind: 'complete',
+    parentToolUseId,
+    agentId: 'Y',
+    status,
+    summary,
+    time: new Date(0),
+  };
+}
+
+function childTool(seq: number, parentToolUseId: string, isComplete: boolean): ConversationMessage {
+  return {
+    type: 'tool-call',
+    messageId: `child-${seq}`,
+    eventType: isComplete ? EventType.TOOL_CALL_COMPLETE : EventType.TOOL_CALL_START,
+    processId: 'p',
+    callSeq: seq,
+    toolName: 'Read',
+    reason: '',
+    toolsetName: '',
+    parameter: {},
+    toolUseId: `t${seq}`,
+    parentToolUseId,
+    isComplete,
+    time: new Date(0),
+  };
+}
+
 describe('deriveTasks / deriveSubagents (F-013)', () => {
   it('deriveTasks folds the completed task tool-calls into the Task list', () => {
     const tasks = deriveTasks(conv([taskCreate(1, '1', 'a'), botMessage('b1', 'hi'), taskCreate(2, '2', 'b')]));
@@ -90,6 +125,44 @@ describe('deriveTasks / deriveSubagents (F-013)', () => {
   it('an empty conversation derives empty lists', () => {
     expect(deriveTasks(conv([]))).toEqual([]);
     expect(deriveSubagents(conv([]))).toEqual([]);
+  });
+});
+
+// Issue #382 — end to end over the conversation. `conversationToSubagentEvents` reads the message Map's
+// insertion order as arrival order, and `Conversation` re-keys a resumed subagent's lifecycle messages to
+// the tail, so the orders below are the ones a real resumed run produces.
+describe('deriveSubagents — a resumed subagent (issue #382)', () => {
+  const agent = agentTool(1, 'X', 'query');
+  const firstRun = [agent, subagentStart('Y', 'X'), childTool(1, 'X', true), subagentComplete('X', 'completed', 'a')];
+
+  it('the first run alone derives a terminal card carrying its summary', () => {
+    const subs = deriveSubagents(conv(firstRun));
+    expect(subs).toHaveLength(1);
+    expect(subs[0]).toMatchObject({ parentToolUseId: 'X', status: 'completed', summary: 'a' });
+  });
+
+  it('shape B — a later-turn resume (no lifecycle event) revives the card on its child tool alone', () => {
+    const subs = deriveSubagents(conv([...firstRun, childTool(2, 'X', false)]));
+    expect(subs).toHaveLength(1);
+    expect(subs[0]).toMatchObject({ status: 'running', summary: undefined });
+    expect(subs[0].tools).toHaveLength(2);
+  });
+
+  it('shape A — a same-turn resume (start re-keyed to the tail) reads as running', () => {
+    // Map order after the resume's `start` is re-keyed: agent, t1, complete, start, t2
+    const subs = deriveSubagents(
+      conv([agent, childTool(1, 'X', true), subagentComplete('X', 'completed', 'a'), subagentStart('Y', 'X'), childTool(2, 'X', false)]), // prettier-ignore
+    );
+    expect(subs[0]).toMatchObject({ status: 'running', summary: undefined });
+  });
+
+  it('shape A — once the resumed run completes, the re-keyed complete settles the card again', () => {
+    // Map order after both lifecycle messages are re-keyed: agent, t1, start, t2, complete
+    const subs = deriveSubagents(
+      conv([agent, childTool(1, 'X', true), subagentStart('Y', 'X'), childTool(2, 'X', true), subagentComplete('X', 'failed', 'b')]), // prettier-ignore
+    );
+    expect(subs).toHaveLength(1);
+    expect(subs[0]).toMatchObject({ status: 'failed', summary: 'b' });
   });
 });
 

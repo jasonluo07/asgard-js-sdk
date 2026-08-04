@@ -455,6 +455,10 @@ export default class Conversation implements IConversation {
       traceId: response.traceId,
     };
 
+    // Re-key to the tail: a resumed subagent re-emits `start` under the same key, and `Map.set` alone
+    // would keep it at the first run's position. `deriveSubagents` reads insertion order as arrival
+    // order, so a stale position would fold the resume before the tool-calls it precedes (issue #382).
+    messages.delete(key);
     messages.set(key, message);
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
@@ -478,6 +482,9 @@ export default class Conversation implements IConversation {
       traceId: response.traceId,
     };
 
+    // Same re-keying as `onSubagentStart`: the second `complete` of a resumed subagent must fold after
+    // that run's child tool-calls, otherwise the card never settles back to terminal (issue #382).
+    messages.delete(key);
     messages.set(key, message);
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
