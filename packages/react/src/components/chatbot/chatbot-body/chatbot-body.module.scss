@@ -4,6 +4,24 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+
+  // Scroll affordance for the docked strip below (see `.chatbot_body__docked`). Once the strip hits its
+  // 50% cap it scrolls internally, but nothing says so: overlay scrollbars are invisible at rest and the
+  // strip's 12px bottom padding scrolls away with the content, so the last visible row ends on a hard edge
+  // flush against the seam — which reads as "the composer is covering it", not "scroll for more". This
+  // fade restores the cue. It hangs off the wrapper, whose bottom edge *is* the strip's bottom edge (the
+  // strip is the last child), so no extra element is needed; ChatbotBody sets the attribute only while
+  // content remains below the fold, so it disappears at the end of the scroll and never shows when the
+  // strip is absent or fits.
+  &[data-docked-overflow]::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 24px;
+    pointer-events: none;
+    background: linear-gradient(to top, var(--asg-color-bg), transparent);
+  }
 }
 
 .chatbot_body {
