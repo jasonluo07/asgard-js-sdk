@@ -159,7 +159,9 @@ export function TaskList({ tasks, locale = 'en-US' }: { tasks: Task[]; locale?: 
         </span>
       </button>
       {open && (
-        <ul className={styles.list}>
+        // `data-scrollable` — same as the SubagentList: this list is the scroll box once the docked
+        // strip squeezes the card, and the container's wheel handler only yields to marked elements.
+        <ul className={styles.list} data-scrollable="true">
           {tasks.map(task => (
             <TaskRow key={task.id} task={task} locale={locale} />
           ))}

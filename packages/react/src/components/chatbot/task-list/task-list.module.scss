@@ -9,10 +9,16 @@
   border: 1px solid var(--asgard-tool-call-border, #333);
   border-radius: 8px;
   background-color: var(--asgard-tool-call-item-bg, #1a1a1a);
+  // See the SubagentList card: the docked strip caps its height, so this card shrinks and scrolls its own
+  // list rather than being pushed below the fold by the panel above it.
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .header {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 6px;
   width: 100%;
@@ -63,6 +69,12 @@
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
+  // Same as the SubagentList: header fixed, list absorbs the shrink and scrolls itself. See that file
+  // for why `data-scrollable` is required on the element in the TSX.
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 .row {

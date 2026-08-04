@@ -204,7 +204,9 @@ export function SubagentList({ subagents, locale = 'en-US' }: { subagents: Subag
         </span>
       </button>
       {show && (
-        <ul className={styles.list}>
+        // `data-scrollable` — this list scrolls itself when the docked strip squeezes the card;
+        // ChatbotContainer's wheel/touch handler preventDefaults on anything without the marker.
+        <ul className={styles.list} data-scrollable="true">
           {subagents.map(sa => (
             <SubagentItem key={sa.parentToolUseId} sa={sa} locale={locale} />
           ))}
