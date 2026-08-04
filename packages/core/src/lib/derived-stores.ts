@@ -19,10 +19,13 @@ function str(value: unknown): string | undefined {
 }
 
 /**
- * Adapt the ordered conversation messages into the `SubagentEvent[]` that `reduceSubagents` folds. The
- * conversation Map preserves first-insertion order, so iterating its values yields arrival order. A
- * completed child tool emits toolStart + toolComplete back-to-back (its final status is what shows);
- * an in-progress child emits only toolStart (→ running).
+ * Adapt the ordered conversation messages into the `SubagentEvent[]` that `reduceSubagents` folds.
+ * Iterating the conversation Map yields arrival order: a message updated in place keeps its slot (a
+ * tool-call completing does not jump the queue), and the one case where a message genuinely arrives
+ * again — a resumed subagent re-emitting `subagent.start` / `subagent.complete` under the same key —
+ * is re-keyed to the tail by `Conversation` so this fold still sees true order (issue #382). A completed
+ * child tool emits toolStart + toolComplete back-to-back (its final status is what shows); an
+ * in-progress child emits only toolStart (→ running).
  */
 export function conversationToSubagentEvents(messages: ConversationMessage[]): SubagentEvent[] {
   const events: SubagentEvent[] = [];

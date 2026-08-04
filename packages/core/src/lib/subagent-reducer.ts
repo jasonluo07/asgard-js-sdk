@@ -12,6 +12,8 @@
 //     tool_call.complete — async subagents complete the `Agent` tool early (result.status =
 //     "async_launched") while the subagent is still running.
 //   - Correlation key = `parentToolUseId` (= the `Agent` tool-call's `toolUseId`).
+//   - A subagent is not one-shot: the orchestrator can resume an existing one, so a terminal card that
+//     produces new activity goes back to `running` (issue #382 — see `resume` below).
 import { Subagent, SubagentStatus, SubagentToolCall } from '../types/subagent';
 
 /** The spawning `Agent` tool-call (native builtin). `true` → route out of the tool-call group. */
@@ -49,9 +51,21 @@ interface Meta {
 }
 
 /**
+ * A subagent that produces new activity is working again, so a terminal card goes back to `running`
+ * and drops the summary — that summary concluded the run that already finished (issue #382).
+ */
+function resume(m: Meta): void {
+  if (m.status === 'running') return;
+
+  m.status = 'running';
+  m.summary = undefined;
+}
+
+/**
  * Fold the subagent event stream into the current list (in first-seen order). Pure and replay-safe:
- * status goes terminal only via `subagentComplete` (agentStart / subagentStart never change it), so a
- * replay never knocks a completed subagent back to running.
+ * a replay re-applies the same arrival order, so the trailing `subagentComplete` wins and the snapshot
+ * is unchanged. (The guard would only be load-bearing if a replay could deliver a `start` — or a child
+ * `toolStart` — *without* the `complete` that followed it, which is not how the folded stream is built.)
  */
 export function reduceSubagents(events: SubagentEvent[]): Subagent[] {
   const order: string[] = [];
@@ -84,12 +98,15 @@ export function reduceSubagents(events: SubagentEvent[]): Subagent[] {
         m.agentId = event.agentId ?? m.agentId;
         m.subagentType = event.subagentType ?? m.subagentType;
         m.description = event.description ?? m.description;
+        resume(m); // shape A: the orchestrator re-started an existing subagent within the same turn
 
-        break; // never touch status (only subagentComplete goes terminal)
+        break;
       }
 
       case 'toolStart': {
-        ensure(event.parentToolUseId);
+        // shape B (the common resume): a later-turn resume carries no lifecycle event at all, so a
+        // child tool-call landing on a terminal card is the only signal that it is working again.
+        resume(ensure(event.parentToolUseId));
         (tools.get(event.parentToolUseId) as Map<string, SubagentToolCall>).set(event.toolUseId, {
           toolsetName: event.toolsetName,
           toolName: event.toolName,

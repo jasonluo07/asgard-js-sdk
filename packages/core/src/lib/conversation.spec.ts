@@ -468,6 +468,30 @@ describe('Conversation — subagent events + id plumbing (F-012)', () => {
     expect(getSubagent(conv, 'subagent:X:start')?.kind).toBe('start');
     expect(getSubagent(conv, 'subagent:X:complete')?.status).toBe('failed');
   });
+
+  // Issue #382 — a resumed subagent re-emits `start` / `complete` under the SAME key. `Map.set` keeps an
+  // existing key at its original position, so a plain overwrite would leave the resume folded back at the
+  // first run's slot; `deriveSubagents` reads insertion order as arrival order, so the second `complete`
+  // would land *before* the resumed run's child tool-calls and the card would never settle again.
+  it('a re-emitted subagent start moves to the tail, preserving arrival order (issue #382)', () => {
+    const conv = empty()
+      .onMessage(subagentStartEvent('X', 'Y'))
+      .onMessage(subagentCompleteEvent('X', 'completed'))
+      .onMessage(subagentStartEvent('X', 'Y'));
+
+    expect(Array.from(conv.messages?.keys() ?? [])).toEqual(['subagent:X:complete', 'subagent:X:start']);
+  });
+
+  it('a re-emitted subagent complete moves to the tail, preserving arrival order (issue #382)', () => {
+    const conv = empty()
+      .onMessage(subagentStartEvent('X', 'Y'))
+      .onMessage(subagentCompleteEvent('X', 'completed'))
+      .onMessage(subagentStartEvent('X', 'Y'))
+      .onMessage(subagentCompleteEvent('X', 'failed'));
+
+    expect(Array.from(conv.messages?.keys() ?? [])).toEqual(['subagent:X:start', 'subagent:X:complete']);
+    expect(getSubagent(conv, 'subagent:X:complete')?.status).toBe('failed');
+  });
 });
 
 // F-020 AC10 — stop-generation converges any still-running tool-call to `cancelled` so it never lingers

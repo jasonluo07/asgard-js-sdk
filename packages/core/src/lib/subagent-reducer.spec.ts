@@ -110,18 +110,87 @@ describe('reduceSubagents (F-012)', () => {
     expect(subs[0].status).toBe('completed');
   });
 
-  it('R5: replay-safe — re-seeing agentStart/subagentStart never reverts a completed subagent', () => {
-    const subs = reduceSubagents([
-      { kind: 'agentStart', toolUseId: 'X' },
-      { kind: 'subagentComplete', parentToolUseId: 'X', status: 'completed' },
+  // A replay re-applies the *same* arrival order, so the trailing `complete` wins and the snapshot is
+  // unchanged. (Before issue #382 this case asserted that a trailing `subagentStart` could never revert
+  // a completed subagent — that freeze is exactly what made a resumed subagent read as finished.)
+  it('R5: replay-safe — re-folding the same arrival order yields the same terminal snapshot', () => {
+    const run: SubagentEvent[] = [
       { kind: 'agentStart', toolUseId: 'X' },
       { kind: 'subagentStart', parentToolUseId: 'X', agentId: 'Y' },
-    ]);
-    expect(subs[0].status).toBe('completed');
+      { kind: 'subagentComplete', parentToolUseId: 'X', status: 'completed' },
+    ];
+    expect(reduceSubagents(run)[0].status).toBe('completed');
+    expect(reduceSubagents([...run, ...run])[0].status).toBe('completed');
   });
 
   it('R5: any prefix folds to a consistent snapshot', () => {
     expect(reduceSubagents([])).toEqual([]);
     expect(reduceSubagents(timeline.slice(0, 3))[0]).toMatchObject({ status: 'running' });
+  });
+});
+
+// Issue #382 — a subagent is not one-shot. The orchestrator can send further instructions to an
+// *existing* subagent, and the resume arrives in one of two shapes (both pinned by asgard-core#168):
+//   A. resumed within the same turn — a second `subagent.start` follows the `subagent.complete`.
+//   B. resumed in a later turn — the backend emits NO subagent lifecycle event at all; the resumed
+//      run's child tool-calls (still carrying the original parentToolUseId) are the only signal.
+// A card that is producing new activity must read as running in both.
+describe('reduceSubagents — a resumed subagent reads as running again (issue #382)', () => {
+  const child = (toolUseId: string): SubagentEvent => ({
+    kind: 'toolStart',
+    parentToolUseId: 'X',
+    toolUseId,
+    toolsetName: '',
+    toolName: 'Read',
+  });
+
+  const firstRun: SubagentEvent[] = [
+    { kind: 'agentStart', toolUseId: 'X', description: '查資料' },
+    { kind: 'subagentStart', parentToolUseId: 'X', agentId: 'Y', subagentType: 'general-purpose' },
+    child('t1'),
+    { kind: 'toolComplete', parentToolUseId: 'X', toolUseId: 't1' },
+    { kind: 'subagentComplete', parentToolUseId: 'X', status: 'completed', summary: '第一輪結論' },
+  ];
+
+  it('R1: shape A — start → complete → start goes back to running', () => {
+    const subs = reduceSubagents([...firstRun, { kind: 'subagentStart', parentToolUseId: 'X', agentId: 'Y' }]);
+    expect(subs).toHaveLength(1);
+    expect(subs[0].status).toBe('running');
+  });
+
+  it('R2: shape A — start → complete → start → complete ends terminal again', () => {
+    const subs = reduceSubagents([
+      ...firstRun,
+      { kind: 'subagentStart', parentToolUseId: 'X', agentId: 'Y' },
+      child('t2'),
+      { kind: 'toolComplete', parentToolUseId: 'X', toolUseId: 't2' },
+      { kind: 'subagentComplete', parentToolUseId: 'X', status: 'failed', summary: '第二輪結論' },
+    ]);
+    expect(subs[0]).toMatchObject({ status: 'failed', summary: '第二輪結論' });
+  });
+
+  it('R3: shape B — a child toolStart on a terminal card revives it, on the same card', () => {
+    const subs = reduceSubagents([...firstRun, child('t2')]);
+    expect(subs).toHaveLength(1);
+    expect(subs[0]).toMatchObject({ parentToolUseId: 'X', status: 'running' });
+    expect(subs[0].tools.map(t => t.toolName)).toEqual(['Read', 'Read']);
+  });
+
+  it('R3: shape B — the card keeps its identity (subagentType / description) across the resume', () => {
+    const subs = reduceSubagents([...firstRun, child('t2')]);
+    expect(subs[0]).toMatchObject({ subagentType: 'general-purpose', description: '查資料' });
+  });
+
+  it('R4: reverting to running drops the finished run’s summary', () => {
+    expect(reduceSubagents([...firstRun, child('t2')])[0].summary).toBeUndefined();
+    expect(
+      reduceSubagents([...firstRun, { kind: 'subagentStart', parentToolUseId: 'X', agentId: 'Y' }])[0].summary,
+    ).toBeUndefined();
+  });
+
+  it('R4: a tool-call on a still-running subagent leaves its state alone', () => {
+    const subs = reduceSubagents([...firstRun.slice(0, 4), child('t2')]);
+    expect(subs[0].status).toBe('running');
+    expect(subs[0].summary).toBeUndefined();
   });
 });
