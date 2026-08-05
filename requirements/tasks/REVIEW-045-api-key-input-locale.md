@@ -3,127 +3,98 @@
 ## Meta
 
 - Task ID: `REVIEW-045`
-- Status: `ready`
+- Status: `done`
 - BUILD Task: `BUILD-045`
-- Reviewed commit: `[filled at review time]`
-- Reviewed branch: `[filled at review time]`
+- Reviewed commit: `29b76801828746fd4636a8aa6ebc4a9558863569`
+- Reviewed branch: `fix/391-api-key-input-locale`
 
 ---
 
 ## §1 Static Code Review
 
-Scan BUILD task `## Coverage` files against `FRONTEND_RULE_COMMON.md`. No server needed.
-
 ### §1.1 Checklist
 
-| Check item                                                                                                    | Rule                           | Result  |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------- |
-| SVG path strings inlined into components                                                                      | FRONTEND_RULE_COMMON §1.1      | ✅ / ❌ |
-| Inline style magic numbers (e.g., `minHeight: 'calc(...)'`)                                                   | FRONTEND_RULE_COMMON §1.2      | ✅ / ❌ |
-| Hardcoded color values (hex / rgba / oklch literal)                                                           | FRONTEND_RULE_COMMON §1.3      | ✅ / ❌ |
-| `<style>` tag injected into JSX                                                                               | FRONTEND_RULE_COMMON §1.4      | ✅ / ❌ |
-| Module-level mutable ID counters                                                                              | FRONTEND_RULE_COMMON §1.5      | ✅ / ❌ |
-| Login backdoor outside `NODE_ENV === 'development'` guard                                                     | FRONTEND_RULE_COMMON §1.6      | ✅ / ❌ |
-| Sensitive data passed through URL query strings                                                               | FRONTEND_RULE_COMMON §1.7      | ✅ / ❌ |
-| `page.tsx` is thin (params + navigation only; no main UI JSX)                                                 | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| Feature components in `src/components/{feature}/`; no `screens/` dir                                          | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| TypeScript type (`src/types/`) and API module (`src/api/`) exist before first use                             | FRONTEND_RULE_COMMON §2.2      | ✅ / ❌ |
-| API calls routed through `src/api/` domain module; no direct axios in components                              | FRONTEND_RULE_COMMON §3.2      | ✅ / ❌ |
-| Server state via TanStack Query; `isLoading` / `isError` both handled                                         | FRONTEND_RULE_COMMON §3.3 §3.4 | ✅ / ❌ |
-| Forms use RHF + Zod; no bare `useState` fields; field-level error messages                                    | FRONTEND_RULE_COMMON §3.5      | ✅ / ❌ |
-| Zustand store does not hold server data                                                                       | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| No `as any`; no `eslint-disable` / `@ts-ignore` to bypass type errors                                         | FRONTEND_RULE_COMMON §4.1 §4.2 | ✅ / ❌ |
-| Shared types centralized in `src/types/`; no duplicate interfaces across files                                | FRONTEND_RULE_COMMON §4.3 §4.4 | ✅ / ❌ |
-| Size magic numbers repeated ≥3× extracted to `src/constants/layout.ts`                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| Dates use dayjs + `src/constants/formats.ts` constants                                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| All user-facing text via `useTranslations()` / `t()`; synced to `messages/zh-TW.json` + `messages/en-US.json` | FRONTEND_RULE_COMMON §5.3      | ✅ / ❌ |
-| Repeated Tailwind class groups (≥3×), JSX fragments (≥3×), logic (≥2×) extracted                              | FRONTEND_RULE_COMMON §6        | ✅ / ❌ |
-| No `setTimeout` mock delays                                                                                   | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No `console.log` (except error boundary logging)                                                              | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No untracked TODO / FIXME                                                                                     | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
+| 檢查項目                                 | 結果                                |
+| ---------------------------------------- | ----------------------------------- |
+| `any` / `as any`                         | ✅ 無                               |
+| `@ts-ignore` / `eslint-disable`          | ✅ 無                               |
+| library code 殘留 `console.log`          | ✅ 無                               |
+| hardcode API key / endpoint / namespace  | ✅ 無（本次未觸及設定路徑）         |
+| RxJS 訂閱 / EventSource / timer teardown | ✅ 不適用（本次未新增訂閱或 timer） |
+| react 只從 core 公開進入點 import        | ✅ 無 `core/src` 深挖               |
+| core 反向 import react / react-dom / DOM | ✅ 無                               |
+| 公開 API 變更經 `@deprecated` 過渡       | ✅ 無破壞性變更（見 §1.4 說明）     |
+| 新增公開型別 / 元件從 package 進入點導出 | ✅ 不適用（未新增公開 API）         |
+| message template 前置依賴                | ✅ 不適用                           |
+| 使用 `botProviderEndpoint`               | ✅ 不適用                           |
+| 導出函式標明 explicit return type        | ✅ 是                               |
+| 共用型別集中、無重複 interface           | ✅ 是                               |
+| React 元件 props 完整型別化              | ✅ 是                               |
+| 元件 hardcode 色值                       | ✅ 無                               |
+| react / react-dom 維持 peerDependencies  | ✅ 未更動                           |
+| core 與 react 版本號一致                 | ✅ `0.3.44` / `0.3.44`              |
+| 重複邏輯 / 型別 / JSX 已抽出             | ✅ 見 §1.4                          |
+| `setTimeout` mock / 死碼 / TODO / FIXME  | ✅ 無                               |
 
 ### §1.2 Mechanical Grep
 
-Run the commands below against directories listed in BUILD task `## Coverage`. Empty output = ✅, any output = ❌.
-
-```bash
-# §1.3 hardcoded color values
-grep -rn --include="*.tsx" --include="*.ts" '#[0-9a-fA-F]\{3,6\}\|rgba(\|oklch(' <coverage-dirs>
-
-# §1.4 <style> tag injection
-grep -rn --include="*.tsx" '<style>' <coverage-dirs>
-
-# §1.7 sensitive data in URL query strings
-grep -rn --include="*.tsx" --include="*.ts" 'router\.push.*email=\|router\.push.*token=\|router\.push.*password=\|searchParams.*token' <coverage-dirs>
-
-# §4.1 as any
-grep -rn --include="*.tsx" --include="*.ts" 'as any' <coverage-dirs>
-
-# §4.2 eslint-disable / ts-ignore
-grep -rn --include="*.tsx" --include="*.ts" 'eslint-disable\|@ts-ignore' <coverage-dirs>
-
-# §5.3 hardcoded Chinese or common UI strings in JSX
-grep -rn --include="*.tsx" '>[^\{<]*[一-鿿][^\{<]*<' <coverage-dirs>
-
-# §7 console.log
-grep -rn --include="*.tsx" --include="*.ts" 'console\.log' <coverage-dirs>
-
-# §7 setTimeout mock
-grep -rn --include="*.tsx" --include="*.ts" 'setTimeout' <coverage-dirs>
-```
-
-Grep results:
+掃描範圍限定為 BUILD task `## Coverage` 列出的檔案（依 REVIEW_RULE §1.2）。
 
 ```
-<paste output here>
+✅ 空 — : any|<any>|as any
+✅ 空 — @ts-ignore|@ts-nocheck|eslint-disable
+✅ 空 — console\.log
+✅ 空 — setTimeout
+✅ 空 — TODO|FIXME
+✅ 空 — rgba\(|#[0-9a-fA-F]{6}\b
 ```
 
 ### §1.3 TypeScript and Lint
 
-```bash
-npx tsc --noEmit
-npm run lint:check （唯讀審查用 lint:check；REVIEW_RULE §1.4 對應的 npm run lint 為含 auto-fix 的變體）
-```
-
-Results:
+依 `AGENTS.md` 使用本 repo 實際存在的指令（review skill 文件寫的 `npx tsc --noEmit` / `npm run lint:check` 在此 repo 不存在）：
 
 ```
-tsc:  PASS / FAIL — <paste output if any errors>
-lint: PASS / FAIL — <paste output if any errors>
+PASS  npm run lint:packages
+PASS  npm run format:check
+PASS  npm run typecheck:packages
+PASS  npm run build:core
+PASS  npm run build:react
+PASS  npm run test:packages          # core 177 passed / react 105 passed
 ```
 
 ### §1.4 Static Review Acceptance
 
-- [ ] All §1.1 items checked and marked ✅/❌
-- [ ] All ❌ violations listed with file path and line number
-- [ ] All §1.2 grep commands run and output pasted
-- [ ] `npx tsc --noEmit` run — no TypeScript errors
-- [ ] `npm run lint:check` run — no ESLint errors
+✅ 通過：19 項　 ❌ 違規：0 項
 
-Any ❌ violation → report BLOCKER to BUILD task; re-run §1 after fix.
+補充判讀：
+
+- **§1.7 公開 API**：`ApiKeyInputProps` 新增選填的 `locale`，屬**新增**而非破壞；未傳者行為與 `0.3.46` 完全相同（仍讀 context）。不需 `@deprecated`。
+- **§2.2 公開 API 導出**：`ApiKeyInput` 與 `Locale` 皆已從 package 進入點導出，本次未新增需要導出的東西。
+- **§6 重構掃描**：修正順帶消除了原本「一半 prop、一半 context」的分裂接線——`chatbot.tsx` 不再預先解析 `placeholder`，只傳一次 `locale`。
 
 ---
 
 ## §3 Functional Validation
 
-Validate each R# from BUILD task against the running app (`npm run dev -- -p <本地 dev port，見 CLAUDE.local.md>`).
-
 ### R# Result Matrix
 
-| R#  | Description                           | Result                | Note                               |
-| --- | ------------------------------------- | --------------------- | ---------------------------------- |
-| R1  | `<criterion summary from BUILD task>` | Pass / Fail / Blocked | `<actual vs expected if not Pass>` |
-| R2  | `<criterion summary>`                 | Pass / Fail / Blocked |                                    |
-| RN  | (Browser smoke test) `<summary>`      | Pass / Fail / Blocked |                                    |
+| R#  | 驗收條件                                                               | 結果    | 證據                                                                                                                                                                     |
+| --- | ---------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R1  | `<Chatbot locale="zh-TW" authState="needApiKey">` 整個金鑰畫面為 zh-TW | ✅ Pass | `api-key-input-locale.spec.tsx`「renders the whole key screen in the locale passed to `<Chatbot>`」——斷言 `auth.keyLabel`、`auth.continue` 與 placeholder 三者皆為 zh-TW |
+| R2  | `invalidApiKey` 狀態同樣在地化                                         | ✅ Pass | 同檔「localizes the invalid-key screen too」，含 `auth.invalidKey`                                                                                                       |
+| R3  | 標準單獨使用（無 prop）仍讀 context                                    | ✅ Pass | 同檔「still reads the template context when used standalone without the prop」（ja-JP）                                                                                  |
+| R4  | 全無 `locale` 時維持 en-US、用字不變                                   | ✅ Pass | 同檔「falls back to en-US when `<Chatbot>` is given no locale」                                                                                                          |
+| R5  | typecheck / build / test 全綠                                          | ✅ Pass | 見 §1.3                                                                                                                                                                  |
+
+額外一條（優先序）：「lets the prop override the surrounding context」——確認 prop 勝過 context，這正是修正 #391 的關鍵順序。
 
 ### §3.1 Acceptance
 
-- [ ] All R# in BUILD task `## Coverage` executed (Step 1 static read + Step 2 browser operation + Step 3 boundary conditions)
-- [ ] Each R# marked Pass / Fail / Blocked with explanation
-- [ ] If e2e spec exists for changed routes: `npm run test:e2e` run and passed
-- [ ] Loading, error, and empty-state boundary conditions confirmed
+5 / 5 Pass，0 Fail。
 
-Any Fail → BLOCKER to BUILD task; describe [actual behavior] vs [expected behavior].
+**回歸測試有效性已驗證**：把 `api-key-input.tsx` 與 `chatbot.tsx` 還原成 `main`（0.3.46）後，5 條中有 **3 條失敗**（`<Chatbot>` 傳 locale 的兩條、以及 prop 覆蓋 context 那條），加回修正後全數通過。
+
+**這次補上了 REVIEW-044 沒能做到的功能驗收**：REVIEW-044 的 `R6` 記為 Partial，因為 react-demo 的 Auth 頁需要特定狀態的 bot provider 才走得到，結果 #391 正好躲在那個沒驗到的畫面裡。本次改用 jsdom 直接掛載 `authState="needApiKey"`——該路徑刻意不建 service provider，所以不需要任何 SSE 或後端即可渲染，這個缺口已由自動化測試補起來。
 
 ---
 
@@ -131,22 +102,21 @@ Any Fail → BLOCKER to BUILD task; describe [actual behavior] vs [expected beha
 
 ### Critical (must fix before done)
 
-None.
+無。
 
 ### Important (should fix in this cycle)
 
-None.
+無。
 
 ### Minor (nice to have)
 
-None.
+1. **本次為自審**，同 REVIEW-043 / REVIEW-044。§1 為機械掃描、§3 有可重跑且已驗證會失敗的測試。
+2. **`ApiKeyInput` 仍相依 `useAsgardContext()` 取 `avatar`**，而非驗證路徑同樣沒有 service provider，所以它一直是拿 context 預設值。這是既有行為、不在本次範圍，但屬於同一類「元件相依了自己渲染路徑不提供的 context」的問題，值得日後一併檢視。
 
 ---
 
 ## Execution Log
 
-- YYYY-MM-DD: REVIEW task created, paired with BUILD-NNN (Status: `draft`).
-- YYYY-MM-DD: §1 Static review started (Status: `draft → in-progress`).
-- YYYY-MM-DD: §1 complete — N ✅ / N ❌; §3 Functional validation complete — all R# Pass (Status: `in-progress → done`).
-
-- 2026-08-05: REVIEW task created, paired with BUILD-045 (Status: `draft`).
+- 2026-08-05: §1 靜態審查執行完畢 — 19 項通過、0 違規；grep 6 項全空；lint / format / typecheck / build / test 全綠。
+- 2026-08-05: §3 功能驗收執行完畢 — R1–R5 全數 Pass；回歸測試已確認在 0.3.46 上失敗 3 條。
+- 2026-08-05: 0 BLOCKER，REVIEW-045 標記 `done`。
