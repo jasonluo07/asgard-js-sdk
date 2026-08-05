@@ -452,23 +452,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
       case 'authenticated':
       default:
         return (
-          <AsgardTemplateContextProvider
-            locale={locale}
-            onErrorClick={onErrorClick}
-            errorMessageRenderer={errorMessageRenderer}
-            onTemplateBtnClick={onTemplateBtnClick}
-            defaultLinkTarget={defaultLinkTarget}
-            messageActions={messageActions}
-            onMessageAction={onMessageAction}
-            renderMessageContent={renderMessageContent}
-            renderToolCallGroup={renderToolCallGroup}
-            renderTitle={renderTitle}
-            untitledLabel={untitledLabel}
-            channelTitleHidden={channelTitleHidden}
-            onSandboxOpenBrowser={onSandboxOpenBrowser}
-            onSandboxOpenFile={handleSandboxOpenFile}
-            sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
-          >
+          <>
             {/* The chat column's `1fr` row: the scrollable thread. The File Explorer is no longer in here —
                 it is a sibling of the whole column (see ChatbotContainer below), so opening it narrows the
                 header and composer too. The footer stays pinned regardless of thread height; the body
@@ -487,7 +471,6 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                 lived inside it the run indicator silently disappeared (heimdall-pm#200). The docked
                 TaskList / SubagentList strip (F-010 / F-012) sits directly above this. */}
             <RunIndicatorSlot />
-            {/* Footer must live inside the template provider so it reads `locale` from the context. */}
             {renderFooter ? (
               renderFooter()
             ) : (
@@ -498,11 +481,10 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
               />
             )}
             <ToolCallConsentGate />
-            {/* F-018 — sandbox cold-start HUD. Inside the template provider so it reads `locale` for its
-                labels (like the docked panels); position:absolute anchors it to ChatbotContainer
+            {/* F-018 — sandbox cold-start HUD. position:absolute anchors it to ChatbotContainer
                 (position:relative), independent of and able to coexist with RunningIndicator. */}
             <SandboxLaunchHud />
-          </AsgardTemplateContextProvider>
+          </>
         );
     }
   };
@@ -547,48 +529,74 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             autoResetChannel={autoResetChannel}
             keepConnectionOnUnmount={keepConnectionOnUnmount}
           >
-            <FileDropContextProvider>
-              <FileDropRefConnector fileDropRef={fileDropRef} />
-              <ChatbotContainer
-                fullScreen={fullScreen}
-                className={className}
-                style={style}
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                {/* The chat column owns the whole vertical stack; the File Explorer aside is its sibling,
+            {/* The template context wraps the whole container, not just the chat column. The File Explorer
+                aside and the drop-zone overlay are siblings of that column (F-021 AC6), so a provider scoped
+                to the column leaves them reading the context default — which is exactly how the panel came
+                to render `en-US` under a `zh-TW` consumer (#387). Keep this above `ChatbotContainer` so
+                anything added as a sibling of the column inherits `locale` by construction.
+                Note this is the authenticated path only; the non-authenticated states return their own tree
+                below, with no service or template provider. Strings there read `locale` from lexical scope
+                rather than this context. */}
+            <AsgardTemplateContextProvider
+              locale={locale}
+              onErrorClick={onErrorClick}
+              errorMessageRenderer={errorMessageRenderer}
+              onTemplateBtnClick={onTemplateBtnClick}
+              defaultLinkTarget={defaultLinkTarget}
+              messageActions={messageActions}
+              onMessageAction={onMessageAction}
+              renderMessageContent={renderMessageContent}
+              renderToolCallGroup={renderToolCallGroup}
+              renderTitle={renderTitle}
+              untitledLabel={untitledLabel}
+              channelTitleHidden={channelTitleHidden}
+              onSandboxOpenBrowser={onSandboxOpenBrowser}
+              onSandboxOpenFile={handleSandboxOpenFile}
+              sandboxBrowserOpenTarget={sandboxBrowserOpenTarget}
+            >
+              <FileDropContextProvider>
+                <FileDropRefConnector fileDropRef={fileDropRef} />
+                <ChatbotContainer
+                  fullScreen={fullScreen}
+                  className={className}
+                  style={style}
+                  onDragEnter={handleDragEnter}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {/* The chat column owns the whole vertical stack; the File Explorer aside is its sibling,
                     so opening the aside narrows header and composer along with the thread (F-021 AC6). */}
-                <div className={styles.chatbot__chat_column}>
-                  {renderHeader ? (
-                    renderHeader()
-                  ) : (
-                    <ChatHeaderHost
-                      title={title}
-                      onReset={onReset}
-                      onClose={onClose}
-                      customActions={customActions}
-                      headerActions={headerActions}
-                      maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-                      locale={locale}
-                      untitledLabel={untitledLabel}
-                      channelTitleHidden={channelTitleHidden}
-                      renderTitle={renderTitle}
-                      fileExplorerController={fileExplorerController}
-                      builtinFileExplorer={builtinFileExplorer}
-                    />
+                  <div className={styles.chatbot__chat_column}>
+                    {renderHeader ? (
+                      renderHeader()
+                    ) : (
+                      <ChatHeaderHost
+                        title={title}
+                        onReset={onReset}
+                        onClose={onClose}
+                        customActions={customActions}
+                        headerActions={headerActions}
+                        maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+                        locale={locale}
+                        untitledLabel={untitledLabel}
+                        channelTitleHidden={channelTitleHidden}
+                        renderTitle={renderTitle}
+                        fileExplorerController={fileExplorerController}
+                        builtinFileExplorer={builtinFileExplorer}
+                      />
+                    )}
+                    {renderContent()}
+                  </div>
+                  {builtinFileExplorer && fileExplorerController.open && (
+                    <aside className={styles.chatbot__file_explorer_aside}>
+                      <ChatbotFileExplorerAside controller={fileExplorerController} basePath={fileExplorerBasePath} />
+                    </aside>
                   )}
-                  {renderContent()}
-                </div>
-                {builtinFileExplorer && fileExplorerController.open && (
-                  <aside className={styles.chatbot__file_explorer_aside}>
-                    <ChatbotFileExplorerAside controller={fileExplorerController} basePath={fileExplorerBasePath} />
-                  </aside>
-                )}
-                <DropZoneOverlay />
-              </ChatbotContainer>
-            </FileDropContextProvider>
+                  <DropZoneOverlay />
+                </ChatbotContainer>
+              </FileDropContextProvider>
+            </AsgardTemplateContextProvider>
           </AsgardServiceContextProvider>
         </AsgardThemeContextProvider>
       </AsgardAppInitializationContextProvider>
