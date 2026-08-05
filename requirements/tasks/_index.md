@@ -168,3 +168,7 @@
 | `REVIEW-041` | Review: Resumed subagent reads as running         | —        | done   | [REVIEW-041-resumed-subagent-reads-running.md](./REVIEW-041-resumed-subagent-reads-running.md)           |
 | `BUILD-042`  | Export user text renderer (UserMessageText)       | Normal   | done   | [BUILD-042-export-user-message-text.md](./BUILD-042-export-user-message-text.md)                         |
 | `REVIEW-042` | Review: Export user text content renderer         | —        | done   | [REVIEW-042-export-user-message-text.md](./REVIEW-042-export-user-message-text.md)                       |
+| `BUILD-043`  | Let `locale` reach every part of the chatbot      | Normal   | done   | [BUILD-043-locale-reaches-file-explorer.md](./BUILD-043-locale-reaches-file-explorer.md)                 |
+| `REVIEW-043` | Review: Let `locale` reach the whole chatbot      | —        | done   | [REVIEW-043-locale-reaches-file-explorer.md](./REVIEW-043-locale-reaches-file-explorer.md)               |
+| `BUILD-044`  | Route remaining hardcoded strings through i18n    | Normal   | done   | [BUILD-044-i18n-remaining-strings.md](./BUILD-044-i18n-remaining-strings.md)                             |
+| `REVIEW-044` | Review: Route remaining strings through i18n      | —        | done   | [REVIEW-044-i18n-remaining-strings.md](./REVIEW-044-i18n-remaining-strings.md)                           |

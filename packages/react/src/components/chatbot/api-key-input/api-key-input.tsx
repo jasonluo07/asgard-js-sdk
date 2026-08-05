@@ -2,6 +2,8 @@ import { useState, FormEvent, ChangeEvent, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardContext } from '../../../context/asgard-service-context';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import { ProfileIcon } from '../profile-icon';
 import EyeSvg from '../../../icons/eye.svg?react';
 import EyeOffSvg from '../../../icons/eye-off.svg?react';
@@ -11,6 +13,7 @@ export interface ApiKeyInputProps {
   onSubmit: (apiKey: string) => void | Promise<void>;
   loading?: boolean;
   error?: string;
+  /** Defaults to the catalog's `auth.enterKey`, resolved from the surrounding template context. */
   placeholder?: string;
   title?: string;
   showToggle?: boolean;
@@ -21,8 +24,8 @@ export function ApiKeyInput({
   onSubmit,
   loading = false,
   error,
-  placeholder = 'Enter your key',
-  title = 'Preview',
+  placeholder,
+  title,
   showToggle = true,
   className,
 }: ApiKeyInputProps): ReactNode {
@@ -30,6 +33,9 @@ export function ApiKeyInput({
   const [showPassword, setShowPassword] = useState(false);
   const { chatbot } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
+  const { locale = 'en-US' } = useAsgardTemplateContext();
+  const resolvedPlaceholder = placeholder ?? t(locale, 'auth.enterKey');
+  const resolvedTitle = title ?? t(locale, 'auth.title');
 
   const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
@@ -57,19 +63,19 @@ export function ApiKeyInput({
       <div className={styles.api_key_input__header}>
         <ProfileIcon avatar={avatar} />
         <h2 className={styles.api_key_input__title} style={chatbot?.header?.title?.style}>
-          {title}
+          {resolvedTitle}
         </h2>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.api_key_input__form}>
         <div>
-          <label className={styles.api_key_input__label}>Key</label>
+          <label className={styles.api_key_input__label}>{t(locale, 'auth.keyLabel')}</label>
           <div className={styles.api_key_input__input_wrapper}>
             <input
               type={showPassword ? 'text' : 'password'}
               value={apiKey}
               onChange={handleInputChange}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               className={clsx(styles.api_key_input__input, {
                 [styles['api_key_input__input--error']]: error,
                 [styles['api_key_input__input--disabled']]: loading,
@@ -83,7 +89,7 @@ export function ApiKeyInput({
                 onClick={togglePasswordVisibility}
                 className={styles.api_key_input__toggle_button}
                 disabled={loading}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={t(locale, showPassword ? 'auth.hidePassword' : 'auth.showPassword')}
               >
                 {showPassword ? (
                   <EyeOffSvg className={styles.api_key_input__toggle_icon} />
@@ -105,7 +111,7 @@ export function ApiKeyInput({
             color: chatbot?.secondaryColor,
           }}
         >
-          {loading ? 'Loading...' : 'Continue'}
+          {t(locale, loading ? 'auth.loading' : 'auth.continue')}
         </button>
       </form>
     </div>
