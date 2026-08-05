@@ -408,7 +408,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
-              placeholder={t(activeLocale, 'auth.enterKey')}
+              locale={activeLocale}
             />
           </div>
         );
@@ -419,7 +419,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
-              placeholder={t(activeLocale, 'auth.enterKey')}
+              locale={activeLocale}
               error={t(activeLocale, 'auth.invalidKey')}
             />
           </div>

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { t } from '../../../i18n';
+import { Locale, t } from '../../../i18n';
 import { ProfileIcon } from '../profile-icon';
 import EyeSvg from '../../../icons/eye.svg?react';
 import EyeOffSvg from '../../../icons/eye-off.svg?react';
@@ -13,9 +13,17 @@ export interface ApiKeyInputProps {
   onSubmit: (apiKey: string) => void | Promise<void>;
   loading?: boolean;
   error?: string;
-  /** Defaults to the catalog's `auth.enterKey`, resolved from the surrounding template context. */
+  /** Defaults to the catalog's `auth.enterKey`. */
   placeholder?: string;
+  /** Defaults to the catalog's `auth.title`. */
   title?: string;
+  /**
+   * UI language for this component's own copy. Takes priority over the surrounding
+   * `AsgardTemplateContext`, and is **required** when `<Chatbot>` renders this: the
+   * non-authenticated path deliberately mounts without a template provider (it skips the
+   * service provider to avoid opening SSE), so context alone always resolves `en-US` (#391).
+   */
+  locale?: Locale;
   showToggle?: boolean;
   className?: string;
 }
@@ -26,6 +34,7 @@ export function ApiKeyInput({
   error,
   placeholder,
   title,
+  locale,
   showToggle = true,
   className,
 }: ApiKeyInputProps): ReactNode {
@@ -33,9 +42,10 @@ export function ApiKeyInput({
   const [showPassword, setShowPassword] = useState(false);
   const { chatbot } = useAsgardThemeContext();
   const { avatar } = useAsgardContext();
-  const { locale = 'en-US' } = useAsgardTemplateContext();
-  const resolvedPlaceholder = placeholder ?? t(locale, 'auth.enterKey');
-  const resolvedTitle = title ?? t(locale, 'auth.title');
+  const { locale: contextLocale = 'en-US' } = useAsgardTemplateContext();
+  const activeLocale = locale ?? contextLocale;
+  const resolvedPlaceholder = placeholder ?? t(activeLocale, 'auth.enterKey');
+  const resolvedTitle = title ?? t(activeLocale, 'auth.title');
 
   const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
@@ -69,7 +79,7 @@ export function ApiKeyInput({
 
       <form onSubmit={handleSubmit} className={styles.api_key_input__form}>
         <div>
-          <label className={styles.api_key_input__label}>{t(locale, 'auth.keyLabel')}</label>
+          <label className={styles.api_key_input__label}>{t(activeLocale, 'auth.keyLabel')}</label>
           <div className={styles.api_key_input__input_wrapper}>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -89,7 +99,7 @@ export function ApiKeyInput({
                 onClick={togglePasswordVisibility}
                 className={styles.api_key_input__toggle_button}
                 disabled={loading}
-                aria-label={t(locale, showPassword ? 'auth.hidePassword' : 'auth.showPassword')}
+                aria-label={t(activeLocale, showPassword ? 'auth.hidePassword' : 'auth.showPassword')}
               >
                 {showPassword ? (
                   <EyeOffSvg className={styles.api_key_input__toggle_icon} />
@@ -111,7 +121,7 @@ export function ApiKeyInput({
             color: chatbot?.secondaryColor,
           }}
         >
-          {t(locale, loading ? 'auth.loading' : 'auth.continue')}
+          {t(activeLocale, loading ? 'auth.loading' : 'auth.continue')}
         </button>
       </form>
     </div>
