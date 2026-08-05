@@ -102,6 +102,8 @@ Files:
 1. **`botMessage.backgroundColor` 沒有任何元件拿去畫背景。** 它只在 `asgard-theme-context.tsx` 內被用來推導 `unsentBackgroundColor` / `quickReplyBackgroundColor`，而那幾處都由 annotations 值的三元判斷把關（`themeFromAnnotations.botMessage?.backgroundColor ? … : …`），default 復活不會觸發。bot 泡泡本身由 `.text--bot { background: transparent }` 決定，`BotMessageText` 的 inline style 只寫 `color`。
 2. **`botMessage.color` 的 default 與 SCSS 同值。** `--asg-color-text-primary` 在建置產物是 `#ffffff`，`.text { color: white }` 等值；`--asg-color-primary` 是 `#4767eb`，與 `.text--user { background: #4767eb }` 完全相同。**issue 把 user 泡泡背景列為風險項時沒有查證這一點**，實際上兩者同色。
 
+3. **讀 `botMessage.color` 的元件不只 `BotMessageText`**（初版稽核漏列，補查後確認無回歸）：`references.tsx:29`、`table-template.tsx:175`、`chart-template.tsx:69` 也讀它並寫成 inline `color`。這三者的 CSS 本來就是深底白字——`references.module.scss:18-19` `background: #585858; color: white`、`table-template.module.scss:7-8` 同型、`chart-template.module.scss:6` `color: var(--asg-color-text-primary, #fff)`——與復活的 `#ffffff` 一致。修正前它們拿到 `undefined`（React 丟棄該 inline style）、由 CSS 上色；修正後拿到同色的 inline 值，畫面不變。
+
 **殘留風險（已知、可接受）**：若某個消費端覆寫了 palette token（例如自己定義 `--asg-color-primary`）卻不設 props theme，修好後那條 token 路徑會開始生效——那正是這個 bug 一直阻斷的功能。七個消費端目前都走 props theme，沒有這種用法。
 
 ---
