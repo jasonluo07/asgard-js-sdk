@@ -80,6 +80,13 @@
 
   .chatbot_body__docked_content {
     margin: 0 auto;
+    // Required because the strip above is a *column* flex container, which makes this a flex item whose
+    // cross axis is horizontal. An `auto` cross-axis margin suppresses the default `align-items: stretch`,
+    // so without an explicit width the box falls back to fit-content and its width tracks its content —
+    // measured on one subagent panel: 158px collapsed, 579px expanded, floating centred in a 1312px strip
+    // instead of aligning with the thread. `.chatbot_body__content` above gets away with the same
+    // `margin: 0 auto` only because its parent is a plain block box.
+    width: 100%;
     // Matches the thread content's 16px horizontal inset; the 12px block padding keeps the clearance the
     // panels already had from the footer.
     padding: 12px 16px;
