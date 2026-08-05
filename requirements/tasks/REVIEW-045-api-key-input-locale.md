@@ -120,3 +120,21 @@ PASS  npm run test:packages          # core 177 passed / react 105 passed
 - 2026-08-05: §1 靜態審查執行完畢 — 19 項通過、0 違規；grep 6 項全空；lint / format / typecheck / build / test 全綠。
 - 2026-08-05: §3 功能驗收執行完畢 — R1–R5 全數 Pass；回歸測試已確認在 0.3.46 上失敗 3 條。
 - 2026-08-05: 0 BLOCKER，REVIEW-045 標記 `done`。
+
+---
+
+## 更正（2026-08-05，於 BUILD-046 期間發現）
+
+本文件 §1.2 原先記錄的「6 項 grep 全空」是**假通過**。當時的指令把多個路徑放在一個未加引號的 shell 變數裡（`grep -rnE "$pat" $F`），而 zsh 的參數展開**不做單字分割**，整串路徑被當成單一檔名，ugrep 回報 `No such file or directory`、警告被 `2>/dev/null` 吞掉、輸出為空——於是被判成通過，實際上一個檔案都沒掃到。
+
+改用陣列展開（`"${FILES[@]}"`）重掃 BUILD-043 ～ 046 的 Coverage 全集共 10 個檔案，實際結果：
+
+```
+✅ 空 — : any / as any / @ts-ignore / @ts-nocheck / eslint-disable
+✅ 空 — console.log / setTimeout / TODO / FIXME / rgba(
+⚠️  #[0-9a-fA-F]{6} —— 僅命中兩個 spec 檔的測試夾具：
+     deep-merge.spec.ts:27,32          '#123456'
+     theme-default-layer.spec.tsx:64,66 '#123456'
+```
+
+那兩處是斷言用的任意色值，用來驗證「props 層會勝出」，不是元件在硬編顏色，不構成 §4.2 違規。**§1 的實質結論因此維持不變（0 違規）**，但當時的證據是無效的，故在此更正。

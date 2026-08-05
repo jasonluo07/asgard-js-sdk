@@ -11,6 +11,13 @@ export function deepMerge<T extends Record<string, unknown>, U extends Record<st
   if (!source) return output;
 
   for (const [key, value] of Object.entries(source)) {
+    // `undefined` means "this layer has no opinion", not "clear the layer below". Without this guard
+    // `Object.entries` still yields keys whose value is `undefined`, and the assignment below wipes the
+    // target — which is how the theme system's default layer became unreachable for six colour fields
+    // (asgard-sdk-pm#52): the annotations pass builds `{ botMessage: { color: annotations?.…?.color } }`
+    // unconditionally, so a provider shipping no annotations overwrote every default with `undefined`.
+    if (value === undefined) continue;
+
     if (!isObject(value)) {
       (output as Record<string, unknown>)[key] = value;
       continue;
