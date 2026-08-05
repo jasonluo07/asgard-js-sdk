@@ -34,7 +34,7 @@ comment is why a consumer has no reason to wrap user content with it.
 `chatbot-body/conversation-message-renderer.tsx`, and the `composed-bot-text` react-demo route (BUILD-026's
 offline smoke-check harness, extended here for a user row).
 
-**Explicitly out of scope:** exporting `Time` (see Notes), the alternative 方案 2 as a _behavior_ change
+**Explicitly out of scope:** the alternative 方案 2 as a _behavior_ change
 (`MessageContainer` already returns a user shell — only its comment was wrong), non-TEXT user message types
 (`UserImageTemplate` still self-draws), any Sindri-side change (separate repo), and npm publish / version
 bump / tag.
@@ -69,11 +69,11 @@ EARS form. Each criterion maps to one or more Implementation Tasks.
   unchanged from before the refactor — same `TemplateBox type="user" direction="horizontal"` wrapper with
   the same `asgard-text-template--user` class, same `.text` + `.text--user` bubble, same theme-derived
   color / background, and `Time` still rendered by `TextTemplate`. → T2
-- `R3` When a consumer returns `<TemplateBox type="user" direction="horizontal"><UserMessageText>…JSX…</UserMessageText></TemplateBox>`
+- `R3` When a consumer returns `<TemplateBox type="user" direction="horizontal"><UserMessageText>…JSX…</UserMessageText><Time time={…} /></TemplateBox>`
   from `renderMessageContent`, the row shall be visually indistinguishable from the default user row apart
-  from the intentionally customized content and the absent timestamp — right-aligned, bubble background,
-  `8px 12px` padding, `8px` radius with a flat top-right corner, `75%` max-width — and arbitrary JSX
-  children shall render inside it. → T1, T5
+  from the intentionally customized content — right-aligned, bubble background, `8px 12px` padding, `8px`
+  radius with a flat top-right corner, `75%` max-width, and the same timestamp — and arbitrary JSX children
+  shall render inside the bubble. → T1, T5, T7
 - `R4` When a consumer reads the `MessageContainer` prop docs (`MessageContentRendererProps` in the
   published `.d.ts`), the comment shall state that the returned shell matches `message.type` (bot shell for
   bot, right-aligned user shell for user, children passed through otherwise), instead of claiming a bot-only
@@ -82,6 +82,10 @@ EARS form. Each criterion maps to one or more Implementation Tasks.
   react-demo `/composed-bot-text` route (`npm run serve:react-demo`, http://localhost:4200), both the
   default and the self-composed user rows shall render as right-aligned themed bubbles with matching
   geometry, the bot rows shall be unchanged, with no build errors and no console errors. → T6
+- `R6` When `@asgard-js/react` is imported, `Time` is exported from the package entry together with an
+  exported `TimeProps`, so a consumer composing its own row can render the same timestamp the default rows
+  show (same `formatTime` output, same `asgard-time` class, same `template.time.style` color) instead of
+  re-implementing it. Passing no `time` still renders nothing. → T7
 
 ---
 
@@ -109,6 +113,10 @@ Run in order; each maps to the R# it satisfies.
       and a composed-user branch in the renderer that returns
       `TemplateBox type="user"` + `UserMessageText` with a JSX child (a chip-like span plus text), so the
       composed vs. default comparison covers the user row too.
+- [x] T7 (R3, R6): Export `Time` — mark `TimeProps` as `export interface` in
+      `templates/time/time.tsx`, add a doc comment stating why it is public, and add `export * from './time'`
+      to `templates/index.ts`. Render `<Time time={message.time} />` inside the demo's composed user row so
+      the demo proves timestamp parity, not just bubble parity.
 - [x] TN-1: `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` +
       `npm run build:core && npm run build:react` + `npm run test:packages`.
 - [x] T6 (R5): Smoke check on react-demo `/composed-bot-text` — toggle Composed / Default, measure both user
@@ -119,7 +127,7 @@ Run in order; each maps to the R# it satisfies.
 
 ## Coverage
 
-Use Cases: R1, R2, R3, R4, R5
+Use Cases: R1, R2, R3, R4, R5, R6
 
 Files:
 
@@ -130,6 +138,10 @@ Files:
 - `packages/react/src/components/templates/text-template/text-template.tsx` — user branch delegates to
   `UserMessageText`; the `styles` memo lost its dead `'user'` case (it now serves only `tool-call`).
 - `packages/react/src/components/templates/text-template/index.ts` — export the new component.
+- `packages/react/src/components/templates/time/time.tsx` — `TimeProps` becomes an exported interface; doc
+  comment explains why `Time` is public.
+- `packages/react/src/components/templates/index.ts` — export `./time` (it was the one template barrel entry
+  missing, which is why `Time` sat in `dist` but was unreachable from the package entry).
 - `packages/react/src/context/asgard-template-context.tsx` — corrected `MessageContainer` doc comment.
 - `packages/react/src/components/chatbot/chatbot-body/conversation-message-renderer.tsx` — corrected the
   matching inline comment (no behavior change).
@@ -148,11 +160,14 @@ Files:
   shell alone gives right-alignment, not the bubble (background / padding / radius / 75% cap), which lives in
   `.text--user`. So 方案 1 is required either way, and 方案 2 collapses into the doc-comment fix (T4) done
   alongside it.
-- **`Time` stays out (issue open question 3).** Symmetric with `BotMessageText`, which also omits it: the
-  consumer composes the row and decides. Sindri's design shows no timestamp. `Time` is deliberately **not**
-  exported (it is not in `templates/index.ts` today) — a consumer that wants the default row _with_ a
-  timestamp should call `renderDefaultContent()`. If a real need for a composed row _with_ a timestamp
-  appears, exporting `Time` is a separate, additive task.
+- **`Time` is not inside `UserMessageText`, but it IS exported (issue open question 3).** The bubble
+  component stays chrome-free and symmetric with `BotMessageText` — the consumer composes the row and decides
+  whether a timestamp appears. The first draft of this task also kept `Time` unexported, on the assumption
+  that a composed row never wants one. The Sindri run disproved it: with the bubble fixed, the composed
+  mention row was the only row in the thread without a timestamp, and Sindri had no way to add one short of
+  re-implementing `formatTime` + the `template.time.style` color — the exact re-implementation this task
+  exists to prevent. So `Time` + `TimeProps` are exported too (R6). `renderDefaultContent()` remains the
+  shortcut for consumers that want the whole default row.
 - **`max-width: 75%` stays on `.text--user`.** The bot side hoisted `max-width` out to
   `.text--bot-default` so a composed bot row fills the reading width. The user side is the opposite case: the
   75% cap is part of the chat-bubble look and the issue's measurements list `max-width: none` as part of the
