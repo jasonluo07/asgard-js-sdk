@@ -170,5 +170,5 @@
 | `REVIEW-042` | Review: Export user text content renderer         | —        | done   | [REVIEW-042-export-user-message-text.md](./REVIEW-042-export-user-message-text.md)                       |
 | `BUILD-043`  | Let `locale` reach every part of the chatbot      | Normal   | done   | [BUILD-043-locale-reaches-file-explorer.md](./BUILD-043-locale-reaches-file-explorer.md)                 |
 | `REVIEW-043` | Review: Let `locale` reach the whole chatbot      | —        | draft  | [REVIEW-043-locale-reaches-file-explorer.md](./REVIEW-043-locale-reaches-file-explorer.md)               |
-| `BUILD-044`  | Route remaining hardcoded strings through i18n    | Normal   | ready  | [BUILD-044-i18n-remaining-strings.md](./BUILD-044-i18n-remaining-strings.md)                             |
-| `REVIEW-044` | Review: Route remaining strings through i18n      | —        | draft  | [REVIEW-044-i18n-remaining-strings.md](./REVIEW-044-i18n-remaining-strings.md)                           |
+| `BUILD-044`  | Route remaining hardcoded strings through i18n    | Normal   | done   | [BUILD-044-i18n-remaining-strings.md](./BUILD-044-i18n-remaining-strings.md)                             |
+| `REVIEW-044` | Review: Route remaining strings through i18n      | —        | ready  | [REVIEW-044-i18n-remaining-strings.md](./REVIEW-044-i18n-remaining-strings.md)                           |

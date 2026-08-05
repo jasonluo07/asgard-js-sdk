@@ -1,9 +1,12 @@
 import { ReactNode } from 'react';
 import { useFileDropContext } from '../../../context/file-drop-context';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
+import { t } from '../../../i18n';
 import styles from './drop-zone-overlay.module.scss';
 
 export function DropZoneOverlay(): ReactNode {
   const { isDraggingOver } = useFileDropContext();
+  const { locale = 'en-US' } = useAsgardTemplateContext();
 
   if (!isDraggingOver) {
     return null;
@@ -28,7 +31,7 @@ export function DropZoneOverlay(): ReactNode {
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
-        <span className={styles.overlay__text}>Drop files here</span>
+        <span className={styles.overlay__text}>{t(locale, 'dropZone.hint')}</span>
       </div>
     </div>
   );

@@ -36,6 +36,7 @@ import { SandboxLaunchHud } from './sandbox-launch-hud';
 import { ChatbotFileExplorerAside, FileExplorerArrivalBridge } from './file-explorer/chatbot-file-explorer';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 import { ToolCallConsentGate } from '../tool-call-consent';
+import { Locale, t } from '../../i18n';
 import styles from './chatbot.module.scss';
 
 export interface ChatbotProps extends AsgardTemplateContextValue {
@@ -388,9 +389,18 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
 
   // Render different content based on authState
   const renderContent = (): React.ReactElement => {
+    // The auth / error branches below render outside any template provider (see the non-authenticated
+    // return at the bottom of this component), so they resolve their copy from the prop directly rather
+    // than from context. Mirrors the context's own default.
+    const activeLocale: Locale = locale ?? 'en-US';
+
     switch (authState) {
       case 'loading':
-        return <div className={styles.chatbot__auth_state_container}>{loadingComponent || <div>Loading...</div>}</div>;
+        return (
+          <div className={styles.chatbot__auth_state_container}>
+            {loadingComponent || <div>{t(activeLocale, 'auth.loading')}</div>}
+          </div>
+        );
 
       case 'needApiKey':
         return (
@@ -398,7 +408,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
-              placeholder="Enter your key"
+              placeholder={t(activeLocale, 'auth.enterKey')}
             />
           </div>
         );
@@ -409,8 +419,8 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
             <ApiKeyInput
               title={title}
               onSubmit={onApiKeySubmit || ((): Promise<void> => Promise.resolve())}
-              placeholder="Enter your key"
-              error="Please check if the key is correct."
+              placeholder={t(activeLocale, 'auth.enterKey')}
+              error={t(activeLocale, 'auth.invalidKey')}
             />
           </div>
         );
@@ -424,7 +434,7 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                   ⚠️
                 </span>
               </div>
-              <div className={styles.chatbot__error_state__message}>Something went wrong. Please try again later.</div>
+              <div className={styles.chatbot__error_state__message}>{t(activeLocale, 'error.generic')}</div>
             </div>
           </div>
         );
@@ -432,20 +442,14 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
       case 'subscriptionExpired':
         return (
           <div className={styles.chatbot__auth_state_container}>
-            <ServiceErrorState
-              avatar={avatar}
-              message="The service is currently unavailable. Please contact the service representative for assistance."
-            />
+            <ServiceErrorState avatar={avatar} message={t(activeLocale, 'error.serviceUnavailable')} />
           </div>
         );
 
       case 'botNotFound':
         return (
           <div className={styles.chatbot__auth_state_container}>
-            <ServiceErrorState
-              avatar={avatar}
-              message="We couldn't find the service. Please contact the service representative for assistance."
-            />
+            <ServiceErrorState avatar={avatar} message={t(activeLocale, 'error.serviceNotFound')} />
           </div>
         );
 
