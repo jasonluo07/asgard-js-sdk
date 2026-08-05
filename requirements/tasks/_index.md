@@ -172,3 +172,5 @@
 | `REVIEW-043` | Review: Let `locale` reach the whole chatbot      | —        | done   | [REVIEW-043-locale-reaches-file-explorer.md](./REVIEW-043-locale-reaches-file-explorer.md)               |
 | `BUILD-044`  | Route remaining hardcoded strings through i18n    | Normal   | done   | [BUILD-044-i18n-remaining-strings.md](./BUILD-044-i18n-remaining-strings.md)                             |
 | `REVIEW-044` | Review: Route remaining strings through i18n      | —        | done   | [REVIEW-044-i18n-remaining-strings.md](./REVIEW-044-i18n-remaining-strings.md)                           |
+| `BUILD-045`  | Give ApiKeyInput a supplied locale                | Normal   | done   | [BUILD-045-api-key-input-locale.md](./BUILD-045-api-key-input-locale.md)                                 |
+| `REVIEW-045` | Review: Give ApiKeyInput a supplied locale        | —        | done   | [REVIEW-045-api-key-input-locale.md](./REVIEW-045-api-key-input-locale.md)                               |
