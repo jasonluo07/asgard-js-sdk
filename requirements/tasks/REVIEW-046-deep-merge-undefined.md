@@ -105,14 +105,15 @@ PASS  npm run test:packages          # core 177 passed / react 114 passed
 
 ### Minor (nice to have)
 
-1. **issue 的風險評估有一處過度保守，已在 BUILD-046 更正**：asgard-sdk-pm#52 把「user 泡泡背景從 `#4767eb` 改讀 `var(--asg-color-primary)`」列為需要下游稽核的可見變更，但建置產物裡 `--asg-color-primary` 就是 `#4767eb`，兩者同色、零差異。建議回該 issue 補一則說明。
-2. **`annotations pass` 本身沒有一併修**（issue 的選項 B）。選項 A 已讓 default 生效，但那段仍在無條件建構 `undefined` 欄位；日後若有人把 `deepMerge` 換成別的合併函式，同一個 bug 會復發。可考慮另開一張整理票。
-3. **本次為自審**，同 REVIEW-043 ～ 045。
+1. **我的初版稽核結論是錯的，靠截圖才抓到**。稽核第一版判定「七個消費端零視覺差異」，理由是「沒有消費端覆寫 palette token」。但 `--asg-color-text-primary` 根本不需要消費端自己定義——SDK 在 `asgard-theme-context.tsx:937` 就從 `primaryComponent.secondaryColor` 推導出來。Mimir 設了淺色 `#0d0d0d`，於是 default 復活後 bot 文字由白轉深。**這是本 cycle 最重要的教訓：純程式碼推導的「零差異」宣稱，在有便宜的實測手段時不該當成結論。**
+2. **issue 的另一處風險評估過度保守**：asgard-sdk-pm#52 把「user 泡泡背景從 `#4767eb` 改讀 `var(--asg-color-primary)`」列為需稽核的可見變更，但建置產物裡 `--asg-color-primary` 就是 `#4767eb`，同色零差異。建議回該 issue 一併補上這兩點。
+3. **`annotations pass` 本身沒有一併修**（issue 的選項 B）。選項 A 已讓 default 生效，但那段仍在無條件建構 `undefined` 欄位；日後若有人把 `deepMerge` 換成別的合併函式，同一個 bug 會復發。可考慮另開一張整理票。
+4. **本次為自審**，同 REVIEW-043 ～ 045。
 
 ---
 
 ## Execution Log
 
 - 2026-08-05: §1 靜態審查執行完畢 — 19 項通過、0 違規；grep 方法更正後重跑（含回頭重掃 043 ～ 045）。
-- 2026-08-05: §3 功能驗收執行完畢 — R1–R6 全數 Pass；回歸測試確認修正前失敗 4 條。
+- 2026-08-05: §3 功能驗收執行完畢 — R1–R6 全數 Pass；回歸測試確認修正前失敗 4 條。R5 另以 Mimir 實測（同一既有 thread、只換 node_modules）推翻初版的「零視覺差異」結論，改為具名列出每一處變化。
 - 2026-08-05: 0 BLOCKER，REVIEW-046 標記 `done`。

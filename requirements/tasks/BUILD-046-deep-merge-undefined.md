@@ -56,7 +56,7 @@ Distilled from `FRONTEND_RULE_COMMON.md`; builder reads this table instead of th
 - `R2` When a source object carries an explicit falsy value (`''` / `0` / `null`), `deepMerge` shall still let it win — only `undefined` means "no opinion". → T2
 - `R3` When neither annotations nor a props theme are supplied, the resolved theme shall expose every one of the six previously-clobbered defaults. → T1, T3
 - `R4` When a props theme sets one field of a group, the sibling fields' defaults shall survive. → T3
-- `R5` (Downstream) For each of the seven consumers, the change shall not alter any rendered surface; every field they leave unset shall resolve to a value visually identical to what SCSS paints today. → T4
+- `R5` (Downstream) 逐一稽核七個消費端，指出每一處會改變的表面並判定其方向；不得有非預期的回歸。→ T4
 - `R6` (Smoke check) `npm run typecheck:packages`, `npm run build:core && npm run build:react`, `npm run test:packages` all pass. → T5
 
 ---
@@ -85,32 +85,41 @@ Files:
 
 ## 下游稽核（T4）
 
-七個消費端傳給 `<Chatbot theme>` 的內容，對照六個復活欄位：
+> **實作後更正（2026-08-05）**：初版稽核的結論是「七個消費端零視覺差異」，**那是錯的**。實測 Mimir 後發現淺色模式有真實且有益的變化，且初版寫的「沒有消費端覆寫 palette token」也不成立——`--asg-color-text-primary` 不必消費端自己定義，SDK 會從 `primaryComponent.secondaryColor` 推導出來（`asgard-theme-context.tsx:937` `themeVars['--asg-color-text-primary'] = effectiveForeground`）。以下是修正後的稽核。
 
-| 消費端       | 未設的欄位                                                     | 復活後的解析值        | 目前由誰上色                                                 | 視覺差異   |
-| ------------ | -------------------------------------------------------------- | --------------------- | ------------------------------------------------------------ | ---------- |
-| Heimdall     | `botMessage.color` / `botMessage.backgroundColor`              | `#ffffff` / `#585858` | `.text { color: white }`；bot 泡泡 `background: transparent` | 無（見下） |
-| Mimir        | `chatbot.borderColor`、`botMessage.color` / `.backgroundColor` | 同上                  | 同上                                                         | 無         |
-| Odin         | 無（六個全設）                                                 | —                     | —                                                            | 無         |
-| Sindri       | `chatbot.backgroundColor`                                      | `var(--asg-color-bg)` | `.chatbot_container` 已用同一個 token 上色                   | 無         |
-| VS Code 擴充 | `botMessage.color` / `.backgroundColor`                        | `#ffffff` / `#585858` | 同 Heimdall                                                  | 無         |
-| embed        | 無（六個全設，且空字串會被 SDK 的 truthy 檢查跳過）            | —                     | —                                                            | 無         |
-| sdk-demo     | 無（六個全設）                                                 | —                     | —                                                            | 無         |
+判定關鍵：`botMessage.color` 的 default 是 `var(--asg-color-text-primary)`，而該變數由 SDK 依消費端的 `primaryComponent.secondaryColor` 推導。因此**只有「有設 `secondaryColor`、但沒設 `botMessage.color`」的消費端會變**。
 
-判定依據，兩點都是查程式碼而非推論：
+| 消費端       | 設了 `botMessage.color`？ | `secondaryColor`                                                   | 實際影響                                                                                                      |
+| ------------ | ------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| **Mimir**    | ✗                         | 淺 `#0d0d0d` / 深 `#fff`                                           | **淺色模式：白字 → `rgb(13,13,13)`。修好既有 bug——bot 的最終回答原本白字白底、完全看不見。** 深色不變。已截圖 |
+| Heimdall     | ✗                         | `var(--foreground)`；app 強制深色，`.dark` 下為 `oklch(0.985 0 0)` | 近白 → 近白，肉眼不可辨                                                                                       |
+| VS Code 擴充 | ✗                         | `#fafafa`                                                          | `#ffffff` → `#fafafa`，肉眼不可辨                                                                             |
+| Odin         | ✓                         | —                                                                  | props 層勝出，無變化                                                                                          |
+| Sindri       | ✓                         | —                                                                  | props 層勝出，無變化                                                                                          |
+| embed        | ✓                         | —                                                                  | props 層勝出，無變化                                                                                          |
+| sdk-demo     | ✓                         | —                                                                  | props 層勝出，無變化                                                                                          |
 
-1. **`botMessage.backgroundColor` 沒有任何元件拿去畫背景。** 它只在 `asgard-theme-context.tsx` 內被用來推導 `unsentBackgroundColor` / `quickReplyBackgroundColor`，而那幾處都由 annotations 值的三元判斷把關（`themeFromAnnotations.botMessage?.backgroundColor ? … : …`），default 復活不會觸發。bot 泡泡本身由 `.text--bot { background: transparent }` 決定，`BotMessageText` 的 inline style 只寫 `color`。
-2. **`botMessage.color` 的 default 與 SCSS 同值。** `--asg-color-text-primary` 在建置產物是 `#ffffff`，`.text { color: white }` 等值；`--asg-color-primary` 是 `#4767eb`，與 `.text--user { background: #4767eb }` 完全相同。**issue 把 user 泡泡背景列為風險項時沒有查證這一點**，實際上兩者同色。
+其餘五個復活欄位不造成任何變化，依據為兩項程式碼查證：
 
-3. **讀 `botMessage.color` 的元件不只 `BotMessageText`**（初版稽核漏列，補查後確認無回歸）：`references.tsx:29`、`table-template.tsx:175`、`chart-template.tsx:69` 也讀它並寫成 inline `color`。這三者的 CSS 本來就是深底白字——`references.module.scss:18-19` `background: #585858; color: white`、`table-template.module.scss:7-8` 同型、`chart-template.module.scss:6` `color: var(--asg-color-text-primary, #fff)`——與復活的 `#ffffff` 一致。修正前它們拿到 `undefined`（React 丟棄該 inline style）、由 CSS 上色；修正後拿到同色的 inline 值，畫面不變。
+1. **`botMessage.backgroundColor` 沒有任何元件拿去畫背景。** 它只在 theme context 內被用來推導 quick-reply / unsent 背景，而那幾處都由 annotations 值的三元判斷把關，default 復活不會觸發。bot 泡泡由 `.text--bot { background: transparent }` 決定。
+2. **`chatbot.backgroundColor` / `borderColor` / `userMessage.*` 的 default 與現況同值**：`--asg-color-primary` 是 `#4767eb`，與 `.text--user { background: #4767eb }` 相同；`chatbot.backgroundColor` 的 `var(--asg-color-bg)` 與 `.chatbot_container` 已用的同一個 token 相同。issue #52 把 user 泡泡背景列為風險項時沒有查證這一點。
 
-**殘留風險（已知、可接受）**：若某個消費端覆寫了 palette token（例如自己定義 `--asg-color-primary`）卻不設 props theme，修好後那條 token 路徑會開始生效——那正是這個 bug 一直阻斷的功能。七個消費端目前都走 props theme，沒有這種用法。
+**讀 `botMessage.color` 的元件不只 `BotMessageText`**（初版稽核漏列）：`references.tsx:29`、`table-template.tsx:175`、`chart-template.tsx:69` 也讀它。三者 CSS 皆為深底白字，在深色消費端無差異；在 Mimir 淺色模式下它們同樣會跟著變深，方向與上表一致。
 
----
+### 實測（Mimir，最高風險的消費端）
+
+用同一個既有 thread（內容完全相同、無 LLM 變異），只切換 `node_modules` 裡的 SDK：
+
+|                   | 淺色 bot 文字        | inline style                           |
+| ----------------- | -------------------- | -------------------------------------- |
+| before（0.3.47）  | `rgb(255, 255, 255)` | 無（default 被抹掉，由 SCSS 上色）     |
+| after（含本修正） | `rgb(13, 13, 13)`    | `color: var(--asg-color-text-primary)` |
+
+深色模式 before / after 皆為 `rgb(255,255,255)`，無變化。截圖見 `.github/screenshots/pm52-mimir-{light,dark}-{before,after}.png`。
 
 ## Execution Log / Change Log
 
 - 2026-08-05: BUILD task created from asgard-sdk-pm#52 (Status: `draft → in-progress`)。
 - 2026-08-05: 兩支測試皆確認在修正前失敗（deep-merge 2 條、theme-default-layer 2 條），修正後全過。
-- 2026-08-05: 下游稽核完成，七個消費端零視覺差異；並更正 issue 對 user 泡泡背景的風險評估。
+- 2026-08-05: 下游稽核初版結論「零視覺差異」**經實測推翻**：Mimir 淺色模式的 bot 回答文字由白轉深，修好了既有的白字白底 bug。稽核表已改寫，並補上 `--asg-color-text-primary` 由 SDK 從 `secondaryColor` 推導這個關鍵事實。
 - 2026-08-05: lint / format:check / typecheck / test（core 177 + react 114）/ build:core / build:react 全綠（Status: `in-progress → done`）。
