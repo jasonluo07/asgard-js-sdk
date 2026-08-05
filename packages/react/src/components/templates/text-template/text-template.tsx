@@ -6,6 +6,7 @@ import classes from './text-template.module.scss';
 import { Time } from '../time';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { BotMessageText } from './bot-message-text';
+import { UserMessageText } from './user-message-text';
 
 interface TextTemplateProps {
   message: ConversationMessage;
@@ -22,20 +23,15 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
 
   const rootStyle = theme?.template?.TextMessageTemplate?.style;
 
-  const styles = useMemo<CSSProperties>(() => {
-    switch (message.type) {
-      case 'user':
-        return {
-          color: theme?.userMessage?.color,
-          backgroundColor: theme?.userMessage?.backgroundColor,
-        };
-      default:
-        return {
-          color: theme?.chatbot?.primaryComponent?.secondaryColor || theme?.template?.TextMessageTemplate?.style?.color,
-          backgroundColor: botMessage?.unsentBackgroundColor,
-        };
-    }
-  }, [message, theme, botMessage]);
+  // Only the `tool-call` branch below still reads this — the bot branch delegates to `BotMessageText` and the
+  // user branch to `UserMessageText`, each reading its own theme fields.
+  const styles = useMemo<CSSProperties>(
+    () => ({
+      color: theme?.chatbot?.primaryComponent?.secondaryColor || theme?.template?.TextMessageTemplate?.style?.color,
+      backgroundColor: botMessage?.unsentBackgroundColor,
+    }),
+    [theme, botMessage],
+  );
 
   if (message.type === 'error') return null;
 
@@ -47,9 +43,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         direction="horizontal"
         style={rootStyle}
       >
-        <div className={clsx(classes.text, classes['text--user'])} style={styles}>
-          {message.text}
-        </div>
+        <UserMessageText>{message.text}</UserMessageText>
         <Time time={message.time} />
       </TemplateBox>
     );

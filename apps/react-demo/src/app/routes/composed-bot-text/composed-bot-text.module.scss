@@ -21,6 +21,15 @@
   }
 }
 
+// The mention chip in the self-composed user row — proves `UserMessageText` accepts JSX children.
+.mentionChip {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.24);
+  font-weight: 600;
+}
+
 .chatbotContainer {
   flex: 1;
   display: flex;
