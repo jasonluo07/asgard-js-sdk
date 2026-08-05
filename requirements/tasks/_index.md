@@ -65,7 +65,17 @@
 
 ## ▶ Next Task
 
-**`BUILD-039`** — Theme audit 第一階段（asgard-sdk-pm#31）。截至 2026-08-04，已發版至 **`0.3.40`**。以下段落保留各 cycle 的脈絡與 backlog。BUILD-041 / REVIEW-041（`asgard-js-sdk#382` resume 後的 subagent 卡片）已於 2026-08-04 收尾，未發版。BUILD-042 / REVIEW-042（`asgard-sdk-pm#53` 匯出 `UserMessageText`）已於 2026-08-05 收尾，**未發版** —— Sindri 要吃到需先升版。
+**None — awaiting task selection.** 截至 2026-08-05，已發版至 **`0.3.47`**。以下段落保留各 cycle 的脈絡與 backlog。
+
+**近期收尾的 cycle**：
+
+- `BUILD-041` / `REVIEW-041`（`asgard-js-sdk#382` resume 後的 subagent 卡片）—— 2026-08-04 收尾，隨 `0.3.42` 發版。
+- `BUILD-042` / `REVIEW-042`（`asgard-sdk-pm#53` 匯出 `UserMessageText`）—— 2026-08-05 收尾，隨 `0.3.44` 發版；Sindri 已升至 `0.3.47`，可直接使用。
+- `BUILD-043` / `REVIEW-043`（`asgard-js-sdk#387` `locale` 傳不到內建 File Explorer）—— 2026-08-05 收尾，隨 `0.3.45` 發版。
+- `BUILD-044` / `REVIEW-044`（`asgard-js-sdk#388` auth / error / drag-drop 字串未進 i18n catalog）—— 2026-08-05 收尾，隨 `0.3.45` 發版。實作範圍大於原 issue 清單：`ApiKeyInput` 另有五個字串由新增的字面值掃描測試抓出，issue 內文已補正。
+- `BUILD-045` / `REVIEW-045`（`asgard-js-sdk#391` 金鑰畫面只在地化一半）—— 2026-08-05 收尾，隨 `0.3.47` 發版。此缺陷正好落在 `REVIEW-044` `R6` 記為 Partial（demo Auth 頁未走查）的那個畫面上；本 cycle 改以 jsdom 掛載 `<Chatbot authState="needApiKey">` 覆蓋，該路徑不開 SSE，缺口已由自動化測試補起。
+
+六個消費端（Heimdall / Mimir / Odin / Sindri / VS Code 擴充 / embed）皆已升至 `0.3.47` 並發 dev tag。
 
 **Theme audit cycle（asgard-sdk-pm#31）**：稽核票 2026-07-23 開出（對 0.3.14），PM 2026-07-23 回覆接受三階段框架、並把第三階段方向改為「SDK 直接採用 `asgard-design-system` 當 token 層」，承諾第一、二階段照清單開票——但**至今未開**（`asgard-sdk-pm` @ `7b917ca` 的 `features/` 只有 F-001~F-023、`tasks/` 只有 TASK-001 / TASK-003）。經使用者授權**不等 PM 開票、先行動工**，以 issue 本體為 source spec。
 
