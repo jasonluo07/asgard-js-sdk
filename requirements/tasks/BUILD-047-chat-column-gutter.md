@@ -96,9 +96,26 @@ react-demo `/templates`，量三處的 computed `paddingLeft`：
 
 960px 下 bot 文字左緣 = column 左緣 + 32px，與 header、composer 同一條線（R4）。
 
-截圖：`.github/screenshots/gutter-narrow-375.png`（下限不變）、`gutter-wide-960-before.png` / `gutter-wide-960-after.png`（同一畫面，before 以 inline style 強制回 16px 取得對照）。
+### 消費端實測（T4b）
 
-docked run-chrome strip 只在有 subagent / task 資料時掛載，demo 無此資料，未取得畫面證據；它與其餘三處共用同一個常數，依據為 T3 的編譯產物查證（四個 selector 皆帶同一份宣告）。
+`npm pack` 出 `0.3.49-local`，`--no-save --legacy-peer-deps` 裝進五個消費端的 `node_modules`，逐一在瀏覽器實測。每個都先確認頁面載入的確實是本地版（掃 `document.styleSheets` 找 `min(4%, 32px)`），再量 computed `paddingLeft`：
+
+| 消費端       | 表面                          | column 寬 | 內距    | 對齊查證                                       |
+| ------------ | ----------------------------- | --------- | ------- | ---------------------------------------------- |
+| **Odin**     | Flow Agent preview（收合）    | 375px     | 16px    | header / thread / composer 三處同值            |
+| **Odin**     | Flow Agent preview（展開）    | 1058px    | 32px    | bot 文字左緣 470 = 面板 438 + 32，三處同一條線 |
+| **Heimdall** | topic 編輯的 AI 面板          | 1256px    | 32px    | thread / composer 皆 left 316（1200 上限置中） |
+| **Sindri**   | conversation（含子代理面板）  | 1312px    | 32px    | thread / **docked** / composer 皆 left 472     |
+| **Mimir**    | insight thread                | 1204px    | 32px    | header / thread / composer 皆 left 260         |
+| **embed**    | bot-provider 頁（程式化改寬） | 375→900px | 16→32px | 375=16 / 420=16.8 / 600=24 / 900=32            |
+
+**docked run-chrome strip 的畫面證據由 Sindri 補齊**（demo 無 subagent / task 資料，量不到）：它的「子代理」面板與訊息串同為 32px、left 472。
+
+Heimdall 的自訂標題列（非 SDK 的 `chat_header`）文字停在 304，與訊息串的 316 差 **12px** —— 即 Brief 所述的已知代價，需在 `asgard-ai-auto-post-web` 另案補上。
+
+截圖：`.github/screenshots/gutter-odin-flow-preview-{collapsed-375,expanded-1058}.jpg`、`gutter-heimdall-topic-1200.jpg`、`gutter-sindri-docked-768.jpg`、`gutter-mimir-thread-1204.jpg`。
+
+> 初版曾以 react-demo `/templates` 的畫面作為 PR 證據，已撤換：該頁只傳 `theme={{ chatbot: { width, maxWidth, height } }}`、一個顏色都沒設，`--asg-color-bg` 未定義使 chatbot 背景為 `rgba(0,0,0,0)`，bot 文字又是 `rgb(255,255,255)`，於是白字透出 demo 的淺色底、幾乎不可讀。那是 demo 既有的配色缺陷（與本任務無關，本任務的 diff 不含任何 color / background 增刪），但拿它當截圖會誤導。
 
 ---
 
@@ -107,3 +124,5 @@ docked run-chrome strip 只在有 subagent / task 資料時掛載，demo 無此�
 - 2026-08-06: 依 PM 口頭回饋建立（Status: `draft → in-progress`）。問題定義確認兩個抱怨畫面同源，且 Odin 另一頁「看起來沒事」是外層 `px-12` 借來的留白，非 SDK 差異。
 - 2026-08-06: 方案取捨定案 —— 隨寬度分級（非固定值、非只改訊息串）、不開放公開接口、閱讀寬度上限另案處理。
 - 2026-08-06: 實作完成；lint（0 errors，1 筆既有 warning）/ format:check / typecheck / test（core 177 + react 114）/ build:core / build:react 全綠；react-demo 實測六個寬度符合 R1–R4。
+- 2026-08-06: PR #396 開出。
+- 2026-08-06: 以 `0.3.49-local` tarball 實測 Odin / Heimdall / Sindri / Mimir / embed 五個消費端，全部符合 R1–R4；Sindri 補齊 docked strip 的畫面證據。PR 截圖由 react-demo 換成真實產品畫面（demo 配色缺陷詳見 T4b 註）。
