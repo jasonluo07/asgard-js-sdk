@@ -189,3 +189,4 @@
 | `REVIEW-046` | Review: deepMerge undefined semantics             | —        | done        | [REVIEW-046-deep-merge-undefined.md](./REVIEW-046-deep-merge-undefined.md)                               |
 | `BUILD-047`  | Chat column inset scales with its own width       | Normal   | in-progress | [BUILD-047-chat-column-gutter.md](./BUILD-047-chat-column-gutter.md)                                     |
 | `BUILD-048`  | Stop break-all from splitting English words       | Normal   | in-progress | [BUILD-048-word-break-splits-english.md](./BUILD-048-word-break-splits-english.md)                       |
+| `BUILD-049`  | Fix two self-referencing theme color defaults     | Normal   | in-progress | [BUILD-049-theme-token-self-reference.md](./BUILD-049-theme-token-self-reference.md)                     |

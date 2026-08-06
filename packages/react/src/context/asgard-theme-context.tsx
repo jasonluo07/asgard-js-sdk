@@ -227,8 +227,20 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
   chatbot: {
     width: '375px',
     height: '640px',
-    backgroundColor: 'var(--asg-color-bg)',
-    borderColor: 'var(--asg-color-border)',
+    // No `backgroundColor` / `borderColor` default here, deliberately — unlike the other `var(--asg-*)`
+    // defaults in this object, these two would be self-references.
+    //
+    // The SCSS palette already declares `--asg-color-bg: #141414` and `--asg-color-border: #434343` on
+    // `.chatbot_root` (`styles/palette/_palette.scss`). The `themeVars` block below then writes
+    // `--asg-color-bg` *back onto that same element* from this very field — so a default of
+    // `var(--asg-color-bg)` made the property reference itself on the element that declares it, which is
+    // invalid at computed-value time. The property became the guaranteed-invalid value and the palette's
+    // good value was lost. Measured live on Mimir: `--asg-color-border` resolved to the literal string
+    // `var(--asg-color-border)`; on a consumer that themes nothing, `.chatbot_container`'s background
+    // resolved to `rgba(0, 0, 0, 0)`, so white bot text sat on the host page's own background.
+    //
+    // Every other `var(--asg-*)` default here names a *different* token than the field it feeds, so it
+    // resolves against the palette normally. These two are the only cycles.
     borderRadius: 'var(--asg-radius-md)',
     contentMaxWidth: '1200px',
     style: {},
