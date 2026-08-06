@@ -9,7 +9,9 @@
   background: rgba(88, 88, 88, 0.2);
   font-size: 13px;
   color: white;
-  word-break: break-all;
+  // See `text-template.module.scss`: `break-all` split English words mid-word; `anywhere` only breaks a
+  // word that cannot fit a line on its own.
+  overflow-wrap: anywhere;
 
   &.hint_root__error {
     color: var(--asg-color-error);
