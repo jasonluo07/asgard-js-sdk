@@ -3,10 +3,18 @@
   padding: 8px 12px;
   border-radius: 8px;
   color: white;
-  word-break: break-all;
+  // `anywhere`, not `break-all`. `break-all` permits a break between *any* two characters, so it splits
+  // English words mid-word even when the whole word would have fit on the next line — measured in Odin:
+  // "your message ca / me through empty", "just are / n't sure where to start". `anywhere` only breaks
+  // inside a word when the word cannot fit on a line of its own, which is what a long URL or token needs
+  // and what prose never triggers. CJK is unaffected either way: its line-breaking rules already allow a
+  // break between characters, so Chinese and Japanese keep wrapping exactly as before. Chosen over
+  // `break-word` because `anywhere` also shrinks the min-content size, so a long token cannot force this
+  // bubble to overflow its flex parent.
+  overflow-wrap: anywhere;
 
   > span {
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 
   p {

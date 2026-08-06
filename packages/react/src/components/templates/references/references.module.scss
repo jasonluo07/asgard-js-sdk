@@ -10,7 +10,10 @@
   display: inline-block;
   padding: 8px 12px;
   border-radius: 8px;
-  word-break: break-all;
+  // See `text-template.module.scss`: `break-all` split English words mid-word. Reference entries carry
+  // both prose titles and long URLs; `anywhere` leaves the titles intact and still breaks a URL that
+  // cannot fit a line on its own.
+  overflow-wrap: anywhere;
 }
 
 .references_box--bot {
@@ -55,7 +58,7 @@
 
 %reference_item_base {
   font-size: 0.75em;
-  word-break: break-all;
+  overflow-wrap: anywhere;
   color: inherit;
 }
 
@@ -77,7 +80,7 @@
   }
 
   > span {
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 }
 
