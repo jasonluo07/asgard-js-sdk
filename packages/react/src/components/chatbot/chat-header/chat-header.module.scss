@@ -3,13 +3,17 @@
 // foreground + channel title subtitle in muted, single-line truncate, Lucide glyphs. Tailwind design
 // re-expressed in this repo's SCSS-module + CSS-variable/theme-token conventions (as F-017 / F-018).
 
+@use '../../../styles' as styles;
+
 .chat_header {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
   height: 56px;
-  padding: 0 16px;
+  // Same inline inset as the thread and the composer, so the title's left edge stays on the column's
+  // one alignment line at every width (see `$chat-gutter`).
+  padding-inline: styles.$chat-gutter;
   background: var(--asg-color-surface, #1f1f1f);
   border-bottom: 1px solid var(--asg-color-border, #434343);
 }

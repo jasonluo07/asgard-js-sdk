@@ -1,6 +1,8 @@
 // BUILD-028 — the footer is now an assembly layer: content width and footer-level theme.
 // The input itself (pill, attachments, send / stop) lives in chat-composer.module.scss.
 
+@use '../../../styles' as styles;
+
 .chatbot_footer {
   // No static border-top here: the body↔footer seam is drawn by <RunningIndicator> in the grid row
   // directly above this one (F-003, hoisted out of the footer by BUILD-034), and it doubles as the
@@ -12,6 +14,9 @@
     gap: var(--asg-spacing-2, 8px);
     margin: 0 auto;
     max-width: 1200px;
-    padding: var(--asg-spacing-3) var(--asg-spacing-4);
+    padding-block: var(--asg-spacing-3);
+    // Shared with the thread and the header so the composer pill's outer edge stays on the same line
+    // (see `$chat-gutter`). Replaces a `var(--asg-spacing-4)` that was 16px by coincidence, not by intent.
+    padding-inline: styles.$chat-gutter;
   }
 }
