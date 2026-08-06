@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-048`
-- Status: `in-progress`
+- Status: `done`
 - Issue: 無 GitHub issue —— 於 BUILD-047 的消費端實測截圖中發現的既有缺陷。
 - Source spec: 無 PM spec 檔；缺陷描述與判準在本檔 Brief。
 - Complexity: `S`
@@ -96,3 +96,4 @@ Odin Flow Agent preview，375px 收合面板，同一句自動問候：
 - 2026-08-06: 建立（Status: `draft → in-progress`）。缺陷是在 BUILD-047 的消費端截圖中發現的：`aren't` 被切成 `are` / `n't`。
 - 2026-08-06: 五處改為 `overflow-wrap: anywhere`，JSON 檢視器一處刻意保留並記錄理由。
 - 2026-08-06: Odin 實測換行修正 + 長 URL 壓力測試通過；lint（0 errors，1 筆既有 warning）/ format:check / typecheck / test（core 177 + react 114）/ build:core / build:react 全綠。
+- 2026-08-06: PR #397 合併進 `main`（merge commit `db64e62e`），隨 0.3.50 出貨（Status: `in-progress → done`）。
