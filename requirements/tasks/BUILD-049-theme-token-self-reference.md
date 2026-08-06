@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-049`
-- Status: `in-progress`
+- Status: `done`
 - Issue: 無 GitHub issue —— 由 BUILD-047 的 PR 截圖看出（react-demo 的機器人文字幾乎不可讀）後追查到的既有缺陷。
 - Source spec: 無 PM spec 檔；缺陷描述與判準在本檔 Brief。
 - Complexity: `S`
@@ -94,3 +94,4 @@ R3 由 Mimir 佐證：annotations 供給的 `#1f1f1f` 在改動後仍勝出，`c
 - 2026-08-06: 建立（Status: `draft → in-progress`）。起點是 BUILD-047 PR 截圖裡「demo 的機器人文字看不見」。
 - 2026-08-06: 初版判斷為「語意 token 沒有 default」，據此在 25 處 SCSS 補 fallback；隨後查到 `styles/palette/_palette.scss` 本來就宣告了全套語意色，**該判斷不成立**，fallback 全數撤回，改為只移除兩個自我指涉的 default。
 - 2026-08-06: react-demo / Mimir / Sindri 實測完成；lint / format:check / typecheck / test（core 177 + react 114）/ build 全綠。
+- 2026-08-06: PR #398 合併進 `main`（merge commit `e8b76649`），隨 0.3.50 出貨（Status: `in-progress → done`）。

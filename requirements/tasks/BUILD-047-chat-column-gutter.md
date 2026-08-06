@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-047`
-- Status: `in-progress`
+- Status: `done`
 - Issue: 無 GitHub issue —— PM 口頭回饋（2026-08-06）：「Platform Agent 說的話的呈現，可能要把水平方向的 padding 加大些，現在這樣太貼有點奇怪」「Heimdall topic 生成好像也有類似問題」，附 Odin Flow Agent preview 展開狀態的截圖。
 - Source spec: 無 PM spec 檔；問題定義與方案取捨在本檔 Brief。
 - Complexity: `S`
@@ -126,3 +126,4 @@ Heimdall 的自訂標題列（非 SDK 的 `chat_header`）文字停在 304，與
 - 2026-08-06: 實作完成；lint（0 errors，1 筆既有 warning）/ format:check / typecheck / test（core 177 + react 114）/ build:core / build:react 全綠；react-demo 實測六個寬度符合 R1–R4。
 - 2026-08-06: PR #396 開出。
 - 2026-08-06: 以 `0.3.49-local` tarball 實測 Odin / Heimdall / Sindri / Mimir / embed 五個消費端，全部符合 R1–R4；Sindri 補齊 docked strip 的畫面證據。PR 截圖由 react-demo 換成真實產品畫面（demo 配色缺陷詳見 T4b 註）。
+- 2026-08-06: PR #396 合併進 `main`（merge commit `22a13f49`），0.3.49 已發佈並打 tag（Status: `in-progress → done`）。
