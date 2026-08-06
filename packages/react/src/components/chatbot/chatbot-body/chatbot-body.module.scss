@@ -1,3 +1,5 @@
+@use '../../../styles' as styles;
+
 .chatbot_body_wrapper {
   position: relative;
   flex: 1;
@@ -35,10 +37,12 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    // 16px around, but only 12px below so the last message clears whatever follows — the docked strip or
+    // 16px above, but only 12px below so the last message clears whatever follows — the docked strip or
     // the footer — by a consistent 12px (the scroll sentinel lives outside this padded content, adding no
-    // space).
-    padding: 16px 16px 12px;
+    // space). The inline inset tracks the column width (see `$chat-gutter`); it is the entire gap between
+    // a bot message's glyphs and the panel edge, since bot text is borderless and full-bleed.
+    padding-block: 16px 12px;
+    padding-inline: styles.$chat-gutter;
     gap: 16px;
     max-width: 1200px;
     box-sizing: border-box;
@@ -87,9 +91,10 @@
     // instead of aligning with the thread. `.chatbot_body__content` above gets away with the same
     // `margin: 0 auto` only because its parent is a plain block box.
     width: 100%;
-    // Matches the thread content's 16px horizontal inset; the 12px block padding keeps the clearance the
-    // panels already had from the footer.
-    padding: 12px 16px;
+    // Matches the thread content's inline inset via the same constant; the 12px block padding keeps the
+    // clearance the panels already had from the footer.
+    padding-block: 12px;
+    padding-inline: styles.$chat-gutter;
     max-width: 1200px;
     box-sizing: border-box;
     display: flex;

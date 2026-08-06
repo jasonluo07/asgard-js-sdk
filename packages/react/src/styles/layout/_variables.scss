@@ -1,0 +1,21 @@
+// The chat column's horizontal inset — the single source for every row that has to line up along the
+// column's left/right edge: the thread content, the docked run-chrome strip, the header, and the
+// composer. A plain 16px used to be repeated at those four call sites (since 2025-03, `a50e1ab0`), which
+// was tuned for the narrow embedded widget and stayed 16px when the same component started being dropped
+// into 700–1200px panels. At that width a bot message reads as flush against the panel edge, because bot
+// text is borderless and full-bleed (`.text--bot { padding: 0 }`) — unlike a user bubble, the column
+// inset *is* the whole gap between the glyphs and the edge, and it is no wider than the 16px gap between
+// two messages, so the eye gets no boundary cue.
+//
+// So the inset tracks the column's own width instead of a viewport breakpoint: a percentage padding
+// resolves against the *containing block's* inline size, and all four call sites sit inside the same
+// `.chatbot__chat_column`, so they resolve to the same number and stay aligned — including when the File
+// Explorer aside opens and narrows the column. `max()` floors it at the value the narrow widget was
+// tuned for; `min()` caps it so a wide panel does not turn into a magazine margin.
+//
+//   380px (collapsed widget) → 16px    700px (expanded panel) → 28px    ≥800px → 32px
+//
+// Compile-time constant, not a CSS variable: the inset is deliberately not part of the public API, so
+// there is nothing here for a consumer to override (and nothing to keep back-compatible). Sass passes
+// mixed-unit `min()` / `max()` through to CSS untouched.
+$chat-gutter: max(16px, min(4%, 32px));
