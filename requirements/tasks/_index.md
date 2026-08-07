@@ -65,9 +65,11 @@
 
 ## ▶ Next Task
 
-**None — awaiting task selection.** 截至 2026-08-05，已發版至 **`0.3.47`**。以下段落保留各 cycle 的脈絡與 backlog。
+**None — awaiting task selection.** 截至 2026-08-07，已發版至 **`0.3.51`**。以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
+
+- `BUILD-050` / `REVIEW-050`（[`asgard-sdk-pm#55`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/55) BUG-007 loading spinner 相位不同步）—— 2026-08-07 收尾，隨 `0.3.51` 發版（PR #402，merge commit `41b39b40`）。每個 spinner 各跑一份從自身 mount 起算的 CSS `animation`，陸續出現的面板因此相位各異、缺口亂指。改用 WAAPI 並把 `startTime` 釘在 document timeline 原點（新 `useSyncedSpin` hook + 共用 `Spinner` 元件），相位變成 `now % 1s` 的同一個函數。順帶收斂 5 份重複的 `loader-circle` glyph 與 7 份 spin `@keyframes`。瀏覽器實測 50 個 spinner（跨 4 個掛載時間點、2 個獨立面板）spread `0.000000°`，同頁重現舊做法為 `272.59°`。**兩處行為變更需在下游留意**：ChatHeader 在 `prefers-reduced-motion` 下由減速 2s 改為停轉（7 處中唯一的例外，向其餘 6 處看齊）、附件上傳圓環由 0.8s 改為 1s。未在瀏覽器實測的兩個呼叫點（tool-call-group、file-explorer）見 REVIEW-050 Findings。
 
 - `BUILD-041` / `REVIEW-041`（`asgard-js-sdk#382` resume 後的 subagent 卡片）—— 2026-08-04 收尾，隨 `0.3.42` 發版。
 - `BUILD-042` / `REVIEW-042`（`asgard-sdk-pm#53` 匯出 `UserMessageText`）—— 2026-08-05 收尾，隨 `0.3.44` 發版；Sindri 已升至 `0.3.47`，可直接使用。
