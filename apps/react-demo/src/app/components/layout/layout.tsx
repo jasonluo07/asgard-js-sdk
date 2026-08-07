@@ -54,6 +54,7 @@ const navItems = [
   { to: '/tool-call-iserror', label: 'Tool-Call isError (F-009)' },
   { to: '/task-list', label: 'Task Check List (F-010)' },
   { to: '/subagent-list', label: 'Subagent List (F-012)' },
+  { to: '/spinner-sync', label: 'Spinner Phase Sync (BUG-007)' },
   { to: '/derived-state', label: 'Derived-State Stores (F-013)' },
   { to: '/channel-title', label: 'Channel Title (F-016)' },
   { to: '/channel-title-ui', label: 'Channel Title UI (F-017)' },

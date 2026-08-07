@@ -49,6 +49,7 @@ import { ToolCallExpand } from './routes/tool-call-expand';
 import { ToolCallIsError } from './routes/tool-call-iserror';
 import { TaskListRoute } from './routes/task-list';
 import { SubagentListRoute } from './routes/subagent-list';
+import { SpinnerSyncRoute } from './routes/spinner-sync';
 import { DockedRunChromeRoute } from './routes/docked-run-chrome';
 import { NudgePayload } from './routes/nudge-payload';
 import { DerivedStateRoute } from './routes/derived-state';
@@ -114,6 +115,7 @@ export function App(): React.ReactElement {
         <Route path="/tool-call-iserror" element={<ToolCallIsError />} />
         <Route path="/task-list" element={<TaskListRoute />} />
         <Route path="/subagent-list" element={<SubagentListRoute />} />
+        <Route path="/spinner-sync" element={<SpinnerSyncRoute />} />
         <Route path="/docked-run-chrome" element={<DockedRunChromeRoute />} />
         <Route path="/nudge-payload" element={<NudgePayload />} />
         <Route path="/derived-state" element={<DerivedStateRoute />} />

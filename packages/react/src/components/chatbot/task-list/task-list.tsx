@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import clsx from 'clsx';
 import { Task, TaskStatus } from '@asgard-js/core';
 import { Locale, t } from '../../../i18n';
+import { Spinner } from '../../spinner';
 import styles from './task-list.module.scss';
 
 // F-010 — Task Check List: a docked tray at the thread↔input seam, above the RunningIndicator. Shows
@@ -12,7 +13,8 @@ import styles from './task-list.module.scss';
 //   completed   = muted check (settles, yields attention)
 //   pending     = hollow dim circle
 // label: in_progress shows `activeForm`; otherwise `subject`. Icons inlined byte-identical to
-// lucide-react 0.487.0 (LoaderCircle / CircleCheck / Circle / ListTodo / ChevronDown / ChevronRight).
+// lucide-react 0.487.0 (CircleCheck / Circle / ListTodo / ChevronDown / ChevronRight); the spinner
+// comes from the shared phase-locked `Spinner` (BUG-007).
 
 const glyphSvgProps = {
   viewBox: '0 0 24 24',
@@ -22,14 +24,6 @@ const glyphSvgProps = {
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
 } as const;
-
-function LoaderCircleIcon({ className, label }: { className?: string; label: string }): ReactNode {
-  return (
-    <svg className={className} {...glyphSvgProps} role="img" aria-label={label}>
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
-}
 
 function CircleCheckIcon({ className, label }: { className?: string; label: string }): ReactNode {
   return (
@@ -78,12 +72,7 @@ function ChevronRightIcon({ className }: { className?: string }): ReactNode {
 
 function StatusGlyph({ status, label }: { status: TaskStatus; label: string }): ReactNode {
   if (status === 'in_progress') {
-    return (
-      <LoaderCircleIcon
-        className={clsx(styles.glyph, styles.glyph__spin, styles['glyph--in_progress'])}
-        label={label}
-      />
-    );
+    return <Spinner className={clsx(styles.glyph, styles['glyph--in_progress'])} label={label} />;
   }
 
   if (status === 'completed') {

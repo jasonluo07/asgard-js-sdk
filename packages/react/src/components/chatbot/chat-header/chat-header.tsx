@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import clsx from 'clsx';
-import { LoaderIcon, MessageSquareIcon } from './icons';
+import { MessageSquareIcon } from './icons';
+import { Spinner } from '../../spinner';
 import styles from './chat-header.module.scss';
 
 // F-022 — the unified chat heading bar. One row at the top of the chat thread carrying three kinds of
@@ -123,7 +124,7 @@ function ActionButton({ action }: { action: ChatHeaderAction }): ReactNode {
       title={label}
       className={clsx(styles.action, active && styles['action--active'], inert && styles['action--disabled'])}
     >
-      {busy ? <LoaderIcon className={styles.spinner} size={18} /> : icon}
+      {busy ? <Spinner size={18} /> : icon}
     </button>
   );
 }

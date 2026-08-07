@@ -72,22 +72,6 @@
   overflow: auto;
 }
 
-.spin {
-  animation: asg-fe-spin 1s linear infinite;
-}
-
-@keyframes asg-fe-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spin {
-    animation: none;
-  }
-}
-
 .status {
   display: flex;
   align-items: center;

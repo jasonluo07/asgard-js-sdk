@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import styles from './tool-call-group.module.scss';
 import { ToolCallVariant, ToolCallDiff } from './tool-call-label';
 import { Locale, t } from '../../../i18n';
+import { Spinner } from '../../spinner';
 
 // Icons
 function ChevronRightIcon({ className }: { className?: string }): ReactNode {
@@ -15,22 +16,6 @@ function ChevronRightIcon({ className }: { className?: string }): ReactNode {
 
 // Status icons (F-007 / §3.5) — inlined lucide 0.487.0. `completed` shows no icon; `running` = the
 // LoaderCircle spinner (amber, spun via CSS); `error` = CircleAlert (red).
-function LoaderCircleIcon({ className }: { className?: string }): ReactNode {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
-}
-
 function CircleAlertIcon({ className }: { className?: string }): ReactNode {
   return (
     <svg
@@ -464,15 +449,7 @@ function StatusIcon({ status }: { status: ToolCallStatus }): ReactNode {
       return <CircleSlashIcon className={clsx(iconClass, styles['tool_call_item__status_icon--cancelled'])} />;
     case 'pending':
     default:
-      return (
-        <LoaderCircleIcon
-          className={clsx(
-            iconClass,
-            styles['tool_call_item__status_icon--running'],
-            styles.tool_call_item__status_icon_spin,
-          )}
-        />
-      );
+      return <Spinner className={clsx(iconClass, styles['tool_call_item__status_icon--running'])} />;
   }
 }
 

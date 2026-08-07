@@ -1,0 +1,36 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  gap: 8px;
+}
+
+.add {
+  padding: 6px 10px;
+  border: 1px solid #888;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.group {
+  width: 420px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.groupLabel {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}

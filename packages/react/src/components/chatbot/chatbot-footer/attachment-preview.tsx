@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import clsx from 'clsx';
 import PaperclipSvg from '../../../icons/paperclip.svg?react';
+import { useSyncedSpin } from '../../../hooks/use-synced-spin';
 import styles from './attachment-preview.module.scss';
 import type { AttachmentItem } from './use-attachment-upload';
 
@@ -22,10 +23,13 @@ interface AttachmentPreviewProps {
 }
 
 function StatusOverlay({ status }: { status: AttachmentItem['status'] }): ReactNode {
+  // A border ring rather than a glyph, so it takes the shared spin from the hook directly (BUG-007).
+  const spinRef = useSyncedSpin<HTMLDivElement>();
+
   if (status === 'uploading') {
     return (
       <div className={styles.overlay}>
-        <div className={styles.spinner} />
+        <div ref={spinRef} className={styles.spinner} />
       </div>
     );
   }

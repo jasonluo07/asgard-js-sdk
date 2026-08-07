@@ -184,19 +184,3 @@
   pointer-events: none;
   opacity: 0.4;
 }
-
-.spinner {
-  animation: chat_header_spin 1s linear infinite;
-}
-
-@keyframes chat_header_spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation-duration: 2s;
-  }
-}
