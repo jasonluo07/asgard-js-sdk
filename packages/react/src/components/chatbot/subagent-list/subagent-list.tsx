@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Subagent, SubagentStatus, SubagentToolCall } from '@asgard-js/core';
 import { Locale, t } from '../../../i18n';
 import { synthesizeToolCallLabel } from '../../templates';
+import { Spinner } from '../../spinner';
 import styles from './subagent-list.module.scss';
 
 // F-012 — Subagent list: a docked tray stacked above the Task List (order: thread → Subagents →
@@ -20,14 +21,6 @@ const glyphSvgProps = {
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
 } as const;
-
-function LoaderCircleIcon({ className, label }: { className?: string; label?: string }): ReactNode {
-  return (
-    <svg className={className} {...glyphSvgProps} role={label ? 'img' : undefined} aria-label={label}>
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  );
-}
 
 function CircleCheckIcon({ className, label }: { className?: string; label?: string }): ReactNode {
   return (
@@ -88,9 +81,7 @@ function ChevronRightIcon({ className }: { className?: string }): ReactNode {
 
 function SubagentGlyph({ status, label }: { status: SubagentStatus; label: string }): ReactNode {
   if (status === 'running') {
-    return (
-      <LoaderCircleIcon className={clsx(styles.glyph, styles.glyph__spin, styles['glyph--running'])} label={label} />
-    );
+    return <Spinner className={clsx(styles.glyph, styles['glyph--running'])} label={label} />;
   }
 
   if (status === 'failed') {
@@ -106,7 +97,7 @@ function SubagentGlyph({ status, label }: { status: SubagentStatus; label: strin
 
 function ToolGlyph({ status }: { status: SubagentToolCall['status'] }): ReactNode {
   if (status === 'running') {
-    return <LoaderCircleIcon className={clsx(styles.tool_glyph, styles.glyph__spin, styles['glyph--running'])} />;
+    return <Spinner className={clsx(styles.tool_glyph, styles['glyph--running'])} />;
   }
 
   if (status === 'error') {

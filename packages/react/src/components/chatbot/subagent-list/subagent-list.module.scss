@@ -126,26 +126,6 @@
   opacity: 0.6;
 }
 
-.glyph__spin {
-  animation: subagent_list_spin 1s linear infinite;
-}
-
-@keyframes subagent_list_spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .glyph__spin {
-    animation: none;
-  }
-}
-
 .row__body {
   flex: 1;
   min-width: 0;

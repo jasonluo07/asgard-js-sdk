@@ -1,6 +1,7 @@
 import { MouseEvent as ReactMouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
+import { Spinner } from '../../spinner';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { t } from '../../../i18n';
 import { useFileExplorerDialog } from './file-explorer-dialog';
@@ -20,7 +21,6 @@ import {
   FolderIcon,
   FolderOpenIcon,
   FolderPlusIcon,
-  LoaderCircleIcon,
   PackageOpenIcon,
   PencilIcon,
   RefreshIcon,
@@ -175,7 +175,7 @@ function DirChildren(props: DirChildrenProps): ReactNode {
   if (loading) {
     return (
       <div className={styles.status} style={pad}>
-        <LoaderCircleIcon size={12} className={styles.spin} /> {t(locale, 'fileExplorer.loading')}
+        <Spinner size={12} /> {t(locale, 'fileExplorer.loading')}
       </div>
     );
   }
@@ -503,7 +503,7 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
             <button type="button" className={styles.nudgeBtn} onClick={handleNudge} disabled={nudging || nudgeDisabled}>
               {nudging ? (
                 <>
-                  <LoaderCircleIcon size={15} className={styles.spin} /> {t(locale, 'fileExplorer.waking')}
+                  <Spinner size={15} /> {t(locale, 'fileExplorer.waking')}
                 </>
               ) : (
                 <>

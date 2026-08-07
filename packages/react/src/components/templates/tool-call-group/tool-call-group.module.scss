@@ -144,22 +144,6 @@
   color: #8c8c8c;
 }
 
-.tool_call_item__status_icon_spin {
-  animation: tool_call_spin 1s linear infinite;
-}
-
-@keyframes tool_call_spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tool_call_item__status_icon_spin {
-    animation: none;
-  }
-}
-
 .tool_call_item__content {
   padding: 2px 0 8px 22px;
   display: flex;

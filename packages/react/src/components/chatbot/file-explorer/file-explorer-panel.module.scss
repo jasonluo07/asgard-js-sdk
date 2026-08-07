@@ -319,23 +319,9 @@
   white-space: nowrap;
 }
 
-.spin {
-  animation: asg-fe-panel-spin 1s linear infinite;
-}
-
-@keyframes asg-fe-panel-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chevron {
     transition: none;
-  }
-
-  .spin {
-    animation: none;
   }
 
   .nudgeBtn:active {

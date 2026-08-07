@@ -2,7 +2,8 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { t } from '../../../i18n';
 import { StreamdownClient } from '../../templates/text-template/streamdown-client';
-import { ArrowLeftIcon, CodeIcon, EyeIcon, LoaderCircleIcon, CircleAlertIcon, RefreshIcon } from './icons';
+import { ArrowLeftIcon, CodeIcon, EyeIcon, CircleAlertIcon, RefreshIcon } from './icons';
+import { Spinner } from '../../spinner';
 import { CodeEditor } from './code-editor';
 import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
 import styles from './file-view.module.scss';
@@ -130,7 +131,7 @@ export function FileView(props: FileViewProps): ReactNode {
     if (content === null && !error) {
       return (
         <div className={styles.status}>
-          <LoaderCircleIcon size={14} className={styles.spin} /> {t(locale, 'fileExplorer.loading')}
+          <Spinner size={14} /> {t(locale, 'fileExplorer.loading')}
         </div>
       );
     }

@@ -2,7 +2,7 @@ import { lazy, ReactNode, Suspense, useEffect, useState } from 'react';
 import type { Extension } from '@codemirror/state';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { t } from '../../../i18n';
-import { LoaderCircleIcon } from './icons';
+import { Spinner } from '../../spinner';
 import styles from './file-view.module.scss';
 
 /**
@@ -74,7 +74,7 @@ function Loading(): ReactNode {
 
   return (
     <div className={styles.status}>
-      <LoaderCircleIcon size={14} className={styles.spin} /> {t(locale, 'fileExplorer.loadingEditor')}
+      <Spinner size={14} /> {t(locale, 'fileExplorer.loadingEditor')}
     </div>
   );
 }
