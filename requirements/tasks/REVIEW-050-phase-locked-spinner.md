@@ -32,7 +32,7 @@
 | React 元件 props 完整型別化              | ✅ 是                                                                          |
 | 元件 hardcode 色值                       | ✅ 無 —— 顏色留在各呼叫端既有的 class 上，`Spinner` 只吃 `currentColor`        |
 | react / react-dom 維持 peerDependencies  | ✅ 未更動                                                                      |
-| core 與 react 版本號一致                 | ✅ `0.3.47` / `0.3.47`（本次未升版）                                           |
+| core 與 react 版本號一致                 | ✅ `0.3.50` / `0.3.50`（審查當下；發版時一併升為 `0.3.51`）                    |
 | 重複邏輯 / 型別 / JSX 已抽出             | ✅ 本 cycle 的主軸 —— 5 份重複 glyph + 7 份 keyframes 收斂為 1（見 §1.4）      |
 | `setTimeout` mock / 死碼 / TODO / FIXME  | ✅ 無新增（見 §1.2 註）                                                        |
 
