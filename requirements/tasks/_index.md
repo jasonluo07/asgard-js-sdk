@@ -191,4 +191,4 @@
 | `BUILD-048`  | Stop break-all from splitting English words       | Normal   | done   | [BUILD-048-word-break-splits-english.md](./BUILD-048-word-break-splits-english.md)                       |
 | `BUILD-049`  | Fix two self-referencing theme color defaults     | Normal   | done   | [BUILD-049-theme-token-self-reference.md](./BUILD-049-theme-token-self-reference.md)                     |
 | `BUILD-050`  | Lock every loading spinner to a shared phase      | Normal   | done   | [BUILD-050-phase-locked-spinner.md](./BUILD-050-phase-locked-spinner.md)                                 |
-| `REVIEW-050` | Review: Lock loading spinners to a shared phase   | —        | ready  | [REVIEW-050-phase-locked-spinner.md](./REVIEW-050-phase-locked-spinner.md)                               |
+| `REVIEW-050` | Review: Lock loading spinners to a shared phase   | —        | done   | [REVIEW-050-phase-locked-spinner.md](./REVIEW-050-phase-locked-spinner.md)                               |
