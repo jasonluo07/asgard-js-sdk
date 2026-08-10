@@ -430,6 +430,27 @@ describe('Channel — send guard while a consent is pending (#404)', () => {
     expect(sent.map(p => p.action)).toEqual([FetchSseAction.RESPONSE_TOOL_CALL_CONSENT, FetchSseAction.NONE]);
     channel.close();
   });
+
+  // #406 — a nudge takes the same `PostUserMessage` path as a plain turn (`IsTrigger: false`; `IsNudge`
+  // is a separate field), so the paused channel rejects it too. `RESET_CHANNEL` escapes only because
+  // the backend deletes and re-ensures the channel before posting, which clears the pause.
+  it('rejects nudge while a consent is pending', async () => {
+    const { channel, sent } = await restoredWithPendingConsent();
+
+    await expect(channel.nudge()).rejects.toBeInstanceOf(ChannelAwaitingConsentError);
+    expect(sent).toEqual([]);
+    channel.close();
+  });
+
+  it('releases the nudge guard once the consent is answered', async () => {
+    const { channel, sent } = await restoredWithPendingConsent();
+
+    await channel.replyToolCallConsents([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]);
+    await channel.nudge();
+
+    expect(sent.map(p => p.action)).toEqual([FetchSseAction.RESPONSE_TOOL_CALL_CONSENT, FetchSseAction.NUDGE]);
+    channel.close();
+  });
 });
 
 // asgard-freyr-pm#359 Q1 — pendingConsent is run-level state carried across every reducer hop. The
