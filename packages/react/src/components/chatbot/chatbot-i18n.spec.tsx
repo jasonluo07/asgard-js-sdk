@@ -30,6 +30,12 @@ const MIGRATED_WORDING: Record<string, string> = {
   'auth.showPassword': 'Show password',
   'auth.hidePassword': 'Hide password',
   'auth.continue': 'Continue',
+  // #412 — the error bubble's copy. Listed here so the locale-parity check below covers it: without
+  // an entry, dropping the ja-JP or zh-TW value leaves the whole suite green.
+  'error.unexpected': 'Unexpected error',
+  'error.showDetails': 'Show more',
+  'error.hideDetails': 'Show less',
+  'error.detail': 'Details',
 };
 
 /** Every source file under `components/chatbot/`, tests and styles excluded. */
