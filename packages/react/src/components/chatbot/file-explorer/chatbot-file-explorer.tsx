@@ -113,7 +113,7 @@ export function ChatbotFileExplorerAside({
   controller: FileExplorerController;
   basePath?: string;
 }): ReactNode {
-  const { client, channel, nudge, isRunning } = useAsgardContext();
+  const { client, channel, nudge, isRunning, pendingConsent } = useAsgardContext();
   const sandboxes = useLaunchedSandboxes(channel);
   // A sandbox whose fs calls keep failing is dropped from the dropdown (AC5); metadata stays authoritative.
   const providers = useMemo(
@@ -141,7 +141,9 @@ export function ChatbotFileExplorerAside({
       onNudge={nudge}
       // A nudge is a turn, so the channel refuses one while a run holds it (F-023 AC6) — and this
       // empty state is on screen during exactly that window, between the send and the sandbox coming up.
-      nudgeDisabled={isRunning}
+      // #409 — core refuses a nudge while a consent prompt is pending (#407), and `isRunning` is false
+      // by then (the consent frame precedes the run terminal), so it alone leaves the button live.
+      nudgeDisabled={isRunning || pendingConsent !== null}
       onClose={controller.closeExplorer}
       chrome="flush"
       basePath={basePath}
