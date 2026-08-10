@@ -27,6 +27,17 @@ function ChevronIcon({ className }: { className?: string }): ReactNode {
   );
 }
 
+/** Whether a value carries information — blank strings and all-blank objects do not. */
+function isPresent(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+
+  if (typeof value === 'string') return value.trim() !== '';
+
+  if (typeof value === 'object') return Object.values(value).some(isPresent);
+
+  return true;
+}
+
 // The run-terminal error bubble (`asgard.run.error`).
 //
 // The event's `message` is frequently the ONLY thing that tells the user what went wrong and what
@@ -52,10 +63,16 @@ function ErrorHint({ message }: { message: ConversationErrorMessage }): ReactNod
 
   if (custom != null) return custom;
 
-  const { code, inner } = message.error ?? {};
   const summary = message.error?.message?.trim() || t(locale, 'error.unexpected');
-  const traceId = message.traceId;
-  const hasDetails = Boolean(code || inner || traceId);
+  // Dumped whole rather than field-by-field on purpose: this payload's shape is still moving (the
+  // backend is filling in `code` / `inner` as it goes), and a hand-picked list would silently omit
+  // whatever it adds next. Stringifying everything also gives an engineer one blob to copy into a
+  // ticket. `traceId` rides on the message, not the error, so it is merged in.
+  const details = { traceId: message.traceId, ...message.error };
+  // `message` is excluded from the decision (not from the dump): it is already the summary above, so
+  // an event carrying nothing else would otherwise offer a toggle that reveals what is on screen.
+  // `location` arrives as a fully-blank object on most errors, hence the look inside.
+  const hasDetails = Object.entries(details).some(([key, value]) => key !== 'message' && isPresent(value));
 
   return (
     <>
@@ -78,24 +95,8 @@ function ErrorHint({ message }: { message: ConversationErrorMessage }): ReactNod
       )}
       {open && hasDetails && (
         <div className={classes.error_details}>
-          {code && (
-            <div className={classes.error_detail_row}>
-              <span className={classes.error_detail_label}>{t(locale, 'error.code')}</span>
-              <span className={classes.error_detail_value}>{code}</span>
-            </div>
-          )}
-          {traceId && (
-            <div className={classes.error_detail_row}>
-              <span className={classes.error_detail_label}>{t(locale, 'error.traceId')}</span>
-              <span className={classes.error_detail_value}>{traceId}</span>
-            </div>
-          )}
-          {inner && (
-            <div className={classes.error_detail_block}>
-              <span className={classes.error_detail_label}>{t(locale, 'error.detail')}</span>
-              <pre className={classes.error_inner}>{inner}</pre>
-            </div>
-          )}
+          <span className={classes.error_detail_label}>{t(locale, 'error.detail')}</span>
+          <pre className={classes.error_inner}>{JSON.stringify(details, null, 2)}</pre>
         </div>
       )}
       {onErrorClick && (

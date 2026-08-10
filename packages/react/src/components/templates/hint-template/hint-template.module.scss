@@ -78,25 +78,9 @@
     color: rgba(220, 220, 220, 1);
   }
 
-  .error_detail_row {
-    display: flex;
-    gap: var(--asg-spacing-2);
-  }
-
-  .error_detail_block {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
   .error_detail_label {
     flex-shrink: 0;
     color: rgba(150, 150, 150, 1);
-  }
-
-  .error_detail_value {
-    min-width: 0;
   }
 
   // The raw upstream error. Monospace + preserved newlines make a stack-ish string readable, and

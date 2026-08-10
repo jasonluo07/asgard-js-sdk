@@ -94,24 +94,39 @@ describe('HintTemplate error bubble', () => {
     expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
   });
 
-  it('reveals code, trace id and the raw inner error on expand, and hides them again', () => {
+  // The expanded region dumps the whole payload as JSON rather than picking fields out, so that a
+  // field the backend adds later shows up without a UI change. Assert on the blob's contents.
+  it('reveals the whole error payload as JSON on expand, and hides it again', () => {
     render(<HintTemplate message={errorMessage({ inner: 'admission webhook denied the request' }, 'trace-abc')} />);
 
     fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.showDetails') }));
 
-    expect(screen.getByText('QUOTA_EXCEED')).toBeTruthy();
-    expect(screen.getByText('trace-abc')).toBeTruthy();
-    expect(screen.getByText('admission webhook denied the request')).toBeTruthy();
+    const dump = screen.getByText(text => text.trimStart().startsWith('{'));
+    const parsed = JSON.parse(dump.textContent ?? '');
+
+    expect(parsed.code).toBe('QUOTA_EXCEED');
+    expect(parsed.traceId).toBe('trace-abc');
+    expect(parsed.inner).toBe('admission webhook denied the request');
+    // Whatever the backend adds next rides along without a UI change — `location` is here today.
+    expect(parsed).toHaveProperty('location');
 
     fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.hideDetails') }));
 
-    expect(screen.queryByText('QUOTA_EXCEED')).toBeNull();
+    expect(screen.queryByText(text => text.trimStart().startsWith('{'))).toBeNull();
   });
 
-  it('omits the toggle when there is nothing to reveal', () => {
+  // The summary already shows `message`, so an event carrying nothing else must not offer a toggle
+  // that reveals only what is on screen. `location` arrives fully blank here, which also does not count.
+  it('omits the toggle when there is nothing to reveal beyond the summary', () => {
     render(<HintTemplate message={errorMessage({ code: '', inner: '' })} />);
 
     expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('offers the toggle as soon as one diagnostic field is present', () => {
+    render(<HintTemplate message={errorMessage({ code: '', inner: '' }, 'trace-only')} />);
+
+    expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
   });
 
   // Preserves the previous `errorMessageRenderer?.(message) ?? <default/>` contract: a renderer
