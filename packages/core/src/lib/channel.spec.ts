@@ -421,6 +421,9 @@ describe('Channel — send guard while a consent is pending (#404)', () => {
     channel.close();
   });
 
+  // NOTE: this does NOT cover the guard — `replyToolCallConsents` has already nulled `pendingConsent`
+  // by the time `sendMessage` runs, so it passes with the guard deleted too (#411). It is here to catch
+  // over-blocking: a guard that latched would break the normal path out of a pause.
   it('releases the guard once the consent is answered', async () => {
     const { channel, sent } = await restoredWithPendingConsent();
 
@@ -428,6 +431,74 @@ describe('Channel — send guard while a consent is pending (#404)', () => {
     await channel.sendMessage({ text: '繼續' });
 
     expect(sent.map(p => p.action)).toEqual([FetchSseAction.RESPONSE_TOOL_CALL_CONSENT, FetchSseAction.NONE]);
+    channel.close();
+  });
+
+  // #411 — `resetChannel` is deliberately NOT guarded: asgard-core's `prepareChannel` runs
+  // `DeleteChannel` → `EnsureChannel` before posting the turn, so the pause is gone by the time it
+  // lands. That asymmetry carries the whole design, and is exactly what a future reader would "fix" by
+  // adding the guard here too. Pin it so that change fails loudly instead of silently breaking reset.
+  it('still allows a channel reset while a consent is pending', async () => {
+    const sent: FetchSsePayload[] = [];
+    const client = {
+      fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
+        sent.push(payload);
+        options?.onSseCompleted?.();
+      },
+      rejoinSse(_id: string, options?: FetchSseOptions): void {
+        options?.onSseStart?.();
+        options?.onSseMessage?.(consentEvent('proc-1'));
+        options?.onSseCompleted?.();
+      },
+    } as unknown as IAsgardServiceClient;
+
+    // A reset builds a brand-new Channel, so drive `Channel.reset` rather than the restored one.
+    const restored = await Channel.restore({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+    restored.close();
+
+    const reset = await Channel.reset({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    expect(sent.map(p => p.action)).toEqual([FetchSseAction.RESET_CHANNEL]);
+    reset.close();
+  });
+
+  // #410 — the prompt is cleared optimistically so the modal closes immediately. If the reply never
+  // lands, the SDK would otherwise believe the pause is over while the server still holds it, silently
+  // disarming both guards above. Restore it so the next send is still refused (and the modal returns).
+  it('restores pendingConsent when the consent reply fails', async () => {
+    const client = {
+      fetchSse(_payload: FetchSsePayload, options?: FetchSseOptions): void {
+        options?.onSseError?.(new Error('socket died'));
+      },
+      rejoinSse(_id: string, options?: FetchSseOptions): void {
+        options?.onSseStart?.();
+        options?.onSseMessage?.(consentEvent('proc-1'));
+        options?.onSseCompleted?.();
+      },
+    } as unknown as IAsgardServiceClient;
+
+    let states: ChannelStates | undefined;
+    const channel = await Channel.restore({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => (states = s),
+    });
+
+    await expect(
+      channel.replyToolCallConsents([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]),
+    ).rejects.toThrow('socket died');
+
+    expect(states?.conversation.pendingConsent?.processId).toBe('proc-1');
+    await expect(channel.sendMessage({ text: '那我改用講的' })).rejects.toBeInstanceOf(ChannelAwaitingConsentError);
     channel.close();
   });
 
