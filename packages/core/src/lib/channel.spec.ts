@@ -221,6 +221,32 @@ function restoreMockClient(rejoinEvents: SseResponse<EventType>[], fetchSse?: ()
   } as unknown as IAsgardServiceClient;
 }
 
+function consentEvent(processId: string, traceId?: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.TOOL_CALL_CONSENT,
+    requestId: 'req-1',
+    traceId,
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: {
+      toolCallConsent: {
+        processId,
+        pendingCalls: [
+          {
+            toolCallId: 'call-1',
+            toolsetName: 'shell',
+            toolName: 'run',
+            parameter: { command: 'rm -rf /tmp/x' },
+            alreadyAllowed: false,
+            reason: '高風險操作',
+          },
+        ],
+      },
+    },
+  } as unknown as SseResponse<EventType>;
+}
+
 describe('Channel — join restore (F-015)', () => {
   it('R2: seeds the title from metadata, replays history, and never sends RESET_CHANNEL', async () => {
     const fetchSseSpy = vi.fn();
@@ -277,6 +303,80 @@ describe('Channel — join restore (F-015)', () => {
     });
 
     expect(channel.getChannelTitle()).toBe('未命名前的標題');
+    channel.close();
+  });
+
+  // asgard-freyr-pm#359 Q1 — "does a rejoin replay a still-undecided tool_call.consent?" The backend
+  // owns whether the frame is sent at all; these two cases pin down the half this SDK owns: *if* it is
+  // sent on the GET rejoin stream, the consent must surface and its answer must reach the backend.
+  // Without them a future change could silently make the A-path answer wrong for the consumer.
+  it('folds a tool_call.consent arriving on the GET rejoin stream into pendingConsent', async () => {
+    let states: ChannelStates | undefined;
+
+    const channel = await Channel.restore({
+      client: restoreMockClient([messageEvent('h1', '歷史一'), consentEvent('proc-1')]),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => (states = s),
+    });
+
+    expect(states?.conversation.pendingConsent?.processId).toBe('proc-1');
+    expect(states?.conversation.pendingConsent?.pendingCalls[0]?.toolCallId).toBe('call-1');
+    channel.close();
+  });
+
+  it('sends the consent answer as RESPONSE_TOOL_CALL_CONSENT after a restore', async () => {
+    const sent: FetchSsePayload[] = [];
+    const client = {
+      fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
+        sent.push(payload);
+        options?.onSseCompleted?.();
+      },
+      rejoinSse(_id: string, options?: FetchSseOptions): void {
+        options?.onSseStart?.();
+        options?.onSseMessage?.(consentEvent('proc-1'));
+        options?.onSseCompleted?.();
+      },
+    } as unknown as IAsgardServiceClient;
+
+    let states: ChannelStates | undefined;
+    const channel = await Channel.restore({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => (states = s),
+    });
+
+    await channel.replyToolCallConsents([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]);
+
+    expect(sent[0]?.action).toBe(FetchSseAction.RESPONSE_TOOL_CALL_CONSENT);
+    expect(sent[0]?.toolCallConsents).toEqual([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]);
+    // Answering clears the prompt, so the modal closes rather than re-firing on the next state push.
+    expect(states?.conversation.pendingConsent).toBeNull();
+    channel.close();
+  });
+});
+
+// asgard-freyr-pm#359 Q1 — pendingConsent is run-level state carried across every reducer hop. The
+// traceId-attach path in buildRunHandlers rebuilds the Conversation directly, so it must carry the
+// pending prompt over; dropping it would strand a run that is still waiting for an answer.
+describe('Channel — pendingConsent durability', () => {
+  it('keeps pendingConsent when a later frame attaches its traceId to the user bubble', async () => {
+    // The consent lands on a frame with no traceId; the *next* frame carries one, which is what
+    // triggers the user-bubble rewrite.
+    const tracedMessage = { ...messageEvent('m1', '回覆'), traceId: 'trace-1' } as SseResponse<EventType>;
+
+    let states: ChannelStates | undefined;
+    const channel = Channel.create({
+      client: mockClient([consentEvent('proc-1'), tracedMessage]),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => (states = s),
+    });
+
+    await channel.sendMessage({ text: '刪掉暫存檔' });
+
+    expect(states?.conversation.pendingConsent?.processId).toBe('proc-1');
     channel.close();
   });
 });
