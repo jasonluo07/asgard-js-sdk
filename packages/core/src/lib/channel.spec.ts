@@ -306,15 +306,23 @@ describe('Channel — join restore (F-015)', () => {
     channel.close();
   });
 
-  // asgard-freyr-pm#359 Q1 — "does a rejoin replay a still-undecided tool_call.consent?" The backend
-  // owns whether the frame is sent at all; these two cases pin down the half this SDK owns: *if* it is
-  // sent on the GET rejoin stream, the consent must surface and its answer must reach the backend.
-  // Without them a future change could silently make the A-path answer wrong for the consumer.
-  it('folds a tool_call.consent arriving on the GET rejoin stream into pendingConsent', async () => {
+  // asgard-freyr-pm#359 Q1 — recovering a still-undecided tool_call.consent after a reload. The live
+  // consent frame is ephemeral (asgard-core never persists it: delivery.persistableDisplayEvent covers
+  // only message/thinking/tool_call `.complete`), so it is NOT part of the collapsed transcript replay.
+  // Instead SubscribeChannelSse detects the pause (ListenType=PAUSE + resume_state.PauseType=
+  // TOOL_CALL_CONSENT) and appends a *synthetic* run.init → tool_call.consent → run.done rebuilt from
+  // the durable resume_state. This mirrors that exact frame order — note the terminal arrives after the
+  // prompt, so the prompt has to survive it.
+  it('recovers a pending consent from the synthetic rejoin bracket (run.init → consent → run.done)', async () => {
     let states: ChannelStates | undefined;
 
     const channel = await Channel.restore({
-      client: restoreMockClient([messageEvent('h1', '歷史一'), consentEvent('proc-1')]),
+      client: restoreMockClient([
+        messageEvent('h1', '歷史一'),
+        runEvent(EventType.INIT),
+        consentEvent('proc-1'),
+        { ...runEvent(EventType.INIT), eventType: EventType.DONE } as SseResponse<EventType>,
+      ]),
       customChannelId: 'ch',
       conversation: new Conversation({ messages: new Map() }),
       statesObserver: s => (states = s),
@@ -322,6 +330,8 @@ describe('Channel — join restore (F-015)', () => {
 
     expect(states?.conversation.pendingConsent?.processId).toBe('proc-1');
     expect(states?.conversation.pendingConsent?.pendingCalls[0]?.toolCallId).toBe('call-1');
+    // The history that preceded the synthetic bracket is still there.
+    expect([...(states?.conversation.messages?.values() ?? [])].map(m => m.messageId)).toEqual(['h1']);
     channel.close();
   });
 
