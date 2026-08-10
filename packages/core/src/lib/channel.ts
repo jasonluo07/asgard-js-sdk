@@ -406,7 +406,12 @@ export default class Channel {
               ...userMessage,
               traceId: response.traceId,
             });
-            this.conversation$.next(new Conversation({ messages }));
+            // Carry `pendingConsent` over — this rebuild bypasses the reducer (which preserves it on
+            // every hop), so omitting it silently discards a consent prompt that arrived on an earlier,
+            // traceId-less frame, stranding a run that is still waiting for the answer.
+            this.conversation$.next(
+              new Conversation({ messages, pendingConsent: this.conversation$.value.pendingConsent }),
+            );
           }
 
           this.currentUserMessageId = undefined;
