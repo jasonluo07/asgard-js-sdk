@@ -618,7 +618,8 @@ export default class Channel {
    * function to compute it at send time. In `@asgard-js/react` this is filled in automatically from
    * `onBeforeSendMessage`.
    *
-   * Rejects with `ChannelBusyError` when a run already holds the channel, exactly like `sendMessage`.
+   * Rejects with `ChannelBusyError` when a run already holds the channel, and with
+   * `ChannelAwaitingConsentError` while a consent prompt is pending — exactly like `sendMessage`.
    */
   public nudge(options?: FetchSseOptions, payload?: FetchSsePayload['payload']): Promise<void> {
     // F-023 AC6 / UC-045 — one run per channel. Invisible or not, a nudge is a turn, so it queues
@@ -629,6 +630,14 @@ export default class Channel {
     const busyWith = this.runStatusSubject.value.kind;
 
     if (busyWith) return Promise.reject(new ChannelBusyError(busyWith));
+
+    // #406 — a nudge is dispatched down the same `PostUserMessage` path as a plain turn (the backend
+    // hardcodes `IsTrigger: false` there; `IsNudge` is a separate field), so a channel paused on a
+    // consent prompt rejects it exactly like a message. Same guard as `sendMessage`, for the same
+    // reason the busy check above cannot catch it: the consent frame precedes the run terminal.
+    const pendingConsent = this.conversation$.value.pendingConsent;
+
+    if (pendingConsent) return Promise.reject(new ChannelAwaitingConsentError(pendingConsent.processId));
 
     // `nudge` — invisible to the user, so it must never surface a stop control (F-023 AC8).
     return this.fetchSse(
