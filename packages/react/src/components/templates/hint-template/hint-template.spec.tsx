@@ -88,9 +88,10 @@ describe('HintTemplate error bubble', () => {
   it('keeps diagnostics collapsed until the user asks for them', () => {
     render(<HintTemplate message={errorMessage({ inner: 'admission webhook denied the request' }, 'trace-abc')} />);
 
-    expect(screen.queryByText('QUOTA_EXCEED')).toBeNull();
-    expect(screen.queryByText('trace-abc')).toBeNull();
-    expect(screen.queryByText('admission webhook denied the request')).toBeNull();
+    // Assert on the dump element, not on the strings inside it: testing-library matches a node's
+    // whole text, and the dump is one text node holding the entire JSON — so `queryByText('QUOTA_EXCEED')`
+    // returns null whether it is collapsed or not, and would pin nothing.
+    expect(screen.queryByText(text => text.trimStart().startsWith('{'))).toBeNull();
     expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
   });
 
@@ -127,6 +128,32 @@ describe('HintTemplate error bubble', () => {
     render(<HintTemplate message={errorMessage({ code: '', inner: '' }, 'trace-only')} />);
 
     expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
+  });
+
+  // The whole point of dumping the payload instead of picking fields: a field this UI has never heard
+  // of still has to open the toggle. `location` stands in for "whatever the backend adds next" — none
+  // of `code` / `inner` / `traceId` is set here, so a hand-picked check would call this empty and hide
+  // the only diagnostic the event carries.
+  it('offers the toggle for a field outside the known three', () => {
+    const location = { namespace: 'ns-42', workflowName: '', processorName: '', processorType: '' };
+
+    render(<HintTemplate message={errorMessage({ code: '', inner: '', location })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.showDetails') }));
+
+    const parsed = JSON.parse(screen.getByText(text => text.trimStart().startsWith('{')).textContent ?? '');
+
+    expect(parsed.location.namespace).toBe('ns-42');
+  });
+
+  // The mirror of the above: a `location` present but entirely blank is not a diagnostic, so it must
+  // not open a toggle on its own.
+  it('does not count an all-blank nested object as a detail', () => {
+    const location = { namespace: '', workflowName: '   ', processorName: '', processorType: '' };
+
+    render(<HintTemplate message={errorMessage({ code: '', inner: '', location })} />);
+
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   // Preserves the previous `errorMessageRenderer?.(message) ?? <default/>` contract: a renderer
