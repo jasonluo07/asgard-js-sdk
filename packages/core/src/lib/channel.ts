@@ -19,6 +19,7 @@ import {
   ToolCallConsentAnswer,
 } from '../types';
 import { ChannelBusyError } from '../types/channel-busy-error';
+import { ChannelAwaitingConsentError } from '../types/channel-awaiting-consent-error';
 import { FetchSseAction, EventType } from '../constants/enum';
 import Conversation from './conversation';
 import { createDerivedStores, DerivedStores } from './derived-stores';
@@ -536,6 +537,15 @@ export default class Channel {
     const busyWith = this.runStatusSubject.value.kind;
 
     if (busyWith) return Promise.reject(new ChannelBusyError(busyWith));
+
+    // #404 — the same rule for a case the run-kind check cannot see. A channel parked on a consent
+    // prompt is paused on the server and only `RESPONSE_TOOL_CALL_CONSENT` resumes it; a plain turn
+    // comes back rejected ("use RespondToolCallConsent"). The pause is invisible above because the
+    // consent frame precedes the run terminal — by the time the prompt is on screen the run has already
+    // settled and `kind` is undefined. Refuse before the optimistic bubble, same as the busy guard.
+    const pendingConsent = this.conversation$.value.pendingConsent;
+
+    if (pendingConsent) return Promise.reject(new ChannelAwaitingConsentError(pendingConsent.processId));
 
     const text = payload.text.trim();
     const messageId = payload.customMessageId ?? uuidv4();
