@@ -3,6 +3,7 @@ export type { Subscription } from 'rxjs';
 export type * from './types';
 export { HttpError, isHttpError } from './types/http-error';
 export { ChannelBusyError, isChannelBusyError } from './types/channel-busy-error';
+export { ChannelAwaitingConsentError, isChannelAwaitingConsentError } from './types/channel-awaiting-consent-error';
 
 export * from './constants/enum';
 

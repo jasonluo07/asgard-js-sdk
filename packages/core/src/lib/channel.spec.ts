@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import Channel from './channel';
 import Conversation from './conversation';
 import { EventType, FetchSseAction } from '../constants/enum';
+import { ChannelAwaitingConsentError } from '../types/channel-awaiting-consent-error';
 import type {
   ChannelMetadata,
   ChannelStates,
@@ -363,6 +364,70 @@ describe('Channel — join restore (F-015)', () => {
     expect(sent[0]?.toolCallConsents).toEqual([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]);
     // Answering clears the prompt, so the modal closes rather than re-firing on the next state push.
     expect(states?.conversation.pendingConsent).toBeNull();
+    channel.close();
+  });
+});
+
+// #404 — a channel parked on a consent prompt is `ListenType=PAUSE` on the server and only accepts a
+// consent reply; asgard-core rejects a plain turn ("use RespondToolCallConsent"). The run already ended
+// with run.done by then, so the F-023 AC6 busy guard sees an idle channel and lets the send through.
+// Refuse locally instead — before the optimistic bubble, same rule as ChannelBusyError.
+describe('Channel — send guard while a consent is pending (#404)', () => {
+  async function restoredWithPendingConsent(): Promise<{
+    channel: Channel;
+    sent: FetchSsePayload[];
+    states: () => ChannelStates | undefined;
+  }> {
+    const sent: FetchSsePayload[] = [];
+    const client = {
+      fetchSse(payload: FetchSsePayload, options?: FetchSseOptions): void {
+        sent.push(payload);
+        options?.onSseCompleted?.();
+      },
+      rejoinSse(_id: string, options?: FetchSseOptions): void {
+        options?.onSseStart?.();
+        options?.onSseMessage?.(consentEvent('proc-1'));
+        options?.onSseCompleted?.();
+      },
+    } as unknown as IAsgardServiceClient;
+
+    let latest: ChannelStates | undefined;
+    const channel = await Channel.restore({
+      client,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: s => (latest = s),
+    });
+
+    return { channel, sent, states: () => latest };
+  }
+
+  it('rejects sendMessage and leaves no trace in the thread', async () => {
+    const { channel, sent, states } = await restoredWithPendingConsent();
+
+    await expect(channel.sendMessage({ text: '算了，改問別的' })).rejects.toBeInstanceOf(ChannelAwaitingConsentError);
+    // Nothing dispatched, and no optimistic user bubble left behind.
+    expect(sent).toEqual([]);
+    expect(states()?.conversation.messages?.size ?? 0).toBe(0);
+    channel.close();
+  });
+
+  it('still allows replyToolCallConsents — the only way out of the pause', async () => {
+    const { channel, sent } = await restoredWithPendingConsent();
+
+    await channel.replyToolCallConsents([{ toolCallId: 'call-1', result: 'DENY_ONCE', denyReason: '不用' }]);
+
+    expect(sent[0]?.action).toBe(FetchSseAction.RESPONSE_TOOL_CALL_CONSENT);
+    channel.close();
+  });
+
+  it('releases the guard once the consent is answered', async () => {
+    const { channel, sent } = await restoredWithPendingConsent();
+
+    await channel.replyToolCallConsents([{ toolCallId: 'call-1', result: 'ALLOW_ONCE', denyReason: '' }]);
+    await channel.sendMessage({ text: '繼續' });
+
+    expect(sent.map(p => p.action)).toEqual([FetchSseAction.RESPONSE_TOOL_CALL_CONSENT, FetchSseAction.NONE]);
     channel.close();
   });
 });
