@@ -584,6 +584,10 @@ export default class Channel {
     options?: FetchSseOptions,
     payload?: FetchSsePayload['payload'],
   ): Promise<void> {
+    // Cleared optimistically so the modal closes the moment the user answers, rather than lingering
+    // while the reply is in flight. Kept so it can be put back if the reply never lands (#410).
+    const answered = this.conversation$.value.pendingConsent;
+
     this.conversation$.next(this.conversation$.value.clearPendingConsent());
 
     // `user` — answering a consent prompt resumes the user's own turn, so it stays stoppable (F-023 AC8).
@@ -598,7 +602,16 @@ export default class Channel {
         toolCallConsents,
       },
       options,
-    );
+    ).catch((error: unknown) => {
+      // #410 — the server is still paused, so leaving the prompt cleared would disarm the send/nudge
+      // guards and let the next turn hit the backend rejection they exist to prevent. Put it back: the
+      // modal returns and the user can answer again.
+      if (answered) {
+        this.conversation$.next(this.conversation$.value.restorePendingConsent(answered));
+      }
+
+      throw error;
+    });
   }
 
   /**

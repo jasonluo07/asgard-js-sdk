@@ -38,6 +38,17 @@ export default class Conversation implements IConversation {
   }
 
   /**
+   * Put a consent prompt back (#410) — the mirror of {@link clearPendingConsent}, used to undo the
+   * optimistic clear when the reply never reaches the server. Yields to a prompt that arrived in the
+   * meantime: that one is newer than the batch being restored.
+   */
+  restorePendingConsent(pendingConsent: ToolCallConsentEventData): Conversation {
+    if (this.pendingConsent) return this;
+
+    return new Conversation({ messages: this.messages, pendingConsent });
+  }
+
+  /**
    * Converge everything the aborted run left mid-flight (F-020 AC10, F-023). A stopped run sends no
    * closing frame for whatever was in progress, so without this those messages advertise activity that
    * has ceased — and they persist in the transcript that way:
