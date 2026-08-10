@@ -67,6 +67,7 @@ export function ChatComposer({
     programmaticScrollToBottom,
     pendingInputValue,
     setPendingInputValue,
+    pendingConsent,
   } = useAsgardContext();
   const { locale = 'en-US' } = useAsgardTemplateContext();
   const theme = useAsgardThemeContext();
@@ -106,10 +107,15 @@ export function ChatComposer({
   } = attachments;
 
   const hasContent = value.trim().length > 0 || hasAttachment;
+  // #409 — while a consent prompt is pending the server only accepts a consent reply, so core rejects
+  // `sendMessage` outright (#405). The run has already ended by then, so `isConnecting` is false and
+  // nothing else here would close the gate. Refuse at the composer instead of letting the user type a
+  // message that cannot be sent — and, critically, that would be cleared from the draft on submit.
+  const isAwaitingConsent = pendingConsent !== null;
   // F-023 AC5 — `isStopping` also closes the send gate: the old run is suspended but not finished, and
   // starting a second one would leave two runs on the channel. The draft is untouched, so the user's
   // text survives the wait (UC-045).
-  const canSend = !isPreviewMode && !isConnecting && !isStopping && !isUploading && hasContent;
+  const canSend = !isPreviewMode && !isConnecting && !isStopping && !isUploading && !isAwaitingConsent && hasContent;
 
   // Textarea max height tracks the chatbot container (40% of it, floor 96px); beyond that it scrolls.
   const adjustTextareaHeight = useCallback(
@@ -155,7 +161,9 @@ export function ChatComposer({
   }, [adjustTextareaHeight, footerRef]);
 
   const onSubmit = useCallback((): void => {
-    if (isComposing || isConnecting || isStopping) return;
+    // `isAwaitingConsent` guards the Enter key too — the disabled textarea covers the pointer path, but
+    // a submit racing the arrival of the prompt must not clear the draft below on a send core refuses.
+    if (isComposing || isConnecting || isStopping || isAwaitingConsent) return;
 
     const text = value.trim();
 
@@ -175,6 +183,7 @@ export function ChatComposer({
     isComposing,
     isConnecting,
     isStopping,
+    isAwaitingConsent,
     value,
     blobIds,
     imagePreviewUrls,
@@ -324,8 +333,14 @@ export function ChatComposer({
           style={chatbot.footer?.textArea?.style}
           rows={1}
           value={value}
-          disabled={isPreviewMode}
-          placeholder={isPreviewMode ? 'Preview mode - input disabled' : inputPlaceholder || 'Enter message'}
+          disabled={isPreviewMode || isAwaitingConsent}
+          placeholder={
+            isPreviewMode
+              ? 'Preview mode - input disabled'
+              : isAwaitingConsent
+              ? t(locale, 'composer.awaitingConsent')
+              : inputPlaceholder || 'Enter message'
+          }
           onChange={onChange}
           onKeyDown={onKeyDown}
           onPaste={onPaste}
@@ -339,9 +354,12 @@ export function ChatComposer({
           {showSpeech && (
             <SpeechInputButton
               setValue={setValue}
-              disabled={isConnecting || isPreviewMode}
+              disabled={isConnecting || isPreviewMode || isAwaitingConsent}
               label={t(locale, 'composer.speech')}
-              className={clsx(styles.speech_button, (isConnecting || isPreviewMode) && styles.speech_button__disabled)}
+              className={clsx(
+                styles.speech_button,
+                (isConnecting || isPreviewMode || isAwaitingConsent) && styles.speech_button__disabled,
+              )}
               style={chatbot.footer?.speechInputButton?.style}
             />
           )}

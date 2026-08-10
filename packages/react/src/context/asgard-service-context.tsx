@@ -7,6 +7,8 @@ import {
   RunStatus,
   SandboxPhase,
   ToolCallConsentEventData,
+  isChannelAwaitingConsentError,
+  isChannelBusyError,
 } from '@asgard-js/core';
 import {
   createContext,
@@ -330,14 +332,21 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
         onMessageSent?.();
 
         return result;
-      } catch {
-        // Errors are surfaced via the `onSseError` prop; swallow here so
-        // fire-and-forget callers (e.g. `ref.serviceContext.sendMessage(...)`)
-        // do not trigger unhandled promise rejections.
+      } catch (error) {
+        // #409 — a *refusal* never opens an SSE connection, so `onSseError` (which the SDK otherwise
+        // relies on for error reporting) is never reached and the caller is told nothing at all.
+        // Forward those two explicitly so the documented channel is actually true for them.
+        if (isChannelBusyError(error) || isChannelAwaitingConsentError(error)) {
+          onSseError?.(error);
+        }
+
+        // Everything else is surfaced via the `onSseError` prop by the transport itself; swallow here
+        // so fire-and-forget callers (e.g. `ref.serviceContext.sendMessage(...)`) do not trigger
+        // unhandled promise rejections.
         return undefined;
       }
     };
-  }, [sendMessage, onBeforeSendMessage, onMessageSent]);
+  }, [sendMessage, onBeforeSendMessage, onMessageSent, onSseError]);
 
   // The textless outbounds — consent reply and the invisible sandbox nudge —
   // run through onBeforeSendMessage too, so consumers can use a single hook to
