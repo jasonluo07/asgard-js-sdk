@@ -14,7 +14,7 @@ import { FileExplorerController } from '../../hooks/use-file-explorer-controller
 import { useAsgardTemplateContext } from '../../context/asgard-template-context';
 import { Locale, t } from '../../i18n';
 import { useFileExplorerDialog } from './file-explorer-dialog';
-import { ancestorDirs, baseName, joinPath, parentDir } from './paths';
+import { ancestorDirs, baseName, joinPath, parentDir, uniqueName } from './paths';
 import { FsEntry, FsProviders, FsSource } from './types';
 
 export type Clipboard = { op: 'copy' | 'cut'; entry: FsEntry } | null;
@@ -71,7 +71,7 @@ export interface FileExplorerContextValue {
   actNewFolder: (dir: string) => Promise<void>;
   actRename: (entry: FsEntry) => Promise<void>;
   actDelete: (entry: FsEntry) => Promise<void>;
-  actPaste: (dstDir: string) => void;
+  actPaste: (dstDir: string) => Promise<void>;
   actUpload: (dir: string) => void;
   actDownload: (entry: FsEntry) => void;
   onUploadPicked: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -118,7 +118,7 @@ export interface FileExplorerProviderProps {
 
 export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNode {
   const { sources, controller, providers, basePath, onNudge, nudgeDisabled, onClose, children } = props;
-  const { saveFile, mkdir, remove, copy, move, upload, download } = providers;
+  const { listDir, saveFile, mkdir, remove, copy, move, upload, download } = providers;
 
   const { locale = 'en-US' } = useAsgardTemplateContext();
   const { dialog, requestInput, requestConfirm } = useFileExplorerDialog(locale);
@@ -254,18 +254,38 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
     [activeSourceId, remove, run, requestConfirm, locale],
   );
   const actPaste = useCallback(
-    (dstDir: string): void => {
+    async (dstDir: string): Promise<void> => {
       if (!activeSourceId || !clipboard) return;
 
-      const dst = joinPath(dstDir, clipboard.entry.name);
-      if (clipboard.op === 'copy') {
-        if (copy) void run(copy(activeSourceId, clipboard.entry.path, dst), dstDir);
+      const { op, entry } = clipboard;
+      // Cutting and pasting into the same folder is a no-op, not a collision — deduplicating it would
+      // silently rename the item the user only meant to leave where it was.
+      if (op === 'cut' && parentDir(entry.path) === dstDir) {
+        setClipboard(null);
+
+        return;
+      }
+
+      // Ask the destination what it already holds. If the listing fails, fall back to the plain name:
+      // a 409 from the backend is a worse outcome than a wrong-looking suffix, but a failed *listing*
+      // says nothing about whether the name is taken, so inventing a suffix would be the wrong guess.
+      let name = entry.name;
+      try {
+        const listing = await listDir(activeSourceId, dstDir);
+        name = uniqueName(new Set(listing.entries.map(e => e.name)), entry.name);
+      } catch {
+        name = entry.name;
+      }
+
+      const dst = joinPath(dstDir, name);
+      if (op === 'copy') {
+        if (copy) void run(copy(activeSourceId, entry.path, dst), dstDir);
       } else if (move) {
-        void run(move(activeSourceId, clipboard.entry.path, dst), dstDir);
+        void run(move(activeSourceId, entry.path, dst), dstDir);
         setClipboard(null);
       }
     },
-    [activeSourceId, clipboard, copy, move, run],
+    [activeSourceId, clipboard, copy, move, listDir, run],
   );
   const actUpload = useCallback((dir: string): void => {
     uploadDirRef.current = dir;

@@ -202,7 +202,7 @@ export function FileExplorerToolbar(): ReactNode {
       <button
         type="button"
         className={styles.toolBtn}
-        onClick={() => actPaste(targetDir)}
+        onClick={() => void actPaste(targetDir)}
         disabled={!clipboard}
         aria-label={t(locale, 'fileExplorer.paste')}
         title={pasteLabel}
@@ -386,7 +386,7 @@ function buildSections(ctx: FileExplorerContextValue, target: MenuTarget): Conte
           key: 'paste',
           label: pasteLabel,
           icon: <ClipboardPasteIcon size={15} />,
-          onSelect: () => actPaste(e.path),
+          onSelect: () => void actPaste(e.path),
           disabled: !clipboard,
         },
       ],
@@ -445,7 +445,7 @@ function buildSections(ctx: FileExplorerContextValue, target: MenuTarget): Conte
         key: 'paste',
         label: pasteLabel,
         icon: <ClipboardPasteIcon size={15} />,
-        onSelect: () => actPaste(root),
+        onSelect: () => void actPaste(root),
         disabled: !clipboard,
       },
     ],
