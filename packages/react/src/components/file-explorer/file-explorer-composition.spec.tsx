@@ -89,6 +89,18 @@ describe('File Explorer composition', () => {
     expect(screen.getByText(SOURCE.rootPath)).toBeTruthy();
   });
 
+  it('does not sit on a spinner when a basePath is set but no source exists', async () => {
+    // `basePath` supplies a tree root independently of the source list, so a hand-assembled explorer can
+    // reach "there is a root but nothing to list". The tree used to bail out of its fetch effect while
+    // leaving its initial loading state alone — a spinner that never resolves.
+    const listDir = vi.fn(async (): Promise<FsListResult> => ({ entries: [], truncated: false }));
+
+    render(<BasePathHarness listDir={listDir} sources={[]} />);
+
+    await waitFor(() => expect(screen.queryByText(t('en-US', 'fileExplorer.loading'))).toBeNull());
+    expect(listDir).not.toHaveBeenCalled();
+  });
+
   it('still renders the panel frame when there is no sandbox to browse', () => {
     const { container } = render(<PanelHarness />);
 
@@ -104,12 +116,18 @@ function PanelHarness(): ReactNode {
   return <FileExplorerPanel sandboxes={[]} controller={controller} listDir={PROVIDERS.listDir} />;
 }
 
-function BasePathHarness({ listDir }: { listDir: () => Promise<FsListResult> }): ReactNode {
+function BasePathHarness({
+  listDir,
+  sources = [SOURCE],
+}: {
+  listDir: () => Promise<FsListResult>;
+  sources?: FsSource[];
+}): ReactNode {
   const controller = useFileExplorerController();
 
   return (
     <FileExplorerProvider
-      sources={[SOURCE]}
+      sources={sources}
       controller={controller}
       providers={{ listDir }}
       basePath="/work/articles/42"

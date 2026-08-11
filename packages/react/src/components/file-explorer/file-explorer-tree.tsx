@@ -128,7 +128,11 @@ function TreeNode({ entry, depth }: { entry: FsEntry; depth: number }): ReactNod
 export function FileExplorerTree(): ReactNode {
   const { openFile, rootPath, activeSourceId, refreshKey, openContext } = useFileExplorer();
 
-  if (openFile || rootPath === null) return null;
+  // No source means nothing to list. `rootPath` alone is not enough: a `basePath` override supplies one
+  // even when the source list is empty, and `DirChildren` would then sit on its initial loading state
+  // forever — a spinner that never resolves. The ready-made panel shows its empty state instead of ever
+  // reaching here; a hand-assembled explorer can, so the guard belongs on the part itself.
+  if (openFile || rootPath === null || !activeSourceId) return null;
 
   return (
     <div className={styles.tree} onContextMenu={e => openContext(e, { kind: 'background' })}>
