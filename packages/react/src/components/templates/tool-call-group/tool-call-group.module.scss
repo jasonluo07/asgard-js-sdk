@@ -222,29 +222,41 @@
   margin: 0;
 }
 
-// JSON Syntax Highlighting Colors
+// JSON syntax highlighting colours (#415).
+//
+// These were the one surface in the theme system with no override point at all: not a CSS variable,
+// not a theme prop, and not reachable through `renderToolCallGroup` either (its `renderDefaultContent`
+// only takes a `title` override, so changing a colour meant re-implementing the whole tool-call group).
+// A light-theme consumer measured 1.48–2.95 contrast against white — the AA threshold is 4.5 — which
+// makes tool-call payloads effectively unreadable there.
+//
+// The fallbacks are the previous literals, so every existing consumer renders identically; this only
+// adds a place to feed a value, following the `--asgard-*` convention (SDK reads, consumer defines).
 .json_token--key {
-  color: #9cdcfe; // Light blue for keys
+  color: var(--asgard-json-token-key, #9cdcfe); // Light blue for keys
 }
 
 .json_token--string {
-  color: #ce9178; // Orange/brown for strings
+  color: var(--asgard-json-token-string, #ce9178); // Orange/brown for strings
 }
 
 .json_token--number {
-  color: #b5cea8; // Light green for numbers
+  color: var(--asgard-json-token-number, #b5cea8); // Light green for numbers
 }
 
 .json_token--boolean {
-  color: #569cd6; // Blue for booleans
+  color: var(--asgard-json-token-boolean, #569cd6); // Blue for booleans
 }
 
+// Shares `boolean`'s token deliberately: the two have always rendered the same colour, and the
+// requested contract treats them as one knob. Splitting them would leave `null` unchanged for a
+// consumer who sets the boolean token expecting both to follow.
 .json_token--null {
-  color: #569cd6; // Blue for null
+  color: var(--asgard-json-token-boolean, #569cd6); // Blue for null
 }
 
 .json_token--punctuation {
-  color: #d4d4d4; // Default gray for punctuation
+  color: var(--asgard-json-token-punctuation, #d4d4d4); // Default gray for punctuation
 }
 
 // Modal styles
