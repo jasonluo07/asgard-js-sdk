@@ -3,7 +3,7 @@ import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
 import { Locale, t } from '../../../i18n';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
-import { FolderTreeIcon } from '../file-explorer/icons';
+import { FolderTreeIcon } from '../../file-explorer/icons';
 import { ChatHeader, ChatHeaderAction, ChatHeaderTitleRendererArgs } from './chat-header';
 import { DownloadIcon, RefreshIcon, XIcon } from './icons';
 

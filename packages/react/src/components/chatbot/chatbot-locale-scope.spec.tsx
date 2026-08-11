@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AsgardTemplateContextProvider } from '../../context/asgard-template-context';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
-import { FileExplorerPanel } from './file-explorer/file-explorer-panel';
+import { FileExplorerPanel } from '../file-explorer/file-explorer-panel';
 import { Locale, t } from '../../i18n';
 
 /**

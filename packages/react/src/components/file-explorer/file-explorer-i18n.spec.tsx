@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { ReactNode } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Locale, t } from '../../../i18n';
+import { Locale, t } from '../../i18n';
 import { FileExplorerDialogApi, useFileExplorerDialog } from './file-explorer-dialog';
 
 /**
@@ -16,7 +16,7 @@ import { FileExplorerDialogApi, useFileExplorerDialog } from './file-explorer-di
  */
 
 const DIR = join(__dirname);
-const I18N = join(__dirname, '..', '..', '..', 'i18n.ts');
+const I18N = join(__dirname, '..', '..', 'i18n.ts');
 const LOCALES: Locale[] = ['en-US', 'ja-JP', 'zh-TW'];
 
 /**
@@ -129,12 +129,14 @@ describe('File Explorer localization', () => {
     expect(t('zh-TW', 'fileExplorer.confirm')).not.toBe('fileExplorer.confirm');
   });
 
-  it('renders the dialog on every panel branch that shows UI', () => {
-    // The empty-sandbox branch returns early. Omitting {dialog} there stranded a pending confirm and
-    // resurrected it unprompted when a sandbox came back (the sandbox list is repolled every 15s).
-    const panel = readFileSync(join(DIR, 'file-explorer-panel.tsx'), 'utf8');
+  it('mounts the dialog in exactly one place — the panel frame', () => {
+    // Originally the dialog was rendered per-branch inside the panel body, and the empty-sandbox branch
+    // (an early return) dropped it: a pending confirm was stranded and resurfaced unprompted when a
+    // sandbox came back (the sandbox list is repolled every 15s). It now lives in <FileExplorerRoot>,
+    // outside every branch. Two hosts would mean the split can creep back in.
+    const hosts = sourceFiles().filter(f => /\{dialog\}/.test(readFileSync(f, 'utf8')));
 
-    expect(panel.match(/\{dialog\}/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(hosts.map(f => f.split('/').pop())).toEqual(['file-explorer-parts.tsx']);
   });
 });
 

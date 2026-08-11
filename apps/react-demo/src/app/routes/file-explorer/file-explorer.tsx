@@ -1,5 +1,12 @@
 import { ReactNode, useMemo } from 'react';
-import { Chatbot, FileExplorerPanel, useFileExplorerController } from '@asgard-js/react';
+// Aliased: this route's own component is also called `FileExplorer`.
+import {
+  Chatbot,
+  FileExplorer as FileExplorerParts,
+  FileExplorerPanel,
+  FsSource,
+  useFileExplorerController,
+} from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { DemoWrapper } from '../../components/demo-wrapper';
@@ -27,6 +34,16 @@ const SANDBOXES: LaunchedSandbox[] = [
 // The chatbot theme defaults to a 375px-wide mobile shell, which leaves the built-in aside (flex 0 0 20rem,
 // max-width 60%) too cramped to inspect. Widen it the same way the all-features-wide route does.
 const WIDE_CHATBOT_THEME = { chatbot: { width: '100%', height: '100%' } };
+
+/**
+ * A source that is not a sandbox: one fixed root, always present, nothing to pick between. Stands in for a
+ * host like Sindri's directory file page, which has no conversation and no sandbox at all.
+ */
+const FIXED_SOURCE: FsSource = {
+  id: 'sbx-demo',
+  label: 'fixed-source',
+  rootPath: '/home/user/project',
+};
 
 interface MemEntry {
   name: string;
@@ -117,6 +134,8 @@ async function writeExternally(path: string): Promise<void> {
 
 export function FileExplorer(): ReactNode {
   const controller = useFileExplorerController({ open: true });
+  // A second, independent controller so the composed panel below does not fight the one above.
+  const composedController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
 
   const providers = useMemo(
     () => ({
@@ -199,6 +218,28 @@ export function FileExplorer(): ReactNode {
           >
             模擬 open-file 卡片 → README.md
           </button>
+        </div>
+
+        <h3 style={{ marginTop: '1.5rem' }}>自行組裝零件（單一固定來源，沒有選台）</h3>
+        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+          同一組零件、換一個標頭：<code>FileExplorer.Provider</code> 收下一個非 sandbox 的來源，標頭只放名稱、
+          <strong>不組 </strong>
+          <code>SourceSelect</code>——「沒有選台」是這個組裝根本沒有那顆零件，不是把 UI 藏起來。標頭以下整個
+          <code>FileExplorer.Workspace</code> 與上方預設組合<strong>共用同一份實作</strong>，所以工具列、樹、
+          右鍵選單、預覽編輯的行為兩邊一致。
+        </p>
+        <div style={{ width: '100%', maxWidth: '32rem', height: '520px' }}>
+          <FileExplorerParts.Provider sources={[FIXED_SOURCE]} controller={composedController} providers={providers}>
+            <FileExplorerParts.Root>
+              <FileExplorerParts.Header>
+                <FileExplorerParts.HeaderRow>
+                  <strong style={{ fontSize: '0.85rem' }}>{FIXED_SOURCE.label}</strong>
+                </FileExplorerParts.HeaderRow>
+                <FileExplorerParts.Cwd />
+              </FileExplorerParts.Header>
+              <FileExplorerParts.Workspace />
+            </FileExplorerParts.Root>
+          </FileExplorerParts.Provider>
         </div>
 
         <h3 style={{ marginTop: '1.5rem' }}>Built-in aside（fileExplorer=&quot;builtin&quot;）</h3>

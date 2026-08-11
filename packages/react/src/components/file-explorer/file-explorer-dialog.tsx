@@ -1,5 +1,5 @@
 import { KeyboardEvent, MouseEvent, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
-import { Locale, t } from '../../../i18n';
+import { Locale, t } from '../../i18n';
 import styles from './file-explorer-dialog.module.scss';
 
 /**
