@@ -1,8 +1,8 @@
 import { lazy, ReactNode, Suspense, useEffect, useState } from 'react';
 import type { Extension } from '@codemirror/state';
-import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { t } from '../../../i18n';
-import { Spinner } from '../../spinner';
+import { useAsgardTemplateContext } from '../../context/asgard-template-context';
+import { t } from '../../i18n';
+import { Spinner } from '../spinner';
 import styles from './file-view.module.scss';
 
 /**

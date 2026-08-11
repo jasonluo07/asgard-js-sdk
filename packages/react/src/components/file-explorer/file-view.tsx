@@ -1,9 +1,9 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { t } from '../../../i18n';
-import { StreamdownClient } from '../../templates/text-template/streamdown-client';
+import { useAsgardTemplateContext } from '../../context/asgard-template-context';
+import { t } from '../../i18n';
+import { StreamdownClient } from '../templates/text-template/streamdown-client';
 import { ArrowLeftIcon, CodeIcon, EyeIcon, CircleAlertIcon, RefreshIcon } from './icons';
-import { Spinner } from '../../spinner';
+import { Spinner } from '../spinner';
 import { CodeEditor } from './code-editor';
 import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
 import styles from './file-view.module.scss';

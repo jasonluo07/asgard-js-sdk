@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { ReactNode } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Locale, t } from '../../../i18n';
+import { Locale, t } from '../../i18n';
 import { FileExplorerDialogApi, useFileExplorerDialog } from './file-explorer-dialog';
 
 /**
@@ -16,7 +16,7 @@ import { FileExplorerDialogApi, useFileExplorerDialog } from './file-explorer-di
  */
 
 const DIR = join(__dirname);
-const I18N = join(__dirname, '..', '..', '..', 'i18n.ts');
+const I18N = join(__dirname, '..', '..', 'i18n.ts');
 const LOCALES: Locale[] = ['en-US', 'ja-JP', 'zh-TW'];
 
 /**

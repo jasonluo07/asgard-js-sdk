@@ -1,9 +1,9 @@
 import { MouseEvent as ReactMouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
-import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
-import { Spinner } from '../../spinner';
-import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { t } from '../../../i18n';
+import { FileExplorerController } from '../../hooks/use-file-explorer-controller';
+import { Spinner } from '../spinner';
+import { useAsgardTemplateContext } from '../../context/asgard-template-context';
+import { t } from '../../i18n';
 import { useFileExplorerDialog } from './file-explorer-dialog';
 import { FileView } from './file-view';
 import { ContextMenu, ContextMenuItem } from './context-menu';

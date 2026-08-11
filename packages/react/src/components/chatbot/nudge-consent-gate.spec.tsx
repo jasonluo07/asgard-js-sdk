@@ -16,12 +16,12 @@ const ctx = vi.hoisted(() => ({
   value: {} as Record<string, unknown>,
 }));
 
-vi.mock('../../../context/asgard-service-context', () => ({
+vi.mock('../../context/asgard-service-context', () => ({
   useAsgardContext: (): Record<string, unknown> => ctx.value,
 }));
 
 // No live sandboxes → FileExplorerPanel renders its empty state, which is where the nudge button lives.
-vi.mock('../../../hooks/use-derived-state', () => ({
+vi.mock('../../hooks/use-derived-state', () => ({
   useLaunchedSandboxes: (): unknown[] => [],
 }));
 

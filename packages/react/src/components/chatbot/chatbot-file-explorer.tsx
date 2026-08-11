@@ -1,13 +1,13 @@
 import { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { ConversationMessage, resolveSandboxUri } from '@asgard-js/core';
-import { useAsgardContext } from '../../../context/asgard-service-context';
-import { useLaunchedSandboxes } from '../../../hooks/use-derived-state';
-import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
-import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
-import { t } from '../../../i18n';
-import { FileExplorerPanel } from './file-explorer-panel';
-import { createSandboxFsProviders } from './create-sandbox-fs-providers';
-import { FolderTreeIcon } from './icons';
+import { useAsgardContext } from '../../context/asgard-service-context';
+import { useLaunchedSandboxes } from '../../hooks/use-derived-state';
+import { FileExplorerController } from '../../hooks/use-file-explorer-controller';
+import { useAsgardTemplateContext } from '../../context/asgard-template-context';
+import { t } from '../../i18n';
+import { FileExplorerPanel } from '../file-explorer/file-explorer-panel';
+import { createSandboxFsProviders } from '../file-explorer/create-sandbox-fs-providers';
+import { FolderTreeIcon } from '../file-explorer/icons';
 import styles from './chatbot-file-explorer.module.scss';
 
 /**

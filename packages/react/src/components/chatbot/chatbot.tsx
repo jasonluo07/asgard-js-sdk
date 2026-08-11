@@ -33,7 +33,7 @@ import { RunIndicatorSlot } from './running-indicator';
 import { ServiceErrorState } from './service-error-state';
 import { DropZoneOverlay } from './drop-zone-overlay/drop-zone-overlay';
 import { SandboxLaunchHud } from './sandbox-launch-hud';
-import { ChatbotFileExplorerAside, FileExplorerArrivalBridge } from './file-explorer/chatbot-file-explorer';
+import { ChatbotFileExplorerAside, FileExplorerArrivalBridge } from './chatbot-file-explorer';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 import { ToolCallConsentGate } from '../tool-call-consent';
 import { Locale, t } from '../../i18n';
