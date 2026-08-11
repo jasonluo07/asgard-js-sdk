@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { ReactNode } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 import { t } from '../../i18n';
 import { FileExplorerProvider, useFileExplorer } from './file-explorer-context';
 import { FileExplorerPanel } from './file-explorer-panel';
-import { FileExplorerRoot, FileExplorerToolbar } from './file-explorer-parts';
-import { FsEntry, FsSource } from './types';
+import { FileExplorerCwd, FileExplorerRoot, FileExplorerToolbar } from './file-explorer-parts';
+import { FileExplorerTree } from './file-explorer-tree';
+import { FsEntry, FsListResult, FsSource } from './types';
 
 /**
  * The File Explorer is assembled from parts so a host with a different header (Sindri's directory tab,
@@ -75,6 +76,19 @@ describe('File Explorer composition', () => {
     onError.mockRestore();
   });
 
+  it('roots the tree at basePath while the cwd keeps showing the source root', async () => {
+    // Heimdall drives the built-in aside with `<Chatbot fileExplorerBasePath>` to pin the tree to one
+    // article workspace, and F-021 AC2 requires the cwd line to keep reporting the real working
+    // directory. The two therefore have to disagree — an override that also moved the cwd would read
+    // as "the sandbox lives here", which is not true.
+    const listDir = vi.fn(async (): Promise<FsListResult> => ({ entries: [], truncated: false }));
+
+    render(<BasePathHarness listDir={listDir} />);
+
+    await waitFor(() => expect(listDir).toHaveBeenCalledWith(SOURCE.id, '/work/articles/42'));
+    expect(screen.getByText(SOURCE.rootPath)).toBeTruthy();
+  });
+
   it('still renders the panel frame when there is no sandbox to browse', () => {
     const { container } = render(<PanelHarness />);
 
@@ -88,4 +102,22 @@ function PanelHarness(): ReactNode {
   const controller = useFileExplorerController();
 
   return <FileExplorerPanel sandboxes={[]} controller={controller} listDir={PROVIDERS.listDir} />;
+}
+
+function BasePathHarness({ listDir }: { listDir: () => Promise<FsListResult> }): ReactNode {
+  const controller = useFileExplorerController();
+
+  return (
+    <FileExplorerProvider
+      sources={[SOURCE]}
+      controller={controller}
+      providers={{ listDir }}
+      basePath="/work/articles/42"
+    >
+      <FileExplorerRoot>
+        <FileExplorerCwd />
+        <FileExplorerTree />
+      </FileExplorerRoot>
+    </FileExplorerProvider>
+  );
 }
