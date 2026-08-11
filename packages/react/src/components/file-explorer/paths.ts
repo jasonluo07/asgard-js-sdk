@@ -34,6 +34,29 @@ export function ancestorDirs(root: string, filePath: string): string[] {
 }
 
 /**
+ * A name that does not collide with `taken`, by appending ` (1)`, ` (2)`… before the extension.
+ *
+ * Pasting into a directory that already holds that name is the common case (copy → paste into the same
+ * folder is *how* you duplicate a file), and the backends reject it: a copy/move without an overwrite
+ * flag answers 409. Silently doing nothing is the worst of the options, and overwriting destroys data,
+ * so the name gets a suffix instead.
+ *
+ * A leading dot is part of the stem, not an extension — `.gitignore` duplicates to `.gitignore (1)`.
+ */
+export function uniqueName(taken: Set<string>, name: string): string {
+  if (!taken.has(name)) return name;
+
+  const dot = name.lastIndexOf('.');
+  const stem = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot) : '';
+
+  for (let i = 1; ; i++) {
+    const candidate = `${stem} (${i})${ext}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
+
+/**
  * Dirs first, then by name — a stable, predictable tree ordering (mirrors the prototype).
  *
  * The explorer always sorts client-side and never relies on backend ordering: the sandbox edge server
