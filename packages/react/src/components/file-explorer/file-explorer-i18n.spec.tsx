@@ -129,12 +129,14 @@ describe('File Explorer localization', () => {
     expect(t('zh-TW', 'fileExplorer.confirm')).not.toBe('fileExplorer.confirm');
   });
 
-  it('renders the dialog on every panel branch that shows UI', () => {
-    // The empty-sandbox branch returns early. Omitting {dialog} there stranded a pending confirm and
-    // resurrected it unprompted when a sandbox came back (the sandbox list is repolled every 15s).
-    const panel = readFileSync(join(DIR, 'file-explorer-panel.tsx'), 'utf8');
+  it('mounts the dialog in exactly one place — the panel frame', () => {
+    // Originally the dialog was rendered per-branch inside the panel body, and the empty-sandbox branch
+    // (an early return) dropped it: a pending confirm was stranded and resurfaced unprompted when a
+    // sandbox came back (the sandbox list is repolled every 15s). It now lives in <FileExplorerRoot>,
+    // outside every branch. Two hosts would mean the split can creep back in.
+    const hosts = sourceFiles().filter(f => /\{dialog\}/.test(readFileSync(f, 'utf8')));
 
-    expect(panel.match(/\{dialog\}/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(hosts.map(f => f.split('/').pop())).toEqual(['file-explorer-parts.tsx']);
   });
 });
 
