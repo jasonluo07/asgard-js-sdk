@@ -65,7 +65,7 @@
 
 ## ▶ Next Task
 
-**None — awaiting task selection.** 最近收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，待授權合併與發版。以下段落保留各 cycle 的脈絡與 backlog。
+**None — awaiting task selection.** 最近收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，2026-08-12 **merged to main** via PR #425（merge commit `a93d137c`）。**刻意未發版**：與 F-029（[`#64`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/64)）／F-030（[`#66`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/66)）併批發一次，六個消費端因此只需 bump 一次；在那之前 `main` 上的版本號維持 `0.3.61`，issue #62 也還不到移 Review 的門檻（缺 tag）。以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
 
