@@ -65,7 +65,7 @@
 
 ## ▶ Next Task
 
-**`REVIEW-051`（ready）** —— [`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用；BUILD-051 已 done，等 review。以下段落保留各 cycle 的脈絡與 backlog。
+**None — awaiting task selection.** 最近收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，待授權合併與發版。以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
 
@@ -195,4 +195,4 @@
 | `BUILD-050`  | Lock every loading spinner to a shared phase      | Normal   | done   | [BUILD-050-phase-locked-spinner.md](./BUILD-050-phase-locked-spinner.md)                                 |
 | `REVIEW-050` | Review: Lock loading spinners to a shared phase   | —        | done   | [REVIEW-050-phase-locked-spinner.md](./REVIEW-050-phase-locked-spinner.md)                               |
 | `BUILD-051`  | Prompt suggestion placeholder + Tab adopt         | Normal   | done   | [BUILD-051-prompt-suggestion-placeholder.md](./BUILD-051-prompt-suggestion-placeholder.md)               |
-| `REVIEW-051` | Review: Prompt suggestion placeholder + Tab adopt | —        | ready  | [REVIEW-051-prompt-suggestion-placeholder.md](./REVIEW-051-prompt-suggestion-placeholder.md)             |
+| `REVIEW-051` | Review: Prompt suggestion placeholder + Tab adopt | —        | done   | [REVIEW-051-prompt-suggestion-placeholder.md](./REVIEW-051-prompt-suggestion-placeholder.md)             |
