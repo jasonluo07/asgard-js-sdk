@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
+import type { FsEntry } from '../components/file-explorer/types';
+
 // F-021 — the shared File Explorer controller decouples *behavior* from *placement* (F-019 decision).
 // Three sources can drive "is the explorer open / which sandbox / reveal which file": (1) the built-in
 // header folder toggle, (2) an agent open-file `sandbox://` card, (3) a consumer-placed <FileExplorerPanel>
@@ -26,6 +28,38 @@ export interface RequestFileOptions {
   reveal?: boolean;
 }
 
+/**
+ * What the user was looking at in one source: which directories are unfolded, what is selected, and
+ * which file is open in the viewer.
+ *
+ * This lives on the controller rather than inside `<FileExplorer.Provider>` for two reasons. First,
+ * keeping one record per source is what makes leaving a source and coming back restore the view instead
+ * of resetting it (F-027 AC8) — the provider used to hold a single copy and wipe it on every switch, so
+ * A → B → A landed on an empty tree. Second, the controller is created by the consumer
+ * ({@link useFileExplorerController}), so a host that remounts its panel — Sindri rebuilds the whole
+ * conversation subtree when you switch conversations — can hold the controller above that boundary and
+ * keep the view across the remount. State kept inside the provider cannot survive that by construction.
+ */
+export interface SourceViewState {
+  /** Absolute paths of the unfolded directories. */
+  expanded: Set<string>;
+  selectedPath: string | null;
+  selectedEntry: FsEntry | null;
+  /** The file open in the viewer, if any. */
+  openFile: FsEntry | null;
+}
+
+/**
+ * A source with no history yet — also what the provider reads while there is no active source.
+ * Shared, so every updater must replace rather than mutate (they all build a `new Set`).
+ */
+export const EMPTY_SOURCE_VIEW: SourceViewState = {
+  expanded: new Set<string>(),
+  selectedPath: null,
+  selectedEntry: null,
+  openFile: null,
+};
+
 export interface FileExplorerController {
   // --- state ---
   /** Whether the built-in right-side aside is expanded. Consumer-placed panels may ignore this. */
@@ -38,6 +72,11 @@ export interface FileExplorerController {
   requestedFile: RequestedFile | null;
   /** Whether a file is currently being edited with unsaved changes (F-021 AC10 — mid-edit guard). */
   isEditingDirty: boolean;
+  /**
+   * Per-source browsing state, keyed by source id — see {@link SourceViewState}. A source that has
+   * never been visited is simply absent; read through {@link FileExplorerController.sourceView}.
+   */
+  sourceViews: Record<string, SourceViewState>;
 
   // --- actions ---
   // open/close named openExplorer/closeExplorer to avoid clashing with the `open` boolean state key.
@@ -56,6 +95,14 @@ export interface FileExplorerController {
   requestFile: (sourceId: string, absolutePath: string, options?: RequestFileOptions) => void;
   /** FileView reports its dirty state here so the arrival wiring can decline to yank mid-edit (AC10). */
   setEditingDirty: (dirty: boolean) => void;
+  /** Read one source's view, falling back to {@link EMPTY_SOURCE_VIEW} for a source never visited. */
+  sourceView: (sourceId: string | null) => SourceViewState;
+  /**
+   * Update one source's view. The updater form (rather than a plain value) is what keeps two writes in
+   * the same handler from clobbering each other — the same reason the provider's `setState` calls it
+   * replaced were functional.
+   */
+  updateSourceView: (sourceId: string, update: (prev: SourceViewState) => SourceViewState) => void;
 }
 
 export interface UseFileExplorerControllerOptions {
@@ -76,6 +123,7 @@ export function useFileExplorerController({
   const [activeSourceId, setActiveSandboxName] = useState<string | null>(initialActiveSource ?? initialActive);
   const [requestedFile, setRequestedFile] = useState<RequestedFile | null>(null);
   const [isEditingDirty, setIsEditingDirty] = useState(false);
+  const [sourceViews, setSourceViews] = useState<Record<string, SourceViewState>>({});
   const nonce = useRef(0);
 
   const openExplorer = useCallback((): void => setOpen(true), []);
@@ -98,12 +146,23 @@ export function useFileExplorerController({
 
   const setEditingDirty = useCallback((dirty: boolean): void => setIsEditingDirty(dirty), []);
 
+  const sourceView = useCallback(
+    (sourceId: string | null): SourceViewState =>
+      sourceId ? sourceViews[sourceId] ?? EMPTY_SOURCE_VIEW : EMPTY_SOURCE_VIEW,
+    [sourceViews],
+  );
+
+  const updateSourceView = useCallback((sourceId: string, update: (prev: SourceViewState) => SourceViewState): void => {
+    setSourceViews(prev => ({ ...prev, [sourceId]: update(prev[sourceId] ?? EMPTY_SOURCE_VIEW) }));
+  }, []);
+
   return {
     open,
     activeSourceId,
     activeSandboxName: activeSourceId,
     requestedFile,
     isEditingDirty,
+    sourceViews,
     openExplorer,
     closeExplorer,
     toggle,
@@ -111,6 +170,8 @@ export function useFileExplorerController({
     selectSandbox: selectSource,
     requestFile,
     setEditingDirty,
+    sourceView,
+    updateSourceView,
   };
 }
 

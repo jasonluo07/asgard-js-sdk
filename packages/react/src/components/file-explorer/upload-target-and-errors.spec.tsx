@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
-import { Locale, t } from '../../i18n';
+import { t, type Locale } from '../../i18n';
 import { FileExplorerProvider, useFileExplorer } from './file-explorer-context';
 import { FileExplorerBody, FileExplorerRoot, FileExplorerToolbar } from './file-explorer-parts';
 import { FileExplorerTree } from './file-explorer-tree';
