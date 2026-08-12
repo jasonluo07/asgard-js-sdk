@@ -286,6 +286,7 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
               const renderDefaultContent = (overrides?: { title?: string }): ReactNode => (
                 <ToolCallGroupTemplate
                   items={items}
+                  time={firstToolCall?.time}
                   title={overrides?.title ?? summary}
                   sealed={sealed}
                   locale={locale}
@@ -295,6 +296,7 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
               if (renderToolCallGroup) {
                 const custom = renderToolCallGroup({
                   items,
+                  time: firstToolCall?.time,
                   renderDefaultContent,
                 });
                 if (custom === null) return null;
@@ -307,7 +309,7 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
 
             return (
               <ConversationMessageRenderer
-                key={group.message.messageId || `${group.message.type}-${index}`}
+                key={group.message.messageId || `${group.message.type}-${index}-${group.message.time.getTime()}`}
                 message={group.message}
               />
             );

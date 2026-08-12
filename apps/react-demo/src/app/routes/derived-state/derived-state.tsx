@@ -24,6 +24,7 @@ function taskCreate(seq: number, id: string, subject: string): ConversationMessa
     parameter: { subject },
     sidecar: { task: { id } },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -40,6 +41,7 @@ function taskUpdate(seq: number, id: string, to: string): ConversationMessage {
     parameter: { taskId: id },
     sidecar: { statusChange: { to } },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -51,6 +53,7 @@ function botMessage(seq: number, text: string): ConversationMessage {
     isTyping: false,
     typingText: null,
     message: { messageId: `bot-${seq}`, text } as never,
+    time: new Date(),
     raw: '',
   };
 }
@@ -69,6 +72,7 @@ function agentTool(seq: number, toolUseId: string, description: string): Convers
     toolUseId,
     result: { status: 'async_launched' },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -81,6 +85,7 @@ function subagentStart(parentToolUseId: string): ConversationMessage {
     agentId: `agent-${parentToolUseId}`,
     subagentType: 'general-purpose',
     description: '查詢資料',
+    time: new Date(),
   };
 }
 

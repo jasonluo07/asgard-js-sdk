@@ -26,6 +26,7 @@ function taskCreate(seq: number, id: string, subject: string): ConversationMessa
     parameter: { subject },
     sidecar: { task: { id } },
     isComplete: true,
+    time: new Date(0),
   };
 }
 
@@ -37,6 +38,7 @@ function botMessage(id: string, text: string): ConversationMessage {
     isTyping: false,
     typingText: null,
     message: { messageId: id, text } as never,
+    time: new Date(0),
     raw: '',
   };
 }
@@ -55,6 +57,7 @@ function agentTool(seq: number, toolUseId: string, description: string): Convers
     toolUseId,
     result: { status: 'async_launched' },
     isComplete: true,
+    time: new Date(0),
   };
 }
 
@@ -67,6 +70,7 @@ function subagentStart(id: string, parentToolUseId: string): ConversationMessage
     agentId: id,
     subagentType: 'general-purpose',
     description: 'work',
+    time: new Date(0),
   };
 }
 
@@ -83,6 +87,7 @@ function subagentComplete(
     agentId: 'Y',
     status,
     summary,
+    time: new Date(0),
   };
 }
 
@@ -100,6 +105,7 @@ function childTool(seq: number, parentToolUseId: string, isComplete: boolean): C
     toolUseId: `t${seq}`,
     parentToolUseId,
     isComplete,
+    time: new Date(0),
   };
 }
 

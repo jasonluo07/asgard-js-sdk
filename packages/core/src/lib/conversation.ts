@@ -173,6 +173,7 @@ export default class Conversation implements IConversation {
       typingText: '',
       messageId: message.messageId,
       message,
+      time: new Date(),
       traceId: response.traceId,
       raw: '',
     });
@@ -203,6 +204,7 @@ export default class Conversation implements IConversation {
       typingText: `${currentBot?.typingText ?? ''}${message.text}`,
       messageId: message.messageId,
       message,
+      time: new Date(),
       traceId: response.traceId ?? currentBot?.traceId,
       raw: currentBot?.raw ?? '',
     });
@@ -227,6 +229,7 @@ export default class Conversation implements IConversation {
       typingText: null,
       messageId: message.messageId,
       message,
+      time: new Date(),
       traceId: response.traceId ?? (currentMessage?.type === 'bot' ? currentMessage.traceId : undefined),
       raw: JSON.stringify(response),
     });
@@ -249,6 +252,7 @@ export default class Conversation implements IConversation {
       messageId: message.messageId,
       text: message.text,
       isThinking: true,
+      time: new Date(),
       traceId: response.traceId,
     };
     messages.set(message.messageId, thinking);
@@ -276,6 +280,7 @@ export default class Conversation implements IConversation {
       messageId: message.messageId,
       text: `${currentThinking?.text ?? ''}${message.text}`,
       isThinking: true,
+      time: currentThinking?.time ?? new Date(),
       traceId: response.traceId ?? currentThinking?.traceId,
     };
     messages.set(message.messageId, thinking);
@@ -300,6 +305,7 @@ export default class Conversation implements IConversation {
       // replay (no start/delta) still renders the whole text.
       text: message.text,
       isThinking: false,
+      time: currentThinking?.time ?? new Date(),
       traceId: response.traceId ?? currentThinking?.traceId,
     };
     messages.set(message.messageId, thinking);
@@ -327,6 +333,7 @@ export default class Conversation implements IConversation {
       blobIds: data.blobIds,
       customMessageId: data.customMessageId,
       identityHint: data.identityHint,
+      time: new Date(),
       traceId: response.traceId,
     };
     messages.set(data.messageId, userMessage);
@@ -345,6 +352,7 @@ export default class Conversation implements IConversation {
       eventType: EventType.ERROR,
       messageId,
       error,
+      time: new Date(),
       traceId: response.traceId,
     });
 
@@ -377,6 +385,7 @@ export default class Conversation implements IConversation {
       toolUseId: toolCallStart.toolUseId,
       parentToolUseId: toolCallStart.parentToolUseId,
       isComplete: false,
+      time: new Date(),
       traceId: response.traceId,
     };
 
@@ -408,7 +417,7 @@ export default class Conversation implements IConversation {
       // arrives with no preceding `tool_call.start`. Dropping it here made every tool-call block
       // vanish when re-entering a conversation. The complete frame extends the same base payload as
       // the start frame (`toolCall.*` plus the correlation ids), so it can stand alone as a finished
-      // call.
+      // call — the only thing lost is the original start timestamp.
       const replayedMessage: ConversationToolCallMessage = {
         type: 'tool-call',
         eventType: EventType.TOOL_CALL_COMPLETE,
@@ -425,6 +434,7 @@ export default class Conversation implements IConversation {
         isError: toolCallComplete.isError,
         sidecar: toolCallComplete.toolUseResultSidecar,
         isComplete: true,
+        time: new Date(),
         traceId: response.traceId,
       };
       messages.set(toolCallKey, replayedMessage);
@@ -452,6 +462,7 @@ export default class Conversation implements IConversation {
       agentId: start.agentId,
       subagentType: start.subagentType,
       description: start.description,
+      time: new Date(),
       traceId: response.traceId,
     };
 
@@ -478,6 +489,7 @@ export default class Conversation implements IConversation {
       subagentType: complete.subagentType,
       status: complete.status,
       summary: complete.summary,
+      time: new Date(),
       traceId: response.traceId,
     };
 

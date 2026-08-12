@@ -113,6 +113,9 @@ export interface AsgardThemeContextValue {
         style: CSSProperties;
       };
     }>;
+    time?: Partial<{
+      style: CSSProperties;
+    }>;
     /**
      * TBD: Fill the necessary properties based on the requirements.
      */
@@ -305,6 +308,9 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
         style: {},
       },
     },
+    time: {
+      style: {},
+    },
     TextMessageTemplate: {
       style: {},
     },
@@ -441,6 +447,7 @@ export function AsgardThemeContextProvider(
           },
           body: {
             style: {
+              // Time/timestamp text color
               color: themeFromAnnotations.chatbot?.inactiveColor,
             },
           },
@@ -501,6 +508,11 @@ export function AsgardThemeContextProvider(
                   ? `${themeFromAnnotations.botMessage.backgroundColor}33`
                   : undefined,
               },
+            },
+          },
+          time: {
+            style: {
+              color: themeFromAnnotations.chatbot?.inactiveColor,
             },
           },
           TextMessageTemplate: {
@@ -655,7 +667,12 @@ export function AsgardThemeContextProvider(
       // The textarea itself is transparent under BUILD-028, so an inline background would show as a
       // mismatched block inside the pill.
 
+      // Ensure prop-level chatbot.inactiveColor is also applied to time color
       if (theme?.chatbot?.inactiveColor) {
+        if (mergedTheme.template?.time?.style) {
+          mergedTheme.template.time.style.color = theme.chatbot.inactiveColor;
+        }
+
         // Apply to header action buttons (refresh, close)
         if (mergedTheme.chatbot.header?.actionButton?.style) {
           mergedTheme.chatbot.header.actionButton.style.color = theme.chatbot.inactiveColor;
@@ -917,8 +934,8 @@ export function AsgardThemeContextProvider(
 
       // Inactive → the muted text/icon tier (tool-call & thinking headers, chevrons, the Task/Subagent
       // rows, the channel title). Reuses `inactiveColor`'s established meaning — it already colors the
-      // placeholder and the header action icons — so the muted tier is themed by the same field
-      // everywhere instead of being stuck on the palette default.
+      // timestamp, the placeholder and the header action icons — so the muted tier is themed by the same
+      // field everywhere instead of being stuck on the palette default.
       const effectiveInactive = mergedTheme.chatbot?.inactiveColor;
       if (typeof effectiveInactive === 'string' && effectiveInactive) {
         themeVars['--asg-color-text-secondary'] = effectiveInactive;

@@ -29,6 +29,7 @@ function taskEvent(
     sidecar,
     result: { text: `${toolName} #${seq}` },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -45,6 +46,7 @@ function readCall(seq: number): ConversationToolCallMessage {
     parameter: { file_path: '/app/inventory.md' },
     result: { text: 'file contents…' },
     isComplete: true,
+    time: new Date(),
   };
 }
 

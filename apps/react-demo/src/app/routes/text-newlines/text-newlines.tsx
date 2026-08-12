@@ -37,6 +37,7 @@ function createDemoMessage(): ConversationMessage {
     isTyping: false,
     typingText: '',
     eventType: EventType.MESSAGE_COMPLETE,
+    time: new Date(),
     message,
     raw: JSON.stringify({
       eventType: EventType.MESSAGE_COMPLETE,

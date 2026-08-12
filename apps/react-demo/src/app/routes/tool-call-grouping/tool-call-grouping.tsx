@@ -31,6 +31,7 @@ function toolCall(seq: number, toolName: string, parameter: Record<string, unkno
     parameter,
     result: { output: 'ok' },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -39,6 +40,7 @@ const THINKING: ConversationThinkingMessage = {
   messageId: 'grp-think',
   text: '檔案都處理完了，接著需要查一下外部資料再決定下一步。',
   isThinking: false,
+  time: new Date(),
 };
 
 const CALLS: ConversationMessage[] = [

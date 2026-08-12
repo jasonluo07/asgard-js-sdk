@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { TextTemplate } from './text-template';
 
+const time = new Date('2026-07-31T00:00:00.000Z');
+
 const botMessage: ConversationBotMessage = {
   type: 'bot',
   messageId: 'bot-message',
@@ -27,6 +29,7 @@ const botMessage: ConversationBotMessage = {
       quickReplies: [],
     },
   },
+  time,
   raw: '',
 };
 
@@ -34,6 +37,7 @@ const userMessage: ConversationUserMessage = {
   type: 'user',
   messageId: 'user-message',
   text: 'User message',
+  time,
 };
 
 describe('TextTemplate message chrome', () => {
@@ -46,11 +50,10 @@ describe('TextTemplate message chrome', () => {
     expect(html).not.toContain('background-color');
   });
 
-  it('keeps the user message bubble but renders no timestamp', () => {
+  it('keeps the user message bubble and timestamp', () => {
     const html = renderToStaticMarkup(<TextTemplate message={userMessage} />);
 
     expect(html).toContain('User message');
-    expect(html).toContain('asgard-text-template--user');
-    expect(html).not.toContain('asgard-time');
+    expect(html).toContain('asgard-time');
   });
 });

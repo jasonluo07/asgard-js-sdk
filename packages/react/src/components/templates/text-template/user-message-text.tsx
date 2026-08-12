@@ -10,12 +10,14 @@ export interface UserMessageTextProps {
 }
 
 /**
- * The user message text content — the themed `.text--user` bubble, without the surrounding
- * `TemplateBox`. Exported so a consumer can compose a custom user message row (e.g. via `renderMessageContent`
+ * The user message text content — the themed `.text--user` bubble, without the surrounding `TemplateBox`
+ * or `Time`. Exported so a consumer can compose a custom user message row (e.g. via `renderMessageContent`
  * + `TemplateBox type="user"`) without re-implementing the bubble background, padding, radius, or width cap.
  *
  * `children` is a `ReactNode` (unlike `BotMessageText`, which renders markdown from a string): customizing a
  * user message means passing JSX, such as a leading mention rendered as a chip.
+ *
+ * The timestamp is the consumer's responsibility — a composed row renders no `Time` unless it adds one.
  */
 export function UserMessageText({ children, className }: UserMessageTextProps): ReactNode {
   const theme = useAsgardThemeContext();

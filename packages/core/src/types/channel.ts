@@ -145,6 +145,7 @@ export type ConversationUserMessage = {
   customMessageId?: string;
   /** Identity hint carried by a replayed `message.user` (F-014). */
   identityHint?: string;
+  time: Date;
   traceId?: string;
 };
 
@@ -155,6 +156,7 @@ export type ConversationBotMessage = {
   isTyping: boolean;
   typingText: string | null;
   message: Message;
+  time: Date;
   traceId?: string;
   raw: string;
 };
@@ -164,6 +166,7 @@ export type ConversationErrorMessage = {
   messageId: string;
   eventType: EventType;
   error: ErrorMessage;
+  time: Date;
   traceId?: string;
 };
 
@@ -196,6 +199,7 @@ export type ConversationToolCallMessage = {
   /** Non-empty when this tool-call belongs to a subagent (points at the `Agent`'s `toolUseId`) (F-012). */
   parentToolUseId?: string;
   isComplete: boolean;
+  time: Date;
   traceId?: string;
 };
 
@@ -215,6 +219,7 @@ export type ConversationSubagentMessage = {
   /** Present on `complete`. */
   status?: SubagentTerminalStatus;
   summary?: string;
+  time: Date;
   traceId?: string;
 };
 
@@ -229,6 +234,7 @@ export type ConversationThinkingMessage = {
   messageId: string;
   text: string;
   isThinking: boolean;
+  time: Date;
   traceId?: string;
 };
 

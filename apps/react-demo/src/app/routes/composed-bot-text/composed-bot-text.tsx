@@ -5,6 +5,7 @@ import {
   MessageContentRendererProps,
   TemplateBox,
   TemplateBoxContent,
+  Time,
   UserMessageText,
 } from '@asgard-js/react';
 import '@asgard-js/react/style';
@@ -41,6 +42,7 @@ function createDemoMessage(): ConversationMessage {
     isTyping: false,
     typingText: '',
     eventType: EventType.MESSAGE_COMPLETE,
+    time: new Date(),
     message,
     raw: JSON.stringify({
       eventType: EventType.MESSAGE_COMPLETE,
@@ -54,6 +56,7 @@ function createDemoUserMessage(): ConversationMessage {
     type: 'user',
     messageId: nanoid(),
     text: `${USER_MENTION}${USER_REST}`,
+    time: new Date(),
   };
 }
 
@@ -73,6 +76,7 @@ export function ComposedBotText(): ReactNode {
             <span className={styles.mentionChip}>{USER_MENTION}</span>
             {message.text.slice(USER_MENTION.length)}
           </UserMessageText>
+          <Time time={message.time} />
         </TemplateBox>
       );
     }

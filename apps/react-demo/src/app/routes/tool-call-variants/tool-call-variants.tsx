@@ -30,6 +30,7 @@ function toolCall(
     parameter,
     result,
     isComplete: true,
+    time: new Date(),
   };
 }
 

@@ -43,6 +43,8 @@ export interface MessageContentRendererProps {
 export interface ToolCallGroupRendererProps {
   /** Tool call items in the group */
   items: ToolCallItemData[];
+  /** Timestamp of the first tool call */
+  time?: Date;
   /** Function to render the default tool call group UI. Accepts optional overrides. */
   renderDefaultContent: (overrides?: { title?: string }) => ReactNode;
 }

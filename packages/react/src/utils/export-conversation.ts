@@ -11,9 +11,7 @@ export function exportConversationToMarkdown(
 ): string {
   const { customChannelId, botName = 'AI 助理' } = options ?? {};
 
-  // Map insertion order IS conversation order — `Conversation` re-keys a message to the tail whenever it
-  // has to move (see `onSubagentStart`), so there is nothing left to sort by.
-  const sortedMessages = Array.from(messages.values());
+  const sortedMessages = Array.from(messages.values()).sort((a, b) => a.time.getTime() - b.time.getTime());
 
   const exportTime = new Date().toLocaleString('zh-TW', {
     year: 'numeric',
@@ -35,8 +33,17 @@ export function exportConversationToMarkdown(
   markdown += '---\n\n';
 
   sortedMessages.forEach((message, index) => {
+    const timeStr = message.time.toLocaleString('zh-TW', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+
     if (message.type === 'user') {
-      markdown += '**使用者**';
+      markdown += `**使用者** | ${timeStr}`;
 
       if (message.traceId) {
         markdown += ` | X-Trace-Id: \`${message.traceId}\``;
@@ -50,7 +57,7 @@ export function exportConversationToMarkdown(
         markdown += `*附件: ${message.blobIds.length} 個檔案*\n\n`;
       }
     } else if (message.type === 'bot') {
-      markdown += `**${botName}**`;
+      markdown += `**${botName}** | ${timeStr}`;
 
       if (message.traceId) {
         markdown += ` | X-Trace-Id: \`${message.traceId}\``;
@@ -61,7 +68,7 @@ export function exportConversationToMarkdown(
       const text = message.message.text || message.typingText || '';
       markdown += `${text}\n\n`;
     } else if (message.type === 'error') {
-      markdown += '**錯誤訊息**';
+      markdown += `**錯誤訊息** | ${timeStr}`;
 
       if (message.traceId) {
         markdown += ` | X-Trace-Id: \`${message.traceId}\``;

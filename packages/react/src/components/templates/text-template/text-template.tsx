@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { ConversationBotMessage, ConversationMessage } from '@asgard-js/core';
 import { TemplateBox, TemplateBoxContent } from '../template-box';
 import classes from './text-template.module.scss';
+import { Time } from '../time';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { BotMessageText } from './bot-message-text';
 import { UserMessageText } from './user-message-text';
@@ -43,6 +44,7 @@ export function TextTemplate(props: TextTemplateProps): ReactNode {
         style={rootStyle}
       >
         <UserMessageText>{message.text}</UserMessageText>
+        <Time time={message.time} />
       </TemplateBox>
     );
   }

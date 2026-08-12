@@ -22,6 +22,7 @@ export function TranscriptReplay(): ReactNode {
         type: 'user',
         messageId: 'c-opt-1',
         text: '（optimistic 泡泡）我剛剛問的問題',
+        time: new Date(),
       });
     }
 

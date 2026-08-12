@@ -73,6 +73,7 @@ function thinkingBlock(): ConversationMessage {
     messageId: nanoid(),
     text: '使用者想比較各群組的新增數量。先確認語意模型有沒有 cohort 欄位，再決定要不要 join 使用者表。',
     isThinking: false,
+    time: new Date(),
   };
 }
 
@@ -82,6 +83,7 @@ function errorBubble(): ConversationMessage {
     messageId: nanoid(),
     eventType: EventType.ERROR,
     error: { code: 'INTERNAL_ERROR', message: '後端連線中斷，請稍後再試。' },
+    time: new Date(),
   };
 }
 
@@ -108,6 +110,7 @@ function taskEvent(
     sidecar,
     result: { text: `${toolName} #${seq}` },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -125,6 +128,7 @@ function agentTool(seq: number, toolUseId: string, description: string): Convers
     toolUseId,
     result: { status: 'async_launched' },
     isComplete: true,
+    time: new Date(),
   };
 }
 
@@ -137,6 +141,7 @@ function subStart(seq: number, parentToolUseId: string, description: string): Co
     agentId: `theme-agent-${parentToolUseId}`,
     subagentType: 'general-purpose',
     description,
+    time: new Date(),
   };
 }
 
@@ -161,6 +166,7 @@ function childTool(
     parentToolUseId,
     result: complete ? { text: 'ok' } : undefined,
     isComplete: complete,
+    time: new Date(),
   };
 }
 
@@ -173,6 +179,7 @@ function subComplete(seq: number, parentToolUseId: string): ConversationSubagent
     agentId: `theme-agent-${parentToolUseId}`,
     status: 'completed',
     summary: 'done',
+    time: new Date(),
   };
 }
 
