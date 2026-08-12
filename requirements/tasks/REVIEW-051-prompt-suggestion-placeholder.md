@@ -110,35 +110,61 @@ const hook: (c: null) => string | null = usePromptSuggestion;
 
 ## §3 Functional Validation
 
-Vitest 覆蓋 store 與鍵盤邏輯；使用者看得到的部分一律在 **headed** Chromium（Playwright，真實
-`page.keyboard.press`）於 `/prompt-suggestion` 操作確認。測試計數：core 196 passed（含本張 +9）、
-react 186 passed（含本張 +17）。
+Vitest 覆蓋 store 與鍵盤邏輯；UI 在 Playwright 驅動的真實 Chromium 上以真實按鍵（`page.keyboard.press`）
+操作確認。測試計數：core 196 passed（含本張 +9）、react 186 passed（含本張 +17）。
+
+**兩批瀏覽器證據，模式不同，分開記錄：**
+
+- **headless**（`playwright-mcp --headless`，UA 為 `HeadlessChrome/151`）—— react-demo `/prompt-suggestion`
+  的 R1–R12。判準全是 DOM 斷言（`value` / `activeElement` / `placeholder` / `title` /
+  `clientHeight` vs `scrollHeight`），這類在 headless 與 headed 無已知差異；截圖 `f-028-01`～`f-028-06`
+  出自這批。**這一節原本誤記為 headed，已更正** —— F-030 記載過 headless 假通過的前例，標籤必須誠實。
+- **headed**（真實視窗，UA 無 `Headless`）—— 消費端 Mimir / Sindri 接 dev 後端的實機驗收，截圖
+  `f-028-07`～`f-028-09`。
 
 ### R# Result Matrix
 
-| R#  | Description                                          | Result | Note                                                                                                                                                  |
-| --- | ---------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | 空輸入框顯示建議 + `⇥ Tab`                           | Pass   | headed：placeholder `那前一週的數字是多少？ ⇥ Tab`；截圖 `f-028-01`                                                                                   |
-| R2  | Tab 填入、焦點留在輸入框、不送出、可編輯             | Pass   | headed：value 填入、`activeElement` 仍是 textarea、使用者泡泡數 **0**；截圖 `f-028-02`。長建議採用後框高 108px、內容全可見（見 Findings Important 1） |
-| R3  | 沒有建議時 `inputPlaceholder` 原樣、無提示字元       | Pass   | headed（進房與「沉默」腳本）：`輸入你的問題`，`title` / `aria-description` 皆 `null`；截圖 `f-028-03`                                                 |
-| R4  | 已有字時不顯示建議；Tab 維持移焦、不覆蓋             | Pass   | headed：Tab 後焦點到 Send，文字未變                                                                                                                   |
-| R5  | `Shift+Tab` 一律不攔                                 | Pass   | headed：焦點反向移到 Close，建議仍在、輸入框未變                                                                                                      |
-| R6  | IME 組字中 Tab 交還輸入法                            | Pass   | headed：`compositionstart` 後真實按 Tab → 未採用、建議仍在、焦點依原生行為移動                                                                        |
-| R7  | `title` / `aria-description` 有／無的兩種狀態都正確  | Pass   | 有建議時兩者皆為完整說明；無建議時兩者皆不存在（headed + Vitest）                                                                                     |
-| R8  | 採用後 / 送出後 / 新 run 開始清空                    | Pass   | headed 觀察採用後 store → `null`；三條清除路徑各有 core 測試（`clearPromptSuggestion()` / `sendMessage()` / `run.init`）                              |
-| R9  | 重整 / rejoin 後無建議、不 loading、不報錯、不擋輸入 | Pass   | headed：載入後 store 為 null、textarea `disabled=false`、無 loading；core 測試「a replayed transcript carries no suggestion」                         |
-| R10 | 一個 run 內兩則 → 顯示最後一則                       | Pass   | headed「兩則」腳本：只呈現第二則；core 測試 last-wins                                                                                                 |
-| R11 | store 語意：晚訂閱者立刻拿到當前值                   | Pass   | core 測試斷言首次發射即為當前快照、重複值被 `distinctUntilChanged` 擋掉；demo 框外面板 render badge 佐證                                              |
-| R12 | en-US / zh-TW（含 ja-JP）文案齊、切語系即時反映      | Pass   | headed 切 zh-TW → `按 Tab 採用這句建議`，`⇥ Tab` 不變、建議本身未被翻譯；Vitest 釘三語系                                                              |
-| R13 | 舊消費端行為不變（純新增、無簽章變更）               | Pass   | 既有測試未改動即全通過；§1.3 的 API surface 檢查顯示只新增、未變更                                                                                    |
-| R14 | (Smoke) build + 測試 + headed demo 走完 R1–R12       | Pass   | build 綠、382 tests 綠、demo 四個腳本（一般／沉默／兩則／很長）走完                                                                                   |
+| R#  | Description                                          | Result | Note                                                                                                                                                                |
+| --- | ---------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | 空輸入框顯示建議 + `⇥ Tab`                           | Pass   | headless（DOM 斷言）：placeholder `那前一週的數字是多少？ ⇥ Tab`；截圖 `f-028-01`                                                                                   |
+| R2  | Tab 填入、焦點留在輸入框、不送出、可編輯             | Pass   | headless（DOM 斷言）：value 填入、`activeElement` 仍是 textarea、使用者泡泡數 **0**；截圖 `f-028-02`。長建議採用後框高 108px、內容全可見（見 Findings Important 1） |
+| R3  | 沒有建議時 `inputPlaceholder` 原樣、無提示字元       | Pass   | headless（進房與「沉默」腳本）：`輸入你的問題`，`title` / `aria-description` 皆 `null`；截圖 `f-028-03`                                                             |
+| R4  | 已有字時不顯示建議；Tab 維持移焦、不覆蓋             | Pass   | headless（DOM 斷言）：Tab 後焦點到 Send，文字未變                                                                                                                   |
+| R5  | `Shift+Tab` 一律不攔                                 | Pass   | headless（DOM 斷言）：焦點反向移到 Close，建議仍在、輸入框未變                                                                                                      |
+| R6  | IME 組字中 Tab 交還輸入法                            | Pass   | headless（DOM 斷言）：`compositionstart` 後真實按 Tab → 未採用、建議仍在、焦點依原生行為移動                                                                        |
+| R7  | `title` / `aria-description` 有／無的兩種狀態都正確  | Pass   | 有建議時兩者皆為完整說明；無建議時兩者皆不存在（headless + Vitest；headed 消費端 `f-028-07`／`f-028-09` 亦見）                                                      |
+| R8  | 採用後 / 送出後 / 新 run 開始清空                    | Pass   | headless 觀察採用後 store → `null`；headed 消費端亦複驗（`f-028-08`）；三條清除路徑各有 core 測試（`clearPromptSuggestion()` / `sendMessage()` / `run.init`）       |
+| R9  | 重整 / rejoin 後無建議、不 loading、不報錯、不擋輸入 | Pass   | headless（DOM 斷言）：載入後 store 為 null、textarea `disabled=false`、無 loading；core 測試「a replayed transcript carries no suggestion」                         |
+| R10 | 一個 run 內兩則 → 顯示最後一則                       | Pass   | headless「兩則」腳本：只呈現第二則；core 測試 last-wins                                                                                                             |
+| R11 | store 語意：晚訂閱者立刻拿到當前值                   | Pass   | core 測試斷言首次發射即為當前快照、重複值被 `distinctUntilChanged` 擋掉；demo 框外面板 render badge 佐證                                                            |
+| R12 | en-US / zh-TW（含 ja-JP）文案齊、切語系即時反映      | Pass   | headless 切 zh-TW → `按 Tab 採用這句建議`，`⇥ Tab` 不變、建議本身未被翻譯；Vitest 釘三語系                                                                          |
+| R13 | 舊消費端行為不變（純新增、無簽章變更）               | Pass   | 既有測試未改動即全通過；§1.3 的 API surface 檢查顯示只新增、未變更                                                                                                  |
+| R14 | (Smoke) build + 測試 + demo 走完 R1–R12              | Pass   | build 綠、382 tests 綠、demo 四個腳本（一般／沉默／兩則／很長）走完；另在 Mimir / Sindri 接 dev 後端實機複驗（見下）                                                |
 
 ### §3.1 Acceptance
 
-- [x] 每條 R# 都執行 Step 1（讀 code / 型別）+ Step 2（Vitest／headed 瀏覽器操作）+ Step 3（邊界）
+- [x] 每條 R# 都執行 Step 1（讀 code / 型別）+ Step 2（Vitest／瀏覽器操作）+ Step 3（邊界）
 - [x] 每條 R# 標記結果並附實際觀察值
 - [x] 邊界情境確認：無建議、建議過長（截斷、不推開版面）、preview mode（不誘導按不到的動作）、awaiting consent（維持自己的 placeholder）、連續兩輪
-- [x] UI 證據全部來自 headed 瀏覽器，六張截圖存於 `.github/screenshots/f-028-*.png`
+- [x] UI 證據存於 `.github/screenshots/f-028-*.png`：demo 六張出自 headless（DOM 斷言為主），消費端三張出自 headed 真實視窗
+
+---
+
+### §3.2 消費端實機驗收（headed，接 dev 後端）
+
+以 `npm pack` 產出 `0.3.60-local` 裝進消費端（`--no-save`），在**有視窗的** Chromium
+（`Chrome/151.0.7922.34`，UA 無 `Headless`）操作，並在頁面上攔 SSE 串流逐一比對 `eventType`：
+
+| 產品                                                    | 結果                                                                                                                                                                                             |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Sindri**（`asgard-ai-agent-hub-web`，locale zh-TW）   | 真實 `asgard.prompt_suggestion` 抵達 → placeholder `再加一個 multiply 函式 ⇥ Tab`、`title` `按 Tab 採用這句建議`；按 Tab → 文字進輸入框、焦點留在輸入框、**沒有送出**（`f-028-07` / `f-028-08`） |
+| **Mimir**（`asgard-ai-data-insight-web`，locale en-US） | 同一則建議（中文）+ 英文 `title` `Press Tab to use this suggestion` —— 正好佐證「提示文案跟語系、建議內容不翻譯」；按 Tab 同樣只填不送（`f-028-09`）                                             |
+| **Odin**（`asgard-ai-platform-web`）                    | **未驗** —— 該 dev 帳號沒有 workspace，進站即要求建立；在他人 dev 帳號建 workspace 已徵詢後略過                                                                                                  |
+
+**觸發條件（後端 e2e 已寫明，值得記下來）**：CLI 有兩道跳過條件 —— `early_conversation`（對話不足兩則
+assistant 訊息）與 `cache_cold`（**上一輪**的 `input + cache_creation + output > 10000`）。一開始用重量級
+資料分析問題連問四輪都拿不到建議，SSE 攔截顯示後端根本沒發；改用後端 e2e 的配方（兩個便宜回合：建
+`calc.py` → 加 `subtract`）後第二輪即穩定出現。**驗這個功能不要用大輸出的回合。**
 
 ---
 
@@ -173,4 +199,4 @@ None.
 
 - 2026-08-12: REVIEW task created, paired with BUILD-051 (Status: `draft`).
 - 2026-08-12: §1 靜態審查完成 —— 20 項全 ✅ / 0 ❌（3 筆 grep 命中經 `git diff` 覆核為既有程式碼或註解誤判）；lint 0 errors、format、typecheck、build:core + build:react 全綠；另以建置產物做 API surface 型別檢查通過（Status: `ready → in-progress`）。
-- 2026-08-12: §3 功能驗收完成 —— R1–R14 全 Pass（headed Chromium 實際操作 + 382 passed tests）。無 BLOCKER；1 項 Important 已於 BUILD 階段修復並附回歸測試，2 項 Minor 僅記錄（Status: `in-progress → done`）。
+- 2026-08-12: §3 功能驗收完成 —— R1–R14 全 Pass（Chromium 實際操作 + 382 passed tests；demo 那批為 headless，消費端實機那批為 headed）。消費端 Mimir / Sindri 接 dev 後端實機複驗通過（Odin 因帳號無 workspace 未驗）；並更正先前把 demo 那批誤記為 headed 的敘述。無 BLOCKER；1 項 Important 已於 BUILD 階段修復並附回歸測試，2 項 Minor 僅記錄（Status: `in-progress → done`）。

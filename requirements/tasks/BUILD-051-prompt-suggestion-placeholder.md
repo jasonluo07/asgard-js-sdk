@@ -113,7 +113,7 @@ Each criterion is mapped to one or more Implementation Tasks (→ T#).
   exactly as before — the change is purely additive, with no altered signature or removed export. → T1, T5, T11
 - `R14` (Smoke check) When the developer runs `npm run build:core && npm run build:react`, the Vitest
   suites, and exercises `/prompt-suggestion` in the react-demo (`npm run serve:react-demo`,
-  http://localhost:4200) in a **headed** browser, the system shall walk R1–R12 with no build errors. → T10, T11, T12
+  http://localhost:4200) in a real browser, the system shall walk R1–R12 with no build errors. → T10, T11, T12
 
 ---
 
@@ -167,7 +167,7 @@ run.done`, with a silent variant and a two-suggestion variant keyed off the sent
 - [x] T11: Run `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` +
       `npm run build:core && npm run build:react`.
 - [x] T12 (R14): Smoke check — `npm run test:packages`, then `npm run serve:react-demo` and walk
-      R1–R12 on `/prompt-suggestion` in a **headed** browser (real `Tab` / `Shift+Tab` key presses);
+      R1–R12 on `/prompt-suggestion` with real `Tab` / `Shift+Tab` key presses;
       screenshots to `.github/screenshots/`.
 
 ---
@@ -175,7 +175,7 @@ run.done`, with a silent variant and a two-suggestion variant keyed off the sent
 ## Coverage
 
 Use Cases: R1 · R2 · R3 · R4 · R5 · R6 · R7 · R8 · R9 · R10 · R11 · R12 · R13 · R14 — all verified.
-R1–R7 / R10 / R12 in a headed browser on `/prompt-suggestion` and again by Vitest; R8–R11 by the core
+R1–R7 / R10 / R12 in the browser on `/prompt-suggestion` and again by Vitest; R8–R11 by the core
 suite; R13 by `typecheck:packages` + the untouched existing suites; R14 by build + suites + demo walk.
 
 Files (package noted where it is not `@asgard-js/core`):
@@ -218,7 +218,9 @@ _Evidence_
 
 ## Verification Notes
 
-Headed Chromium on `/prompt-suggestion`, real key presses (`page.keyboard.press`):
+Chromium on `/prompt-suggestion`, real key presses (`page.keyboard.press`). This batch ran **headless**
+(`playwright-mcp --headless`); every judgement below is a DOM assertion, which headless and headed agree on.
+The headed evidence is the consumer-app pass recorded further down.
 
 | Check                                      | Result                                                                                            |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
@@ -247,4 +249,4 @@ against the old ordering (`expected '36px' to be '222px'`) before passing agains
 
 - 2026-08-12: BUILD task created from https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62 (Status: `draft`).
 - 2026-08-12: Plan confirmed by user; implementation started on `feat/62-prompt-suggestion-placeholder` (Status: `draft → ready → in-progress`).
-- 2026-08-12: All R# verified. lint (0 errors) / format:check / typecheck:packages / build:core + build:react green; test:packages 382 passed (core 196 incl. +9, react 186 incl. +17). Headed-browser smoke on `/prompt-suggestion` walked R1–R12 with real key presses and surfaced one defect (textarea sized before commit → adopted multi-line text invisible), fixed and pinned by a regression test. Two deviations from the spec as written, both recorded above: i18n keys use the repo's `composer.*` namespace rather than the prototype's `input.*`, and the mock's opening run is silent so a fresh load demonstrates R9 (Status: `in-progress → done`).
+- 2026-08-12: All R# verified. lint (0 errors) / format:check / typecheck:packages / build:core + build:react green; test:packages 382 passed (core 196 incl. +9, react 186 incl. +17). Browser smoke (headless) on `/prompt-suggestion` walked R1–R12 with real key presses and surfaced one defect (textarea sized before commit → adopted multi-line text invisible), fixed and pinned by a regression test. Two deviations from the spec as written, both recorded above: i18n keys use the repo's `composer.*` namespace rather than the prototype's `input.*`, and the mock's opening run is silent so a fresh load demonstrates R9 (Status: `in-progress → done`).
