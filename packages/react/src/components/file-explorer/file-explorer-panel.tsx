@@ -94,7 +94,11 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     [listDir, readFile, saveFile, watchFile, mkdir, remove, copy, move, upload, download],
   );
 
-  const hasSource = sources.some(s => s.id === (controller.activeSourceId ?? sources[0]?.id));
+  // "Is there anything to browse" — deliberately not "is the selected id present". The provider resolves
+  // an unknown selection to the first source, so any non-empty list has an active source; asking the
+  // narrower question here made a controller that outlives one source list (it carries the previous
+  // list's sandbox name) render "no sandbox is running" on top of a perfectly live one.
+  const hasSource = sources.length > 0;
 
   return (
     <FileExplorerProvider
