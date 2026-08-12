@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { ToolCallConsentEventData } from '@asgard-js/core';
+
+import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
 
 /**
  * #409 — the "Wake a sandbox" button in the File Explorer's empty state was gated on `isRunning`
@@ -27,19 +30,17 @@ vi.mock('../../hooks/use-derived-state', () => ({
 
 const { ChatbotFileExplorerAside } = await import('./chatbot-file-explorer');
 
-const CONTROLLER = {
-  open: true,
-  activeSandboxName: null,
-  requestedFile: null,
-  isEditingDirty: false,
-  openExplorer: vi.fn(),
-  closeExplorer: vi.fn(),
-  toggleExplorer: vi.fn(),
-  setActiveSandboxName: vi.fn(),
-  requestFile: vi.fn(),
-  clearRequestedFile: vi.fn(),
-  setEditingDirty: vi.fn(),
-} as unknown as Parameters<typeof ChatbotFileExplorerAside>[0]['controller'];
+/**
+ * The controller comes from the real hook rather than a hand-written literal. The literal this
+ * replaced was cast through `as unknown as`, so the compiler never checked it — it had drifted to
+ * three members the interface no longer has, and went on "passing" until a fourth member was added
+ * and the render blew up at runtime instead.
+ */
+function AsideUnderTest(): ReactNode {
+  const controller = useFileExplorerController({ open: true });
+
+  return <ChatbotFileExplorerAside controller={controller} />;
+}
 
 const PENDING: ToolCallConsentEventData = {
   processId: 'proc-1',
@@ -55,7 +56,7 @@ function renderWith(state: { isRunning: boolean; pendingConsent: ToolCallConsent
     pendingConsent: state.pendingConsent,
   };
 
-  return renderToStaticMarkup(<ChatbotFileExplorerAside controller={CONTROLLER} />);
+  return renderToStaticMarkup(<AsideUnderTest />);
 }
 
 /** The wake button is the only one carrying that label; grab its rendered tag. */
