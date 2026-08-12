@@ -62,6 +62,7 @@ const navItems = [
   { to: '/chat-header', label: 'Chat Header (F-022)' },
   { to: '/composer', label: 'Composer (BUILD-028)' },
   { to: '/prompt-suggestion', label: 'Prompt Suggestion (F-028)' },
+  { to: '/question-template', label: 'Question Card (F-029)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

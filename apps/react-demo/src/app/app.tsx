@@ -59,6 +59,7 @@ import { ChannelTitleUiRoute } from './routes/channel-title-ui';
 import { ChatHeaderRoute } from './routes/chat-header';
 import { ComposerRoute } from './routes/composer';
 import { PromptSuggestionRoute } from './routes/prompt-suggestion';
+import { QuestionTemplateRoute } from './routes/question-template';
 import { JoinInitRoute } from './routes/join-init';
 import { StopGenerationRoute } from './routes/stop-generation';
 import { AllFeaturesRoute } from './routes/all-features';
@@ -70,6 +71,7 @@ export function App(): React.ReactElement {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/templates" element={<Templates />} />
+        <Route path="/question-template" element={<QuestionTemplateRoute />} />
         <Route path="/data-insight-style" element={<DataInsightStyle />} />
         <Route path="/features" element={<Features />} />
         <Route path="/theme" element={<Theme />} />
