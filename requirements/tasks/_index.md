@@ -65,7 +65,7 @@
 
 ## ▶ Next Task
 
-**None — awaiting task selection.** 截至 2026-08-07，已發版至 **`0.3.51`**。以下段落保留各 cycle 的脈絡與 backlog。
+**`REVIEW-051`（ready）** —— [`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用；BUILD-051 已 done，等 review。以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
 
@@ -194,3 +194,5 @@
 | `BUILD-049`  | Fix two self-referencing theme color defaults     | Normal   | done   | [BUILD-049-theme-token-self-reference.md](./BUILD-049-theme-token-self-reference.md)                     |
 | `BUILD-050`  | Lock every loading spinner to a shared phase      | Normal   | done   | [BUILD-050-phase-locked-spinner.md](./BUILD-050-phase-locked-spinner.md)                                 |
 | `REVIEW-050` | Review: Lock loading spinners to a shared phase   | —        | done   | [REVIEW-050-phase-locked-spinner.md](./REVIEW-050-phase-locked-spinner.md)                               |
+| `BUILD-051`  | Prompt suggestion placeholder + Tab adopt         | Normal   | done   | [BUILD-051-prompt-suggestion-placeholder.md](./BUILD-051-prompt-suggestion-placeholder.md)               |
+| `REVIEW-051` | Review: Prompt suggestion placeholder + Tab adopt | —        | ready  | [REVIEW-051-prompt-suggestion-placeholder.md](./REVIEW-051-prompt-suggestion-placeholder.md)             |

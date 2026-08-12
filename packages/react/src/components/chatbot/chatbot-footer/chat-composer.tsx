@@ -6,6 +6,7 @@ import {
   RefObject,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -68,6 +69,8 @@ export function ChatComposer({
     pendingInputValue,
     setPendingInputValue,
     pendingConsent,
+    promptSuggestion,
+    clearPromptSuggestion,
   } = useAsgardContext();
   const { locale = 'en-US' } = useAsgardTemplateContext();
   const theme = useAsgardThemeContext();
@@ -117,6 +120,13 @@ export function ChatComposer({
   // text survives the wait (UC-045).
   const canSend = !isPreviewMode && !isConnecting && !isStopping && !isUploading && !isAwaitingConsent && hasContent;
 
+  // F-028 — the suggestion only takes the stage on an empty, usable textarea: it must never paint over
+  // what the user has already written, and offering a Tab shortcut into a disabled field would be a
+  // dead end. A live run is deliberately *not* excluded — the textarea still accepts typing then, and
+  // lining up the next question while the answer streams is exactly when the suggestion earns its keep.
+  const suggesting = Boolean(promptSuggestion) && value.length === 0 && !isPreviewMode && !isAwaitingConsent;
+  const suggestionTitle = suggesting ? t(locale, 'composer.suggestionTitle') : undefined;
+
   // Textarea max height tracks the chatbot container (40% of it, floor 96px); beyond that it scrolls.
   const adjustTextareaHeight = useCallback(
     (element: HTMLTextAreaElement): void => {
@@ -137,13 +147,18 @@ export function ChatComposer({
     textareaRef.current.style.overflowY = 'hidden';
   }, []);
 
-  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(
-    event => {
-      adjustTextareaHeight(event.target);
-      setValue(event.target.value);
-    },
-    [adjustTextareaHeight],
-  );
+  const onChange = useCallback<ChangeEventHandler<HTMLTextAreaElement>>(event => {
+    setValue(event.target.value);
+  }, []);
+
+  // Size the box to its content after the value is committed to the DOM. Measuring inside the setter
+  // (as this used to, and as the Tab-adopt path would have to) reads the *previous* content: typing is
+  // fine because the DOM is already updated by then, but a value pushed in from elsewhere — Tab
+  // adopting a suggestion (F-028), `ChatbotRef.setInputValue` — measured an empty box and left a
+  // multi-line value clipped to one row with `overflow: hidden`, i.e. invisible and unscrollable.
+  useLayoutEffect(() => {
+    if (textareaRef.current) adjustTextareaHeight(textareaRef.current);
+  }, [value, adjustTextareaHeight]);
 
   // Container height changes (fullscreen toggle, window resize) re-apply the dynamic cap.
   useEffect(() => {
@@ -198,9 +213,24 @@ export function ChatComposer({
       if (event.key === 'Enter' && !event.shiftKey && !isComposing && canSend) {
         event.preventDefault();
         onSubmit();
+
+        return;
+      }
+
+      // F-028 — Tab is intercepted only when there is genuinely a suggestion to adopt. Everywhere else
+      // it must keep moving focus: that is a keyboard user's only way out of the textarea, so swallowing
+      // it unconditionally would trap them. `Shift+Tab` (move backwards) is never intercepted, and a Tab
+      // mid-composition belongs to the IME, which may be using it to pick a candidate — same rule the
+      // Enter branch above already follows.
+      if (event.key === 'Tab' && !event.shiftKey && !isComposing && suggesting && promptSuggestion) {
+        event.preventDefault();
+        // Adopting is not sending: the text lands in the textarea, focus stays put, and whether it goes
+        // out is still the user's call. The box resizes itself in the layout effect above.
+        setValue(promptSuggestion);
+        clearPromptSuggestion();
       }
     },
-    [isComposing, canSend, onSubmit],
+    [isComposing, canSend, onSubmit, suggesting, promptSuggestion, clearPromptSuggestion],
   );
 
   const onPaste = useCallback<ClipboardEventHandler<HTMLTextAreaElement>>(
@@ -239,12 +269,9 @@ export function ChatComposer({
 
     setValue(pendingInputValue);
     setPendingInputValue(null);
-
-    if (textareaRef.current) {
-      adjustTextareaHeight(textareaRef.current);
-      textareaRef.current.focus();
-    }
-  }, [pendingInputValue, setPendingInputValue, adjustTextareaHeight]);
+    // Height is handled by the layout effect above — measuring here would read the pre-update DOM.
+    textareaRef.current?.focus();
+  }, [pendingInputValue, setPendingInputValue]);
 
   // Files dropped on the container-level DropZoneOverlay flow through the same ingestion path.
   const { droppedFiles, clearDroppedFiles } = useFileDropContext();
@@ -339,8 +366,14 @@ export function ChatComposer({
               ? 'Preview mode - input disabled'
               : isAwaitingConsent
               ? t(locale, 'composer.awaitingConsent')
+              : suggesting
+              ? `${promptSuggestion} ${t(locale, 'composer.suggestionHint')}`
               : inputPlaceholder || 'Enter message'
           }
+          // The placeholder has room for a reminder, not an explanation — hover and screen readers get
+          // the full sentence. Both stay unset when nothing is being offered (F-028).
+          title={suggestionTitle}
+          aria-description={suggestionTitle}
           onChange={onChange}
           onKeyDown={onKeyDown}
           onPaste={onPaste}

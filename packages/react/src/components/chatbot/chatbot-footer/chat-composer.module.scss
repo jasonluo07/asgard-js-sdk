@@ -97,6 +97,12 @@
 
   &::placeholder {
     color: var(--asg-composer-placeholder-color, var(--asg-color-text-placeholder));
+    // F-028 — a suggestion can be longer than one line. The textarea sizes itself from its *content*,
+    // so a wrapping placeholder would spill out of a one-row box instead of growing it. Keep it on one
+    // line and clip it: an over-long suggestion is truncated, never allowed to push the layout around.
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &:disabled {

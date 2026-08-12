@@ -61,6 +61,7 @@ const navItems = [
   { to: '/channel-title-ui', label: 'Channel Title UI (F-017)' },
   { to: '/chat-header', label: 'Chat Header (F-022)' },
   { to: '/composer', label: 'Composer (BUILD-028)' },
+  { to: '/prompt-suggestion', label: 'Prompt Suggestion (F-028)' },
 ];
 
 export function Layout({ children }: LayoutProps): ReactNode {

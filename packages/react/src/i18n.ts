@@ -51,6 +51,10 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'composer.removeAttachment': 'Remove attachment',
     'composer.closePreview': 'Close preview',
     'composer.awaitingConsent': 'Respond to the permission request to continue',
+    // F-028 — `⇥` alone is a typographic symbol most people cannot name; the word next to it says which
+    // key to press. "Tab" is the legend on the keycap, so it stays untranslated in every locale.
+    'composer.suggestionHint': '⇥ Tab',
+    'composer.suggestionTitle': 'Press Tab to use this suggestion',
     'fileExplorer.open': 'Open',
     'fileExplorer.download': 'Download',
     'fileExplorer.rename': 'Rename',
@@ -152,6 +156,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'composer.removeAttachment': '添付を削除',
     'composer.closePreview': 'プレビューを閉じる',
     'composer.awaitingConsent': '続行するには許可リクエストに応答してください',
+    'composer.suggestionHint': '⇥ Tab',
+    'composer.suggestionTitle': 'Tab キーで候補を入力',
     'fileExplorer.open': '開く',
     'fileExplorer.download': 'ダウンロード',
     'fileExplorer.rename': '名前を変更',
@@ -251,6 +257,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'composer.removeAttachment': '移除附件',
     'composer.closePreview': '關閉預覽',
     'composer.awaitingConsent': '請先回應授權請求',
+    'composer.suggestionHint': '⇥ Tab',
+    'composer.suggestionTitle': '按 Tab 採用這句建議',
     'fileExplorer.open': '開啟',
     'fileExplorer.download': '下載',
     'fileExplorer.rename': '重新命名',

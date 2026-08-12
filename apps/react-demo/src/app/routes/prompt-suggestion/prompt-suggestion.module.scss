@@ -1,0 +1,113 @@
+.legend {
+  margin-bottom: 20px;
+}
+
+.legend__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.scripts {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.9;
+
+  strong {
+    margin-right: 8px;
+  }
+
+  span {
+    opacity: 0.75;
+  }
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+  opacity: 0.75;
+
+  kbd {
+    padding: 1px 5px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+}
+
+.locales {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12px;
+
+  button {
+    padding: 4px 10px;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  button.active {
+    border-color: #1677ff;
+    color: #1677ff;
+  }
+}
+
+.localeHint {
+  opacity: 0.7;
+}
+
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.chatbotContainer {
+  width: 480px;
+  height: 560px;
+}
+
+.panel {
+  width: 360px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1677ff;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.empty {
+  font-size: 14px;
+  opacity: 0.45;
+}

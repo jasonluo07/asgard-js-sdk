@@ -48,6 +48,7 @@ export default class Channel {
   private runStatusSubject: BehaviorSubject<RunStatus>;
   private conversation$: BehaviorSubject<Conversation>;
   private channelTitleSubject: BehaviorSubject<string | null>;
+  private promptSuggestionSubject: BehaviorSubject<string | null>;
   private sandboxPhaseSubject: BehaviorSubject<SandboxPhase>;
   private launchedSandboxesSubject: BehaviorSubject<LaunchedSandbox[]>;
   // Sandboxes hinted live by an `asgard.sandbox.launch` frame but not yet confirmed by metadata (F-019).
@@ -63,6 +64,12 @@ export default class Channel {
   public readonly subagents$: Observable<Subagent[]>;
   /** Reactive channel title store (F-016): seeded from metadata, updated by `title.update`; replay-safe. */
   public readonly channelTitle$: Observable<string | null>;
+  /**
+   * Reactive next-turn suggestion store (F-028): fed by `asgard.prompt_suggestion`, cleared when the
+   * prediction expires. Live-only — a rejoin replay carries no such event, so this legitimately stays
+   * `null` after a reload. Never seeded: there is no metadata source for it.
+   */
+  public readonly promptSuggestion$: Observable<string | null>;
   /** Reactive sandbox cold-start phase store (F-018): per-slice, derived from the last sandbox event; replay-safe. */
   public readonly sandboxPhase$: Observable<SandboxPhase>;
   /** Reactive live-sandbox list store (F-019): authoritative from `/channel/metadata`, per-slice; replay-safe. */
@@ -105,6 +112,7 @@ export default class Channel {
     this.runStatusSubject = new BehaviorSubject<RunStatus>(IDLE_RUN_STATUS);
     this.conversation$ = new BehaviorSubject(config.conversation);
     this.channelTitleSubject = new BehaviorSubject<string | null>(config.channelTitle ?? null);
+    this.promptSuggestionSubject = new BehaviorSubject<string | null>(null);
     this.sandboxPhaseSubject = new BehaviorSubject<SandboxPhase>('idle');
     this.launchedSandboxesSubject = new BehaviorSubject<LaunchedSandbox[]>(
       reconcileLaunched(config.launchedSandboxes ?? []),
@@ -114,6 +122,8 @@ export default class Channel {
     this.subagents$ = this.derivedStores.subagents$;
     // Emit only when the title actually changes (ignore duplicate `title.update`s with the same value).
     this.channelTitle$ = this.channelTitleSubject.pipe(distinctUntilChanged());
+    // Per-slice: the same suggestion arriving twice must not re-notify consumers (F-028).
+    this.promptSuggestion$ = this.promptSuggestionSubject.pipe(distinctUntilChanged());
     // Per-slice: emit only when the phase actually changes, so unrelated high-frequency message
     // deltas never re-notify the HUD (UC-031, same performance rule as the F-013 derived stores).
     this.sandboxPhase$ = this.sandboxPhaseSubject.pipe(distinctUntilChanged());
@@ -139,6 +149,20 @@ export default class Channel {
   /** Current channel title snapshot (F-016) — for framework-agnostic `getSnapshot()` bridging. */
   public getChannelTitle(): string | null {
     return this.channelTitleSubject.value;
+  }
+
+  /** Current next-turn suggestion snapshot (F-028) — for framework-agnostic `getSnapshot()` bridging. */
+  public getPromptSuggestion(): string | null {
+    return this.promptSuggestionSubject.value;
+  }
+
+  /**
+   * Drop the current suggestion (F-028). Called when the prediction has expired: the user adopted it
+   * (it is in the textarea now, and re-offering it would duplicate the text), or a send / a new run
+   * made it stale. Losing focus is deliberately NOT one of those moments.
+   */
+  public clearPromptSuggestion(): void {
+    this.promptSuggestionSubject.next(null);
   }
 
   /** Current sandbox phase snapshot (F-018) — for framework-agnostic `getSnapshot()` bridging. */
@@ -285,6 +309,7 @@ export default class Channel {
       this.derivedStores.tasks$,
       this.derivedStores.subagents$,
       this.channelTitle$,
+      this.promptSuggestion$,
       this.sandboxPhase$,
       this.launchedSandboxes$,
       this.runStatus$,
@@ -297,6 +322,7 @@ export default class Channel {
             tasks,
             subagents,
             channelTitle,
+            promptSuggestion,
             sandboxPhase,
             launchedSandboxes,
             runStatus,
@@ -306,6 +332,7 @@ export default class Channel {
             tasks,
             subagents,
             channelTitle,
+            promptSuggestion,
             sandboxPhase,
             launchedSandboxes,
             runStatus,
@@ -384,6 +411,18 @@ export default class Channel {
           this.channelTitleSubject.next(
             (response as SseResponse<EventType.CHANNEL_TITLE_UPDATE>).fact.channelTitleUpdate.title,
           );
+        }
+
+        // F-028 — the next-turn suggestion is run-level state, not a message: ephemeral, live-only,
+        // and kept out of the conversation. A new run makes the previous prediction stale (it was
+        // about the turn that just ended), so `run.init` drops it — including on a rejoin replay,
+        // which carries `run.init` but never a suggestion.
+        if (response.eventType === EventType.PROMPT_SUGGESTION) {
+          this.promptSuggestionSubject.next(
+            (response as SseResponse<EventType.PROMPT_SUGGESTION>).fact.promptSuggestion.suggestion,
+          );
+        } else if (response.eventType === EventType.INIT) {
+          this.clearPromptSuggestion();
         }
 
         // F-018 — sandbox cold-start phase, derived from the last sandbox event. Run-level (not a
@@ -546,6 +585,11 @@ export default class Channel {
     const pendingConsent = this.conversation$.value.pendingConsent;
 
     if (pendingConsent) return Promise.reject(new ChannelAwaitingConsentError(pendingConsent.processId));
+
+    // F-028 — the prediction was about what to say after the previous turn, so sending expires it
+    // whether or not it was adopted. Cleared here rather than in the composer so programmatic sends
+    // expire it too; after the guards above, so a refused send leaves the offer standing.
+    this.clearPromptSuggestion();
 
     const text = payload.text.trim();
     const messageId = payload.customMessageId ?? uuidv4();

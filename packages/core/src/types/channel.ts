@@ -92,6 +92,8 @@ export interface ChannelStates {
   subagents: Subagent[];
   /** Current channel title — seeded from metadata + updated by `title.update` (F-016). `null` = unnamed. */
   channelTitle: string | null;
+  /** Current next-turn suggestion (F-028). `null` = none on offer, which is the normal case. */
+  promptSuggestion: string | null;
   /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
   /** Live sandboxes in this channel from the latest `/channel/metadata` (F-019). Empty when none live. */
