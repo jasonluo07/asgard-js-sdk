@@ -50,10 +50,11 @@ describe('TextTemplate message chrome', () => {
     expect(html).not.toContain('background-color');
   });
 
-  it('keeps the user message bubble and timestamp', () => {
+  it('keeps the user message bubble but renders no timestamp', () => {
     const html = renderToStaticMarkup(<TextTemplate message={userMessage} />);
 
     expect(html).toContain('User message');
-    expect(html).toContain('asgard-time');
+    expect(html).toContain('asgard-text-template--user');
+    expect(html).not.toContain('asgard-time');
   });
 });

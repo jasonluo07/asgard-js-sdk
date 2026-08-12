@@ -113,6 +113,7 @@ export interface AsgardThemeContextValue {
         style: CSSProperties;
       };
     }>;
+    /** @deprecated Ignored — no message timestamp is rendered any more (#422). */
     time?: Partial<{
       style: CSSProperties;
     }>;
