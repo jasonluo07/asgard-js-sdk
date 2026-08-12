@@ -1,37 +1,20 @@
-import { ReactNode, useMemo } from 'react';
-import { formatTime } from '../../../utils';
-import styles from './time.module.scss';
-import clsx from 'clsx';
-import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { ReactNode } from 'react';
 
 export interface TimeProps {
-  /** Renders nothing when omitted — how the default templates hide the timestamp. */
+  /** @deprecated Ignored — nothing is rendered. */
   time?: Date;
+  /** @deprecated Ignored — nothing is rendered. */
   className?: string;
 }
 
 /**
- * The message timestamp, formatted and themed via `template.time.style`. Exported so a consumer composing
- * its own message row (via `renderMessageContent` + `TemplateBox` / `UserMessageText` / `BotMessageText`)
- * can keep the timestamp its default rows show, instead of re-implementing the format and theme color.
+ * @deprecated Renders nothing. The chat surface no longer shows message timestamps anywhere (#422), so
+ * this is a no-op kept only so existing callers keep compiling; delete your `<Time />` when convenient.
+ *
+ * The value it used to render was never the message's own time: the SDK stamped `new Date()` as each
+ * frame arrived, and a GET rejoin replays the whole history at once, so every replayed message was
+ * re-stamped with the moment the page opened. The backend carries no timestamp to put in its place.
  */
-export function Time(props: TimeProps): ReactNode {
-  const { time, className } = props;
-
-  const { template } = useAsgardThemeContext();
-
-  const timeStyle = useMemo(
-    () => ({
-      color: template?.time?.style?.color,
-    }),
-    [template?.time?.style?.color],
-  );
-
-  if (!time) return null;
-
-  return (
-    <div className={clsx('asgard-time', styles.time, className)} style={timeStyle}>
-      {formatTime(time)}
-    </div>
-  );
+export function Time(_props: TimeProps): ReactNode {
+  return null;
 }

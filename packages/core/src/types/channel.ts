@@ -145,6 +145,11 @@ export type ConversationUserMessage = {
   customMessageId?: string;
   /** Identity hint carried by a replayed `message.user` (F-014). */
   identityHint?: string;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
 };
@@ -156,6 +161,11 @@ export type ConversationBotMessage = {
   isTyping: boolean;
   typingText: string | null;
   message: Message;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
   raw: string;
@@ -166,6 +176,11 @@ export type ConversationErrorMessage = {
   messageId: string;
   eventType: EventType;
   error: ErrorMessage;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
 };
@@ -199,6 +214,11 @@ export type ConversationToolCallMessage = {
   /** Non-empty when this tool-call belongs to a subagent (points at the `Agent`'s `toolUseId`) (F-012). */
   parentToolUseId?: string;
   isComplete: boolean;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
 };
@@ -219,6 +239,11 @@ export type ConversationSubagentMessage = {
   /** Present on `complete`. */
   status?: SubagentTerminalStatus;
   summary?: string;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
 };
@@ -234,6 +259,11 @@ export type ConversationThinkingMessage = {
   messageId: string;
   text: string;
   isThinking: boolean;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
   time: Date;
   traceId?: string;
 };
