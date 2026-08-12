@@ -152,6 +152,7 @@ function emptyFact(): Record<string, unknown> {
     toolCallStart: null,
     toolCallComplete: null,
     toolCallConsent: null,
+    promptSuggestion: null,
   };
 }
 
@@ -208,6 +209,15 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // been called, so pressing stop is visibly what ends it (and, on the timeout channel, only `force` is).
   if (customChannelId.startsWith('stop-generation-')) {
     await handleStopGenerationMock(res, payload, customChannelId);
+
+    return;
+  }
+
+  // F-028 next-turn suggestion demo — scoped channels. The route mounts the shell twice (full-bleed and
+  // the SDK's default 375×640) so both widths can be compared side by side, hence the prefix match: the
+  // narrow one is `-narrow` and must run the same scripts, not fall through to the generic reply.
+  if (customChannelId.startsWith('prompt-suggestion-demo')) {
+    await handlePromptSuggestionMock(res, payload, customChannelId);
 
     return;
   }
@@ -556,6 +566,100 @@ async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): 
     messageFrame(header, 'asgard.message.complete', answerId, replyTo, THINKING_ANSWER, TEXT_TEMPLATE(THINKING_ANSWER)),
   );
 
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-028 — next-turn suggestion demo. The backend pushes `asgard.prompt_suggestion` after the reply and
+// before the run terminal, at most once per run. Three scripts, keyed off what was sent:
+//   「沉默」 → the run carries no suggestion at all (the common case — UC-048)
+//   「兩則」 → two suggestions in one run, so the last-one-wins rule is visible
+//   anything else → one suggestion, the happy path (UC-047)
+// The event never appears in the GET rejoin handler: it is live-only, so a reload legitimately shows
+// no suggestion at all.
+// ---------------------------------------------------------------------------------------------------
+
+const SUGGESTION_REPLY = '上週營收 1,284 萬，較前週成長 12%。成長主要來自行動 App 的回購，官網則持平。';
+
+async function handlePromptSuggestionMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const messageId = randomUUID();
+  const text = payload.text ?? '';
+  // The opening run (mount RESET_CHANNEL, empty text) carries no suggestion — there is no previous turn
+  // to predict from, which is also what a reload looks like: the event is live-only and never replayed.
+  const silent = text.trim() === '' || text.includes('沉默') || text.toLowerCase().includes('silent');
+  const twice = text.includes('兩則') || text.toLowerCase().includes('twice');
+  // The backend caps suggestions at ~100 characters, but the UI must survive a long one regardless:
+  // truncate, never push the layout around.
+  const long = text.includes('很長') || text.toLowerCase().includes('long');
+
+  const suggestionFrame = (suggestion: string): object => ({
+    ...header,
+    eventType: 'asgard.prompt_suggestion',
+    fact: { ...emptyFact(), promptSuggestion: { suggestion } },
+  });
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  writeEvent(res, messageFrame(header, 'asgard.message.start', messageId, replyTo, '', TEXT_TEMPLATE('')));
+
+  for (const chunk of chunkText(SUGGESTION_REPLY, 4)) {
+    await sleep(30);
+    writeEvent(res, messageFrame(header, 'asgard.message.delta', messageId, replyTo, chunk, null));
+  }
+
+  await sleep(60);
+  writeEvent(
+    res,
+    messageFrame(
+      header,
+      'asgard.message.complete',
+      messageId,
+      replyTo,
+      SUGGESTION_REPLY,
+      TEXT_TEMPLATE(SUGGESTION_REPLY),
+    ),
+  );
+
+  // After the reply, before the terminal — the window the real backend uses.
+  if (!silent) {
+    await sleep(200);
+
+    if (long) {
+      writeEvent(
+        res,
+        suggestionFrame(
+          '把行動 App、官網、LINE 官方帳號三個通路的回購率、客單價與新客佔比一起拉出來，並且按週比較過去六週的走勢',
+        ),
+      );
+    } else if (twice) {
+      writeEvent(res, suggestionFrame('先看看官網為什麼持平'));
+      await sleep(300);
+      writeEvent(res, suggestionFrame('把行動 App 的回購拆成新客與舊客'));
+    } else {
+      writeEvent(res, suggestionFrame('那前一週的數字是多少？'));
+    }
+  }
+
+  await sleep(60);
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }

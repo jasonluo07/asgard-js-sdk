@@ -63,6 +63,13 @@ export interface UseChannelReturn {
   conversation: Conversation | null;
   /** Current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
   channelTitle: string | null;
+  /**
+   * Current next-turn suggestion (F-028). `null` = none on offer, which is the normal case: most turns
+   * get none, and the event is live-only, so a reload / rejoin always starts here.
+   */
+  promptSuggestion: string | null;
+  /** Drop the current suggestion (F-028) — call after adopting it. No-op in preview mode. */
+  clearPromptSuggestion: () => void;
   /** Current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
   /**
@@ -136,6 +143,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [channelTitle, setChannelTitle] = useState<string | null>(channelTitleSeed ?? null);
+  // F-028 — never seeded: the suggestion only ever arrives on the live plane.
+  const [promptSuggestion, setPromptSuggestion] = useState<string | null>(null);
   const [sandboxPhase, setSandboxPhase] = useState<SandboxPhase>('idle');
   const [runStatus, setRunStatus] = useState<RunStatus>(IDLE_RUN_STATUS);
 
@@ -157,6 +166,7 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
         setRunStatus(states.runStatus);
         setConversation(states.conversation);
         setChannelTitle(states.channelTitle);
+        setPromptSuggestion(states.promptSuggestion);
         setSandboxPhase(states.sandboxPhase);
       },
     [],
@@ -394,6 +404,10 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
     [channel, customMessageId, onSseMessage, onAuthError, onSseError, conversation],
   );
 
+  const clearPromptSuggestion = useCallback((): void => {
+    channel?.clearPromptSuggestion();
+  }, [channel]);
+
   const stopGeneration = useCallback(
     async (options?: StopGenerationOptions): Promise<void> => {
       // Asks the backend to suspend the background run and keeps the stream open — the channel only
@@ -546,6 +560,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             isConnecting: false,
             conversation: previewConversation,
             channelTitle: channelTitleSeed ?? null,
+            promptSuggestion: null,
+            clearPromptSuggestion,
             sandboxPhase: 'idle',
             runStatus: IDLE_RUN_STATUS,
           }
@@ -556,6 +572,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
             isConnecting,
             conversation,
             channelTitle,
+            promptSuggestion,
+            clearPromptSuggestion,
             sandboxPhase,
             runStatus,
             sendMessage,
@@ -575,6 +593,8 @@ export function useChannel(props: UseChannelProps): UseChannelReturn {
       conversation,
       channelTitle,
       channelTitleSeed,
+      promptSuggestion,
+      clearPromptSuggestion,
       sandboxPhase,
       runStatus,
       sendMessage,

@@ -66,6 +66,28 @@ export function useChannelTitle(channel: Channel | null): string | null {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+/**
+ * Subscribe to a `Channel`'s current next-turn suggestion (F-028). Re-renders only when the
+ * suggestion changes. `null` means none is on offer — the normal case, including after every reload
+ * (the event is live-only and never replayed), so a consumer must not read it as "still loading".
+ */
+export function usePromptSuggestion(channel: Channel | null): string | null {
+  const subscribe = useCallback(
+    (onStoreChange: () => void): (() => void) => {
+      if (!channel) return () => undefined;
+
+      const subscription = channel.promptSuggestion$.subscribe(() => onStoreChange());
+
+      return () => subscription.unsubscribe();
+    },
+    [channel],
+  );
+
+  const getSnapshot = useCallback((): string | null => channel?.getPromptSuggestion() ?? null, [channel]);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
 /** Options for {@link useLaunchedSandboxes}'s metadata-refetch lifecycle (F-019 / UC-033). */
 export interface UseLaunchedSandboxesOptions {
   /** Poll interval (ms) to refetch `/channel/metadata` so idle-recycled sandboxes drop off. `0` disables. Default 15000. */

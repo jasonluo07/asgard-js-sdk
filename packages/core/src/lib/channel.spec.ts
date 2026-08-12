@@ -64,6 +64,17 @@ function sandboxEvent(kind: 'launch' | 'ready'): SseResponse<EventType> {
   } as unknown as SseResponse<EventType>;
 }
 
+function suggestionEvent(suggestion: string): SseResponse<EventType> {
+  return {
+    eventType: EventType.PROMPT_SUGGESTION,
+    requestId: 'req-1',
+    namespace: 'ns',
+    botProviderName: 'bp',
+    customChannelId: 'ch',
+    fact: { promptSuggestion: { suggestion } },
+  } as unknown as SseResponse<EventType>;
+}
+
 function runEvent(kind: EventType.INIT | EventType.ERROR): SseResponse<EventType> {
   return {
     eventType: kind,
@@ -142,6 +153,102 @@ describe('Channel — channel title store (F-016)', () => {
     });
     await channel.sendMessage({ text: 'hi' });
     expect(seen[seen.length - 1]).toBe('新標題');
+    channel.close();
+  });
+});
+
+// F-028 — next-turn suggestion store. Run-level and live-only: fed by `asgard.prompt_suggestion`,
+// never seeded, never replayed on rejoin, and expired by adoption / a send / a new run.
+
+describe('Channel — prompt suggestion store (F-028)', () => {
+  it('R1: starts empty — nothing is offered until an event arrives', () => {
+    expect(makeChannel([]).getPromptSuggestion()).toBeNull();
+  });
+
+  it('R1: consumes asgard.prompt_suggestion → updates the store', async () => {
+    const channel = makeChannel([suggestionEvent('接著幫我加上退款流程')]);
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getPromptSuggestion()).toBe('接著幫我加上退款流程');
+    channel.close();
+  });
+
+  it('R10: two suggestions in one run → the last one wins (no queue)', async () => {
+    const channel = makeChannel([suggestionEvent('第一則'), suggestionEvent('第二則')]);
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getPromptSuggestion()).toBe('第二則');
+    channel.close();
+  });
+
+  it('R11: replays the current snapshot to a late subscriber, and suppresses a duplicate', async () => {
+    const channel = makeChannel([suggestionEvent('A'), suggestionEvent('A'), suggestionEvent('B')]);
+    const emissions: (string | null)[] = [];
+    const sub = channel.promptSuggestion$.subscribe(s => emissions.push(s));
+    await channel.sendMessage({ text: 'hi' });
+    // initial null (late subscriber gets the snapshot immediately), then A (duplicate suppressed), then B
+    expect(emissions).toEqual([null, 'A', 'B']);
+    sub.unsubscribe();
+    channel.close();
+  });
+
+  it('R8: a new run (run.init) drops the previous turn’s prediction', async () => {
+    const channel = makeChannel([suggestionEvent('過期的建議'), runEvent(EventType.INIT)]);
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getPromptSuggestion()).toBeNull();
+    channel.close();
+  });
+
+  it('R8: sending expires the suggestion, adopted or not', async () => {
+    let seenFirstRun = false;
+    const channel = Channel.create({
+      client: {
+        fetchSse(_payload: FetchSsePayload, options?: FetchSseOptions): void {
+          options?.onSseStart?.();
+          // Only the first run carries a suggestion; the second is a bare turn.
+          if (!seenFirstRun) {
+            seenFirstRun = true;
+            options?.onSseMessage?.(suggestionEvent('要不要看退款流程'));
+          }
+
+          options?.onSseCompleted?.();
+        },
+      } as unknown as IAsgardServiceClient,
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+    });
+
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getPromptSuggestion()).toBe('要不要看退款流程');
+
+    await channel.sendMessage({ text: '我自己打的下一句' });
+    expect(channel.getPromptSuggestion()).toBeNull();
+    channel.close();
+  });
+
+  it('R8: clearPromptSuggestion() drops it (the adopt path)', async () => {
+    const channel = makeChannel([suggestionEvent('採用我')]);
+    await channel.sendMessage({ text: 'hi' });
+    channel.clearPromptSuggestion();
+    expect(channel.getPromptSuggestion()).toBeNull();
+    channel.close();
+  });
+
+  it('R9: a replayed transcript carries no suggestion — the store stays empty, not pending', async () => {
+    const channel = makeChannel([runEvent(EventType.INIT), messageEvent('m1', 'hello'), messageEvent('m2', 'world')]);
+    await channel.sendMessage({ text: 'hi' });
+    expect(channel.getPromptSuggestion()).toBeNull();
+    channel.close();
+  });
+
+  it('R11: promptSuggestion is exposed on ChannelStates via statesObserver', async () => {
+    const seen: (string | null)[] = [];
+    const channel = Channel.create({
+      client: mockClient([suggestionEvent('下一句建議')]),
+      customChannelId: 'ch',
+      conversation: new Conversation({ messages: new Map() }),
+      statesObserver: states => seen.push(states.promptSuggestion),
+    });
+    await channel.sendMessage({ text: 'hi' });
+    expect(seen[seen.length - 1]).toBe('下一句建議');
     channel.close();
   });
 });

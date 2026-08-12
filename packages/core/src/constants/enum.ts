@@ -32,6 +32,10 @@ export enum EventType {
   SUBAGENT_COMPLETE = 'asgard.subagent.complete',
   // Channel title push — reserved for F-016 to consume; enum aligned with asgard-core here (F-014).
   CHANNEL_TITLE_UPDATE = 'asgard.channel.title.update',
+  // Next-turn prediction: at most one per run, pushed after the reply and before the run's terminal
+  // event (F-028). Live-only — never persisted, so a rejoin replay does not carry it. "No suggestion"
+  // is the normal case: most turns get none, and nothing may block waiting for one.
+  PROMPT_SUGGESTION = 'asgard.prompt_suggestion',
   // Sandbox cold-start lifecycle (F-018) — `launch` = the backend is provisioning a compute sandbox,
   // `ready` = it is up. Drives the sandbox-phase store consumed by the Launch HUD; independent of the
   // run seam / RunningIndicator. Fact shape aligns with asgard-sdk-go `{ sandboxName, blueprintName }`.

@@ -279,6 +279,18 @@ export interface ChannelTitleUpdateEventData {
 }
 
 /**
+ * `asgard.prompt_suggestion` — the backend's prediction of what the user is likely to say next
+ * (F-028). At most one per run, pushed after the reply and before the run's terminal event.
+ * Ephemeral and live-only: never persisted, so a rejoin replay does not carry it — an absent
+ * suggestion is the normal case, not a dropped frame. `suggestion` is always non-empty (the backend
+ * drops empty predictions rather than emitting them) and is written in the conversation's language,
+ * so the frontend never translates it.
+ */
+export interface PromptSuggestionEventData {
+  suggestion: string;
+}
+
+/**
  * `asgard.sandbox.launch` / `asgard.sandbox.ready` — the backend cold-start signals for a compute
  * sandbox (F-018). Shape aligns with asgard-sdk-go `GenericBotSseEventFactSandbox{Launch,Ready}`.
  * Consumed by the sandbox-phase store that feeds the Launch HUD; carried on the run stream (replayed
@@ -307,6 +319,7 @@ export interface Fact<Type extends EventType> {
   subagentStart: IsEqual<Type, EventType.SUBAGENT_START, SubagentStartEventData>;
   subagentComplete: IsEqual<Type, EventType.SUBAGENT_COMPLETE, SubagentCompleteEventData>;
   channelTitleUpdate: IsEqual<Type, EventType.CHANNEL_TITLE_UPDATE, ChannelTitleUpdateEventData>;
+  promptSuggestion: IsEqual<Type, EventType.PROMPT_SUGGESTION, PromptSuggestionEventData>;
   sandboxLaunch: IsEqual<Type, EventType.SANDBOX_LAUNCH, SandboxEventData>;
   sandboxReady: IsEqual<Type, EventType.SANDBOX_READY, SandboxEventData>;
 }

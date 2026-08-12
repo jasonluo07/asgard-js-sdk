@@ -51,6 +51,13 @@ export interface AsgardServiceContextValue {
   conversation: Conversation | null;
   /** The current channel title (F-016) — seeded from metadata + updated by `title.update`. `null` = unnamed. */
   channelTitle: string | null;
+  /**
+   * The current next-turn suggestion (F-028) — offered as the composer's placeholder, adopted with
+   * Tab. `null` = none, which is the normal case (most turns get none, and it is never replayed).
+   */
+  promptSuggestion: string | null;
+  /** Drop the current suggestion (F-028) — the composer calls this once the user adopts it. */
+  clearPromptSuggestion: () => void;
   /** The current sandbox cold-start phase (F-018) — drives the Launch HUD. `idle` when no sandbox in flight. */
   sandboxPhase: SandboxPhase;
   /** Which run holds the connection and where it is in the stop lifecycle (F-023). */
@@ -142,6 +149,8 @@ export const AsgardServiceContext = createContext<AsgardServiceContextValue>({
   messages: null,
   conversation: null,
   channelTitle: null,
+  promptSuggestion: null,
+  clearPromptSuggestion: () => undefined,
   sandboxPhase: 'idle',
   runStatus: IDLE_RUN_STATUS,
   isRunning: false,
@@ -299,6 +308,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
     isConnecting,
     conversation,
     channelTitle,
+    promptSuggestion,
+    clearPromptSuggestion,
     sandboxPhase,
     runStatus,
     sendMessage,
@@ -412,6 +423,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       messages: conversation?.messages ?? null,
       conversation: conversation ?? null,
       channelTitle,
+      promptSuggestion,
+      clearPromptSuggestion,
       sandboxPhase,
       runStatus,
       isRunning,
@@ -452,6 +465,8 @@ export function AsgardServiceContextProvider(props: AsgardServiceContextProvider
       isConnecting,
       conversation,
       channelTitle,
+      promptSuggestion,
+      clearPromptSuggestion,
       sandboxPhase,
       runStatus,
       isRunning,
