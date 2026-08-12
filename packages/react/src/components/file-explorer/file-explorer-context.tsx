@@ -123,8 +123,13 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
   const { locale = 'en-US' } = useAsgardTemplateContext();
   const { dialog, requestInput, requestConfirm } = useFileExplorerDialog(locale);
 
-  const activeSourceId = controller.activeSourceId ?? sources[0]?.id ?? null;
-  const activeSource = sources.find(s => s.id === activeSourceId) ?? null;
+  // A selected id that is not in `sources` falls back to the first source rather than resolving to no
+  // source at all. The controller outlives any one source list — sandbox names are per-channel and get
+  // recycled, and a controller held across a host's remount (see below) arrives carrying the previous
+  // list's selection. Without the fallback that stale id produced a null root and the panel rendered
+  // as a blank rectangle: no tree, no empty state, nothing to click.
+  const activeSource = sources.find(s => s.id === controller.activeSourceId) ?? sources[0] ?? null;
+  const activeSourceId = activeSource?.id ?? null;
 
   // Which directories are unfolded / what is selected / which file is open lives on the controller,
   // keyed by source (F-027 AC8). Two consequences fall out of that one move: switching sources shows

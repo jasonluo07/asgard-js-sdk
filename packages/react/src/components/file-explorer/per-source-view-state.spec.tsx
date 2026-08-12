@@ -17,10 +17,10 @@ import { FsEntry, FsListResult, FsSource } from './types';
  */
 
 const A: FsSource = { id: 'src-a', label: 'A', rootPath: '/work' };
-const B: FsSource = { id: 'src-b', label: 'B', rootPath: '/work' };
+const B: FsSource = { id: 'src-b', label: 'B', rootPath: '/other' };
 
 const FILE_A: FsEntry = { name: 'a.txt', path: '/work/a.txt', isDir: false, sizeBytes: 1, mtimeUnix: 0, mode: 420 };
-const FILE_B: FsEntry = { name: 'b.txt', path: '/work/b.txt', isDir: false, sizeBytes: 1, mtimeUnix: 0, mode: 420 };
+const FILE_B: FsEntry = { name: 'b.txt', path: '/other/b.txt', isDir: false, sizeBytes: 1, mtimeUnix: 0, mode: 420 };
 
 const PROVIDERS = {
   listDir: async (): Promise<FsListResult> => ({ entries: [], truncated: false }),
@@ -29,6 +29,13 @@ const PROVIDERS = {
 afterEach(() => {
   cleanup();
 });
+
+/** Reports which source the explorer actually resolved to, by its root path. */
+function Cwd(): ReactNode {
+  const { rootPath } = useFileExplorer();
+
+  return <div data-testid="cwd">{rootPath ?? 'none'}</div>;
+}
 
 /** Reports what the explorer currently considers open / expanded, and lets a test drive both. */
 function ViewProbe(): ReactNode {
@@ -138,6 +145,27 @@ describe('per-source view state (F-027 AC8)', () => {
     fireEvent.click(screen.getByText('to-b'));
 
     expect(open()).toBe(FILE_B.path);
+  });
+
+  it('falls back to the first source when the selected one is not in the list', () => {
+    // The other half of holding a controller across a remount: it arrives carrying the previous
+    // list's selection (sandbox names are per-channel), and an id nobody offers used to resolve to no
+    // source at all — a blank rectangle with no tree and no empty state.
+    function Stale(): ReactNode {
+      const controller = useFileExplorerController({ activeSourceId: 'src-gone' });
+
+      return (
+        <FileExplorerProvider sources={[A, B]} controller={controller} providers={PROVIDERS}>
+          <FileExplorerRoot>
+            <Cwd />
+          </FileExplorerRoot>
+        </FileExplorerProvider>
+      );
+    }
+
+    render(<Stale />);
+
+    expect(screen.getByTestId('cwd').textContent).toBe(A.rootPath);
   });
 
   it('survives the explorer being unmounted while the controller outlives it', () => {
