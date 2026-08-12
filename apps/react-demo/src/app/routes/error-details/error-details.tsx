@@ -39,7 +39,6 @@ function errorMessage(
       location: { namespace: '', workflowName: '', processorName: '', processorType: '' },
       ...overrides,
     },
-    time: new Date('2026-08-10T12:34:56.000Z'),
     traceId,
   };
 }

@@ -20,7 +20,6 @@ function toolCall(callSeq: number, toolName: string, parameter: Record<string, u
     parameter,
     result: { output: 'ok' },
     isComplete: true,
-    time: new Date(),
   };
 }
 

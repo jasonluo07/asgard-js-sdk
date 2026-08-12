@@ -46,7 +46,6 @@ const INIT_MESSAGES: ConversationMessage[] = [
     isTyping: false,
     typingText: null,
     message: { messageId: 'b1', text: '您好，我是備料查詢助理，請問要查哪張急單？' } as never,
-    time: new Date(),
     raw: '',
   },
 ];

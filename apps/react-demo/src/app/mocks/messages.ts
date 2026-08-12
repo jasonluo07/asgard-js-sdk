@@ -32,7 +32,6 @@ export function createBaseTemplateExample(message: Message): ConversationMessage
     isTyping: false,
     typingText: '',
     eventType: EventType.MESSAGE_COMPLETE,
-    time: new Date(),
     message,
     raw: JSON.stringify(mockSseResponse),
   };
@@ -764,7 +763,6 @@ export function createUserMessageExample(text: string): ConversationMessage {
     type: 'user',
     messageId: nanoid(),
     text,
-    time: new Date(),
   };
 }
 
@@ -782,7 +780,6 @@ export function createToolCallMessages(): ConversationMessage[] {
       parameter: { query: 'SELECT COUNT(*) FROM users GROUP BY cohort' },
       result: { valid: true, estimatedRows: 5 },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -795,7 +792,6 @@ export function createToolCallMessages(): ConversationMessage[] {
       parameter: { query: 'SELECT COUNT(*) FROM users GROUP BY cohort' },
       result: { rowCount: 5, status: 'ok' },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -808,7 +804,6 @@ export function createToolCallMessages(): ConversationMessage[] {
       parameter: { chartType: 'bar', title: '各群組新增數量' },
       result: { viewId: 'view-123', status: 'ok' },
       isComplete: true,
-      time: new Date(),
     },
   ];
 
@@ -845,7 +840,6 @@ export function createPendingToolCallMessages(): ConversationMessage[] {
       parameter: { location: '台北', date: 'tomorrow' },
       result: { temperature: 22, condition: 'sunny' },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -858,7 +852,6 @@ export function createPendingToolCallMessages(): ConversationMessage[] {
       parameter: { city: '台北', category: 'outdoor' },
       result: { places: ['陽明山', '大稻埕', '河濱公園'] },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -870,7 +863,6 @@ export function createPendingToolCallMessages(): ConversationMessage[] {
       toolsetName: 'activity-service',
       parameter: { weather: 'sunny', places: ['陽明山', '大稻埕', '河濱公園'] },
       isComplete: false,
-      time: new Date(),
     },
   ];
 
@@ -891,7 +883,6 @@ export function createErrorToolCallMessages(): ConversationMessage[] {
       parameter: { query: 'SELECT * FROM orders WHERE date > now()' },
       result: { valid: true },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -904,7 +895,6 @@ export function createErrorToolCallMessages(): ConversationMessage[] {
       parameter: { table: 'orders', action: 'read' },
       result: { allowed: false, reason: 'restricted table' },
       isComplete: true,
-      time: new Date(),
     },
     {
       type: 'tool-call',
@@ -917,7 +907,6 @@ export function createErrorToolCallMessages(): ConversationMessage[] {
       parameter: { query: 'SELECT * FROM orders WHERE date > now()' },
       result: { error: 'Permission denied: table "orders" is restricted' },
       isComplete: true,
-      time: new Date(),
     },
   ];
 
@@ -930,7 +919,6 @@ export function createErrorToolCallMessages(): ConversationMessage[] {
       isTyping: false,
       typingText: '',
       eventType: EventType.MESSAGE_COMPLETE,
-      time: new Date(),
       message: {
         messageId: nanoid(),
         replyToCustomMessageId: '',

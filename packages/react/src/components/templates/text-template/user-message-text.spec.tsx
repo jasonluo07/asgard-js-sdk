@@ -8,7 +8,6 @@ const userMessage: ConversationUserMessage = {
   type: 'user',
   messageId: 'user-message',
   text: 'User message',
-  time: new Date('2026-07-31T00:00:00.000Z'),
 };
 
 describe('UserMessageText', () => {

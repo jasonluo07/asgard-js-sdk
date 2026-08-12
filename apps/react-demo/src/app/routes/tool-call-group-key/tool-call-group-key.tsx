@@ -37,7 +37,6 @@ function toolCall(callSeq: number, toolName: string, parameter: Record<string, u
     parameter,
     result: { output: 'ok' },
     isComplete: true,
-    time: new Date(),
   };
 }
 
@@ -46,7 +45,6 @@ const THINKING: ConversationThinkingMessage = {
   messageId: `${PROCESS_ID}-think`,
   text: '短缺量算出來了，接著查一下在途採購單再決定要不要改替代料號。',
   isThinking: false,
-  time: new Date(),
 };
 
 const MESSAGES: ConversationMessage[] = [
