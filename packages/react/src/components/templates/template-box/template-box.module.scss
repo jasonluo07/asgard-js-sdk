@@ -7,7 +7,8 @@
 .template_box--bot {
   // Bot messages follow the chat-kit content-first layout. Templates may still
   // render this legacy node for API compatibility, but it is no longer part of
-  // the SDK's default message UI.
+  // the SDK's default message UI. (`.asgard-time` needed no rule here — `Time`
+  // renders nothing at all since #422.)
   :global(.asgard-avatar) {
     display: none;
   }

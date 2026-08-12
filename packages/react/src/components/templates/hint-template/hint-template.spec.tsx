@@ -31,6 +31,7 @@ const message: ConversationBotMessage = {
       quickReplies: [],
     },
   },
+  time: new Date('2026-07-31T00:00:00.000Z'),
   raw: '',
 };
 
@@ -63,6 +64,7 @@ function errorMessage(error?: Partial<ConversationErrorMessage['error']>, traceI
       location: { namespace: '', workflowName: '', processorName: '', processorType: '' },
       ...error,
     },
+    time: new Date('2026-07-31T00:00:00.000Z'),
     traceId,
   };
 }

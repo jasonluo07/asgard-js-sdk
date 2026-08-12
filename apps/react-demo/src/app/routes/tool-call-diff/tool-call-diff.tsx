@@ -25,6 +25,7 @@ function toolCall(
     parameter,
     result: state === 'error' ? { error: { message: 'boom' } } : { output: 'ok' },
     isComplete: state !== 'running',
+    time: new Date(),
   };
 }
 

@@ -1,6 +1,7 @@
 import { CSSProperties, ReactNode, useMemo, useState } from 'react';
 import { ConversationUserMessage } from '@asgard-js/core';
 import { TemplateBox } from '../template-box';
+import { Time } from '../time';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import clsx from 'clsx';
 import styles from './user-image-template.module.scss';
@@ -95,6 +96,7 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
             </div>
           )}
         </div>
+        <Time time={message.message.time} />
       </TemplateBox>
 
       {expandedImage && (

@@ -144,7 +144,7 @@ describe('Conversation — transcript replay: message.user (F-014)', () => {
 
   it('dedup: a replay matching the optimistic bubble (by customMessageId) is skipped', () => {
     // The optimistic bubble is keyed by the customMessageId the client generated (channel.sendMessage).
-    const optimistic = empty().pushMessage({ type: 'user', messageId: 'c1', text: 'hi' });
+    const optimistic = empty().pushMessage({ type: 'user', messageId: 'c1', text: 'hi', time: new Date() });
     // The rejoin replays that turn with a backend messageId + the same customMessageId.
     const after = optimistic.onMessage(userEvent('u-backend-1', 'hi', { customMessageId: 'c1' }));
     expect(after.messages?.size).toBe(1);
@@ -510,6 +510,7 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
       toolsetName: '',
       parameter: {},
       isComplete,
+      time: new Date(),
     };
   }
 
@@ -517,7 +518,7 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
     const conv = empty()
       .pushMessage(toolCall('running', false))
       .pushMessage(toolCall('done', true))
-      .pushMessage({ type: 'user', messageId: 'u1', text: 'hi' });
+      .pushMessage({ type: 'user', messageId: 'u1', text: 'hi', time: new Date() });
 
     const settled = conv.settleInFlightMessages();
 
@@ -541,8 +542,8 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
   // test and the demo mock happened to interrupt after thinking had finished, so this path was blind.
   it('settles a streaming thinking block, keeping its text', () => {
     const conv = empty()
-      .pushMessage({ type: 'thinking', messageId: 't1', text: '想到一半', isThinking: true })
-      .pushMessage({ type: 'thinking', messageId: 't2', text: '早就想完了', isThinking: false });
+      .pushMessage({ type: 'thinking', messageId: 't1', text: '想到一半', isThinking: true, time: new Date() })
+      .pushMessage({ type: 'thinking', messageId: 't2', text: '早就想完了', isThinking: false, time: new Date() });
 
     const settled = conv.settleInFlightMessages();
 
@@ -556,7 +557,7 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
   it('settles a thinking block and a running tool-call in the same pass', () => {
     const conv = empty()
       .pushMessage(toolCall('running', false))
-      .pushMessage({ type: 'thinking', messageId: 't1', text: '…', isThinking: true });
+      .pushMessage({ type: 'thinking', messageId: 't1', text: '…', isThinking: true, time: new Date() });
 
     const settled = conv.settleInFlightMessages();
 
@@ -570,6 +571,7 @@ describe('Conversation — cancel in-flight tool-calls on stop (F-020 AC10)', ()
       messageId: 't1',
       text: '…',
       isThinking: true,
+      time: new Date(),
     });
 
     expect((conv.cancelInFlightToolCalls().messages?.get('t1') as ConversationThinkingMessage).isThinking).toBe(false);

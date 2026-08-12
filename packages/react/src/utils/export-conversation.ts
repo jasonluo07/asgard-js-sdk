@@ -11,8 +11,8 @@ export function exportConversationToMarkdown(
 ): string {
   const { customChannelId, botName = 'AI 助理' } = options ?? {};
 
-  // Map insertion order IS conversation order — `Conversation` re-keys a message to the tail whenever it
-  // has to move (see `onSubagentStart`), so there is nothing left to sort by.
+  // Map insertion order IS conversation order. Sorting by `time` was never reliable: on a GET rejoin the
+  // whole history is stamped within the same millisecond (#422).
   const sortedMessages = Array.from(messages.values());
 
   const exportTime = new Date().toLocaleString('zh-TW', {
@@ -36,7 +36,7 @@ export function exportConversationToMarkdown(
 
   sortedMessages.forEach((message, index) => {
     if (message.type === 'user') {
-      markdown += '**使用者**';
+      markdown += `**使用者**`;
 
       if (message.traceId) {
         markdown += ` | X-Trace-Id: \`${message.traceId}\``;
@@ -61,7 +61,7 @@ export function exportConversationToMarkdown(
       const text = message.message.text || message.typingText || '';
       markdown += `${text}\n\n`;
     } else if (message.type === 'error') {
-      markdown += '**錯誤訊息**';
+      markdown += `**錯誤訊息**`;
 
       if (message.traceId) {
         markdown += ` | X-Trace-Id: \`${message.traceId}\``;
