@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useFileExplorerController } from '../../hooks/use-file-explorer-controller';
-import { t } from '../../i18n';
+import { Locale, t } from '../../i18n';
 import { FileExplorerProvider, useFileExplorer } from './file-explorer-context';
 import { FileExplorerBody, FileExplorerRoot, FileExplorerToolbar } from './file-explorer-parts';
 import { FileExplorerTree } from './file-explorer-tree';
@@ -65,7 +65,7 @@ function UploadHarness({
   );
 }
 
-async function pickFile(container: HTMLElement, locale = 'en-US'): Promise<void> {
+async function pickFile(container: HTMLElement, locale: Locale = 'en-US'): Promise<void> {
   fireEvent.click(screen.getByText('select'));
   fireEvent.click(screen.getByLabelText(t(locale, 'fileExplorer.upload')));
 
