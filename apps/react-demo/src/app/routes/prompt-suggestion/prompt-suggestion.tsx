@@ -60,13 +60,22 @@ const SuggestionPanel = memo(function SuggestionPanel({ channel }: { channel: Ch
 
 const LOCALES: Locale[] = ['en-US', 'zh-TW', 'ja-JP'];
 
+// Both sizes are on screen at once, side by side, because the composer is exactly where they diverge:
+// the SDK's default theme is a 375×640 mobile widget, while every consumer here (Mimir, Sindri, Odin)
+// mounts it full-bleed. A suggestion that reads fine full-bleed can be clipped at 375px — including the
+// `⇥ Tab` hint that tells the user the shortcut exists — and showing them together means you compare
+// rather than remember. The wide override is the same one `all-features-wide` uses.
+const WIDE_THEME = { chatbot: { width: '100%', height: '100%' } };
+
 export function PromptSuggestionRoute(): ReactNode {
-  const chatbotRef = useRef<ChatbotRef>(null);
+  const wideRef = useRef<ChatbotRef>(null);
   const [channel, setChannel] = useState<Channel | null>(null);
   const [locale, setLocale] = useState<Locale>('en-US');
 
-  const onChannelReady = useCallback((): void => {
-    setChannel(chatbotRef.current?.serviceContext?.channel ?? null);
+  // The two shells are separate channels, so the store panel follows the wide one (the shape consumers
+  // actually ship); the narrow one is there to be looked at.
+  const onWideChannelReady = useCallback((): void => {
+    setChannel(wideRef.current?.serviceContext?.channel ?? null);
   }, []);
 
   return (
@@ -74,54 +83,75 @@ export function PromptSuggestionRoute(): ReactNode {
       title="Prompt Suggestion (F-028)"
       description="每輪回覆之後，後端最多推一則「下一句你大概想說什麼」。輸入框為空時它以灰字 placeholder 呈現、後面綴 ⇥ Tab；按 Tab 只是填進輸入框，送不送由你決定。沒有建議、或輸入框已經有字，placeholder 就完全照消費端原本的文案顯示。"
     >
-      <div className={styles.legend}>
-        <div className={styles.legend__title}>三個腳本（打字內容決定走哪一條）</div>
-        <ul className={styles.scripts}>
-          {SCRIPTS.map(s => (
-            <li key={s.label}>
-              <strong>{s.label}</strong>
-              <span>{s.hint}</span>
-            </li>
-          ))}
-        </ul>
-        <p className={styles.hint}>
-          鍵盤行為要一起看：有建議時按 <kbd>Tab</kbd> 採用（焦點留在輸入框、不送出）；輸入框一有字建議就讓位、
-          <kbd>Tab</kbd> 回到原本的移動焦點；<kbd>Shift</kbd>+<kbd>Tab</kbd> 一律不攔。採用後、送出後、下一輪
-          開始時建議都會被清掉。重新整理不會有建議 —— 這個事件是 live-only，歷史不重播。
-        </p>
-        <div className={styles.locales}>
-          <span>locale：</span>
-          {LOCALES.map(l => (
-            <button
-              type="button"
-              key={l}
-              className={locale === l ? styles.active : undefined}
-              onClick={(): void => setLocale(l)}
-            >
-              {l}
-            </button>
-          ))}
-          <span className={styles.localeHint}>
-            切換後把滑鼠移到輸入框看 tooltip —— 建議本身是後端內容，不隨語系翻譯。
-          </span>
-        </div>
-      </div>
-
-      <div className={styles.stage}>
-        <div className={styles.chatbotContainer}>
-          <Chatbot
-            ref={chatbotRef}
-            title="營運數據助理"
-            config={config}
-            customChannelId="prompt-suggestion-demo"
-            initMessages={INIT_MESSAGES}
-            inputPlaceholder="輸入你的問題"
-            locale={locale}
-            onChannelReady={onChannelReady}
-          />
+      <div className={styles.stack}>
+        <div className={styles.legend}>
+          <div className={styles.legend__title}>三個腳本（打字內容決定走哪一條）</div>
+          <ul className={styles.scripts}>
+            {SCRIPTS.map(s => (
+              <li key={s.label}>
+                <strong>{s.label}</strong>
+                <span>{s.hint}</span>
+              </li>
+            ))}
+          </ul>
+          <p className={styles.hint}>
+            <kbd>Tab</kbd> 採用（焦點留在輸入框、不送出）· 有字時建議讓位、<kbd>Tab</kbd> 回到移動焦點 ·<kbd>Shift</kbd>
+            +<kbd>Tab</kbd> 不攔 · 採用／送出／下一輪開始都會清掉 · 重整後不會有建議（live-only）
+          </p>
+          <div className={styles.locales}>
+            <span>locale：</span>
+            {LOCALES.map(l => (
+              <button
+                type="button"
+                key={l}
+                className={locale === l ? styles.active : undefined}
+                onClick={(): void => setLocale(l)}
+              >
+                {l}
+              </button>
+            ))}
+            <span className={styles.localeHint}>
+              切換後把滑鼠移到輸入框看 tooltip —— 建議本身是後端內容，不隨語系翻譯。
+            </span>
+          </div>
         </div>
 
+        {/* Above the chatbots on purpose: at 375×640 the shell is taller than most wrappers, and
+            anything placed below it gets covered by the overflow instead of pushed down. */}
         <SuggestionPanel channel={channel} />
+
+        <div className={styles.stage}>
+          <div className={styles.chatbotWide}>
+            <div className={styles.sizeLabel}>寬版 —— 消費端（Mimir / Sindri / Odin）實際的掛法</div>
+            <div className={styles.wideBox}>
+              <Chatbot
+                ref={wideRef}
+                title="營運數據助理"
+                config={config}
+                customChannelId="prompt-suggestion-demo"
+                initMessages={INIT_MESSAGES}
+                inputPlaceholder="輸入你的問題"
+                locale={locale}
+                theme={WIDE_THEME}
+                onChannelReady={onWideChannelReady}
+              />
+            </div>
+          </div>
+
+          <div className={styles.chatbotNarrow}>
+            <div className={styles.sizeLabel}>窄版 375×640 —— SDK 預設 theme</div>
+            <div className={styles.narrowBox}>
+              <Chatbot
+                title="營運數據助理"
+                config={config}
+                customChannelId="prompt-suggestion-demo-narrow"
+                initMessages={INIT_MESSAGES}
+                inputPlaceholder="輸入你的問題"
+                locale={locale}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </DemoWrapper>
   );

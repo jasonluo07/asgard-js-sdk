@@ -213,9 +213,11 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
     return;
   }
 
-  // F-028 next-turn suggestion demo — scoped channel. See `handlePromptSuggestionMock` for the scripts.
-  if (customChannelId === 'prompt-suggestion-demo') {
-    await handlePromptSuggestionMock(res, payload);
+  // F-028 next-turn suggestion demo — scoped channels. The route mounts the shell twice (full-bleed and
+  // the SDK's default 375×640) so both widths can be compared side by side, hence the prefix match: the
+  // narrow one is `-narrow` and must run the same scripts, not fall through to the generic reply.
+  if (customChannelId.startsWith('prompt-suggestion-demo')) {
+    await handlePromptSuggestionMock(res, payload, customChannelId);
 
     return;
   }
@@ -580,12 +582,16 @@ async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): 
 
 const SUGGESTION_REPLY = '上週營收 1,284 萬，較前週成長 12%。成長主要來自行動 App 的回購，官網則持平。';
 
-async function handlePromptSuggestionMock(res: ServerResponse, payload: ParsedPayload): Promise<void> {
+async function handlePromptSuggestionMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+): Promise<void> {
   const header: CommonHeader = {
     requestId: randomUUID(),
     namespace: NAMESPACE,
     botProviderName: BOT_PROVIDER_NAME,
-    customChannelId: 'prompt-suggestion-demo',
+    customChannelId,
   };
   const replyTo = payload.customMessageId ?? '';
   const messageId = randomUUID();

@@ -153,6 +153,29 @@ The entries under `references/` are git submodules (pinned to specific commits).
 
 To run: copy `apps/react-demo/.env.example` to `apps/react-demo/.env`, set `VITE_BOT_PROVIDER_ENDPOINT` / `VITE_API_KEY` (see `CLAUDE.local.md` for the full variable map), then `npm run serve:react-demo`.
 
+### Verify at both widths — narrow AND wide
+
+The default theme sizes the shell as a **375×640** mobile widget (`asgard-theme-context.tsx`), but every
+first-party consumer (Mimir, Sindri, Odin) mounts it **full-bleed** with
+`theme={{ chatbot: { width: '100%', height: '100%' } }}`. A demo route that does not override the theme
+therefore verifies a 375px layout nobody ships, and one that only overrides it never sees the width where
+things get clipped. **Walk every UI acceptance criterion at both sizes, and render them side by side** —
+mount the shell twice on the route (`/prompt-suggestion` is the reference) rather than hiding one behind
+a toggle: what matters is comparing the two, and a toggle makes you hold one of them in your head.
+Give the second shell its own `customChannelId`, and have the mock match the channel by prefix so both
+run the same scripts.
+
+Two traps this has already cost time on:
+
+- **A wrapper shorter than the shell does not clip it — the shell paints outside and covers whatever
+  follows.** The default shell is a fixed 640px tall; a 560px wrapper leaks ~80px of composer over the
+  next element. Size the wrapper to at least the shell, or use the full-bleed override and let flexbox
+  size it (`flex: 1; min-height: 0` — without `min-height: 0` the shell refuses to shrink and pushes the
+  composer below the fold).
+- **`DemoWrapper`'s content area is a row flex.** A route that returns two top-level children gets them
+  side by side, so the chatbot ends up squeezed to zero width. Wrap the route in one column stack, the
+  way `all-features-wide` does.
+
 ## Common Development Tasks
 
 ### Adding a new message template
