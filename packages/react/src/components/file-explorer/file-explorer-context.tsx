@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { FileExplorerController } from '../../hooks/use-file-explorer-controller';
+import { FileExplorerController, SourceViewState } from '../../hooks/use-file-explorer-controller';
 import { useAsgardTemplateContext } from '../../context/asgard-template-context';
 import { Locale, t } from '../../i18n';
 import { useFileExplorerDialog } from './file-explorer-dialog';
@@ -126,11 +126,22 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
   const activeSourceId = controller.activeSourceId ?? sources[0]?.id ?? null;
   const activeSource = sources.find(s => s.id === activeSourceId) ?? null;
 
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [selectedEntry, setSelectedEntry] = useState<FsEntry | null>(null);
+  // Which directories are unfolded / what is selected / which file is open lives on the controller,
+  // keyed by source (F-027 AC8). Two consequences fall out of that one move: switching sources shows
+  // that source's own history instead of a wiped tree, and a host that remounts the panel (Sindri
+  // rebuilds its conversation subtree on every conversation switch) can hold the controller above the
+  // remount and keep the view. Everything below reads and writes it exactly like local state.
+  const { expanded, selectedPath, selectedEntry, openFile } = controller.sourceView(activeSourceId);
+  const updateView = useCallback(
+    (update: (prev: SourceViewState) => SourceViewState): void => {
+      if (!activeSourceId) return;
+
+      controller.updateSourceView(activeSourceId, update);
+    },
+    [controller, activeSourceId],
+  );
+
   const [refreshKey, setRefreshKey] = useState(0);
-  const [openFile, setOpenFile] = useState<FsEntry | null>(null);
   const [clipboard, setClipboard] = useState<Clipboard>(null);
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [nudging, setNudging] = useState(false);
@@ -143,27 +154,36 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
   const bumpRefresh = useCallback((): void => setRefreshKey(k => k + 1), []);
   const closeMenu = useCallback((): void => setMenu(null), []);
 
-  const toggleExpand = useCallback((path: string): void => {
-    setExpanded(prev => {
-      const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
-      else next.add(path);
+  const toggleExpand = useCallback(
+    (path: string): void => {
+      updateView(prev => {
+        const next = new Set(prev.expanded);
+        if (next.has(path)) next.delete(path);
+        else next.add(path);
 
-      return next;
-    });
-  }, []);
-  const expand = useCallback((path: string): void => setExpanded(prev => new Set(prev).add(path)), []);
+        return { ...prev, expanded: next };
+      });
+    },
+    [updateView],
+  );
+  const expand = useCallback(
+    (path: string): void => updateView(prev => ({ ...prev, expanded: new Set(prev.expanded).add(path) })),
+    [updateView],
+  );
 
-  const onSelect = useCallback((entry: FsEntry): void => {
-    setSelectedPath(entry.path);
-    setSelectedEntry(entry);
-  }, []);
+  const onSelect = useCallback(
+    (entry: FsEntry): void => updateView(prev => ({ ...prev, selectedPath: entry.path, selectedEntry: entry })),
+    [updateView],
+  );
 
+  const setOpenFile = useCallback(
+    (entry: FsEntry | null): void => updateView(prev => ({ ...prev, openFile: entry })),
+    [updateView],
+  );
+
+  // The context menu is per-interaction chrome, not part of a source's remembered view — a menu left
+  // open while the source changes is stale in a way "where was I" state is not.
   useEffect(() => {
-    setExpanded(new Set());
-    setSelectedPath(null);
-    setSelectedEntry(null);
-    setOpenFile(null);
     setMenu(null);
   }, [activeSourceId]);
 
@@ -172,22 +192,25 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
     const rf = controller.requestedFile;
     if (!rf || rf.sourceId !== activeSourceId || !rootPath) return;
 
-    setExpanded(prev => {
-      const next = new Set(prev);
+    updateView(prev => {
+      const next = new Set(prev.expanded);
       ancestorDirs(rootPath, rf.absolutePath).forEach(d => next.add(d));
 
-      return next;
+      return {
+        ...prev,
+        expanded: next,
+        selectedPath: rf.absolutePath,
+        openFile: {
+          name: baseName(rf.absolutePath),
+          path: rf.absolutePath,
+          isDir: false,
+          sizeBytes: 0,
+          mtimeUnix: 0,
+          mode: 0,
+        },
+      };
     });
-    setSelectedPath(rf.absolutePath);
-    setOpenFile({
-      name: baseName(rf.absolutePath),
-      path: rf.absolutePath,
-      isDir: false,
-      sizeBytes: 0,
-      mtimeUnix: 0,
-      mode: 0,
-    });
-  }, [controller.requestedFile, activeSourceId, rootPath]);
+  }, [controller.requestedFile, activeSourceId, rootPath, updateView]);
 
   // --- actions (toolbar + context menu share these) ---
   const run = useCallback(
@@ -324,16 +347,18 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
     }
   }, [onNudge, nudging, nudgeDisabled]);
 
-  const openContext = useCallback((e: ReactMouseEvent, target: MenuTarget): void => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = rootRef.current?.getBoundingClientRect();
-    setMenu({ x: rect ? e.clientX - rect.left : e.clientX, y: rect ? e.clientY - rect.top : e.clientY, target });
-    if (target.kind !== 'background') {
-      setSelectedPath(target.entry.path);
-      setSelectedEntry(target.entry);
-    }
-  }, []);
+  const openContext = useCallback(
+    (e: ReactMouseEvent, target: MenuTarget): void => {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = rootRef.current?.getBoundingClientRect();
+      setMenu({ x: rect ? e.clientX - rect.left : e.clientX, y: rect ? e.clientY - rect.top : e.clientY, target });
+      if (target.kind !== 'background') {
+        updateView(prev => ({ ...prev, selectedPath: target.entry.path, selectedEntry: target.entry }));
+      }
+    },
+    [updateView],
+  );
 
   const targetDir = selectedEntry?.isDir ? selectedEntry.path : rootPath ?? '/';
   const pasteLabel = clipboard
@@ -398,6 +423,7 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
       selectedEntry,
       refreshKey,
       openFile,
+      setOpenFile,
       clipboard,
       menu,
       nudging,
