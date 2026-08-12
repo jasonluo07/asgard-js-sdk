@@ -135,6 +135,41 @@ export interface AttachmentMessageTemplate extends MessageTemplate {
   }[];
 }
 
+/** One offered choice of a {@link Question}. `description` explains what picking it means; may be absent. */
+export interface QuestionOption {
+  label: string;
+  description?: string;
+}
+
+/**
+ * One multiple-choice question of a {@link QuestionMessageTemplate}. The backend sends 1–4 per card
+ * with 2–4 options each, but a renderer must not rely on those bounds.
+ */
+export interface Question {
+  /** Full question text. Also the key when folding answers — the model matches on it verbatim. */
+  question: string;
+  /** Short chip label (~12 chars). May repeat across questions, so it is never an identity key. */
+  header: string;
+  multiSelect: boolean;
+  options: QuestionOption[];
+}
+
+/**
+ * A multiple-choice card the agent sends when it needs a decision rather than a guess.
+ *
+ * Answering is deliberately **not** a protocol handshake: the run that produced the card has already
+ * finished, so a client folds the picks into plain text and posts them as an ordinary next user
+ * message. Ignoring the card and typing something else is the same path, not an error path.
+ *
+ * `text` carries a plain-text rendering of the same questions so clients that do not know this
+ * template fall back to it instead of showing an empty bubble.
+ */
+export interface QuestionMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.QUESTION;
+  text?: string;
+  questions: Question[];
+}
+
 export interface Message<Payload = unknown> {
   messageId: string;
   // Non-empty when this frame belongs to a subagent (= the toolUseId of the Agent call that spawned it);
@@ -156,7 +191,8 @@ export interface Message<Payload = unknown> {
     | CarouselMessageTemplate
     | ChartMessageTemplate
     | TableMessageTemplate
-    | AttachmentMessageTemplate;
+    | AttachmentMessageTemplate
+    | QuestionMessageTemplate;
 }
 
 export type IsEqual<A, B, DataType> = A extends B ? (B extends A ? DataType : null) : null;

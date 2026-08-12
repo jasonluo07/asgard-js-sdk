@@ -14,6 +14,7 @@ import {
   UserImageTemplate,
   TableTemplate,
   AttachmentTemplate,
+  QuestionTemplate,
   ThinkingBlock,
   TemplateBox,
   TemplateBoxContent,
@@ -111,6 +112,11 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
         return <TableTemplate message={message} />;
       case MessageTemplateType.ATTACHMENT:
         return <AttachmentTemplate message={message} />;
+      // F-029 — this case *replaces* the plain-text fallback below for QUESTION cards. The backend
+      // ships the questions as prose in `message.text` as well, so an SDK that predates this case
+      // still shows them via the default branch instead of an empty bubble.
+      case MessageTemplateType.QUESTION:
+        return <QuestionTemplate message={message} />;
       default:
         // No-template (or unknown-template) completed message → render its plain text, never an empty
         // bubble (F-011 / UC-017). TextTemplate reads `message.text` directly, independent of template.
