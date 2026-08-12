@@ -28,7 +28,6 @@ function toolCall(
     result,
     isError,
     isComplete: true,
-    time: new Date(),
   };
 }
 

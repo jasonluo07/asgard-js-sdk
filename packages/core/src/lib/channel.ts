@@ -561,7 +561,6 @@ export default class Channel {
         blobIds: payload.blobIds,
         filePreviewUrls: payload.filePreviewUrls,
         documentNames: payload.documentNames,
-        time: new Date(),
       }),
     );
 

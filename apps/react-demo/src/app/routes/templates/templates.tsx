@@ -62,7 +62,7 @@ const templateCreators: Record<TemplateType, () => ReturnType<typeof createTextT
   text: createTextTemplateExample,
   'streaming-text': createStreamingTextTemplateExample,
   'text-auxiliary': createTextAuxiliaryTemplateExample,
-  'user-regression': () => createUserMessageExample('使用者訊息應繼續保留泡泡與時間戳。'),
+  'user-regression': () => createUserMessageExample('使用者訊息應保留泡泡，且不再顯示時間戳。'),
   hint: createHintTemplateExample,
   button: createButtonTemplateExample,
   carousel: createCarouselTemplateExample,

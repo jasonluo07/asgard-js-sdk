@@ -15,8 +15,6 @@ export * from './thinking-block';
 export * from './table-template';
 export * from './attachment-template';
 
-export * from './time';
-
 export * from './quick-replies';
 export * from './references';
 export * from './message-actions';

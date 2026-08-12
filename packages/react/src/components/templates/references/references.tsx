@@ -4,16 +4,14 @@ import { Reference } from '@asgard-js/core';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { safeWindowOpen } from '../../../utils/uri-validation';
-import { Time } from '../time';
 import clsx from 'clsx';
 
 interface ReferencesProps {
   references: Reference[];
-  time?: Date;
 }
 
 export function References(props: ReferencesProps): ReactNode {
-  const { references, time } = props;
+  const { references } = props;
 
   const { template, botMessage, chatbot } = useAsgardThemeContext();
   const { defaultLinkTarget } = useAsgardTemplateContext();
@@ -77,7 +75,6 @@ export function References(props: ReferencesProps): ReactNode {
           </div>
         </div>
       </div>
-      <Time time={time} />
     </div>
   );
 }

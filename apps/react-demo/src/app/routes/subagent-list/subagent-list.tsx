@@ -29,7 +29,6 @@ function agentTool(seq: number, toolUseId: string, description: string): Convers
     toolUseId,
     result: { status: 'async_launched' }, // Agent tool completes early — must NOT mark the subagent done
     isComplete: true,
-    time: new Date(),
   };
 }
 
@@ -48,7 +47,6 @@ function subStart(
     agentId,
     subagentType,
     description,
-    time: new Date(),
   };
 }
 
@@ -76,7 +74,6 @@ function childTool(
     parentToolUseId,
     result: complete ? { text: 'ok' } : undefined,
     isComplete: complete,
-    time: new Date(),
   };
 }
 
@@ -93,7 +90,6 @@ function subComplete(
     agentId: `agent-${parentToolUseId}`,
     status,
     summary: 'done',
-    time: new Date(),
   };
 }
 
@@ -110,7 +106,6 @@ function readCall(seq: number): ConversationToolCallMessage {
     parameter: { file_path: '/app/inventory.md' },
     result: { text: 'file contents…' },
     isComplete: true,
-    time: new Date(),
   };
 }
 

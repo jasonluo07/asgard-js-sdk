@@ -1,6 +1,5 @@
 import { ReactNode, useCallback, useState } from 'react';
 import classes from './hint-template.module.scss';
-import { formatTime } from '../../../utils';
 import { ConversationErrorMessage, ConversationMessage, MessageTemplateType } from '@asgard-js/core';
 import { useAsgardTemplateContext, useAsgardThemeContext } from '../../../context';
 import { t } from '../../../i18n';
@@ -77,7 +76,6 @@ function ErrorHint({ message }: { message: ConversationErrorMessage }): ReactNod
   return (
     <>
       <div className={classes.error_hint_title}>
-        <span className={classes.time}>{formatTime(message.time)}</span>
         <span className={classes.error_hint_summary} title={summary}>
           {summary}
         </span>

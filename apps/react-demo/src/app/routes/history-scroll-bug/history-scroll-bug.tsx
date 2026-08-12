@@ -46,7 +46,6 @@ function botText(text: string, idx: number): ConversationMessage {
     isTyping: false,
     typingText: '',
     eventType: EventType.MESSAGE_COMPLETE,
-    time: new Date(),
     message,
     raw: JSON.stringify(mockSseResponse),
   };
