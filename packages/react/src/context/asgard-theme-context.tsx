@@ -917,8 +917,8 @@ export function AsgardThemeContextProvider(
 
       // Inactive → the muted text/icon tier (tool-call & thinking headers, chevrons, the Task/Subagent
       // rows, the channel title). Reuses `inactiveColor`'s established meaning — it already colors the
-      // timestamp, the placeholder and the header action icons — so the muted tier is themed by the same
-      // field everywhere instead of being stuck on the palette default.
+      // placeholder and the header action icons — so the muted tier is themed by the same field
+      // everywhere instead of being stuck on the palette default.
       const effectiveInactive = mergedTheme.chatbot?.inactiveColor;
       if (typeof effectiveInactive === 'string' && effectiveInactive) {
         themeVars['--asg-color-text-secondary'] = effectiveInactive;

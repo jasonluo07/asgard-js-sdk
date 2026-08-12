@@ -12,7 +12,7 @@ export interface BotMessageTextProps {
 
 /**
  * The bot message text content — the chrome-free `.text--bot` wrapper around the streaming/markdown renderer,
- * without the surrounding `TemplateBox`, `Avatar`, or `Time`. Exported so a consumer can compose a custom
+ * without the surrounding `TemplateBox` or `Avatar`. Exported so a consumer can compose a custom
  * bot message row (e.g. via `renderMessageContent` + `TemplateBox` / `TemplateBoxContent`) without
  * re-implementing the markdown styling.
  *

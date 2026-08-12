@@ -408,7 +408,7 @@ export default class Conversation implements IConversation {
       // arrives with no preceding `tool_call.start`. Dropping it here made every tool-call block
       // vanish when re-entering a conversation. The complete frame extends the same base payload as
       // the start frame (`toolCall.*` plus the correlation ids), so it can stand alone as a finished
-      // call — the only thing lost is the original start timestamp.
+      // call.
       const replayedMessage: ConversationToolCallMessage = {
         type: 'tool-call',
         eventType: EventType.TOOL_CALL_COMPLETE,
