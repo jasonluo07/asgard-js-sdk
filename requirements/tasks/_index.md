@@ -65,7 +65,14 @@
 
 ## ▶ Next Task
 
-**None — awaiting task selection.** 最近收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，2026-08-12 **merged to main** via PR #425（merge commit `a93d137c`）。**刻意未發版**：與 F-029（[`#64`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/64)）／F-030（[`#66`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/66)）併批發一次，六個消費端因此只需 bump 一次；在那之前 `main` 上的版本號維持 `0.3.61`，issue #62 也還不到移 Review 的門檻（缺 tag）。以下段落保留各 cycle 的脈絡與 backlog。
+**None — awaiting task selection.** 最近收尾兩個 cycle，併為同一批發版 `0.3.62`：
+
+- `BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，2026-08-12 **merged to main** via PR #425（merge commit `a93d137c`）。
+- `BUILD-052` / `REVIEW-052`（[`asgard-sdk-pm#64`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/64) F-029 問卷卡 QUESTION template）—— §1 19/19、§3 R1–R17 全 Pass、0 BLOCKERs，2026-08-13 **merged to main** via PR #430（merge commit `0a254e8d`）。純增量的公開 API：core 新增 `MessageTemplateType.QUESTION` 與 `Question` / `QuestionOption` / `QuestionMessageTemplate` 型別，react 新增 `QuestionTemplate`；無破壞性變更。
+
+**批次範圍已縮小為兩個 feature。** 原訂與 F-030（[`#66`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/66) 畫布卡片 canvas：sandboxed iframe 渲染與串流）三個併批發一次，2026-08-13 決定不等 —— F-030 至今未動工（PM issue 仍 OPEN、repo 內無對應的 BUILD 任務），繼續壓著兩個已完成的 feature 不發、代價高於讓消費端多 bump 一次。F-030 之後自成一批。打完 tag 後 #62 / #64 才達到移 Review 的門檻。
+
+以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
 
