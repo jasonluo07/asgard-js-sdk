@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-054`
-- Status: `in-progress`
+- Status: `done`
 - Issue: `https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/69`
 - Source spec: `references/asgard-sdk-pm/tracking/asgard-js-sdk/features/F-021-sandbox-working-directory-file-explorer-側欄.md`
 - Complexity: `S`
@@ -109,14 +109,14 @@ Run in order; each task maps to the R# it satisfies.
 - [x] T4: Run `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` +
       `npm run build:core && npm run build:react` + `npm run test:packages`.
 - [x] T5 (R7): Smoke check in the react-demo `/file-explorer` route at both narrow and wide widths; walk every R#.
-- [ ] T6 (R6): `npm pack` both packages, install into `asgard-ai-agent-hub-web`, and re-walk the 「可下載」 clause of
+- [x] T6 (R6): `npm pack` both packages, install into `asgard-ai-agent-hub-web`, and re-walk the 「可下載」 clause of
       Sindri F-004 AC5 by opening a file from the directory 檔案 tab.
 
 ---
 
 ## Coverage
 
-Use Cases: R1–R5 and R7 verified (R6 pending the downstream install). Traces to Sindri F-004 AC5 / UC-006.
+Use Cases: R1–R7 verified. Traces to Sindri F-004 AC5 / UC-006.
 
 Files:
 
@@ -136,3 +136,9 @@ Files:
 - 2026-08-13: BUILD task created from https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/69 (Status: `draft`).
 - 2026-08-13: Plan confirmed after checking the pinned prototype and the consumer spec; button order and download semantics sourced from them (Status: `draft → ready`).
 - 2026-08-13: Implementation started (Status: `ready → in-progress`).
+- 2026-08-13: R1–R5 and R7 verified in the react-demo — the viewer header reads
+  `back | reload · preview/edit · download`, and the click saved `README.md` under its own name through the
+  tree's own provider. Static checks and `test:packages` green.
+- 2026-08-13: R6 verified downstream — in `asgard-ai-agent-hub-web` on `0.3.63-local`, opening `notes.md` from
+  the directory 檔案 tab shows an enabled download in the viewer header, and clicking it saved `notes.md`
+  through Sindri's own volume-backed provider. Sindri F-004 AC5「可下載」now passes (Status: `in-progress → done`).

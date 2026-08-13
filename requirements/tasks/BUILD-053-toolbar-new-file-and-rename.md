@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-053`
-- Status: `in-progress`
+- Status: `done`
 - Issue: `https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/68`
 - Source spec: `references/asgard-sdk-pm/tracking/asgard-js-sdk/features/F-021-sandbox-working-directory-file-explorer-側欄.md`
 - Complexity: `S`
@@ -124,14 +124,14 @@ Run in order; each task maps to the R# it satisfies.
 - [x] T5: Run `npm run lint:packages` + `npm run format:check` + `npm run typecheck:packages` +
       `npm run build:core && npm run build:react` + `npm run test:packages`.
 - [x] T6 (R8): Smoke check in the react-demo `/file-explorer` route at both narrow and wide widths; walk every R#.
-- [ ] T7 (R9): `npm pack` both packages, install into `asgard-ai-agent-hub-web`, and re-walk Sindri F-004 AC3 on the
+- [x] T7 (R9): `npm pack` both packages, install into `asgard-ai-agent-hub-web`, and re-walk Sindri F-004 AC3 on the
       directory 檔案 tab (and the conversation Files panel, which shares the toolbar).
 
 ---
 
 ## Coverage
 
-Use Cases: R1–R8 verified (R9 pending the downstream install). Traces to Sindri F-004 AC3 / UC-005.
+Use Cases: R1–R9 verified. Traces to Sindri F-004 AC3 / UC-005.
 
 Files:
 
@@ -148,3 +148,12 @@ Files:
 - 2026-08-13: BUILD task created from https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/68 (Status: `draft`).
 - 2026-08-13: Plan confirmed after checking the pinned prototype and the consumer spec; button order and download semantics sourced from them (Status: `draft → ready`).
 - 2026-08-13: Implementation started (Status: `ready → in-progress`).
+- 2026-08-13: R1–R8 verified in the react-demo; ten buttons in the AC3 order at both widths, new-file and rename
+  round-tripped, disabled states track selection and providers. `npm run lint:packages` / `format:check` /
+  `typecheck:packages` / `build:core` / `build:react` all clean; `test:packages` 46 files / 421 tests green
+  (8 new). R7 (toolbar wrap) found and fixed during the smoke check.
+- 2026-08-13: R9 verified downstream — `0.3.63-local` installed into `asgard-ai-agent-hub-web` via `npm pack`
+  (`--no-save`, no `--legacy-peer-deps` needed since both packages carry the same exact version). Sindri's
+  directory 檔案 tab toolbar shows all ten actions in the AC3 order; rename enables on selection; new file →
+  rename → delete round-tripped against the real volume API leaving no residue. The conversation Files panel
+  (419px) shows the same ten on one row. Sindri F-004 AC3 now passes (Status: `in-progress → done`).
