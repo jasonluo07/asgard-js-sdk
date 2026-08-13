@@ -23,6 +23,11 @@
 
 .toolbar {
   display: flex;
+  // The row has no scroll and no clipping, so anything that does not fit paints outside the panel over
+  // whatever follows. Eight buttons already spilled at the default theme's 225px-wide aside; ten fill the
+  // built-in aside's own 20rem exactly, leaving none. Wrapping keeps every action reachable at any width and
+  // is a no-op above ~375px, where the row still fits on one line.
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem;
   padding: 0.35rem 0.45rem;

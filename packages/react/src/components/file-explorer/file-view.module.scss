@@ -55,9 +55,16 @@
   color: var(--asg-color-text-secondary, #6b7280);
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 8%, transparent);
     color: var(--asg-color-primary, #4f46e5);
+  }
+
+  // Matches the tree toolbar's own disabled treatment, so a download the host cannot serve reads the same here
+  // as it does there.
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 }
 

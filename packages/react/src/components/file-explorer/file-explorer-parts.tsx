@@ -123,7 +123,16 @@ export function FileExplorerCwd({ children }: { children?: ReactNode }): ReactNo
   );
 }
 
-/** The action toolbar. Hides itself while a file is open, mirroring the built-in panel. */
+/**
+ * The action toolbar. Hides itself while a file is open, mirroring the built-in panel.
+ *
+ * The button order is the consumer spec's own ordered action set (`asgard-sindri-pm`
+ * `docs/spec/asgard-sindri/panels.md`, restated verbatim in its F-004 AC3: new file, new folder, upload,
+ * download / copy, cut, paste, rename, delete / refresh), whose three lines land on the three separator groups
+ * below. Every action here is the same context action the right-click menu calls — both entry points offering
+ * the same set is the requirement, and sharing the action is what keeps them equal as the set grows. New file
+ * and rename were the two the toolbar was missing, which failed that AC on 2026-08-12.
+ */
 export function FileExplorerToolbar(): ReactNode {
   const ctx = useFileExplorer();
   const {
@@ -134,20 +143,32 @@ export function FileExplorerToolbar(): ReactNode {
     targetDir,
     pasteLabel,
     locale,
+    actNewFile,
     actNewFolder,
     actUpload,
     actDownload,
+    actRename,
     actDelete,
     actPaste,
     setClipboard,
     bumpRefresh,
   } = ctx;
-  const { mkdir, upload, download, remove } = providers;
+  const { saveFile, mkdir, upload, download, move, remove } = providers;
 
   if (openFile) return null;
 
   return (
     <div className={styles.toolbar} role="toolbar" aria-label={t(locale, 'fileExplorer.toolbar')}>
+      <button
+        type="button"
+        className={styles.toolBtn}
+        onClick={() => actNewFile(targetDir)}
+        disabled={!saveFile}
+        aria-label={t(locale, 'fileExplorer.newFile')}
+        title={t(locale, 'fileExplorer.newFile')}
+      >
+        <FilePlusIcon size={16} />
+      </button>
       <button
         type="button"
         className={styles.toolBtn}
@@ -211,6 +232,16 @@ export function FileExplorerToolbar(): ReactNode {
       </button>
       <button
         type="button"
+        className={styles.toolBtn}
+        onClick={() => selectedEntry && actRename(selectedEntry)}
+        disabled={!move || !selectedEntry}
+        aria-label={t(locale, 'fileExplorer.rename')}
+        title={t(locale, 'fileExplorer.rename')}
+      >
+        <PencilIcon size={16} />
+      </button>
+      <button
+        type="button"
         className={`${styles.toolBtn} ${styles.toolDanger}`}
         onClick={() => selectedEntry && actDelete(selectedEntry)}
         disabled={!remove || !selectedEntry}
@@ -240,7 +271,7 @@ export function FileExplorerBody({ children }: { children: ReactNode }): ReactNo
 
 /** The single-file view; renders nothing until a file is opened. */
 export function FileExplorerView(): ReactNode {
-  const { openFile, activeSourceId, providers, controller, setOpenFile } = useFileExplorer();
+  const { openFile, activeSourceId, providers, controller, setOpenFile, actDownload } = useFileExplorer();
 
   if (!openFile || !activeSourceId) return null;
 
@@ -252,6 +283,10 @@ export function FileExplorerView(): ReactNode {
       onSaveFile={providers.saveFile}
       watchFile={providers.watchFile}
       onDirtyChange={controller.setEditingDirty}
+      // The tree's own download, not a second path: same provider call, so the bytes and the saved name are
+      // whatever the tree would have produced for this entry.
+      onDownload={() => actDownload(openFile)}
+      downloadDisabled={!providers.download}
       onBack={() => {
         controller.setEditingDirty(false);
         setOpenFile(null);

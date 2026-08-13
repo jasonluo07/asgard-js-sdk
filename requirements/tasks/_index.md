@@ -205,3 +205,7 @@
 | `REVIEW-051` | Review: Prompt suggestion placeholder + Tab adopt | —        | done   | [REVIEW-051-prompt-suggestion-placeholder.md](./REVIEW-051-prompt-suggestion-placeholder.md)             |
 | `BUILD-052`  | QUESTION template as a fillable card              | Normal   | done   | [BUILD-052-question-template.md](./BUILD-052-question-template.md)                                       |
 | `REVIEW-052` | Review: QUESTION template as a fillable card      | —        | done   | [REVIEW-052-question-template.md](./REVIEW-052-question-template.md)                                     |
+| `BUILD-053`  | Toolbar new-file and rename actions               | Normal   | done   | [BUILD-053-toolbar-new-file-and-rename.md](./BUILD-053-toolbar-new-file-and-rename.md)                   |
+| `REVIEW-053` | Review: Toolbar new-file and rename actions       | —        | done   | [REVIEW-053-toolbar-new-file-and-rename.md](./REVIEW-053-toolbar-new-file-and-rename.md)                 |
+| `BUILD-054`  | File viewer download action                       | Normal   | done   | [BUILD-054-file-view-download.md](./BUILD-054-file-view-download.md)                                     |
+| `REVIEW-054` | Review: File viewer download action               | —        | done   | [REVIEW-054-file-view-download.md](./REVIEW-054-file-view-download.md)                                   |

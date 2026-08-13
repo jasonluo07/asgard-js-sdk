@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useAsgardTemplateContext } from '../../context/asgard-template-context';
 import { t } from '../../i18n';
 import { StreamdownClient } from '../templates/text-template/streamdown-client';
-import { ArrowLeftIcon, CodeIcon, EyeIcon, CircleAlertIcon, RefreshIcon } from './icons';
+import { ArrowLeftIcon, CodeIcon, DownloadIcon, EyeIcon, CircleAlertIcon, RefreshIcon } from './icons';
 import { Spinner } from '../spinner';
 import { CodeEditor } from './code-editor';
 import { FsEntry, FsReadFile, FsSaveFile, FsWatchFile } from './types';
@@ -24,6 +24,13 @@ export interface FileViewProps {
   watchFile?: FsWatchFile;
   /** Report editing / unsaved-changes state so the host can guard mid-edit panel yanks (F-021 AC10). */
   onDirtyChange?: (dirty: boolean) => void;
+  /**
+   * Download the open file (≈ `GET fs/file`, saved under its own name). Absent → no download button at all, so a
+   * consumer mounting this view on its own opts in rather than inheriting a dead control.
+   */
+  onDownload?: () => void;
+  /** Keep the download button visible but inert — the explorer passes `!providers.download`. */
+  downloadDisabled?: boolean;
   /** Back to the file tree. */
   onBack: () => void;
 }
@@ -51,7 +58,8 @@ function kindOf(ext: string): FileKind {
  */
 export function FileView(props: FileViewProps): ReactNode {
   const { locale = 'en-US' } = useAsgardTemplateContext();
-  const { sandboxName, file, readFile, onSaveFile, watchFile, onDirtyChange, onBack } = props;
+  const { sandboxName, file, readFile, onSaveFile, watchFile, onDirtyChange, onDownload, downloadDisabled, onBack } =
+    props;
   const ext = extOf(file.name);
   const kind = kindOf(ext);
   const canToggle = kind !== 'image';
@@ -201,6 +209,20 @@ export function FileView(props: FileViewProps): ReactNode {
               className={styles.actionBtn}
             >
               {mode === 'preview' ? <CodeIcon size={15} /> : <EyeIcon size={15} />}
+            </button>
+          )}
+          {/* After the preview/source toggle, and outside `canToggle` — an image has no toggle but is still
+              downloadable. */}
+          {onDownload && (
+            <button
+              type="button"
+              onClick={onDownload}
+              disabled={downloadDisabled}
+              aria-label={t(locale, 'fileExplorer.download')}
+              title={t(locale, 'fileExplorer.download')}
+              className={styles.actionBtn}
+            >
+              <DownloadIcon size={15} />
             </button>
           )}
         </div>
