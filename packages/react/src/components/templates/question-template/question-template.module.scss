@@ -1,0 +1,236 @@
+// F-029 — the QUESTION card. Card shell mirrors the other templates (rounded + `--asg-color-border`);
+// options are clickable rows whose selected state is carried by `--asg-color-primary`. Secondary text
+// uses the muted token rather than a faded accent. Honors prefers-reduced-motion.
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 8px;
+  background-color: var(--asg-color-surface, #1f1f1f);
+  // The card lives in the message flow, which is width-constrained on the 375px shell. Without this the
+  // long-option rows would push the whole thread open instead of wrapping (R14).
+  min-width: 0;
+  max-width: 100%;
+}
+
+// ---- collapsed shell (R9 / R10) -------------------------------------------------------------------
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+
+  &:hover {
+    color: var(--asg-color-text-primary, #fff);
+  }
+}
+
+.summary__icon {
+  flex-shrink: 0;
+}
+
+.summary__labels {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.summary__state {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+// ---- questions ------------------------------------------------------------------------------------
+
+.questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+}
+
+.question {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.question__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.question__header {
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 11px;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.question__text {
+  font-size: 14px;
+  // Long questions wrap instead of widening the card; `anywhere` also breaks an unspaced URL (R14).
+  overflow-wrap: anywhere;
+  color: var(--asg-color-text-primary, #fff);
+}
+
+.question__multi_hint {
+  font-size: 11px;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+// ---- option row -----------------------------------------------------------------------------------
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--asg-color-primary, #1677ff);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.7;
+  }
+}
+
+.option--checked {
+  border-color: var(--asg-color-primary, #1677ff);
+}
+
+.option__marker {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 1px solid var(--asg-color-border, #434343);
+  // Single-select reads as a radio, multi-select as a checkbox — the shape is the only cue that says
+  // whether picking a second option replaces the first (R2).
+  border-radius: 50%;
+  color: var(--asg-color-primary-on-primary, #fff);
+}
+
+.option__marker--multi {
+  border-radius: 4px;
+}
+
+.option__marker--checked {
+  border-color: var(--asg-color-primary, #1677ff);
+  background-color: var(--asg-color-primary, #1677ff);
+}
+
+.option__body {
+  min-width: 0;
+}
+
+.option__label {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  color: var(--asg-color-text-primary, #fff);
+}
+
+.option__description {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.other_input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  color: var(--asg-color-text-primary, #fff);
+
+  &::placeholder {
+    color: var(--asg-color-text-placeholder, #8c8c8c);
+  }
+
+  &:focus {
+    border-color: var(--asg-color-primary, #1677ff);
+    outline: none;
+  }
+}
+
+// ---- action row -----------------------------------------------------------------------------------
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--asg-color-border, #434343);
+}
+
+.actions__hint {
+  font-size: 12px;
+  color: var(--asg-color-text-secondary, #8c8c8c);
+}
+
+.actions__submit {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  background-color: var(--asg-color-primary, #1677ff);
+  font-size: 12px;
+  color: var(--asg-color-primary-on-primary, #fff);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+}

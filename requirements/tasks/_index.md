@@ -196,3 +196,5 @@
 | `REVIEW-050` | Review: Lock loading spinners to a shared phase   | —        | done   | [REVIEW-050-phase-locked-spinner.md](./REVIEW-050-phase-locked-spinner.md)                               |
 | `BUILD-051`  | Prompt suggestion placeholder + Tab adopt         | Normal   | done   | [BUILD-051-prompt-suggestion-placeholder.md](./BUILD-051-prompt-suggestion-placeholder.md)               |
 | `REVIEW-051` | Review: Prompt suggestion placeholder + Tab adopt | —        | done   | [REVIEW-051-prompt-suggestion-placeholder.md](./REVIEW-051-prompt-suggestion-placeholder.md)             |
+| `BUILD-052`  | QUESTION template as a fillable card              | Normal   | done   | [BUILD-052-question-template.md](./BUILD-052-question-template.md)                                       |
+| `REVIEW-052` | Review: QUESTION template as a fillable card      | —        | done   | [REVIEW-052-question-template.md](./REVIEW-052-question-template.md)                                     |

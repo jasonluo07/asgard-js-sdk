@@ -14,6 +14,7 @@ export * from './tool-call-group';
 export * from './thinking-block';
 export * from './table-template';
 export * from './attachment-template';
+export * from './question-template';
 
 export * from './time';
 

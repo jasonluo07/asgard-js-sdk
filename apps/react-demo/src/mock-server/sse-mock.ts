@@ -216,6 +216,12 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // F-028 next-turn suggestion demo — scoped channels. The route mounts the shell twice (full-bleed and
   // the SDK's default 375×640) so both widths can be compared side by side, hence the prefix match: the
   // narrow one is `-narrow` and must run the same scripts, not fall through to the generic reply.
+  if (customChannelId.startsWith('question-template-demo')) {
+    await handleQuestionCardMock(res, payload, customChannelId);
+
+    return;
+  }
+
   if (customChannelId.startsWith('prompt-suggestion-demo')) {
     await handlePromptSuggestionMock(res, payload, customChannelId);
 
@@ -566,6 +572,166 @@ async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): 
     messageFrame(header, 'asgard.message.complete', answerId, replyTo, THINKING_ANSWER, TEXT_TEMPLATE(THINKING_ANSWER)),
   );
 
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-029 — QUESTION card demo. The backend turns the CLI's `AskUserQuestion` into an ordinary
+// `asgard.message.complete` carrying a QUESTION template, and closes the tool call without waiting:
+// the run is already over when the card renders. So this handler sends a card and ends the run — there
+// is no pending state to model, and a submitted form arrives back here as a plain text message like
+// any other. `text` also carries the prose fallback, which is what an SDK without the QUESTION case
+// shows instead of an empty bubble.
+//
+// Scripts, keyed off what was sent:
+//   「一題」  → a single single-select question (the smallest card)
+//   「長」    → deliberately long question / option strings (layout must not be pushed open)
+//   anything else → the two-question card from the spec (single-select + multi-select)
+// A message that does not ask for a card gets a plain reply, which is how you resolve an earlier card
+// by "typing something else" (UC-050).
+// ---------------------------------------------------------------------------------------------------
+
+interface MockQuestion {
+  question: string;
+  header: string;
+  multiSelect: boolean;
+  options: { label: string; description?: string }[];
+}
+
+// Mirrors the chat-kit prototype's fixture (`demo/DemoApp.tsx`). The questions and options are backend
+// content — the agent writes them per conversation — so any sample would do, but matching the
+// prototype's makes a side-by-side design comparison read as structure-vs-structure instead of leaving
+// the reviewer wondering why the copy differs.
+//
+// One deliberate deviation: the punctuation is full-width (？，) where the prototype uses half-width.
+// Half-width punctuation inside Traditional Chinese is a typesetting error, and this fixture lives in
+// our repo where people will read it. Please don't "restore" it to match the prototype character for
+// character.
+const QUESTION_CARD: MockQuestion[] = [
+  {
+    question: '資料要放在哪一種儲存？',
+    header: '資料儲存',
+    multiSelect: false,
+    options: [
+      { label: 'PostgreSQL', description: '關聯式，交易與複雜查詢最穩，預設的安全選擇。' },
+      { label: 'Redis', description: '記憶體型，讀寫極快但不適合當唯一事實來源。' },
+      { label: '兩個都要', description: 'Postgres 存真相、Redis 當快取層。' },
+    ],
+  },
+  {
+    question: '第一版要先具備哪些能力？',
+    header: '首版範圍',
+    multiSelect: true,
+    options: [
+      { label: '使用者認證', description: '註冊 / 登入 / token 續期。' },
+      { label: '背景任務', description: '排程與非同步佇列。' },
+      { label: '檔案上傳', description: '物件儲存與簽章網址。' },
+      { label: '可觀測性', description: 'structured log、metrics、trace。' },
+    ],
+  },
+];
+
+const QUESTION_CARD_SINGLE: MockQuestion[] = [QUESTION_CARD[0]];
+
+const QUESTION_CARD_LONG: MockQuestion[] = [
+  {
+    question:
+      '如果要同時支援行動 App、官網、LINE 官方帳號三個通路，而且每個通路的回購率、客單價與新客佔比都要能分開追蹤，你希望第一版先把哪一個通路的資料管線接起來？',
+    header: '優先通路',
+    multiSelect: false,
+    options: [
+      {
+        label: '行動 App —— 目前回購率最高、事件埋點最完整，但需要等下一次送審才能補上缺的欄位',
+        description: '好處是資料品質最好，壞處是任何 schema 變更都被 App 的發版節奏綁住，通常要等兩到三週。',
+      },
+      { label: '官網 —— 埋點最鬆散，但改起來當天就能上線' },
+    ],
+  },
+];
+
+/** The prose fallback the backend ships in `text` for clients that do not know this template. */
+function questionPlainText(questions: MockQuestion[]): string {
+  return questions
+    .map(q =>
+      [q.question, ...q.options.map(o => `- ${o.label}${o.description ? ` — ${o.description}` : ''}`)].join('\n'),
+    )
+    .join('\n\n');
+}
+
+const QUESTION_ACK = '好的，我把幾個選項整理成表單了 —— 你可以直接勾，也可以用自己的話回我。';
+
+async function handleQuestionCardMock(
+  res: ServerResponse,
+  payload: ParsedPayload,
+  customChannelId: string,
+): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const text = payload.text ?? '';
+  const wantsCard =
+    text.trim() !== '' &&
+    (text.includes('問') || text.includes('一題') || text.includes('長') || text.toLowerCase().includes('ask'));
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  if (!wantsCard) {
+    // Plain reply — this is the path that resolves an earlier card by typing something else (UC-050).
+    const reply =
+      text.trim() === ''
+        ? '哈囉，我可以幫你決定技術選型。打「問我」會給你一張表單，打「一題」給單題版，打「長」給極端長度版。'
+        : '收到，我先照你說的做，不另外問了。';
+
+    writeEvent(
+      res,
+      messageFrame(header, 'asgard.message.complete', randomUUID(), replyTo, reply, TEXT_TEMPLATE(reply)),
+    );
+    await sleep(60);
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
+  const questions = text.includes('一題')
+    ? QUESTION_CARD_SINGLE
+    : text.includes('長')
+    ? QUESTION_CARD_LONG
+    : QUESTION_CARD;
+
+  // The agent's own words come first, then the card as a separate message — mirroring the backend,
+  // where the card is published alongside the turn's closing remark.
+  writeEvent(
+    res,
+    messageFrame(header, 'asgard.message.complete', randomUUID(), replyTo, QUESTION_ACK, TEXT_TEMPLATE(QUESTION_ACK)),
+  );
+  await sleep(120);
+
+  const plain = questionPlainText(questions);
+
+  writeEvent(
+    res,
+    messageFrame(header, 'asgard.message.complete', randomUUID(), replyTo, plain, {
+      type: 'QUESTION',
+      text: plain,
+      questions,
+    }),
+  );
+
+  // The run ends right here: nobody is waiting for an answer (that is the whole point of F-029).
+  await sleep(60);
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }
@@ -1149,6 +1315,56 @@ async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerRespo
     },
   });
 
+  const questionComplete = (messageId: string, questions: MockQuestion[]): object => ({
+    ...header,
+    eventType: 'asgard.message.complete',
+    fact: {
+      ...emptyFact(),
+      messageComplete: {
+        message: {
+          messageId,
+          replyToCustomMessageId: '',
+          text: questionPlainText(questions),
+          payload: null,
+          isDebug: false,
+          idx: null,
+          template: { type: 'QUESTION', text: questionPlainText(questions), questions },
+        },
+      },
+    },
+  });
+
+  // F-029 R11 — a replayed transcript with two cards: the first is overtaken by a later user message and
+  // must come back collapsed, the second is last and must come back answerable. The replay carries no
+  // answered-ness for either — that is the whole point of deriving it from order.
+  if (customChannelId === 'question-template-rejoin-demo') {
+    const replay: { event: object; id: string }[] = [
+      { event: userFrame('u-r-1', '幫我決定技術選型', 'c-r-1'), id: 'seq:1' },
+      { event: questionComplete('a-r-card-1', QUESTION_CARD), id: 'seq:2' },
+      { event: userFrame('u-r-2', '先不管那些，幫我看一下部署流程', 'c-r-2'), id: 'seq:3' },
+      { event: botComplete('a-r-2', '收到，我先照你說的做，不另外問了。'), id: 'seq:4' },
+      { event: userFrame('u-r-3', '好，那再問我一次', 'c-r-3'), id: 'seq:5' },
+      { event: questionComplete('a-r-card-2', QUESTION_CARD_SINGLE), id: 'seq:6' },
+    ];
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    });
+
+    for (const frame of replay) {
+      await sleep(60);
+      writeCursorEvent(res, frame.event, frame.id);
+    }
+
+    await sleep(40);
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
   // Collapsed history: two turns. The first user turn echoes customMessageId `c-opt-1` so it de-dups
   // against the demo's optimistic bubble; the second (`c-2`) has no optimistic match.
   const transcript: { event: object; id: string }[] = [
@@ -1234,6 +1450,16 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
       : [];
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ data: { title: 'File Explorer（Nudge 空狀態）', runState: 'IDLE', launchedSandboxes } }));
+
+    return;
+  }
+
+  // F-029 R11 — the rejoin channel exists, so mounting takes the restore path and GET /message/sse
+  // replays a transcript that already contains QUESTION cards. Nothing about their answered-ness is
+  // stored anywhere; the collapse must come back purely from the replayed message order.
+  if (customChannelId === 'question-template-rejoin-demo') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: { title: '技術選型（重新進房）', runState: 'IDLE' } }));
 
     return;
   }

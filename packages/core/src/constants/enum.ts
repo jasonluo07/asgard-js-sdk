@@ -63,4 +63,5 @@ export enum MessageTemplateType {
   CHART = 'CHART',
   TABLE = 'TABLE',
   ATTACHMENT = 'ATTACHMENT',
+  QUESTION = 'QUESTION',
 }
