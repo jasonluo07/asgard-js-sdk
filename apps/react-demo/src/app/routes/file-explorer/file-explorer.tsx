@@ -164,7 +164,16 @@ export function FileExplorer(): ReactNode {
         FILES[dst] = `（上傳的檔案：${file.name}）`;
         addEntry(dir, file.name, false, FILES[dst].length);
       },
-      download: async (): Promise<void> => undefined,
+      // A real download rather than a no-op: the toolbar and the file viewer both route here, and the only
+      // way to see that either produced the *original* file name is to let the browser save one.
+      download: async (_sandbox: string, path: string, name: string): Promise<void> => {
+        const url = URL.createObjectURL(new Blob([FILES[path] ?? ''], { type: 'application/octet-stream' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
     }),
     [],
   );
@@ -201,9 +210,9 @@ export function FileExplorer(): ReactNode {
         <div style={{ marginTop: '1rem', maxWidth: '48rem' }}>
           <h4>Cycle 2：工具列 / 右鍵選單</h4>
           <p style={{ fontSize: '0.85rem', color: '#666' }}>
-            上方工具列（左起）：新增資料夾 / 上傳 / 下載 ｜ 複製 / 剪下 / 貼上 / 刪除 …… 最右：重新整理。樹上
-            <strong>右鍵</strong>叫出情境選單（依檔案 / 資料夾 /
-            空白處給不同項目）；複製或剪下後貼到目標資料夾（剪下＋貼上＝搬移）。
+            上方工具列（左起）：新增檔案 / 新增資料夾 / 上傳 / 下載 ｜ 複製 / 剪下 / 貼上 / 重新命名 / 刪除 ……
+            最右：重新整理 —— 與右鍵選單<strong>同一組動作</strong>。樹上<strong>右鍵</strong>叫出情境選單（依檔案 /
+            資料夾 / 空白處給不同項目）；複製或剪下後貼到目標資料夾（剪下＋貼上＝搬移）。
           </p>
           <h4>open-file intent</h4>
           <p style={{ fontSize: '0.85rem', color: '#666' }}>
