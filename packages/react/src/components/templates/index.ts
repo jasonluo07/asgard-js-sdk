@@ -15,6 +15,7 @@ export * from './thinking-block';
 export * from './table-template';
 export * from './attachment-template';
 export * from './question-template';
+export * from './canvas-template';
 
 export * from './time';
 

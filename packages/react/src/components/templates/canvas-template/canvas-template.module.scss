@@ -1,0 +1,130 @@
+// F-030 — canvas card chrome. The drawing itself lives inside a sandboxed iframe and is styled by the
+// palette injected into it (see `canvas-runtime.ts`); everything here is the shell around it.
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--asg-color-border, #434343);
+  border-radius: 12px;
+  background-color: var(--asg-color-surface, #1f1f1f);
+  // `resolveCanvasTheme` reads this element's computed `color` for `--canvas-fg` (AC14). Without an
+  // own declaration it inherits the UA default black — every SDK container sets `color` on its text
+  // components rather than on the containers themselves — and the canvas paints black on #1f1f1f.
+  color: var(--asg-color-text-primary, #fff);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--asg-color-border, #434343);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pulse {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--asg-color-primary, #1677ff);
+  animation: canvas-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes canvas-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.body {
+  position: relative;
+  overflow: auto;
+  transition: height 160ms ease;
+}
+
+.skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+
+  span {
+    display: block;
+    height: 12px;
+    border-radius: 4px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.11) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200% 100%;
+    animation: canvas-shimmer 1.5s linear infinite;
+
+    &:nth-child(1) {
+      width: 45%;
+    }
+
+    &:nth-child(2) {
+      width: 80%;
+    }
+
+    &:nth-child(3) {
+      width: 62%;
+    }
+  }
+}
+
+@keyframes canvas-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.frame--hidden {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  .body {
+    transition: none;
+  }
+
+  .skeleton span {
+    animation: none;
+  }
+}

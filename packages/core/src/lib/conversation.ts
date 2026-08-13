@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { EventType } from '../constants/enum';
+import { EventType, MessageTemplateType } from '../constants/enum';
 import {
+  ConversationCanvasMessage,
   ConversationMessage,
   ConversationSubagentMessage,
   ConversationThinkingMessage,
@@ -110,6 +111,12 @@ export default class Conversation implements IConversation {
         return this.onThinkingDelta(response as SseResponse<EventType.MESSAGE_THINKING_DELTA>);
       case EventType.MESSAGE_THINKING_COMPLETE:
         return this.onThinkingComplete(response as SseResponse<EventType.MESSAGE_THINKING_COMPLETE>);
+      case EventType.MESSAGE_CANVAS_START:
+        return this.onCanvasStart(response as SseResponse<EventType.MESSAGE_CANVAS_START>);
+      case EventType.MESSAGE_CANVAS_DELTA:
+        return this.onCanvasDelta(response as SseResponse<EventType.MESSAGE_CANVAS_DELTA>);
+      case EventType.MESSAGE_CANVAS_COMPLETE:
+        return this.onCanvasComplete(response as SseResponse<EventType.MESSAGE_CANVAS_COMPLETE>);
       case EventType.TOOL_CALL_START:
         return this.onToolCallStart(response as SseResponse<EventType.TOOL_CALL_START>);
       case EventType.TOOL_CALL_COMPLETE:
@@ -153,6 +160,15 @@ export default class Conversation implements IConversation {
    */
   private isTerminalToolCall(message: ConversationMessage | undefined): boolean {
     return message?.type === 'tool-call' && message.isComplete === true;
+  }
+
+  /**
+   * A canvas is terminal once `canvas.complete` has delivered the authoritative fragment
+   * (`isDrawing === false`). Same policy as the bot / thinking guards (F-011): a late start or delta
+   * must not swap that fragment back to whatever prefix happened to be in flight.
+   */
+  private isTerminalCanvas(message: ConversationMessage | undefined): boolean {
+    return message?.type === 'canvas' && !message.isDrawing;
   }
 
   onMessageStart(response: SseResponse<EventType.MESSAGE_START>): Conversation {
@@ -309,6 +325,99 @@ export default class Conversation implements IConversation {
       traceId: response.traceId ?? currentThinking?.traceId,
     };
     messages.set(message.messageId, thinking);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onCanvasStart(response: SseResponse<EventType.MESSAGE_CANVAS_START>): Conversation {
+    const message = response.fact.messageCanvasStart.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
+    // Terminal guard: a finished canvas stays put; a late `start` must not blank it (F-011).
+    if (this.isTerminalCanvas(this.messages?.get(message.messageId))) return this;
+
+    const messages = new Map(this.messages);
+    const canvas: ConversationCanvasMessage = {
+      type: 'canvas',
+      messageId: message.messageId,
+      html: '',
+      isDrawing: true,
+      time: new Date(),
+      traceId: response.traceId,
+    };
+    messages.set(message.messageId, canvas);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onCanvasDelta(response: SseResponse<EventType.MESSAGE_CANVAS_DELTA>): Conversation {
+    const message = response.fact.messageCanvasDelta.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
+    const currentMessage = this.messages?.get(message.messageId);
+
+    // Terminal guard: a late `delta` must not flip a finished canvas back into drawing (F-011).
+    if (this.isTerminalCanvas(currentMessage)) return this;
+
+    // Lazy-init: a `delta` with no existing canvas (joining mid-stream) opens the block rather than
+    // dropping the markup that already arrived.
+    const currentCanvas = currentMessage?.type === 'canvas' ? currentMessage : undefined;
+    const messages = new Map(this.messages);
+    const canvas: ConversationCanvasMessage = {
+      type: 'canvas',
+      messageId: message.messageId,
+      // Deltas are incremental, exactly like a text delta.
+      html: `${currentCanvas?.html ?? ''}${message.text}`,
+      title: currentCanvas?.title,
+      isDrawing: true,
+      time: currentCanvas?.time ?? new Date(),
+      traceId: response.traceId ?? currentCanvas?.traceId,
+    };
+    messages.set(message.messageId, canvas);
+
+    return new Conversation({ messages, pendingConsent: this.pendingConsent });
+  }
+
+  onCanvasComplete(response: SseResponse<EventType.MESSAGE_CANVAS_COMPLETE>): Conversation {
+    const message = response.fact.messageCanvasComplete.message;
+
+    // BUG-001: subagent frames carry a non-empty `parentToolUseId`; hide them from the main conversation.
+    if (message.parentToolUseId) return this;
+
+    const template = message.template?.type === MessageTemplateType.CANVAS ? message.template : undefined;
+    const html = template?.canvas?.html;
+
+    // No template (or no markup) means the backend could not render this canvas — the frame exists only
+    // to close the block `start` opened. Discard the whole card: keeping the partial markup would
+    // present an unfinished document as a finished one. For an unknown id this is a no-op.
+    if (!html) {
+      if (!this.messages?.has(message.messageId)) return this;
+
+      const messages = new Map(this.messages);
+      messages.delete(message.messageId);
+
+      return new Conversation({ messages, pendingConsent: this.pendingConsent });
+    }
+
+    const currentMessage = this.messages?.get(message.messageId);
+    const currentCanvas = currentMessage?.type === 'canvas' ? currentMessage : undefined;
+    const messages = new Map(this.messages);
+    const canvas: ConversationCanvasMessage = {
+      type: 'canvas',
+      messageId: message.messageId,
+      // **Replace, never append.** This fragment is authoritative, and a rejoin replays only the
+      // complete — appending here would stream correctly and come back empty after a reload.
+      html,
+      title: template?.title,
+      isDrawing: false,
+      time: currentCanvas?.time ?? new Date(),
+      traceId: response.traceId ?? currentCanvas?.traceId,
+    };
+    messages.set(message.messageId, canvas);
 
     return new Conversation({ messages, pendingConsent: this.pendingConsent });
   }

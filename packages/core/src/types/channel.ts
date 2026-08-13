@@ -270,10 +270,34 @@ export type ConversationThinkingMessage = {
   traceId?: string;
 };
 
+/**
+ * A visual the agent drew, folded from the `asgard.message.canvas.*` stream (F-030).
+ *
+ * `html` is an **untrusted** fragment: it is model-generated and may contain `<style>` and `<script>`,
+ * so a renderer must isolate it (see `CanvasMessageTemplate`). While `isDrawing` is true the fragment
+ * is a prefix that is still arriving; once `complete` lands it is the backend's authoritative markup.
+ */
+export type ConversationCanvasMessage = {
+  type: 'canvas';
+  messageId: string;
+  html: string;
+  title?: string;
+  /** true = still arriving; false = the authoritative fragment has landed. */
+  isDrawing: boolean;
+  /**
+   * @deprecated The moment this frame was processed, not when the message was sent. A GET rejoin
+   * replays history in one burst, so every replayed message carries the time the page opened (#422).
+   * Nothing in the SDK renders it. The backend carries no per-message timestamp to replace it with.
+   */
+  time: Date;
+  traceId?: string;
+};
+
 export type ConversationMessage =
   | ConversationUserMessage
   | ConversationBotMessage
   | ConversationErrorMessage
   | ConversationToolCallMessage
   | ConversationThinkingMessage
-  | ConversationSubagentMessage;
+  | ConversationSubagentMessage
+  | ConversationCanvasMessage;

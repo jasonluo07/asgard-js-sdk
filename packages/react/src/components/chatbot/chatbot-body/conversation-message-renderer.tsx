@@ -15,6 +15,7 @@ import {
   TableTemplate,
   AttachmentTemplate,
   QuestionTemplate,
+  CanvasTemplate,
   ThinkingBlock,
   TemplateBox,
   TemplateBoxContent,
@@ -83,6 +84,13 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
     // narrows `message` down to `ConversationBotMessage` for the bot-only field access below.
     if (message.type === 'subagent') {
       return null;
+    }
+
+    // F-030 — a canvas is its own message type, not a template on a bot message, so it branches here
+    // like `thinking` does. This also narrows `message` to `ConversationBotMessage` for the template
+    // access below (a canvas message has no `message` field).
+    if (message.type === 'canvas') {
+      return <CanvasTemplate message={message} />;
     }
 
     if (message.isTyping) {

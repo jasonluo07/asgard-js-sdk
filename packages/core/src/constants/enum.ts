@@ -21,6 +21,14 @@ export enum EventType {
   MESSAGE_THINKING_START = 'asgard.message.thinking.start',
   MESSAGE_THINKING_DELTA = 'asgard.message.thinking.delta',
   MESSAGE_THINKING_COMPLETE = 'asgard.message.thinking.complete',
+
+  // Canvas stream (F-030). `start` opens the block, each `delta` carries the markup that became
+  // available (in the message's `text`, appended exactly like a text delta), and `complete` carries the
+  // whole fragment as a CANVAS template — authoritative and self-sufficient, since a rejoin replays
+  // only the complete. A `complete` with no template means the canvas could not be rendered.
+  MESSAGE_CANVAS_START = 'asgard.message.canvas.start',
+  MESSAGE_CANVAS_DELTA = 'asgard.message.canvas.delta',
+  MESSAGE_CANVAS_COMPLETE = 'asgard.message.canvas.complete',
   TOOL_CALL = 'asgard.tool_call',
   TOOL_CALL_START = 'asgard.tool_call.start',
   TOOL_CALL_COMPLETE = 'asgard.tool_call.complete',
@@ -64,4 +72,5 @@ export enum MessageTemplateType {
   TABLE = 'TABLE',
   ATTACHMENT = 'ATTACHMENT',
   QUESTION = 'QUESTION',
+  CANVAS = 'CANVAS',
 }
