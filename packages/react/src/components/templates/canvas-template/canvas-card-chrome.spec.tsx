@@ -7,7 +7,7 @@ import { t } from '../../../i18n';
 import { CanvasTemplate } from './canvas-template';
 
 /**
- * REVIEW-054 BLOCKER 1. The card chrome used to hang the drawing indicator inside the title guard,
+ * REVIEW-056 BLOCKER 1. The card chrome used to hang the drawing indicator inside the title guard,
  * but core sets `title` only on `canvas.complete` — the same event that sets `isDrawing: false`
  * (`conversation.ts` `onCanvasStart` / `onCanvasDelta` / `onCanvasComplete`). `title && isDrawing` is
  * therefore never true, so the indicator was unreachable and the card sat chrome-less for the whole
