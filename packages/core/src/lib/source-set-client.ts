@@ -99,13 +99,13 @@ export default class AsgardSourceSetClient {
     const response = await this.request('list', 'GET', query);
     const json: Envelope<SourceSetListResult> = await response.json();
     const data = json.data ?? (json as SourceSetListResult);
-    const entries = data.entries ?? [];
 
     return {
-      entries,
-      // Falling back to the entries we hold keeps `listAll` terminating if a relay ever drops `paging`;
-      // claiming a larger total we cannot reach would spin.
-      paging: data.paging ?? json.paging ?? { index: options?.page ?? 0, size: entries.length, total: entries.length },
+      entries: data.entries ?? [],
+      // Reported as `null` rather than invented. An earlier version synthesized
+      // `{ total: entries.length }` here to keep `listAll` terminating, which worked — and made a
+      // relay that omits `paging` report the first 1000 of 3000 files as the whole directory.
+      paging: data.paging ?? json.paging ?? null,
     };
   }
 
@@ -120,22 +120,52 @@ export default class AsgardSourceSetClient {
     const maxEntries = options?.maxEntries ?? SOURCE_SET_DEFAULT_MAX_ENTRIES;
     const entries: SourceSetDirEntry[] = [];
     let total = 0;
+    let complete = true;
     let page = 0;
 
     for (;;) {
       const result = await this.list(path, { page, pageSize });
+      const paging = result.paging;
+
+      // A page indexed differently from the one requested means the backend is not honouring `page`.
+      // Everything after this point would be a re-serve of something already collected, so stop before
+      // appending it: duplicates are worse than a shortfall, because the same file appears twice and
+      // the user acts on the wrong one.
+      if (paging && paging.index !== page) {
+        total = paging.total;
+        complete = false;
+
+        break;
+      }
+
       entries.push(...result.entries);
-      total = result.paging.total;
+
+      if (!paging) {
+        // No paging at all. A short page is the whole directory and can be reported as such; a full
+        // one is simply unanswerable — there is no way to distinguish "exactly one page of files" from
+        // "the first page of many", so say so instead of guessing.
+        complete = result.entries.length < pageSize;
+
+        break;
+      }
+
+      total = paging.total;
+
+      if (entries.length >= total) {
+        break;
+      }
 
       // An empty page short of `total` means the backend stopped producing; break rather than spin.
-      if (entries.length >= total || entries.length >= maxEntries || result.entries.length === 0) {
+      if (entries.length >= maxEntries || result.entries.length === 0) {
+        complete = false;
+
         break;
       }
 
       page += 1;
     }
 
-    return { entries, total, truncatedAtCap: entries.length < total };
+    return { entries, total, complete };
   }
 
   /** Stat a path (`GET volume/stat?path=`). A missing path is 200 with `exists: false`, not a 404. */

@@ -60,7 +60,14 @@ export interface SourceSetListOptions {
 /** `GET volume/list` result. */
 export interface SourceSetListResult {
   entries: SourceSetDirEntry[];
-  paging: SourceSetPaging;
+  /**
+   * `null` when the response carried no paging at either layer.
+   *
+   * Deliberately not synthesized from `entries.length`: a made-up total is indistinguishable from a
+   * real one, and {@link AsgardSourceSetClient.listAll} would read it as "that was the whole
+   * directory" — the silent truncation F-026 exists to prevent.
+   */
+  paging: SourceSetPaging | null;
 }
 
 /** Options for the auto-paging walk (F-026). */
@@ -74,13 +81,21 @@ export interface SourceSetListAllOptions {
 /** Result of the auto-paging walk (F-026). */
 export interface SourceSetListAllResult {
   entries: SourceSetDirEntry[];
-  /** What the backend says the directory holds — compare against `entries.length` for the shortfall. */
+  /**
+   * What the backend says the directory holds, or **0 when it never said**. Compare against
+   * `entries.length` for the shortfall; a 0 here with `complete: false` means the shortfall exists but
+   * its size is unknown.
+   */
   total: number;
   /**
-   * True when the walk stopped before `total`. The caller must surface the difference: a listing that
-   * silently drops entries looks complete and is not.
+   * False when `entries` is either known not to be the whole directory, or cannot be shown to be.
+   *
+   * Three things set it false, and the caller cannot tell them apart on purpose — all three mean the
+   * same thing to a user: the cap stopped the walk; the backend sent no paging and a full page, so
+   * "is there more?" is unanswerable; or a page came back indexed differently from the one requested,
+   * which makes every further page untrustworthy.
    */
-  truncatedAtCap: boolean;
+  complete: boolean;
 }
 
 /** Optional byte range for `GET volume/file`. */

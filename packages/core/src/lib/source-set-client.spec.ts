@@ -160,10 +160,12 @@ describe('AsgardSourceSetClient.list (F-024 R3, R6)', () => {
     await expect(makeClient().list('')).resolves.toMatchObject({ paging: { index: 0, size: 1, total: 42 } });
   });
 
-  it('falls back to the entries it holds when neither layer carries paging, so listAll still terminates', async () => {
+  it('reports paging as null when neither layer carries it, rather than inventing a total', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeJsonResponse(200, { data: { entries: [entry('a.txt')] } })));
 
-    await expect(makeClient().list('')).resolves.toMatchObject({ paging: { index: 0, size: 1, total: 1 } });
+    // A synthesized `{ total: 1 }` here is indistinguishable from a real one, and `listAll` would read
+    // it as "that was everything".
+    await expect(makeClient().list('')).resolves.toMatchObject({ paging: null });
   });
 
   it('sends a 0-based page and clamps page_size to the server maximum of 1000', async () => {
@@ -298,7 +300,7 @@ describe('AsgardSourceSetClient.listAll (F-026 R7)', () => {
 
     expect(result.entries).toHaveLength(5);
     expect(result.total).toBe(5);
-    expect(result.truncatedAtCap).toBe(false);
+    expect(result.complete).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
@@ -314,7 +316,7 @@ describe('AsgardSourceSetClient.listAll (F-026 R7)', () => {
 
     expect(result.entries).toHaveLength(4);
     expect(result.total).toBe(100);
-    expect(result.truncatedAtCap).toBe(true);
+    expect(result.complete).toBe(false);
   });
 
   it('throws when a page fails — a partial walk must never pass as the whole directory', async () => {
@@ -339,8 +341,89 @@ describe('AsgardSourceSetClient.listAll (F-026 R7)', () => {
     const result = await makeClient().listAll('', { pageSize: 2 });
 
     expect(result.entries).toHaveLength(2);
-    expect(result.truncatedAtCap).toBe(true);
+    expect(result.complete).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('AsgardSourceSetClient.listAll — when the backend cannot be trusted about paging (F-026)', () => {
+  /**
+   * The whole point of F-026 is that a short listing must never look like a complete one. Two shapes
+   * defeat the naive walk, and both come from relays this SDK does not own:
+   * a response with no `paging` at all, and one whose `paging.index` ignores the page we asked for.
+   */
+  const pageOf = (entries: SourceSetDirEntry[], paging?: { index: number; size: number; total: number }): Response =>
+    fakeJsonResponse(200, paging ? { data: { entries, paging } } : { data: { entries } });
+
+  it('reports a full page with no paging as NOT complete — it cannot tell whether more exists', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => pageOf(Array.from({ length: 3 }, (_, i) => entry(`f${i}.txt`)))),
+    );
+
+    const result = await makeClient().listAll('', { pageSize: 3 });
+
+    expect(result.entries).toHaveLength(3);
+    expect(result.complete).toBe(false);
+    expect(result.total).toBe(0);
+  });
+
+  it('reports a short page with no paging as complete — that really is the whole directory', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => pageOf([entry('only.txt')])),
+    );
+
+    const result = await makeClient().listAll('', { pageSize: 3 });
+
+    expect(result.entries).toHaveLength(1);
+    expect(result.complete).toBe(true);
+  });
+
+  it('stops on a page index that is not the one asked for, instead of collecting duplicates', async () => {
+    // A relay that ignores `page` and always serves the first one. The naive walk returned the same
+    // three names three times and called it complete.
+    const fetchMock = vi.fn(async () =>
+      pageOf(
+        Array.from({ length: 3 }, (_, i) => entry(`f${i}.txt`)),
+        { index: 0, size: 3, total: 9 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().listAll('', { pageSize: 3 });
+
+    expect(result.entries.map(e => e.name)).toEqual(['f0.txt', 'f1.txt', 'f2.txt']);
+    expect(result.complete).toBe(false);
+    expect(result.total).toBe(9);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('still walks a well-behaved backend to the end and calls it complete', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      const page = Number(new URL(url).searchParams.get('page') ?? 0);
+
+      return pagedResponse(page, 2, 5);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await makeClient().listAll('', { pageSize: 2 });
+
+    expect(result.entries).toHaveLength(5);
+    expect(result.total).toBe(5);
+    expect(result.complete).toBe(true);
+  });
+
+  it('reports the cap as incomplete', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => pagedResponse(Number(new URL(url).searchParams.get('page') ?? 0), 2, 100)),
+    );
+
+    const result = await makeClient().listAll('', { pageSize: 2, maxEntries: 4 });
+
+    expect(result.total).toBe(100);
+    expect(result.complete).toBe(false);
   });
 });
 
