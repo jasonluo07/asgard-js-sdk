@@ -4,10 +4,10 @@
 
 - Task ID: `BUILD-060`
 - Status: `done`
-- Issue: `https://github.com/asgard-ai-platform/asgard-sdk-pm/pull/60` — **no per-feature issue exists.**
-  F-024–F-027 + TASK-004 were spec'd by that merged PR alone; unlike F-018–F-023 / F-028–F-030 they were
-  never opened as issues on `asgard-sdk-pm`. The downstream consumer is
-  `asgard-ai-platform/asgard-odin-pm#439` (UC-032).
+- Issue: `https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/75` (F-024) and
+  `.../issues/77` (F-026, data half). **Both were opened on 2026-08-14, after this task was already
+  done** — the batch was spec'd only by the merged PR #60 until then, which is why the earlier log
+  entries say no issue existed. Downstream consumer: `asgard-ai-platform/asgard-odin-pm#439` (UC-032).
 - Source spec: `references/asgard-sdk-pm/tracking/asgard-js-sdk/features/F-024-sourceset-volume-core-client.md`
   (all ACs) + `.../F-026-sourceset-volume-大目錄分頁載入.md` (core half only — see the scope note below)
 - Complexity: `M`
