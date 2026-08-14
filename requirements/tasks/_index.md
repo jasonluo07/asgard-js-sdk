@@ -206,3 +206,7 @@
 | `REVIEW-055` | Review: canvas stream events (core)               | —        | done   | [REVIEW-055-canvas-events-core.md](./REVIEW-055-canvas-events-core.md)                                   |
 | `BUILD-056`  | Canvas card: sandboxed iframe + streaming morph   | Normal   | done   | [BUILD-056-canvas-card-react.md](./BUILD-056-canvas-card-react.md)                                       |
 | `REVIEW-056` | Review: canvas card (react)                       | —        | done   | [REVIEW-056-canvas-card-react.md](./REVIEW-056-canvas-card-react.md)                                     |
+| `BUILD-057`  | Stop the File Explorer controller identity loop   | High     | done   | [BUILD-057-file-explorer-controller-identity.md](./BUILD-057-file-explorer-controller-identity.md)       |
+| `REVIEW-057` | Review: File Explorer controller identity loop    | —        | done   | [REVIEW-057-file-explorer-controller-identity.md](./REVIEW-057-file-explorer-controller-identity.md)     |
+| `BUILD-058`  | Hoist the header L3 escape hatch to Chatbot       | High     | done   | [BUILD-058-hoist-header-render-slot.md](./BUILD-058-hoist-header-render-slot.md)                         |
+| `REVIEW-058` | Review: hoist the header L3 escape hatch          | —        | done   | [REVIEW-058-hoist-header-render-slot.md](./REVIEW-058-hoist-header-render-slot.md)                       |

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { FsEntry } from '../components/file-explorer/types';
 
@@ -156,23 +156,44 @@ export function useFileExplorerController({
     setSourceViews(prev => ({ ...prev, [sourceId]: update(prev[sourceId] ?? EMPTY_SOURCE_VIEW) }));
   }, []);
 
-  return {
-    open,
-    activeSourceId,
-    activeSandboxName: activeSourceId,
-    requestedFile,
-    isEditingDirty,
-    sourceViews,
-    openExplorer,
-    closeExplorer,
-    toggle,
-    selectSource,
-    selectSandbox: selectSource,
-    requestFile,
-    setEditingDirty,
-    sourceView,
-    updateSourceView,
-  };
+  // A fresh object literal on every render makes every consumer's `memo` / dependency array a no-op, and
+  // React Compiler reads the churn as "props changed". Identity now moves only when the state behind it
+  // does. This is not on its own what fixes issue #427 — see the note on `updateView` in
+  // `file-explorer-context.tsx` — but it stops the controller from inventing changes nobody made.
+  return useMemo(
+    () => ({
+      open,
+      activeSourceId,
+      activeSandboxName: activeSourceId,
+      requestedFile,
+      isEditingDirty,
+      sourceViews,
+      openExplorer,
+      closeExplorer,
+      toggle,
+      selectSource,
+      selectSandbox: selectSource,
+      requestFile,
+      setEditingDirty,
+      sourceView,
+      updateSourceView,
+    }),
+    [
+      open,
+      activeSourceId,
+      requestedFile,
+      isEditingDirty,
+      sourceViews,
+      openExplorer,
+      closeExplorer,
+      toggle,
+      selectSource,
+      requestFile,
+      setEditingDirty,
+      sourceView,
+      updateSourceView,
+    ],
+  );
 }
 
 export default useFileExplorerController;

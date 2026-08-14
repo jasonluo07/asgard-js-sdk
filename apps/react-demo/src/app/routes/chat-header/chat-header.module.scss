@@ -138,3 +138,24 @@
   cursor: pointer;
   font-size: 12px;
 }
+
+// #432 — the L3 renderer now receives the assembled `actions`, so a custom bar can draw the built-in
+// buttons (File Explorer toggle, reset, close) itself instead of losing them.
+.customHeader__actionBtn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--asg-color-text-primary, #fff);
+  cursor: pointer;
+}
+
+.customHeader__actionBtn[aria-pressed='true'] {
+  background: var(--asg-color-primary, #1677ff);
+}

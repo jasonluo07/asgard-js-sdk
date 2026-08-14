@@ -25,7 +25,7 @@ import { AuthState } from '@asgard-js/core';
 import clsx from 'clsx';
 import { ApiKeyInput } from './api-key-input';
 import { ChatHeaderHost } from './chat-header/chat-header-host';
-import { ChatHeaderAction } from './chat-header';
+import { ChatHeaderAction, ChatHeaderRendererArgs } from './chat-header';
 import { ChatbotBody } from './chatbot-body';
 import { ChatbotFooter } from './chatbot-footer';
 import { ChatbotContainer } from './chatbot-container/chatbot-container';
@@ -146,16 +146,20 @@ export interface ChatbotProps extends AsgardTemplateContextValue {
   onChannelReady?: () => void;
 
   /**
-   * Custom header renderer (F-022 L3 escape hatch). When provided, replaces the unified `<ChatHeader />`
-   * entirely — `title`, `onReset`, `onClose`, `customActions`, `headerActions`, and
-   * `maintainConnectionWhenClosed` are no longer applied automatically; the renderer owns the whole
-   * heading bar. Return `null` to hide the bar.
+   * Custom header renderer (F-022 / UC-043 L3 escape hatch). The renderer owns the whole heading bar,
+   * and receives the same args as `<ChatHeader>`'s own L3 slot:
    *
-   * Use `useAsgardContext()` inside the renderer to access runtime state
-   * (`resetChannel`, `isResetting`, `avatar`, `title`, `channelTitle`, etc.) and
-   * `useAsgardThemeContext()` for theme tokens.
+   * - `actions` — everything the stock bar would have rendered, in order: the built-in File Explorer
+   *   toggle (when `fileExplorer: 'builtin'`), export (when enabled), `customActions`, `headerActions`,
+   *   reset, close. Rendering them is the renderer's job; ignoring one drops it.
+   * - `renderDefault` — draws the stock bar, so "I only want to add one button" does not require
+   *   rebuilding the whole thing.
+   *
+   * Return `null` to hide the bar. Use `useAsgardContext()` inside the renderer for runtime state
+   * (`resetChannel`, `isResetting`, `avatar`, `channelTitle`, ...) and `useAsgardThemeContext()` for
+   * theme tokens.
    */
-  renderHeader?: () => ReactNode;
+  renderHeader?: (args: ChatHeaderRendererArgs) => ReactNode;
 
   /** Custom menu renderer. When provided, renders between chat body and footer. */
   renderMenu?: () => ReactNode;
@@ -572,24 +576,25 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
                   {/* The chat column owns the whole vertical stack; the File Explorer aside is its sibling,
                     so opening the aside narrows header and composer along with the thread (F-021 AC6). */}
                   <div className={styles.chatbot__chat_column}>
-                    {renderHeader ? (
-                      renderHeader()
-                    ) : (
-                      <ChatHeaderHost
-                        title={title}
-                        onReset={onReset}
-                        onClose={onClose}
-                        customActions={customActions}
-                        headerActions={headerActions}
-                        maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-                        locale={locale}
-                        untitledLabel={untitledLabel}
-                        channelTitleHidden={channelTitleHidden}
-                        renderTitle={renderTitle}
-                        fileExplorerController={fileExplorerController}
-                        builtinFileExplorer={builtinFileExplorer}
-                      />
-                    )}
+                    {/* The host mounts unconditionally: it is what assembles `actions`, and a custom
+                      renderer needs those as much as the stock bar does (UC-043 L3 hands the bar over
+                      *with* its actions). Branching around the host is what made the built-in File
+                      Explorer toggle unreachable for `renderHeader` consumers — issue #432. */}
+                    <ChatHeaderHost
+                      title={title}
+                      onReset={onReset}
+                      onClose={onClose}
+                      customActions={customActions}
+                      headerActions={headerActions}
+                      maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+                      locale={locale}
+                      untitledLabel={untitledLabel}
+                      channelTitleHidden={channelTitleHidden}
+                      renderTitle={renderTitle}
+                      renderHeader={renderHeader}
+                      fileExplorerController={fileExplorerController}
+                      builtinFileExplorer={builtinFileExplorer}
+                    />
                     {renderContent()}
                   </div>
                   {builtinFileExplorer && fileExplorerController.open && (
@@ -614,24 +619,21 @@ export const Chatbot = forwardRef(function Chatbot(props: ChatbotProps, ref: For
         {/* No File Explorer on this path, but the column still owns the vertical stack — the shell itself
             is a horizontal flex container now. */}
         <div className={styles.chatbot__chat_column}>
-          {renderHeader ? (
-            renderHeader()
-          ) : (
-            <ChatHeaderHost
-              title={title}
-              onReset={onReset}
-              onClose={onClose}
-              customActions={customActions}
-              headerActions={headerActions}
-              maintainConnectionWhenClosed={maintainConnectionWhenClosed}
-              locale={locale}
-              untitledLabel={untitledLabel}
-              channelTitleHidden={channelTitleHidden}
-              renderTitle={renderTitle}
-              fileExplorerController={fileExplorerController}
-              builtinFileExplorer={false}
-            />
-          )}
+          <ChatHeaderHost
+            title={title}
+            onReset={onReset}
+            onClose={onClose}
+            customActions={customActions}
+            headerActions={headerActions}
+            maintainConnectionWhenClosed={maintainConnectionWhenClosed}
+            locale={locale}
+            untitledLabel={untitledLabel}
+            channelTitleHidden={channelTitleHidden}
+            renderTitle={renderTitle}
+            renderHeader={renderHeader}
+            fileExplorerController={fileExplorerController}
+            builtinFileExplorer={false}
+          />
           {renderContent()}
         </div>
       </ChatbotContainer>
