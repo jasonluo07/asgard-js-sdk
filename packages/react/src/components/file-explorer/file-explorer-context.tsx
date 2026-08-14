@@ -137,13 +137,18 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
   // rebuilds its conversation subtree on every conversation switch) can hold the controller above the
   // remount and keep the view. Everything below reads and writes it exactly like local state.
   const { expanded, selectedPath, selectedEntry, openFile } = controller.sourceView(activeSourceId);
+  // Depend on `updateSourceView` alone, never the whole controller. `updateSourceView` writes
+  // `sourceViews`, which is a controller field — so depending on the controller makes this callback a
+  // function of its own side effect. The open-file effect below depends on `updateView`, and that loop
+  // (effect → write → new controller → new updateView → effect) is issue #427.
+  const { updateSourceView } = controller;
   const updateView = useCallback(
     (update: (prev: SourceViewState) => SourceViewState): void => {
       if (!activeSourceId) return;
 
-      controller.updateSourceView(activeSourceId, update);
+      updateSourceView(activeSourceId, update);
     },
-    [controller, activeSourceId],
+    [updateSourceView, activeSourceId],
   );
 
   const [refreshKey, setRefreshKey] = useState(0);
