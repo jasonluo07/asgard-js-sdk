@@ -476,6 +476,68 @@ interface ChannelHomeDownloadResult {
 <a id="derived-state"></a>
 <br/>
 
+### AsgardSourceSetClient (SourceSet volume)
+
+A **separate** client for the SourceSet volume HTTP API. It has nothing to do with
+`AsgardServiceClient` — no inheritance, no shared instance, no channel. A volume is a plain remote
+filesystem that is always there, so there is no lifecycle to coordinate with.
+
+One instance serves every base, because the backend guarantees identical path segments after it:
+
+| Endpoint                                       | Auth                                           |
+| ---------------------------------------------- | ---------------------------------------------- |
+| `{EDGE}/ns/{ns}/source-set/{name}/volume`      | `apiKey` → sent as `X-API-KEY`                 |
+| `{PLATFORM_API}/v1/source-set/{id}/volume`     | `customHeaders: { Authorization: 'Bearer …' }` |
+| `{PLATFORM_API}/v1/skill-set/{id}/volume`      | same                                           |
+| `{HUB_API}/v1/directory/{directory_id}/volume` | same                                           |
+
+**Do not pass `apiKey` to a relay.** The volume key belongs to the relay, which holds it server-side;
+putting it in a browser bundle hands it to everyone who loads the page.
+
+```ts
+import { AsgardSourceSetClient } from '@asgard-js/core';
+
+const fs = new AsgardSourceSetClient({
+  sourceSetEndpoint: 'https://api.example.com/v1/source-set/ss-1/volume',
+  customHeaders: { Authorization: `Bearer ${token}` },
+});
+
+const { entries, total, complete } = await fs.listAll(''); // '' is the volume root
+await fs.write('notes/todo.md', '# Todo', { createOnly: true }); // 409 if it already exists
+```
+
+#### Four contract differences from the sandbox fs API
+
+Code copied from `sandboxFs*` compiles and then misbehaves. These are the reasons:
+
+1. **Paths are relative and the root is `''`**, not `/`. A leading or trailing slash, a doubled slash,
+   or a `.` / `..` segment is rejected before the request rather than becoming a 400.
+2. **Listing is paginated**, not truncation-flagged. `list()` returns one page; `listAll()` walks them.
+3. **`stat()` on a missing path resolves** with `exists: false` — the backend answers 200, so branching
+   on a thrown 404 never fires.
+4. **409 means conflict** — `createOnly` on a taken path, or `copy` / `move` onto an occupied
+   destination without `overwrite`. Detect it with `isHttpError(e) && e.status === 409`.
+
+#### `listAll` tells you when it cannot vouch for a listing
+
+```ts
+const { entries, total, complete } = await fs.listAll('docs');
+```
+
+`complete` is `false` in three cases, and the caller is not meant to tell them apart — to a user they
+all mean the same thing:
+
+- the walk hit `maxEntries` (default `SOURCE_SET_DEFAULT_MAX_ENTRIES`, 10 000);
+- the response carried no `paging` **and** a full page, so "is there more?" is unanswerable;
+- a page came back indexed differently from the one requested, which makes every later page suspect.
+
+`total` is the backend's own count, or `0` when it never gave one. So `!complete && total === 0` means
+"short by an unknown amount" — surface that differently from a known shortfall rather than staying
+quiet, which is the whole point.
+
+**There is no watch.** A volume is served by several replicas, so a filesystem watch registered on one
+cannot see another's writes, and the backend deliberately offers none. Re-list to pick up changes.
+
 ### Derived State (Task Check List / Subagent List)
 
 The Task Check List (F-010) and Subagent List (F-012) are pure folds over the conversation, exposed as **framework-agnostic** reactive slices so you can render them outside React — in Vue, Svelte, or vanilla JS. Each slice replays its current immutable snapshot and only emits when that slice actually changes (unrelated high-frequency message deltas are suppressed).
