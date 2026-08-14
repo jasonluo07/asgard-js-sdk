@@ -4,7 +4,7 @@ import { useAsgardAppInitializationContext } from '../../../context/asgard-app-i
 import { Locale, t } from '../../../i18n';
 import { FileExplorerController } from '../../../hooks/use-file-explorer-controller';
 import { FolderTreeIcon } from '../../file-explorer/icons';
-import { ChatHeader, ChatHeaderAction, ChatHeaderTitleRendererArgs } from './chat-header';
+import { ChatHeader, ChatHeaderAction, ChatHeaderRendererArgs, ChatHeaderTitleRendererArgs } from './chat-header';
 import { DownloadIcon, RefreshIcon, XIcon } from './icons';
 
 // F-022 — the chatbot-internal bridge between runtime context and the pure `<ChatHeader>`. It reads the
@@ -25,6 +25,12 @@ export interface ChatHeaderHostProps {
   untitledLabel?: string;
   channelTitleHidden?: boolean;
   renderTitle?: (args: ChatHeaderTitleRendererArgs) => ReactNode;
+  /**
+   * L3 escape hatch, forwarded straight to `<ChatHeader>`. It is forwarded rather than branched on
+   * upstream so the renderer receives the `actions` assembled below — the built-in File Explorer toggle
+   * included (UC-043 L3 hands over the bar *with* its actions).
+   */
+  renderHeader?: (args: ChatHeaderRendererArgs) => ReactNode;
   /** The shared File Explorer controller; the built-in toggle action is added when `builtinFileExplorer`. */
   fileExplorerController: FileExplorerController;
   builtinFileExplorer: boolean;
@@ -42,6 +48,7 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
     untitledLabel,
     channelTitleHidden,
     renderTitle,
+    renderHeader,
     fileExplorerController,
     builtinFileExplorer,
   } = props;
@@ -162,6 +169,7 @@ export function ChatHeaderHost(props: ChatHeaderHostProps): ReactNode {
       untitledLabel={untitledLabel}
       channelTitleHidden={channelTitleHidden}
       renderTitle={renderTitle}
+      renderHeader={renderHeader}
       actions={actions}
     />
   );

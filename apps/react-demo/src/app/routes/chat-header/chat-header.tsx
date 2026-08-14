@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { ConversationMessage, EventType } from '@asgard-js/core';
-import { Chatbot, ChatHeaderAction, ChatHeaderTitleRendererArgs } from '@asgard-js/react';
+import { Chatbot, ChatHeaderAction, ChatHeaderRendererArgs, ChatHeaderTitleRendererArgs } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { DemoWrapper } from '../../components/demo-wrapper';
 import styles from './chat-header.module.scss';
@@ -70,13 +70,31 @@ function customRenderTitle({ title }: ChatHeaderTitleRendererArgs): ReactNode {
 }
 
 // L3 escape hatch (renderHeader): take over the whole bar. Return null to hide entirely.
-function customRenderHeader(): ReactNode {
+//
+// The renderer receives `{ botName, title, actions, renderDefault }` (UC-043). Wrapping `renderDefault()`
+// rather than rebuilding the bar is what keeps the built-in actions — the File Explorer toggle included —
+// reachable; before #432 was fixed this slot got no arguments at all, so those buttons simply vanished.
+function customRenderHeader({ actions }: ChatHeaderRendererArgs): ReactNode {
   return (
     <div className={styles.customHeader}>
       <span className={styles.customHeader__brand}>ACME 支援中心</span>
       <button type="button" className={styles.customHeader__cta}>
         升級方案
       </button>
+      {actions.map(action => (
+        <button
+          key={action.id}
+          type="button"
+          className={styles.customHeader__actionBtn}
+          onClick={action.onClick}
+          aria-label={action.label}
+          aria-pressed={action.active}
+          disabled={action.disabled}
+          title={action.label}
+        >
+          {action.icon}
+        </button>
+      ))}
     </div>
   );
 }
@@ -142,7 +160,7 @@ export function ChatHeaderRoute(): ReactNode {
             initMessages={INIT_MESSAGES}
             channelTitle={channelTitle}
             headerActions={headerActions}
-            fileExplorer={mode === 'fileExplorer' ? 'builtin' : 'off'}
+            fileExplorer={mode === 'fileExplorer' || mode === 'renderHeader' ? 'builtin' : 'off'}
             renderTitle={mode === 'renderTitle' ? customRenderTitle : undefined}
             renderHeader={mode === 'renderHeader' ? customRenderHeader : undefined}
             channelTitleHidden={mode === 'hidden'}
