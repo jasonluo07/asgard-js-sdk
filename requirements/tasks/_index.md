@@ -69,7 +69,7 @@
 
 ## ▶ Next Task
 
-**`BUILD-061`（`done`）/ `REVIEW-061`（`ready`，待跑 `/review BUILD-061`）—— Cycle 2：F-025 元件 + F-026 UI 提示 + TASK-004 demo route** —— branch `feat/f025-standalone-source-set-explorer`，base 是 Cycle 1 的 `feat/f024-sourceset-volume-core-client`（PR #438，draft，`BUILD-060` / `REVIEW-060` 皆 `done`：§1 15 ✅ / 0 ❌ / 9 n/a、§3 R1–R10 全 Pass、0 BLOCKERs，尚未合併、未發版）。
+**`BUILD-061` / `REVIEW-061` 皆 `done`（§1 19 ✅ / 0 ❌、§3 R1–R16／R18／R19 Pass、R17 Partial、0 BLOCKERs、4 Minors）—— Cycle 2：F-025 元件 + F-026 UI 提示 + TASK-004 demo route** —— branch `feat/f025-standalone-source-set-explorer`，base 是 Cycle 1 的 `feat/f024-sourceset-volume-core-client`（PR #438，draft，`BUILD-060` / `REVIEW-060` 皆 `done`：§1 15 ✅ / 0 ❌ / 9 n/a、§3 R1–R10 全 Pass、0 BLOCKERs，尚未合併、未發版）。
 
 > **這是重做。** Cycle 2 第一次嘗試走「組合既有 `components/file-explorer/` parts」路線，對共用模組動了 +981 / −145，並開 [`asgard-sdk-pm#79`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/79) 請 PM 把 F-025「完全獨立、不共用內核」「既有模組 diff 為空」兩條 AC 改掉。#79 已收回關閉 —— 要求 PM 改 AC 來遷就實作方向不對，通過 AC 是實作端的責任。該分支的 PR #439 已關閉，分支 `feat/f025-source-set-file-explorer` 留作參考。`BUILD-061` 因此照原 AC 重寫：獨立模組、共用模組零變更。
 
@@ -223,4 +223,4 @@ REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目�
 | `BUILD-060`  | Standalone SourceSet volume client in core        | High     | done   | [BUILD-060-sourceset-volume-core-client.md](./BUILD-060-sourceset-volume-core-client.md)                 |
 | `REVIEW-060` | Review: SourceSet volume client in core           | —        | done   | [REVIEW-060-sourceset-volume-core-client.md](./REVIEW-060-sourceset-volume-core-client.md)               |
 | `BUILD-061`  | Standalone SourceSet File Explorer                | High     | done   | [BUILD-061-standalone-source-set-explorer.md](./BUILD-061-standalone-source-set-explorer.md)             |
-| `REVIEW-061` | Review: Standalone SourceSet File Explorer        | —        | draft  | [REVIEW-061-standalone-source-set-explorer.md](./REVIEW-061-standalone-source-set-explorer.md)           |
+| `REVIEW-061` | Review: Standalone SourceSet File Explorer        | —        | done   | [REVIEW-061-standalone-source-set-explorer.md](./REVIEW-061-standalone-source-set-explorer.md)           |
