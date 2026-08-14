@@ -216,6 +216,12 @@ export async function handleMockSse(req: IncomingMessage, res: ServerResponse): 
   // F-028 next-turn suggestion demo — scoped channels. The route mounts the shell twice (full-bleed and
   // the SDK's default 375×640) so both widths can be compared side by side, hence the prefix match: the
   // narrow one is `-narrow` and must run the same scripts, not fall through to the generic reply.
+  if (customChannelId.startsWith('canvas-demo')) {
+    await handleCanvasMock(res, payload, customChannelId);
+
+    return;
+  }
+
   if (customChannelId.startsWith('question-template-demo')) {
     await handleQuestionCardMock(res, payload, customChannelId);
 
@@ -572,6 +578,200 @@ async function handleThinkingMock(res: ServerResponse, payload: ParsedPayload): 
     messageFrame(header, 'asgard.message.complete', answerId, replyTo, THINKING_ANSWER, TEXT_TEMPLATE(THINKING_ANSWER)),
   );
 
+  writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+  res.end();
+}
+
+// ---------------------------------------------------------------------------------------------------
+// F-030 — canvas demo. The fragment is streamed at the cadence measured on the product path: going
+// through modelrouter → proxy → sandbox CLI it arrives at roughly 7 bytes per delta (a 2.3KB drawing
+// came as 349 deltas) at about 270 bytes/s, i.e. one chunk every ~25ms. The pacing is deliberately not
+// compressed — "how long before anything is visible" is exactly what the skeleton state exists for,
+// and the fragment is style-first, so its first half has nothing to look at.
+//
+// Scripts, keyed off what was sent:
+//   「重播」 → complete only, no deltas — what a rejoin replays (UC-052)
+//   「壞掉」 → deltas, then a complete with NO template — the backend could not draw it (UC-053)
+//   「長」   → a fragment past the 520px cap, so "scrolls inside the card" is observable (AC13)
+//   「亂寫」 → a fragment that repeats the title, hardcodes colors and leaves a tag unclosed (AC17)
+//   anything else → the full stream (UC-051)
+// ---------------------------------------------------------------------------------------------------
+
+const CANVAS_STEP_MS = 25;
+const CANVAS_CHUNK = 7;
+const CANVAS_TITLE = '資料管線現況';
+const CANVAS_HTML =
+  '<style>\n  /* \u53ea\u7528\u6ce8\u5165\u9032\u4f86\u7684\u4e94\u500b token \u2014\u2014 \u9019\u662f agent \u552f\u4e00\u62ff\u5f97\u5230\u7684\u8abf\u8272\u76e4(\u898b\u5f8c\u7aef show_canvas \u7684\u8aaa\u660e)\u3002\n     \u786c\u5beb\u8272\u78bc\u7684\u8a71,\u756b\u5e03\u5728\u53e6\u4e00\u7a2e\u4e3b\u984c\u4e0b\u5c31\u6703\u58de\u6389,\u800c\u4e14\u8ddf\u7522\u54c1\u7684\u54c1\u724c\u8272\u5404\u8d70\u5404\u7684\u3002 */\n  .pl { display: grid; gap: 0.75rem; font-size: 13px; }\n  .pl-row { display: flex; align-items: center; gap: 0.5rem; }\n  .pl-stage {\n    flex: 1; min-width: 0; padding: 0.6rem 0.7rem; border-radius: 0.5rem;\n    background: color-mix(in srgb, var(--canvas-accent) 12%, transparent);\n    border: 1px solid color-mix(in srgb, var(--canvas-accent) 38%, transparent);\n  }\n  .pl-stage b { display: block; font-size: 13px; margin-bottom: 0.15rem; }\n  .pl-stage span { color: var(--canvas-muted); font-size: 11.5px; }\n  .pl-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.5rem; }\n  .pl-metric {\n    padding: 0.5rem 0.6rem; border-radius: 0.5rem;\n    background: color-mix(in srgb, var(--canvas-fg) 6%, transparent);\n    border: 1px solid var(--canvas-border);\n  }\n  .pl-metric i { font-style: normal; color: var(--canvas-muted); font-size: 11px; }\n  .pl-metric b { display: block; font-size: 17px; font-weight: 650; margin-top: 0.1rem; }\n  .pl-bars { display: flex; align-items: flex-end; gap: 0.35rem; height: 64px; }\n  .pl-bars i { flex: 1; border-radius: 0.2rem 0.2rem 0 0; background: var(--canvas-accent); opacity: 0.8; }\n</style>\n<div class="pl">\n  <div class="pl-row">\n    <div class="pl-stage"><b>Ingest</b><span>Kafka topics \u00b7 12 sources</span></div>\n    <svg width="26" height="14" viewBox="0 0 26 14" aria-hidden="true">\n      <path d="M0 7h18M18 7l-5-4M18 7l-5 4" stroke="currentColor" stroke-width="1.4" fill="none" opacity="0.55"/>\n    </svg>\n    <div class="pl-stage"><b>Transform</b><span>dbt \u00b7 34 models</span></div>\n    <svg width="26" height="14" viewBox="0 0 26 14" aria-hidden="true">\n      <path d="M0 7h18M18 7l-5-4M18 7l-5 4" stroke="currentColor" stroke-width="1.4" fill="none" opacity="0.55"/>\n    </svg>\n    <div class="pl-stage"><b>Serve</b><span>Postgres \u00b7 4 marts</span></div>\n  </div>\n  <div class="pl-metrics">\n    <div class="pl-metric"><i>\u541e\u5410</i><b>1.2M/\u65e5</b></div>\n    <div class="pl-metric"><i>\u5ef6\u9072 p95</i><b>4.3 \u5206</b></div>\n    <div class="pl-metric"><i>\u5931\u6557\u7387</i><b>0.02%</b></div>\n  </div>\n  <div class="pl-bars">\n    <i style="height:38%"></i><i style="height:52%"></i><i style="height:47%"></i>\n    <i style="height:71%"></i><i style="height:64%"></i><i style="height:88%"></i>\n  </div>\n</div>';
+
+// The fragment's own script. It must run exactly once and only after the fragment is final — running
+// mid-stream would execute against half a tree. It stamps a counter onto #root so "exactly once" is
+// observable from inside the frame.
+const CANVAS_SCRIPT =
+  '<scr' +
+  'ipt>var r=document.getElementById("root");' +
+  'var n=Number(r.getAttribute("data-script-runs")||0)+1;' +
+  'r.setAttribute("data-script-runs", String(n));' +
+  // Reported outward because the host cannot read into the frame — this is how "the fragment's own
+  // script really executed, exactly once, after the drawing finished" becomes observable in a browser.
+  'parent.postMessage({ __canvasDemo: "script-ran", runs: n }, "*");' +
+  '</scr' +
+  'ipt>';
+
+const CANVAS_FRAGMENT = CANVAS_HTML + CANVAS_SCRIPT;
+
+// The three scripts above all use a fragment *we* wrote, so it is well-behaved by construction: it fits
+// under the height cap, uses only the five injected tokens, and does not repeat the title. A real agent
+// guarantees none of that. These two exercise the cases the well-behaved one cannot reach.
+
+// Tall enough to pass the 520px cap, so "scrolls inside the card" is actually observable rather than
+// inferred from `max-height` being present in the stylesheet.
+const CANVAS_TALL_ROWS = Array.from({ length: 26 }, (_, i) => {
+  const status = i % 7 === 3 ? 'failed' : 'ok';
+
+  return (
+    `<tr><td>run-${String(2081 - i).padStart(4, '0')}</td>` +
+    `<td>0${2 + (i % 8)}:${String((i * 7) % 60).padStart(2, '0')}</td>` +
+    `<td>${(1.1 + (i % 9) * 0.37).toFixed(2)} 分</td>` +
+    `<td class="${status}">${status}</td></tr>`
+  );
+}).join('');
+
+const CANVAS_TALL_HTML =
+  '<style>' +
+  '.rt { width: 100%; border-collapse: collapse; font-size: 12.5px; }' +
+  '.rt caption { text-align: left; font-weight: 650; padding-bottom: 0.5rem; }' +
+  '.rt th { text-align: left; color: var(--canvas-muted); font-weight: 500; padding: 0.3rem 0.5rem; }' +
+  '.rt td { padding: 0.3rem 0.5rem; border-top: 1px solid var(--canvas-border); }' +
+  '.rt td.failed { color: var(--canvas-accent); font-weight: 650; }' +
+  '</style>' +
+  '<table class="rt"><caption>最近 26 次排程執行</caption>' +
+  '<thead><tr><th>run</th><th>開始</th><th>耗時</th><th>狀態</th></tr></thead>' +
+  `<tbody>${CANVAS_TALL_ROWS}</tbody></table>`;
+
+// Deliberately breaks three of the rules the spec warns about, all at once: it repeats the title the
+// card chrome already shows (AC17's note to the backend), hardcodes colors instead of using the five
+// tokens (so it ignores the product's theme), and leaves a `<div>` unclosed. None of these should
+// damage the host — the fragment lives in its own document, so the blast radius is the card itself.
+const CANVAS_ROGUE_HTML =
+  '<style>' +
+  '.rg { font-size: 13px; }' +
+  '.rg h2 { font-size: 15px; margin: 0 0 0.5rem; }' +
+  '.rg .box { padding: 0.6rem; border-radius: 0.4rem; background: #2b1046; border: 1px solid #ff3ea5; }' +
+  '.rg .box b { color: #ff3ea5; }' +
+  '</style>' +
+  '<div class="rg">' +
+  `<h2>${CANVAS_TITLE}</h2>` +
+  '<div class="box"><b>硬寫色碼</b>：這一塊完全不用注入的 token，換主題不會跟著變。' +
+  '<p>下面這個 div 故意不關，看 morph 會不會把卡片撐爛。</p>' +
+  '<div>unclosed';
+
+async function handleCanvasMock(res: ServerResponse, payload: ParsedPayload, customChannelId: string): Promise<void> {
+  const header: CommonHeader = {
+    requestId: randomUUID(),
+    namespace: NAMESPACE,
+    botProviderName: BOT_PROVIDER_NAME,
+    customChannelId,
+  };
+  const replyTo = payload.customMessageId ?? '';
+  const text = payload.text ?? '';
+  const messageId = randomUUID();
+  const replayOnly = text.includes('重播') || text.toLowerCase().includes('replay');
+  const broken = text.includes('壞掉') || text.toLowerCase().includes('broken');
+  const tall = text.includes('長') || text.toLowerCase().includes('tall');
+  const rogue = text.includes('亂寫') || text.toLowerCase().includes('rogue');
+  const fragment = tall
+    ? CANVAS_TALL_HTML + CANVAS_SCRIPT
+    : rogue
+    ? CANVAS_ROGUE_HTML + CANVAS_SCRIPT
+    : CANVAS_FRAGMENT;
+  const title = tall ? '排程執行紀錄' : CANVAS_TITLE;
+  // The mount frame (RESET_CHANNEL, empty text) must not draw: otherwise every reload paints a canvas
+  // nobody asked for, and the three scripts below can never be observed in isolation.
+  const wantsCanvas = text.trim() !== '';
+
+  const canvasFrame = (eventType: string, factKey: string, body: Record<string, unknown>): object => ({
+    ...header,
+    eventType,
+    fact: {
+      ...emptyFact(),
+      [factKey]: {
+        message: {
+          messageId,
+          replyToCustomMessageId: replyTo,
+          payload: null,
+          isDebug: false,
+          idx: null,
+          text: '',
+          template: null,
+          ...body,
+        },
+      },
+    },
+  });
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  });
+
+  writeEvent(res, { ...header, eventType: 'asgard.run.init', fact: { ...emptyFact(), runInit: {} } });
+  await sleep(40);
+
+  if (!wantsCanvas) {
+    const hello =
+      '打「畫」看完整串流，「重播」看重新進房的樣子，「壞掉」看畫不出來時整張丟棄，' +
+      '「長」看超過 520px 在卡內捲動，「亂寫」看 agent 不守規矩時會怎樣。';
+
+    writeEvent(
+      res,
+      messageFrame(header, 'asgard.message.complete', randomUUID(), replyTo, hello, TEXT_TEMPLATE(hello)),
+    );
+    await sleep(60);
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
+  const intro = replayOnly
+    ? '這是重新進房會看到的樣子：只有 complete，沒有任何 delta。'
+    : '好，我把資料管線畫出來給你看。';
+
+  writeEvent(res, messageFrame(header, 'asgard.message.complete', randomUUID(), replyTo, intro, TEXT_TEMPLATE(intro)));
+  await sleep(80);
+
+  if (!replayOnly) {
+    writeEvent(res, canvasFrame('asgard.message.canvas.start', 'messageCanvasStart', {}));
+
+    for (let i = 0; i < fragment.length; i += CANVAS_CHUNK) {
+      await sleep(CANVAS_STEP_MS);
+      writeEvent(
+        res,
+        canvasFrame('asgard.message.canvas.delta', 'messageCanvasDelta', {
+          text: fragment.slice(i, i + CANVAS_CHUNK),
+        }),
+      );
+    }
+
+    await sleep(60);
+  }
+
+  if (broken) {
+    // No template: the backend could not render it. The frame only closes the block the start opened,
+    // so the client must discard the whole card rather than keep the partial markup (UC-053).
+    writeEvent(res, canvasFrame('asgard.message.canvas.complete', 'messageCanvasComplete', {}));
+  } else {
+    writeEvent(
+      res,
+      canvasFrame('asgard.message.canvas.complete', 'messageCanvasComplete', {
+        text: fragment,
+        template: { type: 'CANVAS', title, canvas: { html: fragment } },
+      }),
+    );
+  }
+
+  await sleep(60);
   writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
   res.end();
 }

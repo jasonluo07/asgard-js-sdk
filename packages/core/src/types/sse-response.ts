@@ -170,6 +170,27 @@ export interface QuestionMessageTemplate extends MessageTemplate {
   questions: Question[];
 }
 
+/**
+ * A visual the agent drew: one self-contained HTML/SVG fragment.
+ *
+ * **The markup is untrusted.** It is generated per conversation and may contain `<style>` and
+ * `<script>`, so injecting it into the host page would hand that page's origin — its cookies, its
+ * storage, its DOM — to content the host did not author. It must be rendered in an isolated browsing
+ * context with scripting allowed but same-origin access denied (in a browser: an iframe sandboxed
+ * *without* `allow-same-origin`, fed by `srcdoc`). That isolation also keeps the fragment off the
+ * network, which is expected — a canvas is authored to be self-contained.
+ *
+ * `html` is the complete fragment and is authoritative: the same markup also arrives beforehand as
+ * incremental canvas deltas purely so the card can be shown taking shape, and a client that ignored
+ * every delta renders the same document from this field alone.
+ */
+export interface CanvasMessageTemplate extends MessageTemplate {
+  type: MessageTemplateType.CANVAS;
+  /** Card title. The renderer shows only this — it must not extract a title from the markup. */
+  title?: string;
+  canvas: { html: string };
+}
+
 export interface Message<Payload = unknown> {
   messageId: string;
   // Non-empty when this frame belongs to a subagent (= the toolUseId of the Agent call that spawned it);
@@ -192,7 +213,8 @@ export interface Message<Payload = unknown> {
     | ChartMessageTemplate
     | TableMessageTemplate
     | AttachmentMessageTemplate
-    | QuestionMessageTemplate;
+    | QuestionMessageTemplate
+    | CanvasMessageTemplate;
 }
 
 export type IsEqual<A, B, DataType> = A extends B ? (B extends A ? DataType : null) : null;
@@ -349,6 +371,11 @@ export interface Fact<Type extends EventType> {
   messageThinkingStart: IsEqual<Type, EventType.MESSAGE_THINKING_START, MessageEventData>;
   messageThinkingDelta: IsEqual<Type, EventType.MESSAGE_THINKING_DELTA, MessageEventData>;
   messageThinkingComplete: IsEqual<Type, EventType.MESSAGE_THINKING_COMPLETE, MessageEventData>;
+  // Canvas stream reuses the message shape (F-030): deltas carry markup in `message.text`, and the
+  // complete carries the whole fragment in `message.template`.
+  messageCanvasStart: IsEqual<Type, EventType.MESSAGE_CANVAS_START, MessageEventData>;
+  messageCanvasDelta: IsEqual<Type, EventType.MESSAGE_CANVAS_DELTA, MessageEventData>;
+  messageCanvasComplete: IsEqual<Type, EventType.MESSAGE_CANVAS_COMPLETE, MessageEventData>;
   toolCallStart: IsEqual<Type, EventType.TOOL_CALL_START, ToolCallBaseEventData>;
   toolCallComplete: IsEqual<Type, EventType.TOOL_CALL_COMPLETE, ToolCallCompleteEventData>;
   toolCallConsent: IsEqual<Type, EventType.TOOL_CALL_CONSENT, ToolCallConsentEventData>;

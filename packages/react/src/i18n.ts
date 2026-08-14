@@ -122,6 +122,9 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'question.submit': 'Send answers',
     'question.submitTitle': 'Sends your choices as your next message',
     'question.closed': 'Answered',
+    // F-030 — canvas card chrome. The drawing itself is backend content and is never translated.
+    'canvas.drawing': 'Drawing',
+    'canvas.untitled': 'Canvas',
   },
   'ja-JP': {
     'tool.read': '{file} を読み込み',
@@ -230,6 +233,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'question.submit': '回答を送信',
     'question.submitTitle': '選んだ内容を次のメッセージとして送信します',
     'question.closed': '回答済み',
+    'canvas.drawing': '描画中',
+    'canvas.untitled': 'キャンバス',
   },
   'zh-TW': {
     'tool.read': '讀取 {file}',
@@ -337,6 +342,8 @@ const MESSAGES: Record<Locale, Record<string, string>> = {
     'question.submit': '送出回答',
     'question.submitTitle': '把你的選擇當成下一則訊息送出',
     'question.closed': '已回覆',
+    'canvas.drawing': '繪製中',
+    'canvas.untitled': '畫布',
   },
 };
 
