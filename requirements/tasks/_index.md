@@ -69,7 +69,7 @@
 
 ## ▶ Next Task
 
-**`REVIEW-060`（ready）** —— `BUILD-060` 已 `done`（F-024 SourceSet volume core client + F-026 core 半邊），branch `feat/f024-sourceset-volume-core-client`，尚未 review、未開 PR。接著是 Cycle 2（F-025 元件 + F-026 UI + TASK-004 demo route）。上一個收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，2026-08-12 **merged to main** via PR #425（merge commit `a93d137c`）。**刻意未發版**：與 F-029（[`#64`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/64)）／F-030（[`#66`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/66)）併批發一次，六個消費端因此只需 bump 一次；在那之前 `main` 上的版本號維持 `0.3.61`，issue #62 也還不到移 Review 的門檻（缺 tag）。以下段落保留各 cycle 的脈絡與 backlog。
+**Cycle 2（F-025 元件 + F-026 UI 提示 + TASK-004 demo route）** —— `BUILD-060` / `REVIEW-060` 皆 `done`（§1 15 ✅ / 0 ❌ / 9 n/a、§3 R1–R10 全 Pass、0 BLOCKERs），branch `feat/f024-sourceset-volume-core-client`，**尚未開 PR、未發版**。REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目錄時 listAll 會續打最多 10 個請求）與 `truncatedAtCap` 無法區分「達上限」與「後端提早停」。上一個收尾：`BUILD-051` / `REVIEW-051`（[`asgard-sdk-pm#62`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/62) F-028 下一句建議 placeholder 與 Tab 採用）—— §1 20/20、§3 R1–R14 全 Pass，2026-08-12 **merged to main** via PR #425（merge commit `a93d137c`）。**刻意未發版**：與 F-029（[`#64`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/64)）／F-030（[`#66`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/66)）併批發一次，六個消費端因此只需 bump 一次；在那之前 `main` 上的版本號維持 `0.3.61`，issue #62 也還不到移 Review 的門檻（缺 tag）。以下段落保留各 cycle 的脈絡與 backlog。
 
 **近期收尾的 cycle**：
 
@@ -217,4 +217,4 @@
 | `BUILD-059`  | Close the typecheck coverage gaps                 | High     | done   | [BUILD-059-typecheck-coverage.md](./BUILD-059-typecheck-coverage.md)                                     |
 | `REVIEW-059` | Review: typecheck coverage gaps                   | —        | done   | [REVIEW-059-typecheck-coverage.md](./REVIEW-059-typecheck-coverage.md)                                   |
 | `BUILD-060`  | Standalone SourceSet volume client in core        | High     | done   | [BUILD-060-sourceset-volume-core-client.md](./BUILD-060-sourceset-volume-core-client.md)                 |
-| `REVIEW-060` | Review: SourceSet volume client in core           | —        | ready  | [REVIEW-060-sourceset-volume-core-client.md](./REVIEW-060-sourceset-volume-core-client.md)               |
+| `REVIEW-060` | Review: SourceSet volume client in core           | —        | done   | [REVIEW-060-sourceset-volume-core-client.md](./REVIEW-060-sourceset-volume-core-client.md)               |
