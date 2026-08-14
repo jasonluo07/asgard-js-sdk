@@ -1780,6 +1780,98 @@ The conversation survives a stop: the transcript is kept, the suspended turn is 
 next message continues the same conversation. See the
 [core README](../core/README.md#stopping-generation) for the underlying lifecycle.
 
+<a id="sourceset-file-explorer"></a>
+<br/>
+
+## SourceSet File Explorer
+
+`SourceSetFileExplorer` browses and edits a **SourceSet volume** directly. There is no chat, no channel
+and no sandbox involved: it replaces the "spin up a throwaway vscode sandbox just to edit one file" flow
+on screens that only need a file manager. Mount it anywhere — it reads no Chatbot context.
+
+```tsx
+import { SourceSetFileExplorer } from '@asgard-js/react';
+import '@asgard-js/react/style';
+
+<SourceSetFileExplorer
+  sourceSetEndpoint="https://api.asgard-ai.com/ns/my-ns/source-set/my-set/volume"
+  apiKey={volumeApiKey}
+  rootPath=""
+  initialPath="notes"
+  readOnly={false}
+  locale="zh-TW"
+  onError={error => console.error(error)}
+/>;
+```
+
+### Four ways to mount it
+
+The same component serves every consumer; only the props differ.
+
+| Consumer                  | `sourceSetEndpoint`                                   | Auth prop                                                |
+| ------------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| Direct to the edge server | `{EDGE}/ns/{namespace}/source-set/{name}/volume`      | `apiKey` — the SourceSet volume API key                  |
+| Platform / SourceSet      | `{PLATFORM_API}/v1/source-set/{source_set_id}/volume` | `customHeaders` with an `Authorization: Bearer …` header |
+| Platform / SkillSet       | `{PLATFORM_API}/v1/skill-set/{skill_set_id}/volume`   | `customHeaders` with an `Authorization: Bearer …` header |
+| Agent Hub / Directory     | `{HUB_API}/v1/directory/{directory_id}/volume`        | `customHeaders` with an `Authorization: Bearer …` header |
+
+Three things are worth reading before you wire one up.
+
+**Do not pass `apiKey` to a BFF relay.** The volume API key is a backend credential and the relay holds
+its own copy; putting it in `apiKey` ships it to the browser, where anyone can read it out of the network
+tab. Against a relay, authenticate the user with `customHeaders` and let the relay authenticate itself.
+
+**Agent Hub's Directory paths are already prefixed by the BFF.** The relay mounts the volume under
+`directory/{id}/`, so a path you send is relative to _that directory_, not to the SourceSet volume root.
+The component does not add a prefix, and neither should you.
+
+**There is no watch.** A volume is served by several replicas and exposes no change stream, so the
+component never subscribes to one. Freshness comes from the refresh button in the toolbar, which reloads
+the visible tree and any file open in the viewer. If a consumer needs changes pushed, that is a backend
+capability the volume API does not have today.
+
+### Props
+
+| Prop                | Type                            | Default            | Description                                                             |
+| ------------------- | ------------------------------- | ------------------ | ----------------------------------------------------------------------- |
+| `sourceSetEndpoint` | `string`                        | —                  | **Required.** The `…/volume` endpoint. A trailing slash is tolerated.   |
+| `apiKey`            | `string`                        | —                  | Sent as `X-API-KEY`. Direct-to-edge only.                               |
+| `customHeaders`     | `Record<string, string>`        | —                  | Merged into every request, e.g. `Authorization`.                        |
+| `rootPath`          | `string`                        | `''` (volume root) | Locks the tree to a subtree; the user cannot browse above it.           |
+| `initialPath`       | `string`                        | —                  | Expanded and selected on mount.                                         |
+| `readOnly`          | `boolean`                       | `false`            | Removes every mutating action, including the viewer's edit entry point. |
+| `locale`            | `'en-US' \| 'ja-JP' \| 'zh-TW'` | `'en-US'`          | UI language.                                                            |
+| `theme`             | `SourceSetExplorerTheme`        | —                  | Overrides for the `--asg-*` tokens the component paints with.           |
+| `maxEntries`        | `number`                        | `10000`            | Ceiling on one directory's auto-paging walk.                            |
+| `onError`           | `(error: unknown) => void`      | —                  | Called on every failed operation, alongside the in-component message.   |
+
+Paths are **volume-relative and the root is the empty string** — `notes/todo.md`, never `/notes/todo.md`.
+A leading slash, a trailing slash, a doubled slash or a `.` / `..` segment is rejected by the volume.
+
+### Large directories
+
+A volume lists with real pagination, so the component walks the pages for you rather than showing a
+silent first thousand. A directory node spins while its walk runs, and when the walk stops short — the
+`maxEntries` cap, or a backend that stops producing before its own reported total — the node says how
+many entries are missing instead of presenting a partial listing as the whole thing.
+
+### Theming
+
+The component paints with the same `--asg-color-*` / `--asg-font-family-*` tokens as the in-sandbox File
+Explorer, so the two match wherever a host shows both. Every token has a built-in fallback, so it renders
+fully without any theme at all; pass `theme` to override individual tokens.
+
+```tsx
+<SourceSetFileExplorer
+  sourceSetEndpoint={endpoint}
+  apiKey={key}
+  theme={{ surface: '#0f1117', textPrimary: '#e6e8ee', border: '#2a2f3a', primary: '#5b8cff' }}
+/>
+```
+
+Try it in the demo app at `/source-set-explorer`, which runs against an in-memory volume when no
+endpoint is configured — see `apps/react-demo/.env.example`.
+
 <a id="development"></a>
 <br/>
 
