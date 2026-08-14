@@ -48,6 +48,12 @@ const demoCards = [
     to: '/private',
   },
   {
+    title: 'SourceSet File Explorer',
+    description:
+      'Browse and edit a SourceSet volume with no chat and no sandbox — the standalone explorer, narrow and full-bleed.',
+    to: '/source-set-explorer',
+  },
+  {
     title: '🐛 History Scroll Bug',
     description: 'Repro: chat does not scroll to bottom when opened with pre-existing history (ClickUp 86exneerk).',
     to: '/history-scroll-bug',

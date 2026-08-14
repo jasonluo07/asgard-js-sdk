@@ -1,0 +1,87 @@
+// One column stack: `DemoWrapper`'s content area is a row flex, so a route returning two top-level
+// children gets them side by side and each is squeezed toward zero width.
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8125rem;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  input[type='text'] {
+    width: 10rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+.source {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  opacity: 0.8;
+
+  code {
+    padding: 0.05rem 0.25rem;
+    border-radius: 0.2rem;
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
+.mounts {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  // Both mounts are 100% height, so the row has to declare one. Sized past the component's own 18rem
+  // minimum so the tree gets room to show a directory expanded rather than one row at a time.
+  height: 34rem;
+}
+
+.narrow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: none;
+  width: 320px;
+}
+
+.wide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.mountTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+// `min-height: 0` matters: without it the flex child refuses to shrink and the explorer overflows the row.
+.mountBody {
+  flex: 1;
+  min-height: 0;
+}
