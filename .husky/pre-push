@@ -2,6 +2,10 @@
 # the CI workflow is disabled, so nothing else catches them. Ten of them once sat on `main` unnoticed
 # for that exact reason. This is the gate.
 #
+# Covers all three projects (core, react, react-demo) including their `*.spec.*` files. `apps/react-demo`
+# is the only real consumer of the public API in this repo, so it doubles as the early warning that a
+# type change breaks downstream.
+#
 # Nx caches the result, so a re-push with nothing changed costs about a second.
 # Escape hatch, for a knowingly broken WIP branch: `git push --no-verify`.
-npm run typecheck:packages
+npm run typecheck

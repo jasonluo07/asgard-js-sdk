@@ -1,8 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    // Keep `tsc --build` output away from `dist/`, which is also vite's build output and is wiped on
+    // every build (`emptyOutDir: true`). Sharing them meant the incremental type-check state was
+    // destroyed by each `nx build react-demo`, and stray `.d.ts` files shipped inside the deployable
+    // bundle. `out-tsc/` is git-ignored and matches what both packages already do.
+    "outDir": "out-tsc/react-demo",
+    "tsBuildInfoFile": "out-tsc/react-demo/tsconfig.app.tsbuildinfo",
     "jsx": "react-jsx",
     "lib": ["dom"],
     "types": ["node", "@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts", "vite/client"],

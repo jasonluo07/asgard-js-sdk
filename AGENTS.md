@@ -12,8 +12,10 @@ Asgard JS SDK is a TypeScript monorepo that provides React components and core s
 npm run build:core        # Build @asgard-js/core
 npm run build:react       # Build @asgard-js/react
 
-# Type check — the ONLY command that fails on a type error (see "Type checking" below)
-npm run typecheck:packages
+# Type check — the ONLY commands that fail on a type error (see "Type checking" below)
+npm run typecheck           # core + react + react-demo (this is what pre-push runs)
+npm run typecheck:packages  # core + react only
+npm run typecheck:demo      # react-demo only
 
 # Test
 npm run test:packages     # Vitest for both core and react
@@ -46,14 +48,27 @@ reports type errors on stdout while still exiting `0`. The GitHub Actions workfl
 catch them is disabled (`.github/workflows/ci.yml`, `if: false`). Ten type errors once sat on `main`
 undetected for exactly this reason.
 
-`npm run typecheck:packages` (`tsc --build` over both packages) is the command that actually fails, and
-a husky `pre-push` hook runs it so a type error cannot reach the remote. Use `git push --no-verify` only
-to share a knowingly broken WIP branch.
+`npm run typecheck` (`tsc --build` over `packages/core`, `packages/react` and `apps/react-demo`) is the
+command that actually fails, and a husky `pre-push` hook runs it so a type error cannot reach the remote.
+Use `git push --no-verify` only to share a knowingly broken WIP branch.
+
+**Coverage is all three projects and all of their `src/`, `*.spec.*` included.** `apps/react-demo` is the
+only real consumer of the public API inside this repo, so it doubles as the early warning that a type
+change breaks downstream. `npm run typecheck:packages` (core + react) and `npm run typecheck:demo` are
+narrower shortcuts for when you only touched one side.
+
+> Two coverage holes used to sit here and are worth knowing about, because both looked like passing runs.
+> **Spec files**: `tsc` always compiled them, but the Nx `typecheck` target inherited the `production`
+> named input, which excludes `**/*.spec.*` — so editing a spec never invalidated the cache and Nx
+> replayed a stale ✅. `nx.json` now pins `targetDefaults.typecheck.inputs` to `default` / `^default`.
+> **The demo**: it was simply never in the `--projects` list, and had accumulated five type errors.
+> If you ever need to confirm the gate is live, drop `const CANARY: number = 'x';` into any file it
+> claims to cover and check that `npm run typecheck` fails **without** `--skip-nx-cache`.
 
 Run it alongside lint and format before calling a task done:
 
 ```bash
-npm run lint:packages && npm run format:check && npm run typecheck:packages
+npm run lint:packages && npm run format:check && npm run typecheck
 npm run build:core && npm run build:react
 npm run test:packages
 ```

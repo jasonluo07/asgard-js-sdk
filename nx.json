@@ -12,6 +12,11 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
+  "targetDefaults": {
+    "typecheck": {
+      "inputs": ["default", "^default", { "externalDependencies": ["typescript"] }]
+    }
+  },
   "nxCloudId": "677b87804f3bc57e4ea713af",
   "plugins": [
     {

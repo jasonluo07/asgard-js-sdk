@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
-import { Chatbot } from '@asgard-js/react';
+import { Chatbot, ChatbotTheme } from '@asgard-js/react';
 import '@asgard-js/react/style';
-import { ConversationMessage, EventType, MessageTemplateType, Theme } from '@asgard-js/core';
+import { ConversationMessage, EventType, MessageTemplateType } from '@asgard-js/core';
 import { nanoid } from 'nanoid';
 import { DemoWrapper } from '../../components/demo-wrapper';
 import styles from './markdown-theme.module.scss';
@@ -30,7 +30,7 @@ const answer: number = 42;
 | 螢幕 | 5000 | 12 |
 `;
 
-const PRESETS: { name: string; theme: Theme }[] = [
+const PRESETS: { name: string; theme: ChatbotTheme }[] = [
   { name: 'Default (no theme)', theme: {} },
   {
     name: 'Light',
