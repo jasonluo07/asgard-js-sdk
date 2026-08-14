@@ -30,6 +30,7 @@ function botText(text: string, idx: number): ConversationMessage {
     template: {
       type: MessageTemplateType.TEXT,
       text,
+      quickReplies: [],
     },
   };
 

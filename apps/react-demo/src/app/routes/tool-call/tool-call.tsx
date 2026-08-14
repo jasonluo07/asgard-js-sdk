@@ -102,6 +102,7 @@ const statusConfig: Record<ToolCallStatus, { icon: string; color: string; label:
   completed: { icon: '✓', color: '#52c41a', label: 'Done' },
   pending: { icon: '⟳', color: '#1890ff', label: 'Running' },
   error: { icon: '✗', color: '#ff4d4f', label: 'Failed' },
+  cancelled: { icon: '⊘', color: '#8c8c8c', label: 'Cancelled' },
 };
 
 function SummaryRenderer({ items }: { items: ToolCallItemData[] }): ReactNode {

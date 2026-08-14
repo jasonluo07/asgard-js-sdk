@@ -82,7 +82,17 @@ function errorBubble(): ConversationMessage {
     type: 'error',
     messageId: nanoid(),
     eventType: EventType.ERROR,
-    error: { code: 'INTERNAL_ERROR', message: '後端連線中斷，請稍後再試。' },
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: '後端連線中斷，請稍後再試。',
+      inner: 'context deadline exceeded',
+      location: {
+        namespace: 'demo',
+        workflowName: 'theme-gallery',
+        processorName: 'llm-completion',
+        processorType: 'completion',
+      },
+    },
     time: new Date(),
   };
 }

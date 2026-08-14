@@ -17,20 +17,20 @@ export function Events(): ReactNode {
 
   const initMessages = [createEmitButtonTemplateExample()];
 
-  const handleTemplateBtnClick = useCallback(
-    (action: { type: string; eventName?: string; payload?: unknown }): void => {
-      if (action.type === 'emit' && action.eventName) {
-        const newLog: EventLog = {
-          id: Date.now(),
-          timestamp: new Date(),
-          eventName: action.eventName,
-          payload: action.payload,
-        };
-        setEventLogs(prev => [newLog, ...prev].slice(0, 10));
-      }
-    },
-    [],
-  );
+  // `onTemplateBtnClick` 只在 EMIT action 上被呼叫，型別是 (payload, eventName, raw) => void，
+  // 沒帶 eventName 的 EMIT 會拿到空字串。
+  const handleTemplateBtnClick = useCallback((payload: Record<string, unknown>, eventName: string): void => {
+    if (!eventName) return;
+
+    const newLog: EventLog = {
+      id: Date.now(),
+      timestamp: new Date(),
+      eventName,
+      payload,
+    };
+
+    setEventLogs(prev => [newLog, ...prev].slice(0, 10));
+  }, []);
 
   const clearLogs = (): void => {
     setEventLogs([]);
