@@ -1,0 +1,503 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AsgardSourceSetClient } from '@asgard-js/core';
+import type { FsEntry } from '../file-explorer/types';
+import { type Locale, t } from '../../i18n';
+import { blobToDataUrl, blobToText, isImageName, saveBlob } from './blob';
+import { isConflict, volumeErrorMessage } from './errors';
+import { baseName, isWithin, joinPath, parentDir, sortEntries, uniqueName } from './paths';
+
+/**
+ * One directory's listing. `total` / `complete` come straight from `listAll` (F-026): `complete: false`
+ * means `entries` is not known to be the whole directory, and `total - entries.length` is the shortfall
+ * to report — except when `total` is 0, which means the volume never said how many there are.
+ */
+export interface DirListing {
+  status: 'loading' | 'loaded' | 'error';
+  entries: FsEntry[];
+  total: number;
+  complete: boolean;
+  error?: string;
+}
+
+export interface ClipboardState {
+  entry: FsEntry;
+  mode: 'copy' | 'cut';
+}
+
+export interface SourceSetExplorerOptions {
+  client: AsgardSourceSetClient;
+  /** Tree root, volume-relative. `''` is the volume root. */
+  rootPath: string;
+  /** Path to reveal and select on first render. */
+  initialPath?: string;
+  locale: Locale;
+  /** Ceiling for one directory's auto-paging walk. */
+  maxEntries?: number;
+  readOnly: boolean;
+  onError?: (error: unknown) => void;
+  /** Ask the user for a name; resolves `null` when dismissed. */
+  requestInput: (options: { title: string; defaultValue?: string }) => Promise<string | null>;
+  /** Ask the user to confirm; resolves `true` only on explicit confirmation. */
+  requestConfirm: (options: { title: string }) => Promise<boolean>;
+}
+
+export interface SourceSetExplorerController {
+  listings: Readonly<Record<string, DirListing>>;
+  expanded: ReadonlySet<string>;
+  selected: FsEntry | null;
+  openFile: FsEntry | null;
+  clipboard: ClipboardState | null;
+  /** Last failed operation, for the shell's error bar. `null` when the last one succeeded. */
+  error: string | null;
+  /** Bumped by refresh; the file view is keyed on it so a refresh re-reads the open file too. */
+  refreshToken: number;
+  busy: boolean;
+  dismissError: () => void;
+  select: (entry: FsEntry | null) => void;
+  toggleExpand: (entry: FsEntry) => void;
+  open: (entry: FsEntry) => void;
+  closeFile: () => void;
+  refresh: () => void;
+  newFile: () => Promise<void>;
+  newFolder: () => Promise<void>;
+  upload: (files: FileList | File[]) => Promise<void>;
+  download: () => Promise<void>;
+  copy: () => void;
+  cut: () => void;
+  paste: () => Promise<void>;
+  rename: () => Promise<void>;
+  remove: () => Promise<void>;
+  readFile: (path: string) => Promise<string>;
+  saveFile: (path: string, content: string) => Promise<void>;
+  /** The directory new entries land in: the selection if it is a directory, else its parent. */
+  targetDir: string;
+}
+
+/** The root entry stands in for the volume root, which has no listing entry of its own. */
+export function rootEntry(rootPath: string): FsEntry {
+  return { name: baseName(rootPath) || '/', isDir: true, path: rootPath, sizeBytes: 0, mtimeUnix: 0, mode: 0 };
+}
+
+/** Directories between `root` and `path`, so revealing `initialPath` expands each one. */
+function ancestorDirs(root: string, path: string): string[] {
+  if (!isWithin(root, path) || path === root) return [];
+
+  const rest = root === '' ? path : path.slice(root.length + 1);
+  const parts = rest.split('/').filter(Boolean);
+  parts.pop();
+
+  const dirs: string[] = [];
+  let cur = root;
+  for (const part of parts) {
+    cur = joinPath(cur, part);
+    dirs.push(cur);
+  }
+
+  return dirs;
+}
+
+/**
+ * The SourceSet explorer's whole state machine: which directories are listed, what is expanded and
+ * selected, the clipboard, and every mutation.
+ *
+ * Deliberately one hook rather than a context provider. The sandbox explorer needs a context because its
+ * parts are composed by hosts; this component is a single closed shell (F-025), so a context would be an
+ * export surface with nothing to plug into it.
+ */
+export function useSourceSetExplorer(options: SourceSetExplorerOptions): SourceSetExplorerController {
+  const { client, rootPath, initialPath, locale, maxEntries, readOnly, onError, requestInput, requestConfirm } =
+    options;
+
+  const [listings, setListings] = useState<Record<string, DirListing>>({});
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([rootPath]));
+  const [selected, setSelected] = useState<FsEntry | null>(null);
+  const [openFile, setOpenFile] = useState<FsEntry | null>(null);
+  const [clipboard, setClipboard] = useState<ClipboardState | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  // A listing that arrives after a newer one for the same path was requested must not overwrite it —
+  // collapsing and re-expanding a large directory otherwise settles on whichever walk finished last.
+  const seq = useRef<Record<string, number>>({});
+
+  const report = useCallback(
+    (e: unknown, contextKey?: string): void => {
+      setError(volumeErrorMessage(e, locale, contextKey ? t(locale, contextKey) : undefined));
+      onError?.(e);
+    },
+    [locale, onError],
+  );
+
+  const listDir = useCallback(
+    async (path: string): Promise<void> => {
+      const ticket = (seq.current[path] ?? 0) + 1;
+      seq.current[path] = ticket;
+
+      setListings(prev => ({
+        ...prev,
+        [path]: { status: 'loading', entries: prev[path]?.entries ?? [], total: 0, complete: true },
+      }));
+
+      try {
+        const result = await client.listAll(path, maxEntries != null ? { maxEntries } : undefined);
+        if (seq.current[path] !== ticket) return;
+
+        const entries = sortEntries(result.entries.map(entry => ({ ...entry, path: joinPath(path, entry.name) })));
+
+        setListings(prev => ({
+          ...prev,
+          [path]: { status: 'loaded', entries, total: result.total, complete: result.complete },
+        }));
+      } catch (e) {
+        if (seq.current[path] !== ticket) return;
+
+        // A failed page must not leave a partial listing looking whole (F-026). The node reports the
+        // error and shows nothing rather than the entries an earlier walk happened to collect.
+        setListings(prev => ({
+          ...prev,
+          [path]: {
+            status: 'error',
+            entries: [],
+            total: 0,
+            complete: false,
+            error: volumeErrorMessage(e, locale),
+          },
+        }));
+        onError?.(e);
+      }
+    },
+    [client, maxEntries, locale, onError],
+  );
+
+  // First listing, plus revealing `initialPath`. Re-runs when the volume itself changes.
+  useEffect(() => {
+    setListings({});
+    setSelected(null);
+    setOpenFile(null);
+    setClipboard(null);
+    setError(null);
+    seq.current = {};
+
+    const reveal = initialPath && isWithin(rootPath, initialPath) ? initialPath : null;
+    const dirs = reveal ? [rootPath, ...ancestorDirs(rootPath, reveal)] : [rootPath];
+    setExpanded(new Set(dirs));
+    dirs.forEach(dir => void listDir(dir));
+  }, [rootPath, initialPath, listDir]);
+
+  // Select `initialPath` once its parent listing lands, so the selection carries the real entry (with
+  // `isDir`) rather than one synthesized from the path.
+  const revealed = useRef(false);
+  useEffect(() => {
+    if (revealed.current || !initialPath || !isWithin(rootPath, initialPath)) return;
+
+    const entry = listings[parentDir(initialPath)]?.entries.find(it => it.path === initialPath);
+    if (entry) {
+      revealed.current = true;
+      setSelected(entry);
+    }
+  }, [listings, initialPath, rootPath]);
+
+  const targetDir = useMemo((): string => {
+    if (!selected) return rootPath;
+
+    return selected.isDir ? selected.path : parentDir(selected.path);
+  }, [selected, rootPath]);
+
+  /** Re-list a directory that is on screen; a collapsed one just drops its cache and re-lists on expand. */
+  const invalidate = useCallback(
+    (path: string): void => {
+      if (expanded.has(path) || path === rootPath) {
+        void listDir(path);
+
+        return;
+      }
+
+      setListings(prev => {
+        if (!(path in prev)) return prev;
+
+        const next = { ...prev };
+        delete next[path];
+
+        return next;
+      });
+    },
+    [expanded, rootPath, listDir],
+  );
+
+  /** Run a mutation, then re-list what it touched and surface any failure. */
+  const mutate = useCallback(
+    async (contextKey: string, run: () => Promise<void>, touched: string[]): Promise<void> => {
+      setBusy(true);
+      try {
+        await run();
+        setError(null);
+        [...new Set(touched)].forEach(invalidate);
+      } catch (e) {
+        report(e, contextKey);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [invalidate, report],
+  );
+
+  /** Names already used in `dir`, for dedupe. Loads the listing first when it is not on hand. */
+  const takenIn = useCallback(
+    async (dir: string): Promise<Set<string>> => {
+      const known = listings[dir];
+      if (known?.status === 'loaded') return new Set(known.entries.map(it => it.name));
+
+      const result = await client.listAll(dir, maxEntries != null ? { maxEntries } : undefined);
+
+      return new Set(result.entries.map(it => it.name));
+    },
+    [listings, client, maxEntries],
+  );
+
+  const select = useCallback((entry: FsEntry | null): void => setSelected(entry), []);
+
+  const toggleExpand = useCallback(
+    (entry: FsEntry): void => {
+      if (!entry.isDir) return;
+
+      setExpanded(prev => {
+        const next = new Set(prev);
+        if (next.has(entry.path)) {
+          next.delete(entry.path);
+        } else {
+          next.add(entry.path);
+          if (listings[entry.path]?.status !== 'loaded') void listDir(entry.path);
+        }
+
+        return next;
+      });
+    },
+    [listings, listDir],
+  );
+
+  const open = useCallback((entry: FsEntry): void => {
+    if (entry.isDir) return;
+
+    setOpenFile(entry);
+  }, []);
+
+  const closeFile = useCallback((): void => setOpenFile(null), []);
+
+  const refresh = useCallback((): void => {
+    setError(null);
+    setRefreshToken(n => n + 1);
+    [...expanded].forEach(dir => void listDir(dir));
+  }, [expanded, listDir]);
+
+  const newFile = useCallback(async (): Promise<void> => {
+    const name = await requestInput({ title: t(locale, 'sourceSetExplorer.newFilePrompt') });
+    if (!name) return;
+
+    const dir = targetDir;
+    await mutate(
+      'sourceSetExplorer.opNewFile',
+      async () => {
+        try {
+          await client.write(joinPath(dir, name), '', { createOnly: true });
+        } catch (e) {
+          // R9: `createOnly` turns an existing name into a 409 instead of an overwrite. Say which name.
+          if (isConflict(e)) throw new Error(t(locale, 'sourceSetExplorer.errorNameTaken', { name }));
+
+          throw e;
+        }
+      },
+      [dir],
+    );
+  }, [requestInput, locale, targetDir, mutate, client]);
+
+  const newFolder = useCallback(async (): Promise<void> => {
+    const name = await requestInput({ title: t(locale, 'sourceSetExplorer.newFolderPrompt') });
+    if (!name) return;
+
+    const dir = targetDir;
+    await mutate('sourceSetExplorer.opNewFolder', () => client.mkdir(joinPath(dir, name)), [dir]);
+  }, [requestInput, locale, targetDir, mutate, client]);
+
+  const upload = useCallback(
+    async (files: FileList | File[]): Promise<void> => {
+      const picked = Array.from(files);
+      if (picked.length === 0) return;
+
+      const dir = targetDir;
+      await mutate(
+        'sourceSetExplorer.opUpload',
+        async () => {
+          for (const file of picked) {
+            try {
+              await client.write(joinPath(dir, file.name), file, { createOnly: true });
+            } catch (e) {
+              // Same choice as new-file: never overwrite silently, name the collision.
+              if (isConflict(e)) throw new Error(t(locale, 'sourceSetExplorer.errorNameTaken', { name: file.name }));
+
+              throw e;
+            }
+          }
+        },
+        [dir],
+      );
+    },
+    [targetDir, mutate, client, locale],
+  );
+
+  const download = useCallback(async (): Promise<void> => {
+    const entry = selected;
+    if (!entry || entry.isDir) return;
+
+    setBusy(true);
+    try {
+      const result = await client.read(entry.path);
+      saveBlob(result.content, entry.name);
+      setError(null);
+    } catch (e) {
+      report(e, 'sourceSetExplorer.opDownload');
+    } finally {
+      setBusy(false);
+    }
+  }, [selected, client, report]);
+
+  const copy = useCallback((): void => {
+    if (selected) setClipboard({ entry: selected, mode: 'copy' });
+  }, [selected]);
+
+  const cut = useCallback((): void => {
+    if (selected) setClipboard({ entry: selected, mode: 'cut' });
+  }, [selected]);
+
+  const paste = useCallback(async (): Promise<void> => {
+    const held = clipboard;
+    if (!held) return;
+
+    const dir = targetDir;
+    // Pasting a directory into itself or its own descendant would recurse; the volume would either
+    // 409 or churn, and neither reads as an explanation.
+    if (held.entry.isDir && isWithin(held.entry.path, dir)) {
+      setError(t(locale, 'sourceSetExplorer.errorPasteIntoSelf'));
+
+      return;
+    }
+
+    const from = parentDir(held.entry.path);
+    await mutate(
+      'sourceSetExplorer.opPaste',
+      async () => {
+        const name = uniqueName(await takenIn(dir), held.entry.name);
+        const dst = joinPath(dir, name);
+        if (held.mode === 'cut') await client.move(held.entry.path, dst);
+        else await client.copy(held.entry.path, dst);
+      },
+      [dir, from],
+    );
+
+    if (held.mode === 'cut') setClipboard(null);
+  }, [clipboard, targetDir, locale, mutate, takenIn, client]);
+
+  const rename = useCallback(async (): Promise<void> => {
+    const entry = selected;
+    if (!entry) return;
+
+    const name = await requestInput({
+      title: t(locale, 'sourceSetExplorer.renamePrompt'),
+      defaultValue: entry.name,
+    });
+    if (!name || name === entry.name) return;
+
+    const dir = parentDir(entry.path);
+    await mutate(
+      'sourceSetExplorer.opRename',
+      async () => {
+        try {
+          await client.move(entry.path, joinPath(dir, name));
+        } catch (e) {
+          if (isConflict(e)) throw new Error(t(locale, 'sourceSetExplorer.errorNameTaken', { name }));
+
+          throw e;
+        }
+      },
+      [dir],
+    );
+
+    if (openFile?.path === entry.path) setOpenFile(null);
+
+    setSelected(null);
+  }, [selected, requestInput, locale, mutate, client, openFile]);
+
+  const remove = useCallback(async (): Promise<void> => {
+    const entry = selected;
+    if (!entry) return;
+
+    const confirmed = await requestConfirm({
+      title: t(locale, entry.isDir ? 'sourceSetExplorer.confirmDeleteDir' : 'sourceSetExplorer.confirmDelete', {
+        name: entry.name,
+      }),
+    });
+    if (!confirmed) return;
+
+    const dir = parentDir(entry.path);
+    await mutate(
+      'sourceSetExplorer.opDelete',
+      // A directory goes through `removeAll`; `remove` only takes files and empty directories.
+      () => (entry.isDir ? client.removeAll(entry.path) : client.remove(entry.path)),
+      [dir],
+    );
+
+    if (openFile && isWithin(entry.path, openFile.path)) setOpenFile(null);
+
+    setSelected(null);
+    setClipboard(prev => (prev && isWithin(entry.path, prev.entry.path) ? null : prev));
+  }, [selected, requestConfirm, locale, mutate, client, openFile]);
+
+  const readFile = useCallback(
+    async (path: string): Promise<string> => {
+      const result = await client.read(path);
+
+      return isImageName(path) ? blobToDataUrl(result.content) : blobToText(result.content);
+    },
+    [client],
+  );
+
+  const saveFile = useCallback(
+    async (path: string, content: string): Promise<void> => {
+      if (readOnly) return;
+
+      await client.write(path, content);
+    },
+    [client, readOnly],
+  );
+
+  const dismissError = useCallback((): void => setError(null), []);
+
+  return {
+    listings,
+    expanded,
+    selected,
+    openFile,
+    clipboard,
+    error,
+    refreshToken,
+    busy,
+    dismissError,
+    select,
+    toggleExpand,
+    open,
+    closeFile,
+    refresh,
+    newFile,
+    newFolder,
+    upload,
+    download,
+    copy,
+    cut,
+    paste,
+    rename,
+    remove,
+    readFile,
+    saveFile,
+    targetDir,
+  };
+}
