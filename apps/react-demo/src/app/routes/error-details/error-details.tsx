@@ -58,7 +58,7 @@ const CASES: { id: string; label: string; note: string }[] = [
   {
     id: 'err-nomessage',
     label: '沒有 message',
-    note: '退回 catalog 字串，而不是渲染出一個空標題。',
+    note: '退回 catalog 字串，而不是渲染出一個空標題。它同時帶著 traceId，所以 toggle 照常出現 —— 摘要是 fallback 文字，展開的 JSON 才是真正的內容。',
   },
   {
     id: 'err-bare',

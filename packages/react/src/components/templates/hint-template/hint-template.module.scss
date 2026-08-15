@@ -16,10 +16,6 @@
   // single long message stretches the whole thread.
   max-width: 100%;
 
-  &.hint_root__error {
-    color: var(--asg-color-error);
-  }
-
   .error_hint_title {
     display: flex;
     align-items: baseline;
@@ -28,13 +24,19 @@
     max-width: 100%;
   }
 
-  // Collapsed summary: two lines max, the rest on the element's `title`.
+  // Summary. #412 §3 asks for the two-line clamp **while collapsed** — the clamp used to be
+  // unconditional, so expanding the details left a long message still truncated on screen and readable
+  // only as an escaped string inside the JSON below. The modifier is added by `ErrorHint` from its own
+  // `open` state, so opening the details also reveals the full summary.
   .error_hint_summary {
+    overflow: hidden;
+  }
+
+  .error_hint_summary__clamped {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .error_hint_toggle {
@@ -85,11 +87,20 @@
     color: var(--asgard-error-details-label, rgba(150, 150, 150, 1));
   }
 
-  // The raw upstream error. Monospace + preserved newlines make a stack-ish string readable, and
-  // the height cap keeps even a multi-kilobyte one scrolling inside the bubble.
+  // The whole error payload as `JSON.stringify(details, null, 2)` — not the raw `inner` it held before
+  // #416. That matters for two reasons the next reader should not have to rediscover:
+  //
+  // 1. `JSON.stringify` **escapes** newlines to a literal `\n` and quotes to `\"`, so `pre-wrap` now only
+  //    preserves the two-space indentation. A multi-line stack trace renders as one long line full of
+  //    `\n` — strictly less readable than the pre-#416 rendering. #412 §2 took that trade on purpose: a
+  //    field-agnostic dump beats a hand-picked list that silently drops whatever the backend adds next.
+  // 2. The cap is sized for that payload, not for `inner` alone. Measured on the demo's three seeded
+  //    cases (11px / 15.95px line height): 223px, 271px, 191px — 160px cut all three off mid-`location`
+  //    and pushed `code` and `inner` below the fold. 280px clears the tallest of them while still
+  //    bounding a multi-kilobyte `inner` to a scroll box.
   .error_inner {
     margin: 0;
-    max-height: 160px;
+    max-height: 280px;
     overflow: auto;
     white-space: pre-wrap;
     font-family: var(--asg-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
