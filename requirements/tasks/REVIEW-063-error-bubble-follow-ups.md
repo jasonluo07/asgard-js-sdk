@@ -3,127 +3,119 @@
 ## Meta
 
 - Task ID: `REVIEW-063`
-- Status: `ready`
+- Status: `done`
 - BUILD Task: `BUILD-063`
-- Reviewed commit: `<git commit SHA>`
-- Reviewed branch: `<branch-name>`
+- Reviewed commit: `3b6dea4`
+- Reviewed branch: `fix/417-error-bubble-follow-ups`
 
 ---
 
 ## §1 Static Code Review
 
-Scan BUILD task `## Coverage` files against `FRONTEND_RULE_COMMON.md`. No server needed.
+Scope = the six files in `BUILD-063 ## Coverage`. `lint` / `typecheck` / `build` run project-wide.
 
 ### §1.1 Checklist
 
-| Check item                                                                                                    | Rule                           | Result  |
-| ------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------- |
-| SVG path strings inlined into components                                                                      | FRONTEND_RULE_COMMON §1.1      | ✅ / ❌ |
-| Inline style magic numbers (e.g., `minHeight: 'calc(...)'`)                                                   | FRONTEND_RULE_COMMON §1.2      | ✅ / ❌ |
-| Hardcoded color values (hex / rgba / oklch literal)                                                           | FRONTEND_RULE_COMMON §1.3      | ✅ / ❌ |
-| `<style>` tag injected into JSX                                                                               | FRONTEND_RULE_COMMON §1.4      | ✅ / ❌ |
-| Module-level mutable ID counters                                                                              | FRONTEND_RULE_COMMON §1.5      | ✅ / ❌ |
-| Login backdoor outside `NODE_ENV === 'development'` guard                                                     | FRONTEND_RULE_COMMON §1.6      | ✅ / ❌ |
-| Sensitive data passed through URL query strings                                                               | FRONTEND_RULE_COMMON §1.7      | ✅ / ❌ |
-| `page.tsx` is thin (params + navigation only; no main UI JSX)                                                 | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| Feature components in `src/components/{feature}/`; no `screens/` dir                                          | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| TypeScript type (`src/types/`) and API module (`src/api/`) exist before first use                             | FRONTEND_RULE_COMMON §2.2      | ✅ / ❌ |
-| API calls routed through `src/api/` domain module; no direct axios in components                              | FRONTEND_RULE_COMMON §3.2      | ✅ / ❌ |
-| Server state via TanStack Query; `isLoading` / `isError` both handled                                         | FRONTEND_RULE_COMMON §3.3 §3.4 | ✅ / ❌ |
-| Forms use RHF + Zod; no bare `useState` fields; field-level error messages                                    | FRONTEND_RULE_COMMON §3.5      | ✅ / ❌ |
-| Zustand store does not hold server data                                                                       | FRONTEND_RULE_COMMON §2.1      | ✅ / ❌ |
-| No `as any`; no `eslint-disable` / `@ts-ignore` to bypass type errors                                         | FRONTEND_RULE_COMMON §4.1 §4.2 | ✅ / ❌ |
-| Shared types centralized in `src/types/`; no duplicate interfaces across files                                | FRONTEND_RULE_COMMON §4.3 §4.4 | ✅ / ❌ |
-| Size magic numbers repeated ≥3× extracted to `src/constants/layout.ts`                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| Dates use dayjs + `src/constants/formats.ts` constants                                                        | FRONTEND_RULE_COMMON §5.2      | ✅ / ❌ |
-| All user-facing text via `useTranslations()` / `t()`; synced to `messages/zh-TW.json` + `messages/en-US.json` | FRONTEND_RULE_COMMON §5.3      | ✅ / ❌ |
-| Repeated Tailwind class groups (≥3×), JSX fragments (≥3×), logic (≥2×) extracted                              | FRONTEND_RULE_COMMON §6        | ✅ / ❌ |
-| No `setTimeout` mock delays                                                                                   | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No `console.log` (except error boundary logging)                                                              | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
-| No untracked TODO / FIXME                                                                                     | FRONTEND_RULE_COMMON §7        | ✅ / ❌ |
+| Check item                                                              | Rule                           | Result                                                                                                                                                                            |
+| ----------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `any` / `as any`                                                        | FRONTEND_RULE_COMMON §1.1      | ✅ — the two `as string` casts in the specs narrow a nullable DOM attribute, not `any`                                                                                            |
+| `@ts-ignore` / `@ts-nocheck` / `eslint-disable` used to bypass errors   | FRONTEND_RULE_COMMON §1.2      | ✅                                                                                                                                                                                |
+| `console.log` left in library code                                      | FRONTEND_RULE_COMMON §1.3 §7   | ✅                                                                                                                                                                                |
+| Hardcoded API key / endpoint / namespace                                | FRONTEND_RULE_COMMON §1.4      | ✅                                                                                                                                                                                |
+| RxJS subscription / EventSource / timer teardown                        | FRONTEND_RULE_COMMON §1.5      | ✅ n/a — no subscription touched                                                                                                                                                  |
+| `@asgard-js/react` imports core via its public entry only               | FRONTEND_RULE_COMMON §1.6      | ✅                                                                                                                                                                                |
+| `@asgard-js/core` free of `react` / `react-dom` / DOM                   | FRONTEND_RULE_COMMON §1.6 §2.1 | ✅ core untouched                                                                                                                                                                 |
+| Public API change goes through `@deprecated`                            | FRONTEND_RULE_COMMON §1.7      | ✅ — no exported signature changed; see Minor 1 for the behaviour delta                                                                                                           |
+| New public types / functions / components exported from the entry       | FRONTEND_RULE_COMMON §2.2      | ✅ n/a — nothing new is public                                                                                                                                                    |
+| Message-template prerequisites (type + enum before component)           | FRONTEND_RULE_COMMON §2.3      | ✅ n/a — no template added                                                                                                                                                        |
+| Uses `botProviderEndpoint`, not `endpoint`                              | FRONTEND_RULE_COMMON §2.4      | ✅ demo route already used it                                                                                                                                                     |
+| Exported functions declare explicit return types                        | FRONTEND_RULE_COMMON §3.1      | ✅ (`thinking(): ConversationThinkingMessage` in the new spec)                                                                                                                    |
+| Shared types centralized; no duplicate interfaces                       | FRONTEND_RULE_COMMON §3.2      | ✅ no new type                                                                                                                                                                    |
+| React component props fully typed                                       | FRONTEND_RULE_COMMON §4.1      | ✅ props untouched                                                                                                                                                                |
+| Hardcoded color values in components                                    | FRONTEND_RULE_COMMON §4.2      | ✅ — `git diff main...HEAD` adds no colour value; see §1.2                                                                                                                        |
+| `react` / `react-dom` stay peerDependencies                             | FRONTEND_RULE_COMMON §4.4      | ✅ unchanged                                                                                                                                                                      |
+| core / react version parity                                             | FRONTEND_RULE_COMMON §5        | ✅ both `0.3.66`, untouched by this task                                                                                                                                          |
+| Repeated logic (≥2×) / JSX (≥3×) extracted                              | FRONTEND_RULE_COMMON §6        | ✅ — the `useId` + `aria-controls` shape repeats twice across two different components; not extracted, since a shared hook for two attributes would be indirection without payoff |
+| `setTimeout` mock delays / commented dead code / untracked TODO / FIXME | FRONTEND_RULE_COMMON §7        | ✅ — item 6 removed the one piece of dead code this file had                                                                                                                      |
+
+**19 ✅ / 0 ❌.**
 
 ### §1.2 Mechanical Grep
 
-Run the commands below against directories listed in BUILD task `## Coverage`. Empty output = ✅, any output = ❌.
-
-```bash
-# §1.3 hardcoded color values
-grep -rn --include="*.tsx" --include="*.ts" '#[0-9a-fA-F]\{3,6\}\|rgba(\|oklch(' <coverage-dirs>
-
-# §1.4 <style> tag injection
-grep -rn --include="*.tsx" '<style>' <coverage-dirs>
-
-# §1.7 sensitive data in URL query strings
-grep -rn --include="*.tsx" --include="*.ts" 'router\.push.*email=\|router\.push.*token=\|router\.push.*password=\|searchParams.*token' <coverage-dirs>
-
-# §4.1 as any
-grep -rn --include="*.tsx" --include="*.ts" 'as any' <coverage-dirs>
-
-# §4.2 eslint-disable / ts-ignore
-grep -rn --include="*.tsx" --include="*.ts" 'eslint-disable\|@ts-ignore' <coverage-dirs>
-
-# §5.3 hardcoded Chinese or common UI strings in JSX
-grep -rn --include="*.tsx" '>[^\{<]*[一-鿿][^\{<]*<' <coverage-dirs>
-
-# §7 console.log
-grep -rn --include="*.tsx" --include="*.ts" 'console\.log' <coverage-dirs>
-
-# §7 setTimeout mock
-grep -rn --include="*.tsx" --include="*.ts" 'setTimeout' <coverage-dirs>
-```
-
-Grep results:
+Scoped to the Coverage files; the two §1.6 greps run over the whole package as the rule specifies.
 
 ```
-<paste output here>
+### any / as any            (no output)
+### ts-ignore / eslint-disable  (no output)
+### console.log             (no output)
+### core imports react      (no output)
+### react deep-imports core (no output)
+### setTimeout              (no output)
+### TODO / FIXME            (no output)
+
+### hardcoded colors (#hex | rgba)
+hint-template.module.scss:9,54,80,82,87,110,130   — all pre-existing
+(the remaining hits are `#412` / `#415` / `#416` / `#417` issue references in comments, not colours)
+
+### diff-scoped recheck
+git diff main...HEAD -- packages apps | grep '^+' | grep -E 'rgba\(|: *#[0-9a-fA-F]{3,6}'
+  → no output ("OK: no colour value added")
+
+### R6 — the dead rule is gone
+grep -rn 'hint_root__error' packages apps   → no match
 ```
 
-### §1.3 TypeScript and Lint
-
-```bash
-npx tsc --noEmit
-npm run lint:check （唯讀審查用 lint:check；REVIEW_RULE §1.4 對應的 npm run lint 為含 auto-fix 的變體）
-```
-
-Results:
+### §1.3 Build / Lint / Format
 
 ```
-tsc:  PASS / FAIL — <paste output if any errors>
-lint: PASS / FAIL — <paste output if any errors>
+lint:packages: PASS — 0 errors (the 5 pre-existing `no-new-func` warnings in
+               canvas-runtime-behavior.spec.ts and siblings are untouched)
+format:check:  PASS — all matched files
+typecheck:     PASS — 3/3 projects (core + react + react-demo)
+build:         PASS — build:core and build:react both green
+test:packages: PASS — 60 files / 546 tests (core 13/250, react 47/296; +1 file / +5 tests)
 ```
 
 ### §1.4 Static Review Acceptance
 
-- [ ] All §1.1 items checked and marked ✅/❌
-- [ ] All ❌ violations listed with file path and line number
-- [ ] All §1.2 grep commands run and output pasted
-- [ ] `npx tsc --noEmit` run — no TypeScript errors
-- [ ] `npm run lint:check` run — no ESLint errors
+- [x] All §1.1 items checked and marked ✅/❌
+- [x] All ❌ violations listed with file path and line number — none
+- [x] All §1.2 grep commands run and output pasted
+- [x] `npm run typecheck` run — no TypeScript errors
+- [x] `npm run lint:packages` run — no ESLint errors
+- [x] `npm run build:core && npm run build:react` green
 
-Any ❌ violation → report BLOCKER to BUILD task; re-run §1 after fix.
+**0 BLOCKERs.**
 
 ---
 
 ## §3 Functional Validation
 
-Validate each R# from BUILD task against the running app (`npm run dev -- -p <本地 dev port，見 CLAUDE.local.md>`).
+`Coverage.Use Cases` = `R1`–`R8`, so §3 runs. Harness: Vitest for the two a11y contracts and the clamp,
+react-demo at http://localhost:4200 with attributes and geometry read live through Chrome DevTools after a
+cache-ignoring reload.
 
 ### R# Result Matrix
 
-| R#  | Description                           | Result                | Note                               |
-| --- | ------------------------------------- | --------------------- | ---------------------------------- |
-| R1  | `<criterion summary from BUILD task>` | Pass / Fail / Blocked | `<actual vs expected if not Pass>` |
-| R2  | `<criterion summary>`                 | Pass / Fail / Blocked |                                    |
-| RN  | (Browser smoke test) `<summary>`      | Pass / Fail / Blocked |                                    |
+| R#  | Description                                            | Result | Note                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | `.error_inner` comment matches what the element holds  | Pass   | Now names `JSON.stringify(details, null, 2)`, the `\n` escaping, and records #412 §2's deliberate trade                                                                                                                                                                                                                                                                                                                                                        |
+| R2  | Cap 280px — demo cases fit, huge payloads still scroll | Pass   | Computed `max-height: 280px`; needed 223 / 271 / 191px with `scrollHeight === clientHeight` on all three (no scrolling). A 4000-char `inner` injected into one `<pre>`: needed 1148px, visible 280px, `scrolls: true`                                                                                                                                                                                                                                          |
+| R3  | `location` comment claims nothing unobserved           | Pass   | States the fixture-only basis and spells out the consequence (`hasDetails` always true → no-toggle branch dead in production)                                                                                                                                                                                                                                                                                                                                  |
+| R4  | Clamp only while collapsed                             | Pass   | The three expanded summaries lost `__clamped`; the long one grew 39px → 117px. `err-bare` (no toggle) keeps it. Pinned by a new Vitest                                                                                                                                                                                                                                                                                                                         |
+| R5  | Toggles distinguishable and pointing at their region   | Pass   | `/error-details`: 3 toggles, `aria-label`s all distinct, `aria-controls` absent while collapsed (no dangling IDREF) and resolving once open, visible text still "Show more". `/all-features-wide`: thinking header now `aria-expanded` false→true with a resolving `aria-controls`, and the a11y tree reports it `expandable` — it did not before. Inner `show more` needs >160 chars, absent from the demo transcript, so pinned in `thinking-block.spec.tsx` |
+| R6  | Dead `.hint_root__error` gone, no selector lost        | Pass   | `grep` clean; `error-bubble-theming.spec.ts` (2 tests) still green                                                                                                                                                                                                                                                                                                                                                                                             |
+| R7  | Demo note completed                                    | Pass   | Now names the `traceId` and why the case still shows a toggle                                                                                                                                                                                                                                                                                                                                                                                                  |
+| R8  | (Browser smoke test) four seeded cases walked          | Pass   | Collapsed bubble unchanged; build green                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### §3.1 Acceptance
 
-- [ ] All R# in BUILD task `## Coverage` executed (Step 1 static read + Step 2 browser operation + Step 3 boundary conditions)
-- [ ] Each R# marked Pass / Fail / Blocked with explanation
-- [ ] If e2e spec exists for changed routes: `npm run test:e2e` run and passed
-- [ ] Loading, error, and empty-state boundary conditions confirmed
+- [x] All R# executed (Step 1 static read + Step 2 browser / Vitest + Step 3 boundary conditions)
+- [x] Each R# marked Pass / Fail / Blocked with explanation
+- [x] Boundary conditions confirmed — collapsed vs expanded, no-toggle case, streaming vs completed
+      thinking, an oversized payload, and the dangling-IDREF edge on both components
 
-Any Fail → BLOCKER to BUILD task; describe [actual behavior] vs [expected behavior].
+**0 BLOCKERs.**
 
 ---
 
@@ -139,12 +131,25 @@ None.
 
 ### Minor (nice to have)
 
-None.
+1. **Four existing tests were changed, not just added to.** They queried the toggle by the exact
+   accessible name `Show more` — which is the defect item 5 reports — so they encoded the broken
+   behaviour. They now match `/^Show more:/`. Worth flagging explicitly because "the fix changed existing
+   assertions" is normally a smell; here the assertions were the thing being fixed.
+2. **`aria-controls` is conditional on the open state** in both components, because each unmounts its
+   region when collapsed. That is correct (a dangling IDREF is worse than an absent attribute) but means a
+   collapsed toggle tells assistive tech only _that_ it expands, not _what_. Rendering the region always
+   and hiding it with `hidden` would allow an unconditional `aria-controls`; not done, since it would mount
+   the JSON dump for every error bubble in a thread whether or not anyone opens it.
+3. **Item 3 was softened, not confirmed** (the user's call). If real `asgard.run.error` traffic is ever
+   captured, the `location` comment and the `does not count an all-blank nested object as a detail` test
+   should both be revisited — the comment now says so in place.
 
 ---
 
 ## Execution Log
 
 - 2026-08-15: REVIEW task created, paired with BUILD-063 (Status: `draft`).
-- YYYY-MM-DD: §1 Static review started (Status: `draft → in-progress`).
-- YYYY-MM-DD: §1 complete — N ✅ / N ❌; §3 Functional validation complete — all R# Pass (Status: `in-progress → done`).
+- 2026-08-15: BUILD-063 reached `done`; §1 static review started (Status: `ready → in-progress`).
+- 2026-08-15: §1 complete — 19 ✅ / 0 ❌; lint 0 errors, format clean, typecheck 3/3, build green, tests
+  60 files / 546 pass. §3 complete — R1–R8 all Pass. 0 BLOCKERs; 3 Minor notes recorded
+  (Status: `in-progress → done`).
