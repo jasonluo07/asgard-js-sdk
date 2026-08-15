@@ -9,6 +9,13 @@ export * from './constants/enum';
 
 export { default as AsgardServiceClient } from './lib/client';
 
+export {
+  default as AsgardSourceSetClient,
+  SOURCE_SET_DEFAULT_MAX_ENTRIES,
+  SOURCE_SET_MAX_PAGE_SIZE,
+} from './lib/source-set-client';
+export { assertVolumePath, SOURCE_SET_VOLUME_ROOT } from './lib/source-set-path';
+
 export { default as Channel } from './lib/channel';
 
 export { default as Conversation } from './lib/conversation';
