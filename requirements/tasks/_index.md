@@ -69,7 +69,7 @@
 
 ## ▶ Next Task
 
-**`BUILD-062` / `REVIEW-062`（[`asgard-sdk-pm#54`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/54) 訊息欄預設 1200px → 800px）皆 `done`，本地驗收通過，PR [#442](https://github.com/asgard-ai-platform/asgard-js-sdk/pull/442) 掛在那裡等一批合併。** §1 19 項 0 違規、§3 R1–R6 全 Pass。實裝五個消費端查過影響範圍：Sindri（`768px`，本地 tarball 實測不受影響）與 Mimir（`896px`）都已自設寬度，真正會變窄的是 **Odin、Heimdall、嵌入版**。**票的前提已過期** —— 那句「Mimir 一行 147 字」是 2026-08-06 早上量的，Mimir 當天 20:42 的 `84d2d30` 就自己加了 `contentMaxWidth: "896px"`；發版時值得在 release note 點名實際受影響的三個產品。
+**`BUILD-062` / `REVIEW-062`（[`asgard-sdk-pm#54`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/54) 訊息欄預設 1200px → 800px）皆 `done`，本地驗收通過，PR [#442](https://github.com/asgard-ai-platform/asgard-js-sdk/pull/442) 已合併進 `main`（merge commit `7993c660`）；`ci.yml` 為 `if: false` 故 Actions 顯示 skipped。**尚未打 tag，即尚未發 npm。** §1 19 項 0 違規、§3 R1–R6 全 Pass。實裝五個消費端查過影響範圍：Sindri（`768px`，本地 tarball 實測不受影響）與 Mimir（`896px`）都已自設寬度，真正會變窄的是 **Odin、Heimdall、嵌入版**。**票的前提已過期\*\* —— 那句「Mimir 一行 147 字」是 2026-08-06 早上量的，Mimir 當天 20:42 的 `84d2d30` 就自己加了 `contentMaxWidth: "896px"`；發版時值得在 release note 點名實際受影響的三個產品。
 
 上一批：**`BUILD-060` / `REVIEW-060` / `BUILD-061` / `REVIEW-061` 全數 `done`，PR [#438](https://github.com/asgard-ai-platform/asgard-js-sdk/pull/438) 與 [#441](https://github.com/asgard-ai-platform/asgard-js-sdk/pull/441) 皆已合併進 `main`（merge commit `f342c033` / `fc312314`），隨 `0.3.66` 發版。** F-024／F-025／F-026／TASK-004 這一批到此結束；看板 [`#75`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/75)／[`#76`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/76)／[`#77`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/77) 已移 `In progress`，[`#78`](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/78) 仍為 `To Do`（待討論）。
 
