@@ -137,6 +137,22 @@ Files (all `@asgard-js/react`; `@asgard-js/core` untouched):
 | R5  | `packages/react/README.md` default-theme block reads `contentMaxWidth: '800px'`                                                                                                                                                  | Pass   |
 | R6  | Text box measured 736px; average glyph 9.23px at 16px Space Grotesk → **80 English characters per line** (was 147 at 1140px), inside the 45–90 band. Re-measured under the Crazy theme — identical geometry, no token regression | Pass   |
 
+**Consumer impact (checked after the review, all five first-party consumers):**
+
+| Consumer                               | Sets `contentMaxWidth`?                  | Effect of this change                                                                                                                                                                               |
+| -------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sindri (`asgard-ai-agent-hub-web`)     | `768px` (`src/lib/chatbot-utils.ts:154`) | none — **verified live**: local SDK `npm pack`-installed, real backend conversation measured at `maxWidth: 768px` / 768px wide, long answers render fine. Restored to the registry build afterwards |
+| Mimir (`asgard-ai-data-insight-web`)   | `896px` (`src/lib/chatbot-utils.ts:50`)  | none                                                                                                                                                                                                |
+| Odin (`asgard-ai-platform-web`)        | no                                       | **1200 → 800**                                                                                                                                                                                      |
+| Heimdall (`asgard-ai-auto-post-web`)   | no                                       | **1200 → 800**                                                                                                                                                                                      |
+| Embed widget (`asgard-embed-frontend`) | no                                       | **1200 → 800**                                                                                                                                                                                      |
+
+The issue's premise has since moved: its "Mimir, 147 characters per line" measurement was taken on
+2026-08-06 morning, and Mimir's own commit `84d2d30` that same evening added `contentMaxWidth: "896px"`.
+So this change lands on Odin, Heimdall and the embed widget — not on the product that reported it. Sindri
+already shipping 768px is also the strongest evidence that 800px is not too cramped: it is narrower still,
+against a real backend, and reads fine.
+
 **Deliberately not changed:** `chat-header` stays full-bleed (it takes `$chat-gutter` but no `max-width`), so
 the title sits at the column edge while the thread centres. That is the pre-existing behaviour at 1200px and
 matches ChatGPT / Claude; narrowing the column only makes it more visible. Raised with the user before build,

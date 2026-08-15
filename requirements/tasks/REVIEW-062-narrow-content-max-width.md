@@ -153,9 +153,13 @@ None.
 
 1. **Release-note item, not a code defect.** No public signature changed, so §1.7 does not fire — but every
    consumer that does _not_ set `theme.chatbot.contentMaxWidth` gets a visibly narrower column on upgrade with
-   no code change of its own. Heimdall's topic panel, fullscreen mode and Odin's expanded Flow Agent preview are
-   the ones the PM issue names. Worth one line in the release note when this ships; PM already approved the
-   visual change on [asgard-sdk-pm#54](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/54).
+   no code change of its own. A post-review sweep of all five first-party consumers (see `BUILD-062 ##
+Verification`) puts that at **Odin, Heimdall and the embed widget**; Sindri (`768px`) and Mimir (`896px`)
+   already set their own and are unaffected — Sindri confirmed live with the packed local build. Note that
+   Mimir is the product the issue measured, and it self-fixed the same day the issue was filed
+   (`84d2d30`, 2026-08-06), so the issue's stated impact is now out of date. Worth one line in the release
+   note; PM already approved the visual change on
+   [asgard-sdk-pm#54](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/54).
 2. **`chat-header` stays full-bleed.** Measured `max-width: none` — it takes `$chat-gutter` but no cap, so the
    bot name / channel title sits at the column edge while the thread and composer centre at 800px. Pre-existing
    at 1200px and the same pattern ChatGPT / Claude use; raised with the user before the build and deliberately
