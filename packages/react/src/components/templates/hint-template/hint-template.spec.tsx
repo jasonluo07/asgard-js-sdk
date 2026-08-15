@@ -12,6 +12,12 @@ import { AsgardTemplateContext } from '../../../context';
 import { t } from '../../../i18n';
 import { HintTemplate } from './hint-template';
 
+// #417 §5 — the toggle's accessible name carries its error's summary, so a thread with several error
+// bubbles no longer reads as a list of identical "Show more" buttons. These match the leading label and
+// ignore whatever summary follows.
+const showDetailsName = new RegExp(`^${t('en-US', 'error.showDetails')}:`);
+const hideDetailsName = new RegExp(`^${t('en-US', 'error.hideDetails')}:`);
+
 const message: ConversationBotMessage = {
   type: 'bot',
   messageId: 'hint-message',
@@ -92,7 +98,7 @@ describe('HintTemplate error bubble', () => {
     // whole text, and the dump is one text node holding the entire JSON — so `queryByText('QUOTA_EXCEED')`
     // returns null whether it is collapsed or not, and would pin nothing.
     expect(screen.queryByText(text => text.trimStart().startsWith('{'))).toBeNull();
-    expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: showDetailsName })).toBeTruthy();
   });
 
   // The expanded region dumps the whole payload as JSON rather than picking fields out, so that a
@@ -100,7 +106,7 @@ describe('HintTemplate error bubble', () => {
   it('reveals the whole error payload as JSON on expand, and hides it again', () => {
     render(<HintTemplate message={errorMessage({ inner: 'admission webhook denied the request' }, 'trace-abc')} />);
 
-    fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.showDetails') }));
+    fireEvent.click(screen.getByRole('button', { name: showDetailsName }));
 
     const dump = screen.getByText(text => text.trimStart().startsWith('{'));
     const parsed = JSON.parse(dump.textContent ?? '');
@@ -111,7 +117,7 @@ describe('HintTemplate error bubble', () => {
     // Whatever the backend adds next rides along without a UI change — `location` is here today.
     expect(parsed).toHaveProperty('location');
 
-    fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.hideDetails') }));
+    fireEvent.click(screen.getByRole('button', { name: hideDetailsName }));
 
     expect(screen.queryByText(text => text.trimStart().startsWith('{'))).toBeNull();
   });
@@ -127,7 +133,7 @@ describe('HintTemplate error bubble', () => {
   it('offers the toggle as soon as one diagnostic field is present', () => {
     render(<HintTemplate message={errorMessage({ code: '', inner: '' }, 'trace-only')} />);
 
-    expect(screen.getByRole('button', { name: t('en-US', 'error.showDetails') })).toBeTruthy();
+    expect(screen.getByRole('button', { name: showDetailsName })).toBeTruthy();
   });
 
   // The whole point of dumping the payload instead of picking fields: a field this UI has never heard
@@ -139,7 +145,7 @@ describe('HintTemplate error bubble', () => {
 
     render(<HintTemplate message={errorMessage({ code: '', inner: '', location })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: t('en-US', 'error.showDetails') }));
+    fireEvent.click(screen.getByRole('button', { name: showDetailsName }));
 
     const parsed = JSON.parse(screen.getByText(text => text.trimStart().startsWith('{')).textContent ?? '');
 
@@ -154,6 +160,51 @@ describe('HintTemplate error bubble', () => {
     render(<HintTemplate message={errorMessage({ code: '', inner: '', location })} />);
 
     expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  // #417 §5 — two error bubbles in one thread used to expose two buttons whose accessible name was the
+  // identical string "Show more", with nothing saying which error each belonged to or what it opened.
+  it('gives each toggle a name of its own and points it at the region it opens', () => {
+    render(
+      <>
+        <HintTemplate message={errorMessage({ message: 'first failure', inner: 'a' }, 'trace-1')} />
+        <HintTemplate message={errorMessage({ message: 'second failure', inner: 'b' }, 'trace-2')} />
+      </>,
+    );
+
+    const [first, second] = screen.getAllByRole('button', { name: showDetailsName });
+
+    expect(first.getAttribute('aria-label')).toContain('first failure');
+    expect(second.getAttribute('aria-label')).toContain('second failure');
+    expect(first.getAttribute('aria-label')).not.toBe(second.getAttribute('aria-label'));
+
+    // Collapsed: the region is unmounted, so there must be no dangling IDREF.
+    expect(first.getAttribute('aria-expanded')).toBe('false');
+    expect(first.getAttribute('aria-controls')).toBeNull();
+
+    fireEvent.click(first);
+
+    expect(first.getAttribute('aria-expanded')).toBe('true');
+
+    const controls = first.getAttribute('aria-controls');
+
+    expect(controls).toBeTruthy();
+    expect(document.getElementById(controls as string)).toBeTruthy();
+  });
+
+  // #417 §4 — #412 §3 asks for the two-line clamp *while collapsed*; it used to be unconditional, so a
+  // long message stayed truncated on screen even after the user expanded the details.
+  it('drops the summary clamp once the details are expanded', () => {
+    render(<HintTemplate message={errorMessage({ inner: 'admission webhook denied the request' })} />);
+
+    const summary = screen.getByTitle(QUOTA_REASON);
+    const clampedClasses = summary.className;
+
+    expect(clampedClasses).toMatch(/clamped/);
+
+    fireEvent.click(screen.getByRole('button', { name: showDetailsName }));
+
+    expect(summary.className).not.toMatch(/clamped/);
   });
 
   // Preserves the previous `errorMessageRenderer?.(message) ?? <default/>` contract: a renderer

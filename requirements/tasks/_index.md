@@ -230,3 +230,5 @@ REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目�
 | `REVIEW-061` | Review: Standalone SourceSet File Explorer              | —        | done   | [REVIEW-061-standalone-source-set-explorer.md](./REVIEW-061-standalone-source-set-explorer.md)           |
 | `BUILD-062`  | Narrow the default content column to a readable measure | Normal   | done   | [BUILD-062-narrow-content-max-width.md](./BUILD-062-narrow-content-max-width.md)                         |
 | `REVIEW-062` | Review: narrow the default content column               | —        | done   | [REVIEW-062-narrow-content-max-width.md](./REVIEW-062-narrow-content-max-width.md)                       |
+| `BUILD-063`  | Close the error bubble follow-ups                       | Normal   | done   | [BUILD-063-error-bubble-follow-ups.md](./BUILD-063-error-bubble-follow-ups.md)                           |
+| `REVIEW-063` | Review: error bubble follow-ups                         | —        | ready  | [REVIEW-063-error-bubble-follow-ups.md](./REVIEW-063-error-bubble-follow-ups.md)                         |

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ConversationThinkingMessage } from '@asgard-js/core';
 import { StreamdownClient } from '../text-template/streamdown-client';
@@ -106,6 +106,11 @@ export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
   const streaming = message.isThinking;
   const [manualOpen, setManualOpen] = useState(false);
   const [showFull, setShowFull] = useState(false);
+  // Same problem the error bubble has (#417 §5): a thread can hold several of these, and both buttons
+  // below render identical text with nothing naming what they open. The header carried no
+  // `aria-expanded` at all, so its state was invisible to assistive tech as well.
+  const bodyId = useId();
+  const reasoningId = useId();
 
   // Streaming is always expanded; completed is collapsed until the user opens it.
   const open = streaming || manualOpen;
@@ -121,6 +126,9 @@ export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
         className={styles.thinking_block__header}
         onClick={() => setManualOpen(prev => !prev)}
         disabled={streaming}
+        aria-expanded={open}
+        // Body is unmounted while collapsed, so only point at it when it exists (dangling IDREF otherwise).
+        aria-controls={open ? bodyId : undefined}
       >
         {!streaming && (
           <ChevronIcon
@@ -135,17 +143,23 @@ export function ThinkingBlock({ message }: ThinkingBlockProps): ReactNode {
         </span>
       </button>
       {open && (
-        <div className={styles.thinking_block__body}>
+        <div id={bodyId} className={styles.thinking_block__body}>
           {streaming ? (
             <StreamingReasoning text={message.text} />
           ) : (
             <div className={styles.thinking_block__reasoning}>
-              <StreamdownClient>{shown}</StreamdownClient>
+              <div id={reasoningId}>
+                <StreamdownClient>{shown}</StreamdownClient>
+              </div>
               {clamped && (
                 <button
                   type="button"
                   className={styles.thinking_block__more}
                   onClick={() => setShowFull(prev => !prev)}
+                  // This one grows the text in place rather than mounting a region, so the target is
+                  // always present and `aria-controls` can be unconditional.
+                  aria-expanded={showFull}
+                  aria-controls={reasoningId}
                 >
                   {showFull ? t(locale, 'thinking.showLess') : t(locale, 'thinking.showMore')}
                 </button>
