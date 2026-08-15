@@ -19,3 +19,13 @@
 // there is nothing here for a consumer to override (and nothing to keep back-compatible). Sass passes
 // mixed-unit `min()` / `max()` through to CSS untouched.
 $chat-gutter: max(16px, min(4%, 32px));
+
+// The chat column's own width cap — the stylesheet-side default for the thread, the docked run-chrome strip
+// and the composer. The inline theme style overrides it on every render (`theme.chatbot.contentMaxWidth`,
+// defaulting to `DEFAULT_CONTENT_MAX_WIDTH` in `context/asgard-theme-context.tsx`), so this is the value a
+// stylesheet-only render falls back to; keep the two numbers in step.
+//
+// 800px, not the 1200px this used to be: measured on Mimir (1204px panel, 1140px of text after the gutters,
+// 16px type) that came to 147 English characters per line — 1.6× the 45–90 character band typography treats
+// as comfortable. 800px leaves 736px ≈ 95 characters. Decided on asgard-sdk-pm#54.
+$chat-content-max-width: 800px;

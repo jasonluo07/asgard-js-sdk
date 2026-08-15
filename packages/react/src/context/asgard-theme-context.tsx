@@ -224,6 +224,21 @@ export interface AsgardThemeContextValue {
  */
 export type ChatbotTheme = Partial<AsgardThemeContextValue>;
 
+/**
+ * Default cap for the chat column — the thread, the docked run-chrome strip and the composer all share it,
+ * so they stay on one centred axis. Consumers override it with `theme.chatbot.contentMaxWidth`.
+ *
+ * 800px, not the 1200px this used to be. Measured on Mimir — a 1204px panel, 1140px of text after the 32px
+ * gutters, 16px type — that came to **147 English characters per line**: 1.6× the 45–90 character band
+ * typography treats as comfortable, far enough past it that the eye loses the next line on the return
+ * sweep. 800px leaves 736px ≈ 95 characters, just over the band's upper edge, and lands in the same
+ * 700–800px range ChatGPT / Claude / Gemini use. Decided on asgard-sdk-pm#54.
+ *
+ * Mirrored by `$chat-content-max-width` in `styles/layout/_variables.scss` for the stylesheet-side default;
+ * keep the two in step.
+ */
+export const DEFAULT_CONTENT_MAX_WIDTH = '800px';
+
 export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
   chatbot: {
     width: '375px',
@@ -243,7 +258,7 @@ export const defaultAsgardThemeContextValue: AsgardThemeContextValue = {
     // Every other `var(--asg-*)` default here names a *different* token than the field it feeds, so it
     // resolves against the palette normally. These two are the only cycles.
     borderRadius: 'var(--asg-radius-md)',
-    contentMaxWidth: '1200px',
+    contentMaxWidth: DEFAULT_CONTENT_MAX_WIDTH,
     style: {},
     header: {
       style: {},

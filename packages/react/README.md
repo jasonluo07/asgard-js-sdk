@@ -504,7 +504,7 @@ const defaultTheme = {
     backgroundColor: 'var(--asg-color-bg)',
     borderColor: 'var(--asg-color-border)',
     borderRadius: 'var(--asg-radius-md)',
-    contentMaxWidth: '1200px',
+    contentMaxWidth: '800px', // exported as `DEFAULT_CONTENT_MAX_WIDTH`
     style: {},
     header: {
       style: {},

@@ -44,7 +44,7 @@
     padding-block: 16px 12px;
     padding-inline: styles.$chat-gutter;
     gap: 16px;
-    max-width: 1200px;
+    max-width: styles.$chat-content-max-width;
     box-sizing: border-box;
   }
 }
@@ -95,7 +95,7 @@
     // clearance the panels already had from the footer.
     padding-block: 12px;
     padding-inline: styles.$chat-gutter;
-    max-width: 1200px;
+    max-width: styles.$chat-content-max-width;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;

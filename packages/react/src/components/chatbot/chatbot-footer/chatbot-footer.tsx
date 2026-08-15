@@ -2,7 +2,7 @@ import { ReactNode, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import { useAsgardContext } from '../../../context/asgard-service-context';
 import { useAsgardAppInitializationContext } from '../../../context/asgard-app-initialization-context';
-import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { DEFAULT_CONTENT_MAX_WIDTH, useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { ChatComposer } from './chat-composer';
 import styles from './chatbot-footer.module.scss';
 
@@ -52,7 +52,10 @@ export function ChatbotFooter({
     [chatbot],
   );
 
-  const contentStyles = useMemo(() => ({ maxWidth: chatbot?.contentMaxWidth ?? '1200px' }), [chatbot?.contentMaxWidth]);
+  const contentStyles = useMemo(
+    () => ({ maxWidth: chatbot?.contentMaxWidth ?? DEFAULT_CONTENT_MAX_WIDTH }),
+    [chatbot?.contentMaxWidth],
+  );
 
   return (
     <div ref={footerRef} className={clsx('asgard-chatbot-footer', styles.chatbot_footer)} style={footerStyles}>
