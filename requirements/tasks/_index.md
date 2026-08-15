@@ -227,4 +227,4 @@ REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目�
 | `BUILD-061`  | Standalone SourceSet File Explorer                      | High     | done   | [BUILD-061-standalone-source-set-explorer.md](./BUILD-061-standalone-source-set-explorer.md)             |
 | `REVIEW-061` | Review: Standalone SourceSet File Explorer              | —        | done   | [REVIEW-061-standalone-source-set-explorer.md](./REVIEW-061-standalone-source-set-explorer.md)           |
 | `BUILD-062`  | Narrow the default content column to a readable measure | Normal   | done   | [BUILD-062-narrow-content-max-width.md](./BUILD-062-narrow-content-max-width.md)                         |
-| `REVIEW-062` | Review: narrow the default content column               | —        | ready  | [REVIEW-062-narrow-content-max-width.md](./REVIEW-062-narrow-content-max-width.md)                       |
+| `REVIEW-062` | Review: narrow the default content column               | —        | done   | [REVIEW-062-narrow-content-max-width.md](./REVIEW-062-narrow-content-max-width.md)                       |
