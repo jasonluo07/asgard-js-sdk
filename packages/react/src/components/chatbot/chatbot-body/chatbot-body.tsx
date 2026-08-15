@@ -20,7 +20,7 @@ import {
   groupSummary,
   toolDiff,
 } from '../../templates';
-import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { DEFAULT_CONTENT_MAX_WIDTH, useAsgardThemeContext } from '../../../context/asgard-theme-context';
 import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { Locale } from '../../../i18n';
 import clsx from 'clsx';
@@ -211,7 +211,7 @@ export function ChatbotBody({ hideRunChrome = false }: { hideRunChrome?: boolean
 
   const contentStyles = useMemo(
     () => ({
-      maxWidth: chatbot?.contentMaxWidth ?? '1200px',
+      maxWidth: chatbot?.contentMaxWidth ?? DEFAULT_CONTENT_MAX_WIDTH,
     }),
     [chatbot],
   );
