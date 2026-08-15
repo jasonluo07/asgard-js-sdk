@@ -1,0 +1,129 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid var(--asg-color-border, rgba(0, 0, 0, 0.1));
+}
+
+.back {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.25rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--asg-color-text-primary, inherit);
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 8%, transparent);
+  }
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.actionBtn {
+  display: grid;
+  place-items: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--asg-color-text-secondary, #6b7280);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--asg-color-primary, #4f46e5) 8%, transparent);
+    color: var(--asg-color-primary, #4f46e5);
+  }
+
+  // Matches the tree toolbar's own disabled treatment, so a download the host cannot serve reads the same here
+  // as it does there.
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.dirty {
+  color: var(--asg-color-primary, #4f46e5);
+  font-size: 0.75rem;
+}
+
+.body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--asg-color-text-secondary, #6b7280);
+
+  &.error {
+    color: var(--asg-color-error, #ef4444);
+  }
+}
+
+.imageWrap {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.image {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  border: 1px solid var(--asg-color-border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.375rem;
+}
+
+.markdown {
+  padding: 0.75rem;
+}
+
+// CodeMirror brings its own theme; this only sizes it and hands over the panel's text colour so the
+// gutter and selection sit on the same surface as the rest of the explorer.
+.codemirror {
+  height: 100%;
+  min-height: 16rem;
+  font-size: 0.75rem;
+
+  :global(.cm-editor) {
+    height: 100%;
+  }
+
+  :global(.cm-scroller) {
+    line-height: 1.55;
+  }
+}

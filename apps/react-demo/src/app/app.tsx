@@ -40,6 +40,7 @@ import { RunIndicator } from './routes/run-indicator';
 import { SandboxHud } from './routes/sandbox-hud';
 import { SandboxCards } from './routes/sandbox-cards';
 import { FileExplorer } from './routes/file-explorer';
+import { SourceSetExplorerRoute } from './routes/source-set-explorer';
 import { ToolCallVariants } from './routes/tool-call-variants';
 import { ToolCallI18n } from './routes/tool-call-i18n';
 import { ToolCallGrouping } from './routes/tool-call-grouping';
@@ -112,6 +113,7 @@ export function App(): React.ReactElement {
         <Route path="/sandbox-hud" element={<SandboxHud />} />
         <Route path="/sandbox-cards" element={<SandboxCards />} />
         <Route path="/file-explorer" element={<FileExplorer />} />
+        <Route path="/source-set-explorer" element={<SourceSetExplorerRoute />} />
         <Route path="/tool-call-variants" element={<ToolCallVariants />} />
         <Route path="/tool-call-i18n" element={<ToolCallI18n />} />
         <Route path="/tool-call-grouping" element={<ToolCallGrouping />} />
