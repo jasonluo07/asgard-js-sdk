@@ -1,5 +1,9 @@
-// Batch upload UI (F-031 / F-025). Colors come from the generated `--asg-color-*` palette only;
+// Batch upload UI (F-031 / F-025). Colors come from the generated `--asg-color-*` palette;
 // `warning` is the existing token for "the batch is not a failure, it just has leftovers".
+//
+// Every fallback is the palette's own literal (blue 6 / yellow 6), never `currentColor`: in a rule that
+// also sets `color`, `currentColor` resolves against that same declaration — which once rendered the
+// primary button as white on white, invisible, in a host that supplies no theme.
 
 .progress {
   flex: none;
@@ -43,8 +47,8 @@
 }
 
 .progressButton:hover {
-  border-color: var(--asg-color-primary, currentColor);
-  color: var(--asg-color-primary, inherit);
+  border-color: var(--asg-color-primary, #4767eb);
+  color: var(--asg-color-primary, #4767eb);
 }
 
 .progressClose {
@@ -73,12 +77,12 @@
 }
 
 .progressFill {
-  background: var(--asg-color-primary, currentColor);
+  background: var(--asg-color-primary, #4767eb);
 }
 
 // Not `error`: some items were left behind, but the batch as a whole did not fail.
 .progressFillPartial {
-  background: var(--asg-color-warning, currentColor);
+  background: var(--asg-color-warning, #f7ac38);
 }
 
 .progressHint {
@@ -188,7 +192,7 @@
 
 .dialogChoicePrimary {
   border: 1px solid transparent;
-  background: var(--asg-color-primary, currentColor);
+  background: var(--asg-color-primary, #4767eb);
   color: var(--asg-color-primary-on-primary, #fff);
 }
 
@@ -207,7 +211,7 @@
   padding: 0 0.15rem;
   border: none;
   background: transparent;
-  color: var(--asg-color-primary, inherit);
+  color: var(--asg-color-primary, #4767eb);
   font: inherit;
   font-size: 0.72rem;
   cursor: pointer;

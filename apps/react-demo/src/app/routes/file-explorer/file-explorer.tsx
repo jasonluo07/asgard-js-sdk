@@ -1,11 +1,13 @@
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 // Aliased: this route's own component is also called `FileExplorer`.
 import {
+  AsgardTemplateContextProvider,
   Chatbot,
   FileExplorer as FileExplorerParts,
   FileExplorerPanel,
   FsSource,
   useFileExplorerController,
+  type Locale,
 } from '@asgard-js/react';
 import '@asgard-js/react/style';
 import { HttpError, LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
@@ -199,6 +201,10 @@ export function FileExplorer(): ReactNode {
   // Two more so the batch-upload pair below does not fight each other or the panels above.
   const batchWideController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
   const batchNarrowController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
+  // The standalone panels sit outside any Chatbot, so nothing supplies a locale and they would render
+  // en-US only. Acceptance happens in zh-TW, and a missing key is invisible in English (the code's own
+  // fallback *is* the English string), so the switch has to exist here.
+  const [batchLocale, setBatchLocale] = useState<Locale>('zh-TW');
 
   const providers = useMemo(
     () => ({
@@ -310,52 +316,74 @@ export function FileExplorer(): ReactNode {
           （於是指數退避與 AIMD 降速真的會跑，面板會顯示「伺服器忙碌，已降到同時 N 個」）。 單檔上限填的是
           <strong>目標值 64MB</strong>；上線值仍是 8MB，所以大檔那一條要等 asgard-core#230。
         </p>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 28rem', minWidth: 0, height: '560px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>寬（full-bleed，實裝形態）</div>
-            <div style={{ height: '520px' }}>
-              <FileExplorerPanel
-                sandboxes={SANDBOXES}
-                controller={batchWideController}
-                listDir={providers.listDir}
-                readFile={providers.readFile}
-                saveFile={providers.saveFile}
-                mkdir={providers.mkdir}
-                remove={providers.remove}
-                copy={providers.copy}
-                move={providers.move}
-                upload={providers.upload}
-                uploadMany={providers.uploadMany}
-                download={providers.download}
-                maxUploadBytes={MAX_UPLOAD_BYTES}
-                uploadConcurrency={3}
-              />
-            </div>
-          </div>
-          <div style={{ flex: '0 0 343px', height: '560px' }}>
-            <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
-              窄（343px，預設 theme 寬度）
-            </div>
-            <div style={{ width: '343px', height: '520px' }}>
-              <FileExplorerPanel
-                sandboxes={SANDBOXES}
-                controller={batchNarrowController}
-                listDir={providers.listDir}
-                readFile={providers.readFile}
-                saveFile={providers.saveFile}
-                mkdir={providers.mkdir}
-                remove={providers.remove}
-                copy={providers.copy}
-                move={providers.move}
-                upload={providers.upload}
-                uploadMany={providers.uploadMany}
-                download={providers.download}
-                maxUploadBytes={MAX_UPLOAD_BYTES}
-                uploadConcurrency={3}
-              />
-            </div>
-          </div>
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginBottom: '0.6rem' }}>
+          <span style={{ fontSize: '0.8rem', color: '#666' }}>locale：</span>
+          {(['zh-TW', 'en-US', 'ja-JP'] as Locale[]).map(l => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setBatchLocale(l)}
+              style={{
+                padding: '0.15rem 0.5rem',
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                fontWeight: l === batchLocale ? 700 : 400,
+              }}
+            >
+              {l}
+            </button>
+          ))}
         </div>
+        <AsgardTemplateContextProvider locale={batchLocale}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 28rem', minWidth: 0, height: '560px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
+                寬（full-bleed，實裝形態）
+              </div>
+              <div style={{ height: '520px' }}>
+                <FileExplorerPanel
+                  sandboxes={SANDBOXES}
+                  controller={batchWideController}
+                  listDir={providers.listDir}
+                  readFile={providers.readFile}
+                  saveFile={providers.saveFile}
+                  mkdir={providers.mkdir}
+                  remove={providers.remove}
+                  copy={providers.copy}
+                  move={providers.move}
+                  upload={providers.upload}
+                  uploadMany={providers.uploadMany}
+                  download={providers.download}
+                  maxUploadBytes={MAX_UPLOAD_BYTES}
+                  uploadConcurrency={3}
+                />
+              </div>
+            </div>
+            <div style={{ flex: '0 0 343px', height: '560px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
+                窄（343px，預設 theme 寬度）
+              </div>
+              <div style={{ width: '343px', height: '520px' }}>
+                <FileExplorerPanel
+                  sandboxes={SANDBOXES}
+                  controller={batchNarrowController}
+                  listDir={providers.listDir}
+                  readFile={providers.readFile}
+                  saveFile={providers.saveFile}
+                  mkdir={providers.mkdir}
+                  remove={providers.remove}
+                  copy={providers.copy}
+                  move={providers.move}
+                  upload={providers.upload}
+                  uploadMany={providers.uploadMany}
+                  download={providers.download}
+                  maxUploadBytes={MAX_UPLOAD_BYTES}
+                  uploadConcurrency={3}
+                />
+              </div>
+            </div>
+          </div>
+        </AsgardTemplateContextProvider>
 
         <h3 style={{ marginTop: '1.5rem' }}>自行組裝零件（單一固定來源，沒有選台）</h3>
         <p style={{ fontSize: '0.85rem', color: '#666' }}>
