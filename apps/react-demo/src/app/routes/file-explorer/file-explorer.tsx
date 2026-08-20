@@ -428,6 +428,7 @@ export function FileExplorer(): ReactNode {
             fileExplorer="builtin"
             enableUpload
             enableDocumentUpload
+            locale="zh-TW"
             theme={WIDE_CHATBOT_THEME}
           />
         </div>
