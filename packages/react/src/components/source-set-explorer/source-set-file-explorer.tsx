@@ -1,6 +1,7 @@
 import { CSSProperties, MouseEvent, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { AsgardSourceSetClient } from '@asgard-js/core';
 import { ContextMenu, type ContextMenuItem } from '../file-explorer/context-menu';
+import type { FsEntry } from '../file-explorer/types';
 import { type Locale, t } from '../../i18n';
 import { Spinner } from '../spinner';
 import { SourceSetFileView } from './file-view';
@@ -61,6 +62,24 @@ export interface SourceSetFileExplorerProps {
   theme?: SourceSetExplorerTheme;
   /** Ceiling on one directory's auto-paging walk (F-026). */
   maxEntries?: number;
+  /**
+   * Host-supplied context-menu actions, rendered as their own section after `Rename` / `Delete` and
+   * before `Refresh`. Called with the currently selected entry, or `null` when nothing is selected —
+   * the same target every built-in action resolves against.
+   *
+   * Not called at all while `readOnly` (F-025 R10): a read-only volume offers no gesture that can never
+   * complete, and that applies to the host's section as much as to the built-in ones.
+   */
+  extraEntryActions?: (entry: FsEntry | null) => ContextMenuItem[];
+  /**
+   * Decoration for the right of each entry's name — a badge, a status marker. Return `null` to leave a
+   * row as it was.
+   *
+   * Purely visual: it adds no click target of its own, so a click still reaches the row. Unlike
+   * {@link SourceSetFileExplorerProps.extraEntryActions} it keeps rendering while `readOnly`, because a
+   * status marker is information rather than an operation.
+   */
+  entryBadge?: (entry: FsEntry) => ReactNode;
   onError?: (error: unknown) => void;
 }
 
@@ -123,6 +142,8 @@ export function SourceSetFileExplorer(props: SourceSetFileExplorerProps): ReactN
     locale = 'en-US',
     theme,
     maxEntries,
+    extraEntryActions,
+    entryBadge,
     onError,
   } = props;
 
@@ -264,7 +285,8 @@ export function SourceSetFileExplorer(props: SourceSetFileExplorerProps): ReactN
 
   const closeMenu = useCallback((): void => setMenu(null), []);
 
-  // Grouping only — the menu carries exactly the actions the toolbar does.
+  // Grouping only — the menu carries exactly the built-in actions the toolbar does, plus whatever
+  // section the host contributes.
   const menuSections = useMemo((): ContextMenuItem[][] => {
     const group = (keys: string[]): ContextMenuItem[] =>
       actions
@@ -278,13 +300,18 @@ export function SourceSetFileExplorer(props: SourceSetFileExplorerProps): ReactN
           onSelect: action.run,
         }));
 
+    // The host's section sits between the mutating pair and `Refresh`, which stays the closer. A host
+    // that returns nothing drops out through the same filter every built-in group goes through.
+    const extra = !readOnly && extraEntryActions ? extraEntryActions(selected) : [];
+
     return [
       group(['newFile', 'newFolder', 'upload']),
       group(['download', 'copy', 'cut', 'paste']),
       group(['rename', 'delete']),
+      extra,
       group(['refresh']),
     ].filter(section => section.length > 0);
-  }, [actions, labelOf]);
+  }, [actions, labelOf, readOnly, extraEntryActions, selected]);
 
   return (
     <div className={styles.root} style={themeStyle(theme)}>
@@ -346,6 +373,7 @@ export function SourceSetFileExplorer(props: SourceSetFileExplorerProps): ReactN
             onToggle={explorer.toggleExpand}
             onOpen={explorer.open}
             onContextMenu={openMenu}
+            entryBadge={entryBadge}
           />
         )}
       </div>

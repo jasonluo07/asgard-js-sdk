@@ -17,6 +17,8 @@ export interface SourceSetTreeProps {
   onOpen: (entry: FsEntry) => void;
   /** Right-click anywhere in the tree; the row handler selects its entry first. */
   onContextMenu: (event: MouseEvent) => void;
+  /** Host decoration for the right of a row's name; `null` leaves the row untouched. */
+  entryBadge?: (entry: FsEntry) => ReactNode;
 }
 
 const INDENT_REM = 0.85;
@@ -29,7 +31,8 @@ const INDENT_REM = 0.85;
  * walk pages, and a walk that stopped short says by how much instead of quietly showing fewer files.
  */
 export function SourceSetTree(props: SourceSetTreeProps): ReactNode {
-  const { listings, expanded, selected, rootPath, locale, onSelect, onToggle, onOpen, onContextMenu } = props;
+  const { listings, expanded, selected, rootPath, locale, onSelect, onToggle, onOpen, onContextMenu, entryBadge } =
+    props;
 
   function renderDirBody(path: string, depth: number): ReactNode {
     const listing = listings[path];
@@ -82,6 +85,7 @@ export function SourceSetTree(props: SourceSetTreeProps): ReactNode {
   function renderNode(entry: FsEntry, depth: number): ReactNode {
     const isOpen = entry.isDir && expanded.has(entry.path);
     const isSelected = selected?.path === entry.path;
+    const badge = entryBadge?.(entry);
 
     return (
       <div key={entry.path} className={styles.node}>
@@ -117,6 +121,12 @@ export function SourceSetTree(props: SourceSetTreeProps): ReactNode {
             {entry.isDir ? isOpen ? <FolderOpenIcon size={14} /> : <FolderIcon size={14} /> : <FileIcon size={14} />}
           </span>
           <span className={styles.label}>{entry.name}</span>
+          {/*
+            Mounted only when the host returned something, so a row without a badge keeps the DOM — and the
+            row `gap` — it had before. Truthiness rather than a `null` check on purpose: `entry.isDir && …`
+            is the idiom hosts reach for, and that yields `false` for every file.
+          */}
+          {badge ? <span className={styles.rowBadge}>{badge}</span> : null}
         </div>
         {isOpen && renderDirBody(entry.path, depth + 1)}
       </div>
