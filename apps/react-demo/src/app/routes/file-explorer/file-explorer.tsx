@@ -8,7 +8,7 @@ import {
   useFileExplorerController,
 } from '@asgard-js/react';
 import '@asgard-js/react/style';
-import { LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
+import { HttpError, LaunchedSandbox, SandboxFsListResult } from '@asgard-js/core';
 import { DemoWrapper } from '../../components/demo-wrapper';
 
 const MOCK_ENDPOINT = `${typeof window !== 'undefined' ? window.location.origin : ''}/mock-asgard`;
@@ -118,6 +118,66 @@ function removeTree(path: string): void {
 }
 
 /**
+ * The sandbox's own upload limit (F-031 / EXT-003). The demo uses the **target** 64MB so the pre-flight
+ * check is exercisable; production is still 8MB until asgard-core#230 raises it, which is why the cap is
+ * injected rather than hardcoded in the SDK.
+ */
+const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
+
+/** Attempts per destination, so "fails the first time" is expressible. */
+const UPLOAD_ATTEMPTS = new Map<string, number>();
+let uploadFilesSeen = 0;
+
+/**
+ * Batch upload against the mock, reproducing the **three** backend behaviors that the component would
+ * otherwise be written wrongly against. Without them the queue looks correct in the source and is never
+ * actually exercised:
+ *
+ * 1. A write creates its parent directories, so a nested relative path just works (`os.MkdirAll` in
+ *    `file_write.go`). Nothing pre-creates the levels.
+ * 2. `create_only` on an existing path answers `409` — which is what makes the conflict dialog reachable.
+ * 3. Every 9th file fails its first attempt with `503`. This one is here on purpose: without it neither
+ *    the exponential back-off nor the AIMD slow-down ever runs in the demo.
+ */
+async function uploadManyMock(
+  _sandbox: string,
+  dirPath: string,
+  relPath: string,
+  file: File,
+  options: { createOnly: boolean; signal: AbortSignal; lastAttempt: boolean },
+): Promise<void> {
+  const dst = `${dirPath.replace(/\/$/, '')}/${relPath}`;
+  const attempt = (UPLOAD_ATTEMPTS.get(dst) ?? 0) + 1;
+
+  UPLOAD_ATTEMPTS.set(dst, attempt);
+
+  if (attempt === 1) {
+    uploadFilesSeen += 1;
+
+    if (uploadFilesSeen % 9 === 0) throw new HttpError(503, 'Service Unavailable');
+  }
+
+  if (options.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+  if (options.createOnly && dst in FILES) throw new HttpError(409, 'Conflict');
+
+  // (1) The backend creates the parent directories itself.
+  const parts = relPath.split('/');
+  let cursor = dirPath.replace(/\/$/, '');
+
+  for (const segment of parts.slice(0, -1)) {
+    const child = `${cursor}/${segment}`;
+    if (!(child in DIRS)) DIRS[child] = [];
+
+    addEntry(cursor, segment, true, 0);
+    cursor = child;
+  }
+
+  FILES[dst] = `（上傳的檔案：${file.name}，${file.size} bytes）`;
+  addEntry(cursor, baseOf(dst), false, file.size);
+}
+
+/**
  * Write to the mock sandbox fs from *outside* the panel, the way an agent would. Deliberately a raw
  * `PUT fs/file` rather than the panel's own save, so the reload we observe can only have come from
  * `fs/watch` (F-021 AC3).
@@ -136,6 +196,9 @@ export function FileExplorer(): ReactNode {
   const controller = useFileExplorerController({ open: true });
   // A second, independent controller so the composed panel below does not fight the one above.
   const composedController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
+  // Two more so the batch-upload pair below does not fight each other or the panels above.
+  const batchWideController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
+  const batchNarrowController = useFileExplorerController({ activeSourceId: FIXED_SOURCE.id });
 
   const providers = useMemo(
     () => ({
@@ -164,6 +227,7 @@ export function FileExplorer(): ReactNode {
         FILES[dst] = `（上傳的檔案：${file.name}）`;
         addEntry(dir, file.name, false, FILES[dst].length);
       },
+      uploadMany: uploadManyMock,
       // A real download rather than a no-op: the toolbar and the file viewer both route here, and the only
       // way to see that either produced the *original* file name is to let the browser save one.
       download: async (_sandbox: string, path: string, name: string): Promise<void> => {
@@ -204,7 +268,9 @@ export function FileExplorer(): ReactNode {
             copy={providers.copy}
             move={providers.move}
             upload={providers.upload}
+            uploadMany={providers.uploadMany}
             download={providers.download}
+            maxUploadBytes={MAX_UPLOAD_BYTES}
           />
         </div>
         <div style={{ marginTop: '1rem', maxWidth: '48rem' }}>
@@ -227,6 +293,68 @@ export function FileExplorer(): ReactNode {
           >
             模擬 open-file 卡片 → README.md
           </button>
+        </div>
+
+        <h3 style={{ marginTop: '1.5rem' }}>批次上傳（F-031）——寬窄並排</h3>
+        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+          上傳鈕會先問<strong>檔案還是資料夾</strong>（兩者能力不同：挑資料夾拿不到空資料夾，挑檔案拿不到資料夾）；
+          從桌面<strong>拖進樹裡</strong>則走 <code>webkitGetAsEntry()</code> 遞迴，連空資料夾都保留。 並排兩個 shell
+          是刻意的：預設 theme 是 375px 行動版寬度，而實裝的消費端都是 full-bleed， 只驗一種等於沒驗到另一種會壞的版面。
+        </p>
+        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+          mock 複製了後端三個真實行為，否則限流與衝突在 demo 上永遠走不到：<strong>write 自動遞迴建父目錄</strong>、
+          <strong>
+            <code>create_only</code> 撞名回 409
+          </strong>
+          （於是會跳出衝突對話框）、<strong>每第 9 個檔的第一次嘗試回 503</strong>
+          （於是指數退避與 AIMD 降速真的會跑，面板會顯示「伺服器忙碌，已降到同時 N 個」）。 單檔上限填的是
+          <strong>目標值 64MB</strong>；上線值仍是 8MB，所以大檔那一條要等 asgard-core#230。
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 28rem', minWidth: 0, height: '560px' }}>
+            <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>寬（full-bleed，實裝形態）</div>
+            <div style={{ height: '520px' }}>
+              <FileExplorerPanel
+                sandboxes={SANDBOXES}
+                controller={batchWideController}
+                listDir={providers.listDir}
+                readFile={providers.readFile}
+                saveFile={providers.saveFile}
+                mkdir={providers.mkdir}
+                remove={providers.remove}
+                copy={providers.copy}
+                move={providers.move}
+                upload={providers.upload}
+                uploadMany={providers.uploadMany}
+                download={providers.download}
+                maxUploadBytes={MAX_UPLOAD_BYTES}
+                uploadConcurrency={3}
+              />
+            </div>
+          </div>
+          <div style={{ flex: '0 0 343px', height: '560px' }}>
+            <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem' }}>
+              窄（343px，預設 theme 寬度）
+            </div>
+            <div style={{ width: '343px', height: '520px' }}>
+              <FileExplorerPanel
+                sandboxes={SANDBOXES}
+                controller={batchNarrowController}
+                listDir={providers.listDir}
+                readFile={providers.readFile}
+                saveFile={providers.saveFile}
+                mkdir={providers.mkdir}
+                remove={providers.remove}
+                copy={providers.copy}
+                move={providers.move}
+                upload={providers.upload}
+                uploadMany={providers.uploadMany}
+                download={providers.download}
+                maxUploadBytes={MAX_UPLOAD_BYTES}
+                uploadConcurrency={3}
+              />
+            </div>
+          </div>
         </div>
 
         <h3 style={{ marginTop: '1.5rem' }}>自行組裝零件（單一固定來源，沒有選台）</h3>

@@ -12,7 +12,7 @@ import {
   FileExplorerSourceSelect,
   FileExplorerWorkspace,
 } from './file-explorer-parts';
-import { FsListDir, FsProviders, FsReadFile, FsSaveFile, FsWatchFile, sandboxesAsSources } from './types';
+import { FsListDir, FsProviders, FsReadFile, FsSaveFile, FsUploadMany, FsWatchFile, sandboxesAsSources } from './types';
 
 export type { FsListDir } from './types';
 
@@ -23,6 +23,12 @@ export interface FileExplorerMutations {
   copy?: (sandboxName: string, src: string, dst: string) => Promise<void>;
   move?: (sandboxName: string, src: string, dst: string) => Promise<void>;
   upload?: (sandboxName: string, dirPath: string, file: File) => Promise<void>;
+  /**
+   * Batch-capable upload (F-031) — called once per file by the shared upload queue, which owns the
+   * pacing and the collision prompts. With only `upload`, batches still work but run one file at a
+   * time and cannot ask before overwriting.
+   */
+  uploadMany?: FsUploadMany;
   download?: (sandboxName: string, path: string, name: string) => Promise<void>;
 }
 
@@ -56,6 +62,13 @@ export interface FileExplorerPanelProps extends FileExplorerMutations {
    * `flush` = the built-in aside split into the chat view (no radius, left divider only). Defaults to `card`.
    */
   chrome?: 'card' | 'flush';
+  /**
+   * Per-file upload cap in bytes (the sandbox edge server's `FileWriteMaxBytes`); omitted means no cap.
+   * An oversized file is failed in the browser instead of spending a request to be told `400`.
+   */
+  maxUploadBytes?: number;
+  /** Uploads in flight at once, as a ceiling the queue backs off from (default 3). */
+  uploadConcurrency?: number;
 }
 
 /**
@@ -81,17 +94,20 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
     copy,
     move,
     upload,
+    uploadMany,
     download,
     onNudge,
     nudgeDisabled,
     onClose,
     chrome = 'card',
+    maxUploadBytes,
+    uploadConcurrency,
   } = props;
 
   const sources = useMemo(() => sandboxesAsSources(sandboxes), [sandboxes]);
   const providers = useMemo<FsProviders>(
-    () => ({ listDir, readFile, saveFile, watchFile, mkdir, remove, copy, move, upload, download }),
-    [listDir, readFile, saveFile, watchFile, mkdir, remove, copy, move, upload, download],
+    () => ({ listDir, readFile, saveFile, watchFile, mkdir, remove, copy, move, upload, uploadMany, download }),
+    [listDir, readFile, saveFile, watchFile, mkdir, remove, copy, move, upload, uploadMany, download],
   );
 
   // "Is there anything to browse" — deliberately not "is the selected id present". The provider resolves
@@ -109,6 +125,8 @@ export function FileExplorerPanel(props: FileExplorerPanelProps): ReactNode {
       onNudge={onNudge}
       nudgeDisabled={nudgeDisabled}
       onClose={onClose}
+      maxUploadBytes={maxUploadBytes}
+      uploadConcurrency={uploadConcurrency}
     >
       <FileExplorerRoot chrome={chrome}>
         {hasSource ? (

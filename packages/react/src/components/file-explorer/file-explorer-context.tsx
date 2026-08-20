@@ -1,5 +1,7 @@
 import {
   createContext,
+  DragEvent as ReactDragEvent,
+  DragEventHandler,
   MouseEvent as ReactMouseEvent,
   ReactNode,
   RefObject,
@@ -13,6 +15,22 @@ import {
 import { FileExplorerController, SourceViewState } from '../../hooks/use-file-explorer-controller';
 import { useAsgardTemplateContext } from '../../context/asgard-template-context';
 import { Locale, t } from '../../i18n';
+import {
+  formatUploadSize,
+  isFileDrag,
+  isUploadPlanEmpty,
+  planFromDataTransfer,
+  planFromFileList,
+  splitRelPath,
+  UploadConflictDialog,
+  UploadProgress,
+  useUploadQueue,
+  type UploadLabels,
+  type UploadPlan,
+  type UploadPlanSource,
+  type UploadReason,
+  type UploadWrite,
+} from '../upload-queue';
 import { useFileExplorerDialog } from './file-explorer-dialog';
 import { ancestorDirs, baseName, joinPath, parentDir, uniqueName } from './paths';
 import { FsEntry, FsProviders, FsSource } from './types';
@@ -20,6 +38,15 @@ import { FsEntry, FsProviders, FsSource } from './types';
 export type Clipboard = { op: 'copy' | 'cut'; entry: FsEntry } | null;
 export type MenuTarget = { kind: 'file' | 'dir'; entry: FsEntry } | { kind: 'background' };
 export type OpenMenu = { x: number; y: number; target: MenuTarget } | null;
+/** Anchor for the "files or folder?" upload menu; `dir` is where that batch will land. */
+export type OpenUploadMenu = { x: number; y: number; dir: string } | null;
+
+/** Handlers that make a container accept files dragged in from outside the browser (F-031 AC3). */
+export interface DropZoneProps {
+  onDragOver: DragEventHandler<HTMLElement>;
+  onDragLeave: DragEventHandler<HTMLElement>;
+  onDrop: DragEventHandler<HTMLElement>;
+}
 
 /**
  * Everything the File Explorer parts need. Holding it here — rather than inside one panel component —
@@ -49,6 +76,10 @@ export interface FileExplorerContextValue {
   openFile: FsEntry | null;
   clipboard: Clipboard;
   menu: OpenMenu;
+  /** The "files or folder?" menu the upload button opens; `null` when closed. */
+  uploadMenu: OpenUploadMenu;
+  /** External files are hovering the tree — highlight the whole container as one drop target. */
+  dropping: boolean;
   nudging: boolean;
   /** The directory actions target: the selected dir, else the root. */
   targetDir: string;
@@ -57,7 +88,10 @@ export interface FileExplorerContextValue {
 
   // --- refs owned by <FileExplorerRoot> ---
   rootRef: RefObject<HTMLDivElement | null>;
+  /** The multi-file picker. Must stay the **first** `input[type=file]` inside the root. */
   uploadInputRef: RefObject<HTMLInputElement | null>;
+  /** The folder picker (`webkitdirectory`), which yields every file in the tree but no empty folder. */
+  uploadDirInputRef: RefObject<HTMLInputElement | null>;
 
   // --- actions ---
   setOpenFile: (entry: FsEntry | null) => void;
@@ -72,13 +106,31 @@ export interface FileExplorerContextValue {
   actRename: (entry: FsEntry) => Promise<void>;
   actDelete: (entry: FsEntry) => Promise<void>;
   actPaste: (dstDir: string) => Promise<void>;
+  /** Opens the multi-file picker. Unchanged signature and behavior, now accepting several files. */
   actUpload: (dir: string) => void;
+  /** Opens the folder picker. */
+  actUploadFolder: (dir: string) => void;
+  /**
+   * Opens the "files or folder?" menu, and records the destination immediately — the target directory
+   * follows from the selection at the moment upload was invoked, not from which item is chosen next.
+   */
+  openUploadMenu: (event: ReactMouseEvent, dir: string) => void;
+  closeUploadMenu: () => void;
   actDownload: (entry: FsEntry) => void;
   onUploadPicked: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onUploadDirPicked: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Spread onto the tree container so files dragged in from outside upload to `targetDir`. */
+  dropZoneProps: DropZoneProps;
   handleNudge: () => Promise<void>;
 
   /** The confirm / prompt dialog element; `<FileExplorerRoot>` always mounts it. */
   dialog: ReactNode;
+  /**
+   * The batch upload progress panel and its conflict dialog. Mounted by `<FileExplorerRoot>` for the
+   * same reason `dialog` is: a worker awaiting a collision answer whose dialog went unmounted would
+   * park forever, and the batch with it.
+   */
+  uploadOverlay: ReactNode;
 }
 
 const FileExplorerContext = createContext<FileExplorerContextValue | null>(null);
@@ -113,12 +165,37 @@ export interface FileExplorerProviderProps {
   nudgeDisabled?: boolean;
   /** When provided, the header shows a close (X) button. */
   onClose?: () => void;
+  /**
+   * Per-file size cap in bytes for uploads; omitted means no cap. The sandbox edge server enforces
+   * one (`FileWriteMaxBytes`) and a SourceSet volume, which streams in chunks, does not — so the
+   * explorer takes it as a parameter. An oversized file fails in the browser rather than spending a
+   * request to be told `400`.
+   */
+  maxUploadBytes?: number;
+  /**
+   * How many uploads may be in flight at once (default 3). This is the ceiling: the queue halves it
+   * when the server pushes back and works back up. A source offering only the single-file `upload`
+   * provider ignores it and runs strictly sequentially, since that signature cannot carry the
+   * per-request options a batch needs.
+   */
+  uploadConcurrency?: number;
   children: ReactNode;
 }
 
 export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNode {
-  const { sources, controller, providers, basePath, onNudge, nudgeDisabled, onClose, children } = props;
-  const { listDir, saveFile, mkdir, remove, copy, move, upload, download } = providers;
+  const {
+    sources,
+    controller,
+    providers,
+    basePath,
+    onNudge,
+    nudgeDisabled,
+    onClose,
+    maxUploadBytes,
+    uploadConcurrency,
+    children,
+  } = props;
+  const { listDir, saveFile, mkdir, remove, copy, move, upload, uploadMany, download } = providers;
 
   const { locale = 'en-US' } = useAsgardTemplateContext();
   const { dialog, requestInput, requestConfirm } = useFileExplorerDialog(locale);
@@ -154,12 +231,22 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
   const [refreshKey, setRefreshKey] = useState(0);
   const [clipboard, setClipboard] = useState<Clipboard>(null);
   const [menu, setMenu] = useState<OpenMenu>(null);
+  const [uploadMenu, setUploadMenu] = useState<OpenUploadMenu>(null);
+  const [dropping, setDropping] = useState(false);
   const [nudging, setNudging] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const uploadDirRef = useRef<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const uploadDirInputRef = useRef<HTMLInputElement>(null);
 
   const rootPath = basePath ?? activeSource?.rootPath ?? null;
+
+  /** Where a directory action lands: the selected directory, else the tree root. */
+  const targetDir = selectedEntry?.isDir ? selectedEntry.path : rootPath ?? '/';
+  // Mirrored for the drop handlers below, which are memoized on the providers alone so that changing
+  // the selection mid-drag does not rebuild them (and drop where the selection used to be).
+  const targetDirRef = useRef(targetDir);
+  targetDirRef.current = targetDir;
 
   const bumpRefresh = useCallback((): void => setRefreshKey(k => k + 1), []);
   const closeMenu = useCallback((): void => setMenu(null), []);
@@ -320,20 +407,173 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
     },
     [activeSourceId, clipboard, copy, move, listDir, run],
   );
+  // --- batch upload (F-031) ---
+  //
+  // Every file is its own request: there is no batch endpoint anywhere in the chain. The queue below
+  // owns the pacing, the collision prompts and cancellation; this layer only turns a relative path
+  // into an absolute one and hands over a provider.
+
+  /**
+   * Writes one file of a batch. `uploadMany` is the real path; a source offering only the legacy
+   * `upload` still works, and still keeps the folder structure — that signature derives its
+   * destination as `${dirPath}/${file.name}`, so the relative directory goes into `dirPath` and the
+   * backend creates the levels. What it cannot express is `createOnly` or `signal`, so a degraded
+   * batch overwrites silently (exactly as single-file upload always has) and cannot be interrupted
+   * mid-request.
+   */
+  const uploadWrite = useCallback<UploadWrite>(
+    (relPath, file, options) => {
+      const dir = uploadDirRef.current;
+
+      if (!activeSourceId || !dir) return Promise.reject(new Error('No upload destination is selected.'));
+
+      if (uploadMany) return uploadMany(activeSourceId, dir, relPath, file, options);
+
+      if (upload) {
+        const { dir: relDir } = splitRelPath(relPath);
+
+        return upload(activeSourceId, relDir ? joinPath(dir, relDir) : dir, file);
+      }
+
+      return Promise.reject(new Error('This source cannot upload.'));
+    },
+    [activeSourceId, upload, uploadMany],
+  );
+
+  const uploadMkdir = useCallback(
+    (relPath: string): Promise<void> => {
+      const dir = uploadDirRef.current;
+
+      if (!activeSourceId || !dir || !mkdir) return Promise.resolve();
+
+      return mkdir(activeSourceId, joinPath(dir, relPath));
+    },
+    [activeSourceId, mkdir],
+  );
+
+  const uploads = useUploadQueue({
+    write: uploadWrite,
+    // Only the drag path ever reports empty directories, and `mkdir` is what preserves them.
+    mkdir: mkdir ? uploadMkdir : undefined,
+    maxBytes: maxUploadBytes,
+    // A legacy-only source cannot carry per-request options, so it runs strictly one at a time.
+    concurrency: uploadMany ? uploadConcurrency : 1,
+    // One refresh for the whole batch. The per-action `run()` below bumps once per action, which is
+    // right for a single mutation and wrong by two hundred for a folder upload.
+    onSettled: () => {
+      const dir = uploadDirRef.current;
+      if (dir) expand(dir);
+
+      bumpRefresh();
+    },
+  });
+
+  const startUpload = useCallback(
+    (dir: string, plan: UploadPlan): void => {
+      if (isUploadPlanEmpty(plan)) return;
+
+      uploadDirRef.current = dir;
+      uploads.start(plan);
+    },
+    [uploads],
+  );
+
   const actUpload = useCallback((dir: string): void => {
     uploadDirRef.current = dir;
     uploadInputRef.current?.click();
   }, []);
-  const onUploadPicked = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>): void => {
-      const file = e.target.files?.[0];
-      const dir = uploadDirRef.current;
-      e.target.value = '';
-      if (!file || !dir || !activeSourceId || !upload) return;
+  const actUploadFolder = useCallback((dir: string): void => {
+    uploadDirRef.current = dir;
+    uploadDirInputRef.current?.click();
+  }, []);
 
-      void run(upload(activeSourceId, dir, file), dir);
+  /**
+   * The upload button asks "files or folder?" rather than doing one of them, because the two really
+   * do differ: a folder pick cannot see empty folders, and a file pick cannot see folders at all.
+   * The destination is recorded here, when upload was invoked — not when the choice is made.
+   */
+  const openUploadMenu = useCallback((event: ReactMouseEvent, dir: string): void => {
+    const rootRect = rootRef.current?.getBoundingClientRect();
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+
+    uploadDirRef.current = dir;
+    setUploadMenu({
+      x: rootRect ? buttonRect.left - rootRect.left : buttonRect.left,
+      y: rootRect ? buttonRect.bottom - rootRect.top + 2 : buttonRect.bottom,
+      dir,
+    });
+  }, []);
+  const closeUploadMenu = useCallback((): void => setUploadMenu(null), []);
+
+  /**
+   * Reads a picked `FileList` and starts the batch.
+   *
+   * The copy on the first line is not incidental. `input.files` is **live**: clearing `input.value`
+   * empties the very `FileList` you are holding, so reading it afterwards finds nothing and the batch
+   * silently never starts. And the value does have to be cleared, or picking the same file twice in a
+   * row fires no `change` at all. Copy first, then clear.
+   */
+  const takePicked = useCallback(
+    (input: HTMLInputElement, source: UploadPlanSource): void => {
+      const picked = input.files ? Array.from(input.files) : [];
+      const dir = uploadDirRef.current;
+
+      input.value = '';
+      if (picked.length === 0 || !dir) return;
+
+      startUpload(dir, planFromFileList(picked, source));
     },
-    [activeSourceId, upload, run],
+    [startUpload],
+  );
+
+  const onUploadPicked = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>): void => takePicked(e.target, 'files'),
+    [takePicked],
+  );
+
+  const onUploadDirPicked = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>): void => takePicked(e.target, 'directory'),
+    [takePicked],
+  );
+
+  /**
+   * Accepts files dragged in **from outside the browser** only. Dragging nodes around inside the tree
+   * stays unsupported (moving is cut-and-paste, per the SourceSet explorer's own decision), which is
+   * also why the highlight covers the whole container rather than the row under the cursor: a per-row
+   * highlight would advertise dropping onto a node, and that is the gesture that does not exist.
+   */
+  const dropZoneProps = useMemo<DropZoneProps>(
+    () => ({
+      onDragOver: (event: ReactDragEvent<HTMLElement>): void => {
+        if (!upload && !uploadMany) return;
+
+        if (!isFileDrag(event.dataTransfer)) return;
+
+        event.preventDefault();
+        setDropping(true);
+      },
+      onDragLeave: (event: ReactDragEvent<HTMLElement>): void => {
+        // Only the container's own leave counts; bubbling from a child row would flicker the state.
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+
+        setDropping(false);
+      },
+      onDrop: (event: ReactDragEvent<HTMLElement>): void => {
+        if (!upload && !uploadMany) return;
+
+        if (!isFileDrag(event.dataTransfer)) return;
+
+        event.preventDefault();
+        setDropping(false);
+
+        const dir = targetDirRef.current;
+        // `DataTransfer` does not survive the await inside, so hand it over synchronously.
+        const dataTransfer = event.dataTransfer;
+
+        void planFromDataTransfer(dataTransfer).then(plan => startUpload(dir, plan));
+      },
+    }),
+    [upload, uploadMany, startUpload],
   );
   const actDownload = useCallback(
     (entry: FsEntry): void => {
@@ -370,10 +610,88 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
     [updateView],
   );
 
-  const targetDir = selectedEntry?.isDir ? selectedEntry.path : rootPath ?? '/';
   const pasteLabel = clipboard
     ? t(locale, 'fileExplorer.pasteNamed', { name: clipboard.entry.name })
     : t(locale, 'fileExplorer.paste');
+
+  /**
+   * The chat explorer's copy for the shared upload UI, drawn from `fileExplorer.*`. The components
+   * themselves hold no strings: the SourceSet explorer mounts the same ones against its own
+   * `sourceSetExplorer.*` namespace, so neither namespace can be baked in.
+   */
+  const uploadLabels = useMemo<UploadLabels>(
+    () => ({
+      region: t(locale, 'fileExplorer.uploadProgress'),
+      uploading: t(locale, 'fileExplorer.uploading'),
+      cancelled: t(locale, 'fileExplorer.uploadCancelled'),
+      doneWithFailures: t(locale, 'fileExplorer.uploadDoneWithFailures'),
+      done: t(locale, 'fileExplorer.uploadDone'),
+      cancel: t(locale, 'fileExplorer.cancel'),
+      retry: (count): string => t(locale, 'fileExplorer.uploadRetry', { count: String(count) }),
+      dismiss: t(locale, 'fileExplorer.uploadDismiss'),
+      throttled: (limit, max): string =>
+        t(locale, 'fileExplorer.uploadThrottled', { limit: String(limit), max: String(max) }),
+      emptyDirsHint: t(locale, 'fileExplorer.uploadEmptyDirsHint'),
+      reason: (reason: UploadReason): string => {
+        switch (reason.code) {
+          case 'too-large':
+            return t(locale, 'fileExplorer.uploadTooLarge', {
+              max: formatUploadSize(reason.maxBytes),
+              size: formatUploadSize(reason.size),
+            });
+          case 'exists-skipped':
+            return t(locale, 'fileExplorer.uploadExistsSkipped');
+          case 'cancelled':
+            return t(locale, 'fileExplorer.uploadCancelled');
+          default:
+            if (reason.status === 403) return t(locale, 'fileExplorer.uploadForbidden');
+
+            if (reason.status === 413) return t(locale, 'fileExplorer.uploadTooLargeForServer');
+
+            if (reason.status === 429) return t(locale, 'fileExplorer.uploadServerBusy');
+
+            if (reason.status !== undefined && reason.status >= 500) {
+              return t(locale, 'fileExplorer.uploadServerError', { status: String(reason.status) });
+            }
+
+            return reason.message || t(locale, 'fileExplorer.uploadUnknownError');
+        }
+      },
+      conflictTitle: t(locale, 'fileExplorer.uploadConflictTitle'),
+      skip: t(locale, 'fileExplorer.uploadSkip'),
+      keepBoth: t(locale, 'fileExplorer.uploadKeepBoth'),
+      overwrite: t(locale, 'fileExplorer.uploadOverwrite'),
+      applyToRest: (count): string => t(locale, 'fileExplorer.uploadApplyToRest', { count: String(count) }),
+      allSkip: t(locale, 'fileExplorer.uploadAllSkip'),
+      allKeepBoth: t(locale, 'fileExplorer.uploadAllKeepBoth'),
+      allOverwrite: t(locale, 'fileExplorer.uploadAllOverwrite'),
+      cancelBatch: t(locale, 'fileExplorer.uploadCancelBatch'),
+    }),
+    [locale],
+  );
+
+  const uploadOverlay = useMemo(
+    () => (
+      <>
+        <UploadProgress
+          items={uploads.items}
+          running={uploads.running}
+          cancelled={uploads.cancelled}
+          limit={uploads.limit}
+          ceiling={uploads.ceiling}
+          source={uploads.source}
+          labels={uploadLabels}
+          onCancel={uploads.cancel}
+          onRetryFailed={uploads.retryFailed}
+          onDismiss={uploads.dismiss}
+        />
+        {uploads.conflict && (
+          <UploadConflictDialog ask={uploads.conflict} labels={uploadLabels} onAnswer={uploads.answerConflict} />
+        )}
+      </>
+    ),
+    [uploads, uploadLabels],
+  );
 
   const value = useMemo<FileExplorerContextValue>(
     () => ({
@@ -394,11 +712,14 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
       openFile,
       clipboard,
       menu,
+      uploadMenu,
+      dropping,
       nudging,
       targetDir,
       pasteLabel,
       rootRef,
       uploadInputRef,
+      uploadDirInputRef,
       setOpenFile,
       setClipboard,
       closeMenu,
@@ -412,10 +733,16 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
       actDelete,
       actPaste,
       actUpload,
+      actUploadFolder,
+      openUploadMenu,
+      closeUploadMenu,
       actDownload,
       onUploadPicked,
+      onUploadDirPicked,
+      dropZoneProps,
       handleNudge,
       dialog,
+      uploadOverlay,
     }),
     [
       sources,
@@ -436,6 +763,8 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
       setOpenFile,
       clipboard,
       menu,
+      uploadMenu,
+      dropping,
       nudging,
       targetDir,
       pasteLabel,
@@ -450,10 +779,16 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
       actDelete,
       actPaste,
       actUpload,
+      actUploadFolder,
+      openUploadMenu,
+      closeUploadMenu,
       actDownload,
       onUploadPicked,
+      onUploadDirPicked,
+      dropZoneProps,
       handleNudge,
       dialog,
+      uploadOverlay,
     ],
   );
 

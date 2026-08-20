@@ -41,6 +41,12 @@ export interface SandboxFsWriteOptions {
   mode?: number;
   /** Fail with 409 if the file already exists. */
   createOnly?: boolean;
+  /**
+   * Aborts the request in flight. A batch upload cancels hundreds of queued writes at once, and
+   * without this the ones already dispatched would run to completion after the user gave up — the
+   * whole point of cancelling is that they stop (F-031 AC13).
+   */
+  signal?: AbortSignal;
 }
 
 /** `PUT fs/file` result: `{ data: { bytesWritten } }`. */

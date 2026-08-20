@@ -45,6 +45,7 @@ const EXPECTED: Record<string, string[]> = {
   ChevronDownIcon: ['path{d=m6 9 6 6 6-6}'], // lucide `chevron-down`
   ChevronRightIcon: ['path{d=m9 18 6-6-6-6}'], // lucide `chevron-right`
   CircleAlertIcon: ['circle{cx=12,cy=12,r=10}', 'line{x1=12,y1=8,x2=12,y2=12}', 'line{x1=12,y1=16,x2=12.01,y2=16}'], // lucide `alert-circle`
+  CircleCheckIcon: ['circle{cx=12,cy=12,r=10}', 'path{d=m9 12 2 2 4-4}'], // lucide `circle-check`
   ClipboardPasteIcon: [
     'path{d=M15 2H9a1 1 0 0 0-1 1v2c0 .6.4 1 1 1h6c.6 0 1-.4 1-1V3c0-.6-.4-1-1-1Z}',
     'path{d=M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2M16 4h2a2 2 0 0 1 2 2v2M11 14h10}',
@@ -71,6 +72,11 @@ const EXPECTED: Record<string, string[]> = {
     'path{d=M9 15h6}',
     'path{d=M12 18v-6}',
   ], // lucide `file-plus`
+  FileWarningIcon: [
+    'path{d=M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z}',
+    'path{d=M12 9v4}',
+    'path{d=M12 17h.01}',
+  ], // lucide `file-warning`
   FolderIcon: [
     'path{d=M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z}',
   ], // lucide `folder`
@@ -88,6 +94,11 @@ const EXPECTED: Record<string, string[]> = {
     'path{d=M3 5a2 2 0 0 0 2 2h3}',
     'path{d=M3 3v13a2 2 0 0 0 2 2h3}',
   ], // lucide `folder-tree`
+  FolderUpIcon: [
+    'path{d=M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z}',
+    'path{d=M12 10v6}',
+    'path{d=m9 13 3-3 3 3}',
+  ], // lucide `folder-up`
   PackageOpenIcon: [
     'path{d=M12 22v-9}',
     'path{d=M15.17 2.21a1.67 1.67 0 0 1 1.63 0L21 4.57a1.93 1.93 0 0 1 0 3.36L8.82 14.79a1.655 1.655 0 0 1-1.64 0L3 12.43a1.93 1.93 0 0 1 0-3.36z}',

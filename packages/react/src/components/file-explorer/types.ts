@@ -63,6 +63,36 @@ export type FsMutateSrcDst = (sourceId: string, src: string, dst: string) => Pro
 export type FsUpload = (sourceId: string, dirPath: string, file: File) => Promise<void>;
 
 /**
+ * The batch-capable upload capability (F-031). Called **once per file** by the shared upload queue,
+ * which owns the concurrency, the back-off and the collision prompts — a batch endpoint does not
+ * exist, so every file is its own request no matter who drives them.
+ *
+ * Three things it can express that {@link FsUpload} cannot, and which a batch needs:
+ *
+ * - `relPath` may span levels (`notes/sub/b.md`), relative to `dirPath`. The caller does **not**
+ *   pre-create those levels: both backends' write paths create parent directories themselves.
+ * - `createOnly` makes a collision fail loudly (`409`) instead of silently overwriting, which is what
+ *   lets the explorer ask. A folder upload collides far too often to guess.
+ * - `signal` makes cancellation real for requests already dispatched.
+ */
+export type FsUploadMany = (
+  sourceId: string,
+  dirPath: string,
+  relPath: string,
+  file: File,
+  options: {
+    createOnly: boolean;
+    signal: AbortSignal;
+    /**
+     * The queue will not retry this file again whatever happens. A provider that counts failures to
+     * decide a source is unreachable should count only these, since the queue retries exactly the
+     * server errors such a counter looks for.
+     */
+    lastAttempt: boolean;
+  },
+) => Promise<void>;
+
+/**
  * Everything the explorer can ask a source to do. Only `listDir` is required — each omitted capability
  * simply disables the actions that need it (the toolbar button and context-menu item go `disabled`),
  * which is how a read-only source is expressed.
@@ -78,6 +108,12 @@ export interface FsProviders {
   copy?: FsMutateSrcDst;
   move?: FsMutateSrcDst;
   upload?: FsUpload;
+  /**
+   * Batch-capable upload (F-031). When present the explorer uploads many files — and whole folders —
+   * through it. When only `upload` is given, batches still work but degrade to one file at a time,
+   * with no collision prompt, because that signature carries neither `createOnly` nor `signal`.
+   */
+  uploadMany?: FsUploadMany;
   /** Download a file to the browser. */
   download?: (sourceId: string, path: string, name: string) => Promise<void>;
 }

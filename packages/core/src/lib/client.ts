@@ -578,7 +578,12 @@ export default class AsgardServiceClient implements IAsgardServiceClient {
     const form = new FormData();
     form.append('file', content instanceof Blob ? content : new Blob([content]));
 
-    const response = await fetch(url.toString(), { method: 'PUT', headers: this.apiHeaders(), body: form });
+    const response = await fetch(url.toString(), {
+      method: 'PUT',
+      headers: this.apiHeaders(),
+      body: form,
+      signal: options?.signal,
+    });
 
     if (!response.ok) {
       throw new HttpError(response.status, response.statusText, await response.text().catch(() => undefined));
