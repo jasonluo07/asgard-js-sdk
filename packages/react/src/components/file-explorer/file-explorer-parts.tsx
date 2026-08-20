@@ -43,8 +43,16 @@ export function FileExplorerRoot({
   chrome?: 'card' | 'flush';
   children: ReactNode;
 }): ReactNode {
-  const { rootRef, uploadInputRef, uploadDirInputRef, onUploadPicked, onUploadDirPicked, dialog, uploadOverlay } =
-    useFileExplorer();
+  const {
+    rootRef,
+    uploadInputRef,
+    uploadDirInputRef,
+    onUploadPicked,
+    onUploadDirPicked,
+    dialog,
+    uploadOverlay,
+    dropZoneProps,
+  } = useFileExplorer();
 
   // `webkitdirectory` is not a React DOM attribute, and setting it on the element avoids both a cast
   // and an unknown-prop warning — `HTMLInputElement` declares it, so this stays fully typed.
@@ -53,7 +61,9 @@ export function FileExplorerRoot({
   }, [uploadDirInputRef]);
 
   return (
-    <div className={`${styles.root} ${chrome === 'flush' ? styles.flush : ''}`} ref={rootRef}>
+    // The drop zone is the whole panel, not the tree alone: the handlers decide for themselves whether
+    // this panel serves the drag, and a drop it does not serve passes through untouched.
+    <div className={`${styles.root} ${chrome === 'flush' ? styles.flush : ''}`} ref={rootRef} {...dropZoneProps}>
       {children}
 
       {/* The multi-file picker stays first: it is the one an assembly reaches for by element type. */}
@@ -310,8 +320,9 @@ export function FileExplorerToolbar(): ReactNode {
 }
 
 /**
- * Body container — the tree and the single-file view share this slot, and it is the drop target for
- * files dragged in from outside the browser (F-031 AC3).
+ * Body container — the tree and the single-file view share this slot, and it shows the highlight for
+ * files dragged in from outside the browser (F-031 AC3). The drop handlers themselves sit on
+ * `FileExplorerRoot`, so no part of the panel behaves differently from the tree.
  *
  * The highlight covers the whole container rather than the row under the cursor, deliberately: a
  * per-row highlight would suggest dropping onto a particular node, and dragging **within** the tree
@@ -319,14 +330,15 @@ export function FileExplorerToolbar(): ReactNode {
  * there is no tree on screen to drop onto.
  */
 export function FileExplorerBody({ children }: { children: ReactNode }): ReactNode {
-  const { dropping, dropZoneProps, openFile, providers, targetDir, locale } = useFileExplorer();
-  const droppable = !openFile && (!!providers.upload || !!providers.uploadMany);
-  const zone = droppable ? dropZoneProps : undefined;
+  const { dropping, targetDir, locale } = useFileExplorer();
 
+  // `dropping` is set only by a drag the panel will actually serve, so it is the whole condition — no
+  // second copy of "can this panel upload, and is the tree even on screen" to drift out of step with
+  // the handlers that answer it.
   return (
-    <div className={`${styles.body} ${dropping && droppable ? styles.bodyDropping : ''}`} {...zone}>
+    <div className={`${styles.body} ${dropping ? styles.bodyDropping : ''}`}>
       {children}
-      {dropping && droppable && (
+      {dropping && (
         <div className={styles.dropOverlay}>{t(locale, 'fileExplorer.dropToUpload', { dir: targetDir })}</div>
       )}
     </div>

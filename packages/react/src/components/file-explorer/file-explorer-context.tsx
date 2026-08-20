@@ -41,8 +41,14 @@ export type OpenMenu = { x: number; y: number; target: MenuTarget } | null;
 /** Anchor for the "files or folder?" upload menu; `dir` is where that batch will land. */
 export type OpenUploadMenu = { x: number; y: number; dir: string } | null;
 
-/** Handlers that make a container accept files dragged in from outside the browser (F-031 AC3). */
+/**
+ * Handlers that make a container accept files dragged in from outside the browser (F-031 AC3).
+ *
+ * All four are needed, not just `onDrop`: the enter/leave pair is what keeps an enclosing drop target
+ * (the chat shell) from tracking a drag this panel has already taken over — see issue #446.
+ */
 export interface DropZoneProps {
+  onDragEnter: DragEventHandler<HTMLElement>;
   onDragOver: DragEventHandler<HTMLElement>;
   onDragLeave: DragEventHandler<HTMLElement>;
   onDrop: DragEventHandler<HTMLElement>;
@@ -78,7 +84,7 @@ export interface FileExplorerContextValue {
   menu: OpenMenu;
   /** The "files or folder?" menu the upload button opens; `null` when closed. */
   uploadMenu: OpenUploadMenu;
-  /** External files are hovering the tree — highlight the whole container as one drop target. */
+  /** External files are hovering the panel — highlight the tree container as one drop target. */
   dropping: boolean;
   nudging: boolean;
   /** The directory actions target: the selected dir, else the root. */
@@ -119,7 +125,7 @@ export interface FileExplorerContextValue {
   actDownload: (entry: FsEntry) => void;
   onUploadPicked: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onUploadDirPicked: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  /** Spread onto the tree container so files dragged in from outside upload to `targetDir`. */
+  /** Spread onto the panel container so files dragged in from outside upload to `targetDir`. */
   dropZoneProps: DropZoneProps;
   handleNudge: () => Promise<void>;
 
@@ -541,29 +547,59 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
    * stays unsupported (moving is cut-and-paste, per the SourceSet explorer's own decision), which is
    * also why the highlight covers the whole container rather than the row under the cursor: a per-row
    * highlight would advertise dropping onto a node, and that is the gesture that does not exist.
+   *
+   * Spread on the panel container (`FileExplorerRoot`), so every part of the panel behaves the same
+   * way — the toolbar and the header strip are as much "the File Explorer" to the person dragging as
+   * the tree is, and the upload progress panel covers the tree's own bottom edge mid-batch.
    */
-  const dropZoneProps = useMemo<DropZoneProps>(
-    () => ({
+  const dropZoneProps = useMemo<DropZoneProps>(() => {
+    /** Will this panel serve the drag? Only a served drag is claimed; anything else passes through. */
+    const serves = (event: ReactDragEvent<HTMLElement>): boolean =>
+      !openFile && (!!upload || !!uploadMany) && isFileDrag(event.dataTransfer);
+
+    /**
+     * Take the event out of circulation. `preventDefault()` alone only suppresses the browser default
+     * — the event keeps bubbling, and the chat shell around this panel is itself a drop target that
+     * turns dropped files into composer attachments. Without the `stopPropagation()`, one drop into
+     * the panel both uploaded the batch *and* left one attachment chip per file to dismiss by hand
+     * (issue #446), and every `dragenter` crossing the panel lit the shell's global drop overlay
+     * beside this panel's own highlight.
+     */
+    const claim = (event: ReactDragEvent<HTMLElement>): void => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    return {
+      onDragEnter: (event: ReactDragEvent<HTMLElement>): void => {
+        if (!serves(event)) return;
+
+        claim(event);
+        setDropping(true);
+      },
       onDragOver: (event: ReactDragEvent<HTMLElement>): void => {
-        if (!upload && !uploadMany) return;
+        if (!serves(event)) return;
 
-        if (!isFileDrag(event.dataTransfer)) return;
-
-        event.preventDefault();
+        claim(event);
         setDropping(true);
       },
       onDragLeave: (event: ReactDragEvent<HTMLElement>): void => {
+        if (!serves(event)) return;
+
+        // Claimed before the guard below, not after: a move between two rows inside the panel is the
+        // panel's own business, and letting that `dragleave` reach the shell would decrement a
+        // counter this panel never let it increment — leaving its overlay stuck on afterwards.
+        claim(event);
+
         // Only the container's own leave counts; bubbling from a child row would flicker the state.
         if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
 
         setDropping(false);
       },
       onDrop: (event: ReactDragEvent<HTMLElement>): void => {
-        if (!upload && !uploadMany) return;
+        if (!serves(event)) return;
 
-        if (!isFileDrag(event.dataTransfer)) return;
-
-        event.preventDefault();
+        claim(event);
         setDropping(false);
 
         const dir = targetDirRef.current;
@@ -572,9 +608,8 @@ export function FileExplorerProvider(props: FileExplorerProviderProps): ReactNod
 
         void planFromDataTransfer(dataTransfer).then(plan => startUpload(dir, plan));
       },
-    }),
-    [upload, uploadMany, startUpload],
-  );
+    };
+  }, [openFile, upload, uploadMany, startUpload]);
   const actDownload = useCallback(
     (entry: FsEntry): void => {
       if (activeSourceId && download) void download(activeSourceId, entry.path, entry.name);

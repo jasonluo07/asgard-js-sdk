@@ -242,3 +242,5 @@ REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目�
 | `REVIEW-064` | Review: host extension points on the SourceSet Explorer | —        | done   | [REVIEW-064-explorer-host-extension-points.md](./REVIEW-064-explorer-host-extension-points.md)           |
 | `BUILD-065`  | File Explorer batch upload (multi-file / folder)        | High     | done   | [BUILD-065-file-explorer-batch-upload.md](./BUILD-065-file-explorer-batch-upload.md)                     |
 | `REVIEW-065` | Review: File Explorer batch upload                      | —        | done   | [REVIEW-065-file-explorer-batch-upload.md](./REVIEW-065-file-explorer-batch-upload.md)                   |
+| `BUILD-066`  | Keep a File Explorer file drop inside the panel         | High     | done   | [BUILD-066-explorer-drop-stays-in-panel.md](./BUILD-066-explorer-drop-stays-in-panel.md)                 |
+| `REVIEW-066` | Review: File Explorer drop stays in the panel           | —        | ready  | [REVIEW-066-explorer-drop-stays-in-panel.md](./REVIEW-066-explorer-drop-stays-in-panel.md)               |
