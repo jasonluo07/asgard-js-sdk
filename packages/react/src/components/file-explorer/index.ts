@@ -34,6 +34,7 @@ export type {
   FsSaveFile,
   FsSource,
   FsUpload,
+  FsUploadMany,
   FsWatchFile,
 } from './types';
 export { sandboxAsSource, sandboxesAsSources } from './types';

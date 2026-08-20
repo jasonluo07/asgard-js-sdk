@@ -1,6 +1,6 @@
 import { AsgardServiceClient, isHttpError, SandboxFsListResult } from '@asgard-js/core';
 import { FsListDir } from './file-explorer-panel';
-import { FsReadFile, FsSaveFile, FsWatchFile } from './types';
+import { FsReadFile, FsSaveFile, FsUploadMany, FsWatchFile } from './types';
 
 const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg']);
 
@@ -39,6 +39,8 @@ export interface SandboxFsProviders {
   copy: FsMutateSrcDst;
   move: FsMutateSrcDst;
   upload: FsUpload;
+  /** Batch-capable upload (F-031) — one call per file, driven by the shared upload queue. */
+  uploadMany: FsUploadMany;
   /** Download a file to the browser (`GET fs/file` → `<a download>`). */
   download: (sandboxName: string, path: string, name: string) => Promise<void>;
 }
@@ -75,7 +77,20 @@ function isSandboxLevelFailure(error: unknown): boolean {
   return isHttpError(error) && (error.status === 412 || error.status >= 500);
 }
 
-type TrackFsCall = <T>(sandboxName: string, run: () => Promise<T>) => Promise<T>;
+type TrackFsCall = <T>(
+  sandboxName: string,
+  run: () => Promise<T>,
+  /**
+   * Whether a sandbox-level failure from this call counts toward the eviction threshold. `false` still
+   * resets the counter on success — a call that succeeds proves the sandbox is there either way.
+   *
+   * Only batch upload passes `false`, and only for an attempt it is about to retry: the upload queue
+   * backs off and retries exactly the `5xx` this tracker counts, so counting every attempt would evict
+   * a live sandbox that was merely pushing back. The terminal attempt is counted, so a sandbox that is
+   * genuinely gone still evicts after three failed files (F-031).
+   */
+  countFailure?: boolean,
+) => Promise<T>;
 
 /**
  * Count sandbox-level failures per sandbox and report one that keeps failing (F-021 AC5). Any success
@@ -84,14 +99,14 @@ type TrackFsCall = <T>(sandboxName: string, run: () => Promise<T>) => Promise<T>
 function createFailureTracker(onUnreachable?: (sandboxName: string) => void): TrackFsCall {
   const failures = new Map<string, number>();
 
-  return async function track<T>(sandboxName: string, run: () => Promise<T>): Promise<T> {
+  return async function track<T>(sandboxName: string, run: () => Promise<T>, countFailure = true): Promise<T> {
     try {
       const result = await run();
       failures.delete(sandboxName);
 
       return result;
     } catch (error) {
-      if (!isSandboxLevelFailure(error)) throw error;
+      if (!countFailure || !isSandboxLevelFailure(error)) throw error;
 
       const count = (failures.get(sandboxName) ?? 0) + 1;
       failures.set(sandboxName, count);
@@ -157,6 +172,26 @@ export function createSandboxFsProviders(
         const dst = `${dirPath.replace(/\/$/, '')}/${file.name}`;
         await client.sandboxFsWrite(sandboxName, dst, file);
       }),
+    // Batch upload (F-031). `relPath` may span levels; the sandbox's own write creates the parent
+    // directories, so nothing is pre-created here.
+    uploadMany: (
+      sandboxName: string,
+      dirPath: string,
+      relPath: string,
+      file: File,
+      options: { createOnly: boolean; signal: AbortSignal; lastAttempt: boolean },
+    ): Promise<void> =>
+      track(
+        sandboxName,
+        async () => {
+          const dst = `${dirPath.replace(/\/$/, '')}/${relPath}`;
+          await client.sandboxFsWrite(sandboxName, dst, file, {
+            createOnly: options.createOnly,
+            signal: options.signal,
+          });
+        },
+        options.lastAttempt,
+      ),
     download: (sandboxName: string, path: string, name: string): Promise<void> =>
       track(sandboxName, async () => {
         const { content } = await client.sandboxFsRead(sandboxName, path);

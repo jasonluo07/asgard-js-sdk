@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { t } from '../../i18n';
 import { Spinner } from '../spinner';
 import { ContextMenu, ContextMenuItem } from './context-menu';
@@ -14,6 +14,7 @@ import {
   EyeIcon,
   FilePlusIcon,
   FolderPlusIcon,
+  FolderUpIcon,
   PackageOpenIcon,
   PencilIcon,
   RefreshIcon,
@@ -42,14 +43,24 @@ export function FileExplorerRoot({
   chrome?: 'card' | 'flush';
   children: ReactNode;
 }): ReactNode {
-  const { rootRef, uploadInputRef, onUploadPicked, dialog } = useFileExplorer();
+  const { rootRef, uploadInputRef, uploadDirInputRef, onUploadPicked, onUploadDirPicked, dialog, uploadOverlay } =
+    useFileExplorer();
+
+  // `webkitdirectory` is not a React DOM attribute, and setting it on the element avoids both a cast
+  // and an unknown-prop warning — `HTMLInputElement` declares it, so this stays fully typed.
+  useEffect(() => {
+    if (uploadDirInputRef.current) uploadDirInputRef.current.webkitdirectory = true;
+  }, [uploadDirInputRef]);
 
   return (
     <div className={`${styles.root} ${chrome === 'flush' ? styles.flush : ''}`} ref={rootRef}>
       {children}
 
-      <input ref={uploadInputRef} type="file" hidden onChange={onUploadPicked} />
+      {/* The multi-file picker stays first: it is the one an assembly reaches for by element type. */}
+      <input ref={uploadInputRef} type="file" multiple hidden onChange={onUploadPicked} />
+      <input ref={uploadDirInputRef} type="file" multiple hidden onChange={onUploadDirPicked} />
 
+      {uploadOverlay}
       {dialog}
     </div>
   );
@@ -146,6 +157,10 @@ export function FileExplorerToolbar(): ReactNode {
     actNewFile,
     actNewFolder,
     actUpload,
+    actUploadFolder,
+    openUploadMenu,
+    uploadMenu,
+    closeUploadMenu,
     actDownload,
     actRename,
     actDelete,
@@ -153,7 +168,8 @@ export function FileExplorerToolbar(): ReactNode {
     setClipboard,
     bumpRefresh,
   } = ctx;
-  const { saveFile, mkdir, upload, download, move, remove } = providers;
+  const { saveFile, mkdir, upload, uploadMany, download, move, remove } = providers;
+  const canUpload = !!upload || !!uploadMany;
 
   if (openFile) return null;
 
@@ -182,8 +198,8 @@ export function FileExplorerToolbar(): ReactNode {
       <button
         type="button"
         className={styles.toolBtn}
-        onClick={() => actUpload(targetDir)}
-        disabled={!upload}
+        onClick={event => openUploadMenu(event, targetDir)}
+        disabled={!canUpload}
         aria-label={t(locale, 'fileExplorer.upload')}
         title={t(locale, 'fileExplorer.upload')}
       >
@@ -260,13 +276,61 @@ export function FileExplorerToolbar(): ReactNode {
       >
         <RefreshIcon size={16} />
       </button>
+
+      {/*
+        "Files or folder?" — asked rather than assumed, because the two pickers can see different
+        things: a folder pick reaches every file in the tree but no empty folder, and a file pick sees
+        no folders at all. Reusing `ContextMenu` keeps it one hover shallower than a submenu would.
+      */}
+      {uploadMenu && (
+        <ContextMenu
+          x={uploadMenu.x}
+          y={uploadMenu.y}
+          sections={[
+            [
+              {
+                key: 'upload-files',
+                label: t(locale, 'fileExplorer.uploadFiles'),
+                icon: <UploadIcon size={15} />,
+                onSelect: () => actUpload(uploadMenu.dir),
+              },
+              {
+                key: 'upload-folder',
+                label: t(locale, 'fileExplorer.uploadFolder'),
+                icon: <FolderUpIcon size={15} />,
+                onSelect: () => actUploadFolder(uploadMenu.dir),
+              },
+            ],
+          ]}
+          onClose={closeUploadMenu}
+        />
+      )}
     </div>
   );
 }
 
-/** Body container — the tree and the single-file view share this slot. */
+/**
+ * Body container — the tree and the single-file view share this slot, and it is the drop target for
+ * files dragged in from outside the browser (F-031 AC3).
+ *
+ * The highlight covers the whole container rather than the row under the cursor, deliberately: a
+ * per-row highlight would suggest dropping onto a particular node, and dragging **within** the tree
+ * is not supported at all (moving is cut-and-paste). Dropping is disabled while a file is open, where
+ * there is no tree on screen to drop onto.
+ */
 export function FileExplorerBody({ children }: { children: ReactNode }): ReactNode {
-  return <div className={styles.body}>{children}</div>;
+  const { dropping, dropZoneProps, openFile, providers, targetDir, locale } = useFileExplorer();
+  const droppable = !openFile && (!!providers.upload || !!providers.uploadMany);
+  const zone = droppable ? dropZoneProps : undefined;
+
+  return (
+    <div className={`${styles.body} ${dropping && droppable ? styles.bodyDropping : ''}`} {...zone}>
+      {children}
+      {dropping && droppable && (
+        <div className={styles.dropOverlay}>{t(locale, 'fileExplorer.dropToUpload', { dir: targetDir })}</div>
+      )}
+    </div>
+  );
 }
 
 /** The single-file view; renders nothing until a file is opened. */
@@ -314,9 +378,11 @@ function buildSections(ctx: FileExplorerContextValue, target: MenuTarget): Conte
     actDelete,
     actPaste,
     actUpload,
+    actUploadFolder,
     actDownload,
   } = ctx;
-  const { saveFile, mkdir, remove, move, upload, download } = providers;
+  const { saveFile, mkdir, remove, move, upload, uploadMany, download } = providers;
+  const canUpload = !!upload || !!uploadMany;
   const root = rootPath ?? '/';
 
   const refreshSec: ContextMenuItem[] = [
@@ -411,11 +477,18 @@ function buildSections(ctx: FileExplorerContextValue, target: MenuTarget): Conte
           disabled: !mkdir,
         },
         {
-          key: 'upload',
-          label: t(locale, 'fileExplorer.upload'),
+          key: 'upload-files',
+          label: t(locale, 'fileExplorer.uploadFiles'),
           icon: <UploadIcon size={15} />,
           onSelect: () => actUpload(e.path),
-          disabled: !upload,
+          disabled: !canUpload,
+        },
+        {
+          key: 'upload-folder',
+          label: t(locale, 'fileExplorer.uploadFolder'),
+          icon: <FolderUpIcon size={15} />,
+          onSelect: () => actUploadFolder(e.path),
+          disabled: !canUpload,
         },
         {
           key: 'paste',

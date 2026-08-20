@@ -69,6 +69,15 @@ export function CircleAlertIcon(props: IconProps): ReactNode {
   );
 }
 
+export function CircleCheckIcon(props: IconProps): ReactNode {
+  return (
+    <svg {...svgProps(props)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
 export function FolderIcon(props: IconProps): ReactNode {
   return (
     <svg {...svgProps(props)}>
@@ -102,6 +111,16 @@ export function FileIcon(props: IconProps): ReactNode {
     <svg {...svgProps(props)}>
       <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
       <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+    </svg>
+  );
+}
+
+export function FileWarningIcon(props: IconProps): ReactNode {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
     </svg>
   );
 }
@@ -152,6 +171,16 @@ export function UploadIcon(props: IconProps): ReactNode {
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" x2="12" y1="3" y2="15" />
+    </svg>
+  );
+}
+
+export function FolderUpIcon(props: IconProps): ReactNode {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+      <path d="M12 10v6" />
+      <path d="m9 13 3-3 3 3" />
     </svg>
   );
 }
