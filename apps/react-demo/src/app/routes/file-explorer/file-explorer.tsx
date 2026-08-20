@@ -413,12 +413,22 @@ export function FileExplorer(): ReactNode {
           aside（切進 chat 殼內、不 fixed），dropdown 由 <code>launchedSandboxes$</code>（metadata mock）驅動；工具列 /
           右鍵選單透過真實 fs mock 端點（mkdir / item / all / copy / move）操作。
         </p>
+        <p style={{ fontSize: '0.85rem', color: '#666' }}>
+          帶 <code>enableUpload</code> + <code>enableDocumentUpload</code>（Odin 就是這樣掛的），所以 chat 殼本身也是個
+          drop target：檔案拖進聊天區會變成 composer 附件。兩個都要開，否則 <code>.txt</code> 先被 MIME
+          檢查擋掉，就走不到附件那一步。issue #446 的檢查點是拖進 aside
+          <strong>不會兩件事都發生</strong>——面板任何位置（工具列、header、上傳進度面板都算）放下只會上傳，chatbot 的
+          全域「拖曳檔案到此」浮層不會跟面板自己的「上傳到 …」高亮同時亮。
+        </p>
         <div style={{ height: '560px' }}>
           <Chatbot
             title="File Explorer（builtin）"
             config={{ botProviderEndpoint: MOCK_ENDPOINT }}
             customChannelId="file-explorer-demo"
             fileExplorer="builtin"
+            enableUpload
+            enableDocumentUpload
+            locale="zh-TW"
             theme={WIDE_CHATBOT_THEME}
           />
         </div>
