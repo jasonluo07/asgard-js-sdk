@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `REVIEW-064`
-- Status: `draft`
+- Status: `ready`
 - BUILD Task: `BUILD-064`
 - Reviewed commit: `<git commit SHA>`
 - Reviewed branch: `<branch-name>`

@@ -19,6 +19,9 @@ export { FileExplorerPanel } from './file-explorer-panel';
 export type { FileExplorerPanelProps, FsListDir } from './file-explorer-panel';
 export { FileView } from './file-view';
 export type { FileViewProps } from './file-view';
+// The item shape hosts return from an explorer's extra-actions hook (BUILD-064). Only the type is public:
+// the menu itself is rendered by the explorer, so a host describes items rather than mounting one.
+export type { ContextMenuItem } from './context-menu';
 export { createSandboxFsProviders } from './create-sandbox-fs-providers';
 export type { SandboxFsProviders, SandboxFsProvidersOptions } from './create-sandbox-fs-providers';
 export type {

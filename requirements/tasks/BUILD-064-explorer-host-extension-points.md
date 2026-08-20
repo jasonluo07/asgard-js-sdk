@@ -3,7 +3,7 @@
 ## Meta
 
 - Task ID: `BUILD-064`
-- Status: `draft`
+- Status: `done`
 - Issue: [asgard-sdk-pm#82](https://github.com/asgard-ai-platform/asgard-sdk-pm/issues/82)（需求源為消費端 Odin 的 [odin-pm#472 [F-011] Syncer](https://github.com/asgard-ai-platform/asgard-odin-pm/issues/472)）
 - Source spec: `references/asgard-sdk-pm/tracking/asgard-js-sdk/features/F-025-sourceset-file-explorer-元件.md`（**F-025 的 AC 不因本 task 改動**，見 Brief 末段；需求來自 Odin F-011 的 AC，出處為決議 [`2026-08-19-syncer-in-drive`](https://github.com/asgard-ai-platform/asgard-odin-pm/blob/32c1241c5b9b2d0a2fde1e53e1bcdfe94736d984/docs/decisions/2026-08-19-syncer-in-drive.md) 與視覺原型 [asgard-chat-kit-prototype `SourceSetFileExplorer.tsx`](https://github.com/asgard-ai-platform/asgard-chat-kit-prototype/blob/b6f9d0ed1697b0713ee258192a5fb5269166112d/src/SourceSetFileExplorer.tsx#L84-L88)，chat-kit PR #19）
 - Complexity: `S`
@@ -88,22 +88,64 @@ EARS form: `When <event/condition>[, while <state>], the system shall <observabl
 
 Run in order; each task maps to the R# it satisfies.
 
-- [ ] T1: Add the two optional props to `SourceSetFileExplorerProps` with doc comments stating the contracts R2 / R3 / R5 encode.
-- [ ] T2 (R1–R4): Append the host section inside `menuSections` — `extraEntryActions` is skipped entirely while `readOnly`; the existing trailing `.filter(section => section.length > 0)` already drops it when it returns nothing.
-- [ ] T3 (R5, R6): Thread `entryBadge` through `SourceSetTreeProps` into the row, rendered after `styles.label`; add a `.rowBadge` class (semantic tokens only, §4.2 / F-025 R16) that reserves no space when absent.
-- [ ] T4 (R7): Re-export `ContextMenuItem` from `components/file-explorer/index.ts` (currently only `FsEntry` is public) so it reaches the `@asgard-js/react` entry.
-- [ ] T5 (R8): Confirm the no-props path is untouched — `chatbot/file-explorer/` diff stays empty, existing specs still pass unchanged.
-- [ ] T6 (R9): Extend `source-set-explorer.spec.tsx` with a `BUILD-064` group covering R1–R6, wire the two props into the react-demo route for manual inspection, then run `npm run lint:packages`, `npm run format:check`, `npm run typecheck`, `npm run test:react`, `npm run build:core && npm run build:react`.
+- [x] T1: Add the two optional props to `SourceSetFileExplorerProps` with doc comments stating the contracts R2 / R3 / R5 encode.
+- [x] T2 (R1–R4): Append the host section inside `menuSections` — `extraEntryActions` is skipped entirely while `readOnly`; the existing trailing `.filter(section => section.length > 0)` already drops it when it returns nothing.
+- [x] T3 (R5, R6): Thread `entryBadge` through `SourceSetTreeProps` into the row, rendered after `styles.label`; add a `.rowBadge` class (semantic tokens only, §4.2 / F-025 R16) that reserves no space when absent.
+- [x] T4 (R7): Re-export `ContextMenuItem` from `components/file-explorer/index.ts` (currently only `FsEntry` is public) so it reaches the `@asgard-js/react` entry.
+- [x] T5 (R8): Confirm the no-props path is untouched — `chatbot/file-explorer/` diff stays empty, existing specs still pass unchanged.
+- [x] T6 (R9): Extend `source-set-explorer.spec.tsx` with a `BUILD-064` group covering R1–R6, wire the two props into the react-demo route for manual inspection, then run `npm run lint:packages`, `npm run format:check`, `npm run typecheck`, `npm run test:react`, `npm run build:core && npm run build:react`.
 
 ---
 
 ## Coverage
 
-Use Cases: [filled during build]
-Files: [filled during build]
+Use Cases: `R1`–`R9` — all nine verified, `R1`–`R7` by Vitest (`BUILD-064 — host extension points`, 7 cases) and
+`R1`–`R6` / `R8` again by hand in the react-demo at both mount widths.
+
+Files:
+
+| File (package)                                                                       | Change                                                                   |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `packages/react/src/components/source-set-explorer/source-set-file-explorer.tsx`     | Both props (T1) and the host menu section inside `menuSections` (T2)     |
+| `packages/react/src/components/source-set-explorer/tree.tsx`                         | `entryBadge` on `SourceSetTreeProps`, rendered after `styles.label` (T3) |
+| `packages/react/src/components/source-set-explorer/source-set-explorer.module.scss`  | `.rowBadge` slot — layout only, no colour of its own (T3)                |
+| `packages/react/src/components/file-explorer/index.ts`                               | `export type { ContextMenuItem }`, +3 lines, nothing else (T4)           |
+| `packages/react/src/components/source-set-explorer/source-set-explorer.spec.tsx`     | `BUILD-064` group, 7 cases over R1–R7 (T6)                               |
+| `apps/react-demo/src/app/routes/source-set-explorer/source-set-explorer.tsx`         | A "host extension points" switch that plays Odin's Drive Files tab (T6)  |
+| `apps/react-demo/src/app/routes/source-set-explorer/source-set-explorer.module.scss` | `.pulledBadge` — the demo's own marker, styled host-side (T6)            |
+
+`packages/react/src/components/chatbot/` and `packages/core/` are untouched (T5).
+
+---
+
+## Decisions
+
+- **`extraEntryActions` takes `FsEntry | null`, not `FsEntry`.** `asgard-sdk-pm#82` says the shape follows the
+  prototype, and the prototype writes `(entry: FsEntry)`; `R2` above widens it. Confirmed 2026-08-20 to keep
+  `R2`: the tree's background is right-clickable with nothing selected, so `null` is a state that actually
+  occurs, and narrowing to `FsEntry` later leaves every host compiling while widening later would not (§1.7).
+  Consumers null-check — Odin's `entry.isDir` becomes `entry?.isDir`.
+- **The badge sits on the row's trailing edge (`margin-left: auto`), not immediately after the name.** F-011's
+  wording is "名稱右側", which at full-bleed width (the way Odin mounts this) puts ~950px between the name and
+  the marker. Both were rendered side by side and the prototype's placement was confirmed 2026-08-20: markers
+  line up in one column, which is what makes "which folders have a source?" scannable.
+- **The `Relevant Rules` row naming `packages/react/src/components/chatbot/file-explorer/` is a stale path** —
+  no such directory exists; the shared explorer lives at `packages/react/src/components/file-explorer/`, which
+  T4 deliberately touches. The intent (leave the in-sandbox explorer's behavior alone) holds: the only change
+  there is a type re-export.
 
 ---
 
 ## Execution Log / Change Log
 
 - 2026-08-20: BUILD task created as an F-025 increment, driven by odin-pm#472 (Status: `draft`).
+- 2026-08-20: Implemented T1–T6 (Status: `in-progress` → `done`). Static gates green — `lint:packages` 0 errors
+  (5 pre-existing warnings), `format:check` clean apart from the untracked local `CLAUDE.local.md`, `typecheck`
+  green over core + react + react-demo (the demo resolves `@asgard-js/react` to source, so its
+  `import type { ContextMenuItem }` is a real check on T4), `test:packages` 553 passed (7 new),
+  `build:core` + `build:react` clean and both props present in the emitted `.d.ts`.
+- 2026-08-20: Functional walk in the react-demo at 320px and full-bleed — host section renders between
+  `Delete` and `Refresh` as its own separated group, the mounted folder's item is greyed as
+  `Pulled by nightly-docs`, picking `Pull from external source` on an unmarked folder marks it in both mounts,
+  `readOnly` drops the section while the markers stay, and with both props off every row is back to three
+  children with zero badge slots in the document.

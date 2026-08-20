@@ -85,3 +85,13 @@
   flex: 1;
   min-height: 0;
 }
+
+// The badge the route hands to `entryBadge`. Deliberately styled here rather than in the SDK: the slot is
+// layout only, so how a marker looks is the host's call.
+.pulledBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: #4f46e5;
+  cursor: help;
+}

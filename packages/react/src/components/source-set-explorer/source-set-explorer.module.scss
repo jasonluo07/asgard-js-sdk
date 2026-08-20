@@ -176,6 +176,16 @@
   white-space: nowrap;
 }
 
+// The host's badge slot. `margin-left: auto` parks it on the row's trailing edge (as the prototype does)
+// and `flex: none` keeps it whole, so a long name truncates before the marker does. Layout only — colour
+// and size come from whatever the host renders inside.
+.rowBadge {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  margin-left: auto;
+}
+
 // Per-node status line: the paging spinner, the empty-directory note, a listing error, and F-026's
 // shortfall notice all sit here so they line up with the entries they describe.
 .nodeStatus {

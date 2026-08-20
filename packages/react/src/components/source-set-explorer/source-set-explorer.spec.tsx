@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { t } from '../../i18n';
+import type { ContextMenuItem } from '../file-explorer';
+import type { FsEntry } from '../file-explorer/types';
 import { SourceSetFileExplorer } from './source-set-file-explorer';
 
 /**
@@ -393,5 +396,179 @@ describe('F-025 R3 — auth reaches the volume the way the host chose', () => {
 
     expect(seen[0]).toMatchObject({ Authorization: 'Bearer t' });
     expect(seen[0]).not.toHaveProperty('X-API-KEY');
+  });
+});
+
+describe('BUILD-064 — host extension points', () => {
+  /** Every menu item's label, in the order the menu lays them out. */
+  function menuLabels(): (string | null)[] {
+    return within(screen.getByRole('menu'))
+      .getAllByRole('menuitem')
+      .map(item => item.textContent);
+  }
+
+  function rows(): HTMLElement[] {
+    return screen.getAllByRole('treeitem');
+  }
+
+  function rowNamed(name: string): HTMLElement {
+    const found = rows().find(row => row.textContent?.startsWith(name));
+    if (!found) throw new Error(`no row for ${name}`);
+
+    return found;
+  }
+
+  it('renders the host section between the mutating pair and refresh (R1)', async () => {
+    installVolume(SIMPLE);
+    render(
+      <SourceSetFileExplorer
+        sourceSetEndpoint={ENDPOINT}
+        apiKey="k"
+        extraEntryActions={() => [{ key: 'pull', label: 'Pull from external source', onSelect: (): void => undefined }]}
+      />,
+    );
+
+    fireEvent.contextMenu(await screen.findByText('a.txt'));
+    await screen.findByRole('menu');
+
+    expect(menuLabels()).toEqual([
+      ...ACTION_ORDER.slice(0, -1).map(key => t('en-US', key)),
+      'Pull from external source',
+      t('en-US', 'sourceSetExplorer.refresh'),
+    ]);
+  });
+
+  it('passes the selected entry, and null when nothing is selected (R2)', async () => {
+    installVolume(SIMPLE);
+    const seen: (FsEntry | null)[] = [];
+    render(
+      <SourceSetFileExplorer
+        sourceSetEndpoint={ENDPOINT}
+        apiKey="k"
+        extraEntryActions={entry => {
+          seen.push(entry);
+
+          return [
+            {
+              key: 'host',
+              label: entry ? `Act on ${entry.name}` : 'Act on the volume',
+              onSelect: (): void => undefined,
+            },
+          ];
+        }}
+      />,
+    );
+
+    // Right-clicking the tree itself never selected anything, so the host is asked about `null`.
+    fireEvent.contextMenu(await screen.findByRole('tree'));
+    expect(menuLabels()).toContain('Act on the volume');
+    expect(seen).toContain(null);
+
+    // A right-click on a row selects it first, which is the target every built-in action resolves to.
+    fireEvent.contextMenu(screen.getByText('a.txt'));
+
+    await waitFor(() => expect(menuLabels()).toContain('Act on a.txt'));
+    expect(seen.at(-1)).toMatchObject({ path: 'a.txt', isDir: false });
+  });
+
+  it('drops the whole host section while readOnly (R3)', async () => {
+    installVolume(SIMPLE);
+    render(
+      <SourceSetFileExplorer
+        sourceSetEndpoint={ENDPOINT}
+        apiKey="k"
+        readOnly
+        extraEntryActions={() => [{ key: 'pull', label: 'Pull from external source', onSelect: (): void => undefined }]}
+      />,
+    );
+
+    fireEvent.contextMenu(await screen.findByText('a.txt'));
+
+    expect(menuLabels()).toEqual([t('en-US', 'sourceSetExplorer.download'), t('en-US', 'sourceSetExplorer.refresh')]);
+  });
+
+  it('renders a disabled host item inert but visible (R4)', async () => {
+    installVolume(SIMPLE);
+    const onSelect = vi.fn();
+    render(
+      <SourceSetFileExplorer
+        sourceSetEndpoint={ENDPOINT}
+        apiKey="k"
+        extraEntryActions={() => [{ key: 'pull', label: 'Pulled by nightly-docs', disabled: true, onSelect }]}
+      />,
+    );
+
+    fireEvent.contextMenu(await screen.findByText('a.txt'));
+
+    const item = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Pulled by nightly-docs' });
+    expect((item as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(item);
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).not.toBeNull();
+  });
+
+  it('puts the badge after the name, keeps it out of the row click path, and shows it read-only too (R5)', async () => {
+    installVolume(SIMPLE);
+    const badge = (entry: FsEntry): ReactNode => (entry.isDir ? <span data-testid="badge">synced</span> : null);
+    const { unmount } = render(<SourceSetFileExplorer sourceSetEndpoint={ENDPOINT} apiKey="k" entryBadge={badge} />);
+
+    await screen.findByText('a.txt');
+    const dirRow = rowNamed('notes');
+    const marker = screen.getByTestId('badge');
+
+    // After the name, inside the row, and only on the directory the host marked.
+    expect(dirRow.contains(marker)).toBe(true);
+    expect(dirRow.lastElementChild).toBe(marker.parentElement);
+    expect(dirRow.children.length).toBe(4);
+    expect(rowNamed('a.txt').querySelector('[data-testid="badge"]')).toBeNull();
+
+    // Clicking it is a click on the row: the row still selects (and a directory still expands).
+    fireEvent.click(marker);
+
+    await waitFor(() => expect(dirRow.getAttribute('aria-selected')).toBe('true'));
+    expect(await screen.findByText('todo.md')).toBeTruthy();
+
+    unmount();
+    installVolume(SIMPLE);
+    render(<SourceSetFileExplorer sourceSetEndpoint={ENDPOINT} apiKey="k" readOnly entryBadge={badge} />);
+
+    await screen.findByText('a.txt');
+    expect(screen.getByTestId('badge')).toBeTruthy();
+  });
+
+  it('leaves the row exactly as it was when there is no badge to show (R6)', async () => {
+    installVolume(SIMPLE);
+    const { unmount } = render(<SourceSetFileExplorer sourceSetEndpoint={ENDPOINT} apiKey="k" />);
+
+    await screen.findByText('a.txt');
+    // chevron, icon, label — the shape a row has had since F-025.
+    const bare = rows().map(row => row.children.length);
+    expect(bare).toEqual([3, 3]);
+
+    unmount();
+    installVolume(SIMPLE);
+    render(<SourceSetFileExplorer sourceSetEndpoint={ENDPOINT} apiKey="k" entryBadge={() => null} />);
+
+    await screen.findByText('a.txt');
+    expect(rows().map(row => row.children.length)).toEqual(bare);
+  });
+
+  it('types host items through the public ContextMenuItem shape (R7)', () => {
+    // A compile-time check: the type a host imports has to describe what the prop accepts. If either
+    // drifts, `npm run typecheck` fails here rather than in a consumer app.
+    const items: ContextMenuItem[] = [
+      {
+        key: 'pull',
+        label: 'Pull from external source',
+        disabled: true,
+        danger: false,
+        onSelect: (): void => undefined,
+      },
+    ];
+    const hook: NonNullable<Parameters<typeof SourceSetFileExplorer>[0]['extraEntryActions']> = () => items;
+
+    expect(hook(null)).toHaveLength(1);
   });
 });
