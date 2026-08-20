@@ -234,3 +234,5 @@ REVIEW-060 留了兩則 Minor 給 Cycle 2：`AbortSignal` 取消（收合大目�
 | `REVIEW-062` | Review: narrow the default content column               | —        | done   | [REVIEW-062-narrow-content-max-width.md](./REVIEW-062-narrow-content-max-width.md)                       |
 | `BUILD-063`  | Close the error bubble follow-ups                       | Normal   | done   | [BUILD-063-error-bubble-follow-ups.md](./BUILD-063-error-bubble-follow-ups.md)                           |
 | `REVIEW-063` | Review: error bubble follow-ups                         | —        | done   | [REVIEW-063-error-bubble-follow-ups.md](./REVIEW-063-error-bubble-follow-ups.md)                         |
+| `BUILD-064`  | Host extension points on the SourceSet File Explorer    | High     | draft  | [BUILD-064-explorer-host-extension-points.md](./BUILD-064-explorer-host-extension-points.md)             |
+| `REVIEW-064` | Review: host extension points on the SourceSet Explorer | —        | draft  | [REVIEW-064-explorer-host-extension-points.md](./REVIEW-064-explorer-host-extension-points.md)           |
