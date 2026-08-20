@@ -181,7 +181,7 @@
 // onto a specific node is not a gesture this explorer has (moving is cut-and-paste), so suggesting it
 // would be a lie.
 .bodyDropping {
-  outline: 1px dashed var(--asg-color-primary, currentColor);
+  outline: 1px dashed var(--asg-color-primary, #4767eb);
   outline-offset: -2px;
 }
 
