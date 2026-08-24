@@ -2,6 +2,7 @@ import { Observer } from 'rxjs';
 import { EventType } from '../constants/enum';
 import Conversation from '../lib/conversation';
 import { IAsgardServiceClient } from './client';
+import { MessageBlob } from './blob';
 import { ErrorMessage, Message } from './sse-response';
 import { Subagent, SubagentTerminalStatus } from './subagent';
 import { Task } from './task';
@@ -141,6 +142,12 @@ export type ConversationUserMessage = {
   messageId: string;
   text: string;
   blobIds?: string[];
+  /**
+   * Attachment metadata carried by a replayed `message.user` (#448). `filePreviewUrls` /
+   * `documentNames` below are the live-send equivalents — a consumer hands those in at `sendMessage`
+   * time and they do not survive a reload, so on a replayed turn this is the only source.
+   */
+  blobs?: MessageBlob[];
   filePreviewUrls?: string[];
   documentNames?: string[];
   /** The client-sent id echoed back on GET rejoin — the dedup key vs the optimistic bubble (F-014). */

@@ -107,8 +107,8 @@ export function ComposerRoute(): ReactNode {
         </div>
         <p className={styles.hint}>
           送出鈕在沒有內容時是 disabled（不再被語音鈕取代）；打字後才亮起，串流中變成停止鈕。📎 一次可選圖片＋
-          文件，兩者會同時 pending（互斥已解除）。跑的是本地 /mock-asgard 串流，mock 沒有 blob 端點，所以附件會
-          走到錯誤態 —— 預覽版面（縮圖 / chips）與同時 pending 仍可驗證。
+          文件，兩者會同時 pending（互斥已解除）。跑的是本地 /mock-asgard 串流，blob 端點也已經 mock 起來 （#448
+          補的），所以附件會真的上傳成功、跟著訊息送出去。
         </p>
       </div>
 

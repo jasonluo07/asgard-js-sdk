@@ -2,7 +2,9 @@ import { CSSProperties, ReactNode, useMemo, useState } from 'react';
 import { ConversationUserMessage } from '@asgard-js/core';
 import { TemplateBox } from '../template-box';
 import { Time } from '../time';
+import { useAsgardTemplateContext } from '../../../context/asgard-template-context';
 import { useAsgardThemeContext } from '../../../context/asgard-theme-context';
+import { resolveReplayAttachmentChips, UserAttachmentChip } from './user-attachment-chip';
 import clsx from 'clsx';
 import styles from './user-image-template.module.scss';
 
@@ -16,6 +18,7 @@ interface UserImageTemplateProps {
 export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNode {
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const theme = useAsgardThemeContext();
+  const { locale = 'en-US' } = useAsgardTemplateContext();
 
   const textStyles = useMemo<CSSProperties>(
     () => ({
@@ -34,6 +37,15 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
   );
 
   const rootStyle = theme?.template?.TextMessageTemplate?.style;
+
+  // #448 — the replay path. Only reached when neither live field is present: a consumer that handed in
+  // previews or document names has already drawn this turn's attachments, and drawing them again from the
+  // blob metadata would double every chip on the message the user just sent.
+  const hasLivePreviews = Boolean(message.message.filePreviewUrls?.length || message.message.documentNames?.length);
+  const replayChips = useMemo(
+    () => (hasLivePreviews ? [] : resolveReplayAttachmentChips(message.message, locale)),
+    [hasLivePreviews, message.message, locale],
+  );
 
   return (
     <>
@@ -60,6 +72,10 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
             </div>
           )}
 
+          {/* The live document card stays hand-written rather than folding into <UserAttachmentChip>: it is
+              what a consumer sees the moment they hit send, and leaving it byte-identical is what makes
+              "the send path is unchanged" checkable instead of argued. The two shapes are near-duplicates
+              on purpose — two occurrences, and the one that matters is frozen. */}
           {message.message.documentNames && message.message.documentNames.length > 0 && (
             <div className={styles.documents_container}>
               {message.message.documentNames.map((name, index) => (
@@ -86,6 +102,14 @@ export function UserImageTemplate({ message }: UserImageTemplateProps): ReactNod
                     {name}
                   </span>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {replayChips.length > 0 && (
+            <div className={styles.documents_container}>
+              {replayChips.map(chip => (
+                <UserAttachmentChip key={chip.key} chip={chip} style={documentCardStyles} />
               ))}
             </div>
           )}

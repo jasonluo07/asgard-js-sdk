@@ -58,7 +58,10 @@ export function ConversationMessageRenderer(props: ConversationMessageRendererPr
 
   const renderDefaultContent = useCallback((): ReactNode => {
     if (message.type === 'user') {
-      if (message.blobIds && message.blobIds.length > 0) {
+      // #448 — either half means "this turn had attachments": a live send fills `blobIds`, and a replayed
+      // frame carries `blobs` beside them. Routing on `blobIds` alone would leave a frame that ever ships
+      // metadata without ids falling through to the plain text template, silently dropping the chips.
+      if (message.blobIds?.length || message.blobs?.length) {
         return <UserImageTemplate message={{ type: 'user', message }} />;
       }
 

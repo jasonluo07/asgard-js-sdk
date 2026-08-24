@@ -440,6 +440,7 @@ export default class Conversation implements IConversation {
       messageId: data.messageId,
       text: data.text,
       blobIds: data.blobIds,
+      blobs: data.blobs,
       customMessageId: data.customMessageId,
       identityHint: data.identityHint,
       time: new Date(),

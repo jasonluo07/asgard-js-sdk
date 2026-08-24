@@ -44,6 +44,18 @@ function asgardSseMockPlugin(): Plugin {
         }
       });
 
+      // Blob upload (`POST /blob`) — what `client.uploadFile()` calls when the composer has a pending
+      // attachment. Mounted so the live send path completes without a real backend.
+      server.middlewares.use('/mock-asgard/blob', async (req, res, next) => {
+        try {
+          const { handleMockBlobUpload } = await import('./src/mock-server/sse-mock');
+
+          await handleMockBlobUpload(req, res);
+        } catch (err) {
+          next(err as Error);
+        }
+      });
+
       // F-021 — sandbox fs mock for the /file-explorer demo: list/file/stat + mutations
       // (mkdir/item/all/copy/move) + the `watch` SSE that drives the FileView's watch-and-reload.
       server.middlewares.use('/mock-asgard/sandbox', async (req, res, next) => {

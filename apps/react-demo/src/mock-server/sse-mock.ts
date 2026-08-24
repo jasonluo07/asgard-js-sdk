@@ -792,6 +792,17 @@ async function handleCanvasMock(res: ServerResponse, payload: ParsedPayload, cus
 // by "typing something else" (UC-050).
 // ---------------------------------------------------------------------------------------------------
 
+// #448 — the `blobs` entry the backend snapshots on `asgard.message.user`: renderable attachment
+// metadata, no URL (a presigned link expires and cannot live in a durable record). `fileName` is null
+// when the upload carried no name.
+interface MockMessageBlob {
+  blobId: string;
+  fileType: 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'AUDIO' | 'BINARY';
+  fileName: string | null;
+  size: number;
+  mime: string;
+}
+
 interface MockQuestion {
   question: string;
   header: string;
@@ -1496,6 +1507,21 @@ async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerRespo
     eventType: 'asgard.message.user',
     fact: { ...emptyFact(), messageUser: { messageId, text, customMessageId, blobIds: [] } },
   });
+  // #448 — the attachment half of a replayed user turn. `blobs` is the renderable metadata; `blobIds` is
+  // what an older transcript row has on its own (no backfill), which is why the two are passed separately.
+  const userAttachmentFrame = (
+    messageId: string,
+    text: string,
+    blobIds: string[],
+    blobs?: MockMessageBlob[],
+  ): object => ({
+    ...header,
+    eventType: 'asgard.message.user',
+    fact: {
+      ...emptyFact(),
+      messageUser: { messageId, text, customMessageId: `c-${messageId}`, blobIds, ...(blobs ? { blobs } : {}) },
+    },
+  });
   const botComplete = (messageId: string, text: string): object => ({
     ...header,
     eventType: 'asgard.message.complete',
@@ -1565,6 +1591,71 @@ async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerRespo
     return;
   }
 
+  // #448 — a transcript whose user turns carried attachments. Three shapes, in the order that matters:
+  // a pure-attachment turn (empty text — the one that used to vanish entirely), an attachment+text turn,
+  // and a legacy row with ids and no metadata, which is what every pre-fix conversation looks like
+  // forever. Matched by prefix so the route can mount two shells on their own channel ids.
+  if (customChannelId.startsWith('attachment-rejoin-demo')) {
+    const replay: { event: object; id: string }[] = [
+      {
+        event: userAttachmentFrame(
+          'u-att-1',
+          '',
+          ['2091078155488989184', '2091078159192559616'],
+          [
+            {
+              blobId: '2091078155488989184',
+              fileType: 'DOCUMENT',
+              fileName: 'quarterly.txt',
+              size: 39,
+              mime: 'text/plain',
+            },
+            { blobId: '2091078159192559616', fileType: 'IMAGE', fileName: null, size: 70, mime: 'image/png' },
+          ],
+        ),
+        id: 'seq:1',
+      },
+      { event: botComplete('a-att-1', '收到，我看到一份 quarterly.txt 和一張圖片。'), id: 'seq:2' },
+      {
+        event: userAttachmentFrame(
+          'u-att-2',
+          '這張圖也一起看',
+          ['2091078160000000000'],
+          [
+            {
+              blobId: '2091078160000000000',
+              fileType: 'IMAGE',
+              fileName: 'revenue-chart.png',
+              size: 20480,
+              mime: 'image/png',
+            },
+          ],
+        ),
+        id: 'seq:3',
+      },
+      { event: botComplete('a-att-2', '兩者都納入了。'), id: 'seq:4' },
+      { event: userAttachmentFrame('u-att-3', '', ['2087428865445072896']), id: 'seq:5' },
+      { event: botComplete('a-att-3', '（這一則是舊 transcript 列：只有 blob id，沒有 metadata。）'), id: 'seq:6' },
+    ];
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    });
+
+    for (const frame of replay) {
+      await sleep(60);
+      writeCursorEvent(res, frame.event, frame.id);
+    }
+
+    await sleep(40);
+    writeEvent(res, { ...header, eventType: 'asgard.run.done', fact: { ...emptyFact(), runDone: {} } });
+    res.end();
+
+    return;
+  }
+
   // Collapsed history: two turns. The first user turn echoes customMessageId `c-opt-1` so it de-dups
   // against the demo's optimistic bubble; the second (`c-2`) has no optimistic match.
   const transcript: { event: object; id: string }[] = [
@@ -1596,6 +1687,60 @@ async function handleMockTranscriptRejoin(req: IncomingMessage, res: ServerRespo
 // Default is 404 so every other demo channel keeps its pre-F-015 mount behavior (404 → RESET_CHANNEL).
 // The /join-init route uses the scoped ids below to drive the three branches (+ the error fallback).
 // ---------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------
+// Blob upload. `client.uploadFile()` posts one multipart file per request to `${base}/blob` and reads
+// back the `BlobData` the composer needs to turn a pending attachment into a `blobId`. Without this the
+// live send path cannot complete in the demo at all, so the "what the sender sees" half of #448 — image
+// previews and document cards, drawn from fields the consumer supplies — was not checkable here.
+// ---------------------------------------------------------------------------------------------------
+
+function rawBody(req: IncomingMessage): Promise<Buffer> {
+  return new Promise(resolve => {
+    const chunks: Buffer[] = [];
+
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', () => resolve(Buffer.alloc(0)));
+  });
+}
+
+/** Enough multipart parsing for a mock: the file part's declared name, type, and byte length. */
+function describeUploadedFile(body: Buffer): { fileName: string | null; mime: string; size: number } {
+  const head = body.subarray(0, 2048).toString('latin1');
+  const fileName = /filename="([^"]*)"/.exec(head)?.[1] ?? null;
+  const mime = /Content-Type:\s*([^\r\n]+)/i.exec(head)?.[1]?.trim() ?? 'application/octet-stream';
+
+  return { fileName: fileName || null, mime, size: body.length };
+}
+
+function fileTypeOf(mime: string): MockMessageBlob['fileType'] {
+  if (mime.startsWith('image/')) return 'IMAGE';
+
+  if (mime.startsWith('video/')) return 'VIDEO';
+
+  if (mime.startsWith('audio/')) return 'AUDIO';
+
+  if (mime.startsWith('text/') || mime.startsWith('application/')) return 'DOCUMENT';
+
+  return 'BINARY';
+}
+
+export async function handleMockBlobUpload(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const body = await rawBody(req);
+  const { fileName, mime, size } = describeUploadedFile(body);
+  const blob: MockMessageBlob & { channelId: string } = {
+    channelId: 'mock-channel',
+    blobId: randomUUID(),
+    fileType: fileTypeOf(mime),
+    fileName,
+    size,
+    mime,
+  };
+
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ isSuccess: true, data: [blob], error: null, errorCode: null }));
+}
 
 export async function handleMockChannelMetadata(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '', 'http://localhost');
@@ -1660,6 +1805,15 @@ export async function handleMockChannelMetadata(req: IncomingMessage, res: Serve
   if (customChannelId === 'question-template-rejoin-demo') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ data: { title: '技術選型（重新進房）', runState: 'IDLE' } }));
+
+    return;
+  }
+
+  // #448 — the attachment replay channels exist, so mounting takes the restore path and GET /message/sse
+  // replays turns that carried attachments.
+  if (customChannelId.startsWith('attachment-rejoin-demo')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ data: { title: '帶附件的歷史對話', runState: 'IDLE' } }));
 
     return;
   }

@@ -60,6 +60,7 @@ import { ChannelTitleUiRoute } from './routes/channel-title-ui';
 import { ChatHeaderRoute } from './routes/chat-header';
 import { ComposerRoute } from './routes/composer';
 import { PromptSuggestionRoute } from './routes/prompt-suggestion';
+import { AttachmentRejoinRoute } from './routes/attachment-rejoin';
 import { QuestionTemplateRoute } from './routes/question-template';
 import { CanvasCardRoute } from './routes/canvas-card';
 import { JoinInitRoute } from './routes/join-init';
@@ -74,6 +75,7 @@ export function App(): React.ReactElement {
         <Route path="/" element={<Home />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/question-template" element={<QuestionTemplateRoute />} />
+        <Route path="/attachment-rejoin" element={<AttachmentRejoinRoute />} />
         <Route path="/canvas-card" element={<CanvasCardRoute />} />
         <Route path="/data-insight-style" element={<DataInsightStyle />} />
         <Route path="/features" element={<Features />} />
