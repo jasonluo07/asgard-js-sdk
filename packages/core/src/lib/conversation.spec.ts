@@ -3,6 +3,7 @@ import Conversation from './conversation';
 import { EventType } from '../constants/enum';
 import type {
   ConversationBotMessage,
+  MessageBlob,
   ConversationSubagentMessage,
   ConversationThinkingMessage,
   ConversationToolCallMessage,
@@ -101,7 +102,7 @@ describe('Conversation — message assembly robustness (F-011)', () => {
 function userEvent(
   messageId: string,
   text: string,
-  extra?: { customMessageId?: string; identityHint?: string; blobIds?: string[] },
+  extra?: { customMessageId?: string; identityHint?: string; blobIds?: string[]; blobs?: MessageBlob[] },
 ): SseResponse<EventType> {
   return {
     eventType: EventType.MESSAGE_USER,
@@ -114,7 +115,10 @@ function userEvent(
   } as unknown as SseResponse<EventType>;
 }
 
-function getUser(conv: Conversation, messageId: string): { type: 'user'; text: string } | undefined {
+function getUser(
+  conv: Conversation,
+  messageId: string,
+): { type: 'user'; text: string; blobs?: MessageBlob[] } | undefined {
   const message = conv.messages?.get(messageId);
 
   return message?.type === 'user' ? message : undefined;
@@ -150,6 +154,26 @@ describe('Conversation — transcript replay: message.user (F-014)', () => {
     expect(after.messages?.size).toBe(1);
     expect(getUser(after, 'c1')?.text).toBe('hi');
     expect(getUser(after, 'u-backend-1')).toBeUndefined();
+  });
+
+  // #448 — the frame now carries renderable attachment metadata beside the ids. Without it a replayed
+  // turn has nothing to draw: a chip needs a name and a type, and an id is neither.
+  it('carries the frame blobs through verbatim, alongside blobIds', () => {
+    const blobs: MessageBlob[] = [
+      { blobId: 'b1', fileType: 'DOCUMENT', fileName: 'quarterly.txt', size: 39, mime: 'text/plain' },
+      { blobId: 'b2', fileType: 'IMAGE', fileName: null, size: 70, mime: 'image/png' },
+    ];
+    const conv = empty().onMessage(userEvent('u-att-1', '', { blobIds: ['b1', 'b2'], blobs }));
+    expect(getUser(conv, 'u-att-1')?.blobs).toEqual(blobs);
+  });
+
+  // An old transcript row, and an old backend, look identical from here: ids with no metadata. The key is
+  // absent rather than `[]`, and nothing backfills it — the renderer has to cope, so it must see the gap.
+  it('leaves blobs undefined when the frame omits the key', () => {
+    const conv = empty().onMessage(userEvent('u-att-2', '', { blobIds: ['b1'] }));
+    const user = getUser(conv, 'u-att-2');
+    expect(user?.blobs).toBeUndefined();
+    expect(user).toMatchObject({ blobIds: ['b1'] });
   });
 
   it('replay of message.user + a self-sufficient message.complete (no start/delta) assembles both', () => {

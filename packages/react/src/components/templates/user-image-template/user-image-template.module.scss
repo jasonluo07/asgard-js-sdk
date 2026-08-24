@@ -70,6 +70,10 @@
 
 .document_icon {
   flex-shrink: 0;
+  // The replay chips draw their glyph from `src/icons/*.svg`, which declare a 24px intrinsic size; the
+  // live document card's inline glyph is 20px. Pin both to 20 so a reloaded chip matches the sent one.
+  width: 20px;
+  height: 20px;
 }
 
 .document_name {

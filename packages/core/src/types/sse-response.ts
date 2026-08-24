@@ -1,4 +1,5 @@
 import { EventType, MessageTemplateType } from '../constants/enum';
+import { MessageBlob } from './blob';
 import { SubagentTerminalStatus } from './subagent';
 
 export interface Reference {
@@ -231,6 +232,12 @@ export interface MessageUserEventData {
   messageId: string;
   text: string;
   blobIds?: string[];
+  /**
+   * Renderable metadata for the same attachments `blobIds` points at — added alongside it, never
+   * replacing it (#448). Absent on an old backend **and** on transcript rows written before the backend
+   * started snapshotting it, which are not backfilled: an id with no entry here is all a renderer gets.
+   */
+  blobs?: MessageBlob[];
   customMessageId?: string;
   identityHint?: string;
 }
